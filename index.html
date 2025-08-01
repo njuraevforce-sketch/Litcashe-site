@@ -1,12 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset='UTF-8'>
-  <title>Litcash</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lit-cash — Зарабатывай на рекламе</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0f172a; }
+  </style>
 </head>
-<body style='background:#0d1117;color:#fff;font-family:sans-serif;text-align:center;padding:50px;'>
-  <h1>LITCASH</h1>
-  <p>Invest in the Future</p>
-  <p>Earn up to 3% daily in USDT (TRC-20)</p>
+<body class="text-white font-sans">
+
+  <!-- Хедер -->
+  <header class="p-4 flex justify-between items-center bg-gray-900 shadow-lg">
+    <h1 class="text-2xl font-bold text-blue-400">Lit-cash</h1>
+    <nav class="space-x-4">
+      <a href="#how" class="hover:underline">Как это работает</a>
+      <a href="#features" class="hover:underline">Преимущества</a>
+      <a href="#referral" class="hover:underline">Рефералы</a>
+      <a href="#cabinet" class="hover:underline">Кабинет</a>
+    </nav>
+  </header>
+
+  <!-- Геро-блок -->
+
+  <!-- Форма регистрации -->
+  <section id="register" class="bg-gray-900 py-16 px-6">
+  <h3 class="text-2xl font-bold text-center mb-6">Регистрация</h3>
+  <form class="space-y-4 max-w-md mx-auto">
+    <label class="block">
+      <span class="text-gray-300">Имя</span>
+      <input type="text" placeholder="Иван" required
+        class="w-full p-2 mt-1 rounded bg-gray-800 text-white border border-gray-600" />
+    </label>
+    <label class="block">
+      <span class="text-gray-300">Фамилия</span>
+      <input type="text" placeholder="Иванов" required
+        class="w-full p-2 mt-1 rounded bg-gray-800 text-white border border-gray-600" />
+    </label>
+    <label class="block">
+      <span class="text-gray-300">Серия и номер паспорта</span>
+      <input type="text" placeholder="AA1234567" required
+        class="w-full p-2 mt-1 rounded bg-gray-800 text-white border border-gray-600" />
+    </label>
+    <label class="block">
+      <span class="text-gray-300">Номер телефона</span>
+      <input type="tel" placeholder="+998901234567" required
+        class="w-full p-2 mt-1 rounded bg-gray-800 text-white border border-gray-600" />
+    </label>
+    <label class="block">
+      <span class="text-gray-300">Фото паспорта или ID-карты</span>
+      <input type="file" accept="image/*" required
+        class="w-full mt-1 text-white" />
+    </label>
+    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+      Зарегистрироваться
+    </button>
+  </form>
+</section>
+  <section class="text-center py-20 bg-gray-950">
+    <h2 class="text-4xl font-bold mb-4">Стабильный пассивный доход с мировыми брендами</h2>
+    <p class="text-gray-300 mb-6">Инвестируй один раз — получай каждый день</p>
+    <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full text-lg shadow-lg animate-pulse">Войти в систему</button>
+  </section>
+
+  <!-- Как это работает -->
+  <section id="how" class="py-16 px-6 max-w-4xl mx-auto text-center">
+    <h3 class="text-2xl font-semibold mb-8">Как это работает</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div><p class="text-xl font-bold mb-2">1. Инвестируй в рекламу</p><p>Вносишь USDT (TRC-20)</p></div>
+      <div><p class="text-xl font-bold mb-2">2. Смотри ролики</p><p>Просматривай короткие видеорекламы</p></div>
+      <div><p class="text-xl font-bold mb-2">3. Получай прибыль</p><p>Получай 3% от инвестиций + бонусы от рефералов</p></div>
+    </div>
+  </section>
+
+  <!-- Преимущества -->
+  <section id="features" class="py-16 px-6 bg-gray-800">
+    <h3 class="text-2xl font-semibold text-center mb-10">Наши преимущества</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+      <div class="p-4 bg-gray-900 rounded-xl">🔒 Безопасные выплаты</div>
+      <div class="p-4 bg-gray-900 rounded-xl">🌐 Мировые бренды</div>
+      <div class="p-4 bg-gray-900 rounded-xl">💸 Доход 3% ежедневно</div>
+      <div class="p-4 bg-gray-900 rounded-xl">🤝 Реферальная система</div>
+      <div class="p-4 bg-gray-900 rounded-xl">🪙 Оплата в USDT (TRC-20)</div>
+      <div class="p-4 bg-gray-900 rounded-xl">📈 Прозрачная статистика</div>
+    </div>
+  </section>
+
+  <!-- Видео-превью -->
+<section class="py-16 px-6 text-center">
+  <h3 class="text-2xl font-semibold mb-6">Посмотри, как это работает</h3>
+  <div class="flex justify-center">
+    <img src="/mnt/data/A_promotional_digital_video_advertisement_for_Lit-.png" alt="Видео-превью Lit-cash" class="rounded-xl max-w-3xl w-full shadow-lg" />
+  </div>
+</section>
+
+  <!-- Реферальная система -->
+  <section id="referral" class="bg-gray-900 py-16 px-6">
+    <h3 class="text-2xl font-bold text-center mb-8">Реферальная система (3 поколения)</h3>
+    <div class="max-w-3xl mx-auto">
+      <div class="bg-gray-800 p-4 rounded mb-4">
+        <p class="text-blue-400">Ваша пригласительная ссылка:</p>
+        <div class="flex justify-between items-center mt-2">
+          <code id="ref-link" class="select-all">https://lit-cash.com/?ref=USERNAME</code>
+          <button onclick="copyRef()" class="bg-blue-600 px-3 py-1 rounded hover:bg-blue-700">Скопировать</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gray-800 p-4 rounded">
+          <p class="text-lg font-semibold">👤 1 уровень</p>
+          <p>Приглашено: 8</p>
+          <p>Доход: <span class="text-green-400 font-bold">$24.50</span> (13%)</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded">
+          <p class="text-lg font-semibold">👥 2 уровень</p>
+          <p>Приглашено: 15</p>
+          <p>Доход: <span class="text-green-400 font-bold">$7.10</span> (5%)</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded">
+          <p class="text-lg font-semibold">👥 3 уровень</p>
+          <p>Приглашено: 30</p>
+          <p>Доход: <span class="text-green-400 font-bold">$3.25</span> (1%)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Личный кабинет -->
+  <section id="cabinet" class="bg-gray-950 py-16 px-6">
+    <h3 class="text-2xl font-bold text-center mb-8">Личный кабинет инвестора</h3>
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-gray-800 p-6 rounded-xl">
+        <h4 class="text-xl font-semibold mb-4">Баланс</h4>
+        <p class="text-3xl text-green-400 font-bold">$150.00 USDT</p>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-xl">
+        <h4 class="text-xl font-semibold mb-4">Заработано с рефералов</h4>
+        <p class="text-3xl text-blue-400 font-bold">$34.85</p>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-xl">
+        <h4 class="text-xl font-semibold mb-4">Начислено за просмотры</h4>
+        <p class="text-3xl font-bold">$59.20</p>
+      </div>
+      <div class="bg-gray-800 p-6 rounded-xl">
+        <h4 class="text-xl font-semibold mb-4">Действия</h4>
+        <button class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 mb-2 w-full">Пополнить USDT</button>
+        <button class="bg-green-600 px-4 py-2 rounded hover:bg-green-700 w-full">Вывести прибыль</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Система начисления -->
+  <section class="bg-gray-800 py-16 px-6">
+    <h3 class="text-2xl font-bold text-center mb-8">Система начисления прибыли</h3>
+    <div class="max-w-3xl mx-auto bg-gray-900 p-6 rounded-xl text-sm text-gray-300">
+      <ul class="space-y-4">
+        <li>✅ Ежедневно начисляется доход от инвестиций согласно вашему уровню:</li>
+        <li>🔹 <strong>Новичок</strong>: 3% в день при инвестициях до 100 USDT</li>
+        <li>🔹 <strong>Партнёр</strong>: 3.5% в день при 100–500 USDT и 5 активных рефералах</li>
+        <li>🔹 <strong>Премиум</strong>: 4% в день при 500–2000 USDT и 15 активных рефералах</li>
+        <li>🔹 <strong>Инвестор PRO</strong>: 5% в день при 2000–5000 USDT и 30 активных рефералов</li>
+      </ul>
+      <div class="mt-6">
+        <p>📺 За каждый просмотр рекламного видео начисляется фиксированная сумма, увеличенная в соответствии с уровнем.</p>
+        <p class="mt-2">💸 Доход от рефералов также начисляется отдельно по уровням: 13% (1 поколение), 5% (2), 1% (3).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Таблица уровней инвестора -->
+  <section class="bg-gray-900 py-16 px-6">
+    <h3 class="text-2xl font-bold text-center mb-8">Уровни инвесторов</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm text-gray-300 border border-gray-700">
+        <thead class="bg-gray-800 text-white">
+          <tr>
+            <th class="px-4 py-3 border border-gray-700">Уровень</th>
+            <th class="px-4 py-3 border border-gray-700">Процент дохода</th>
+            <th class="px-4 py-3 border border-gray-700">Инвестиции</th>
+            <th class="px-4 py-3 border border-gray-700">Активные рефералы</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="bg-gray-800">
+            <td class="px-4 py-3 border border-gray-700">🟢 Новичок</td>
+            <td class="px-4 py-3 border border-gray-700">3%</td>
+            <td class="px-4 py-3 border border-gray-700">до 100 USDT</td>
+            <td class="px-4 py-3 border border-gray-700">0</td>
+          </tr>
+          <tr>
+            <td class="px-4 py-3 border border-gray-700">🔵 Партнёр</td>
+            <td class="px-4 py-3 border border-gray-700">3.5%</td>
+            <td class="px-4 py-3 border border-gray-700">100–500 USDT</td>
+            <td class="px-4 py-3 border border-gray-700">5+</td>
+          </tr>
+          <tr class="bg-gray-800">
+            <td class="px-4 py-3 border border-gray-700">🟣 Премиум</td>
+            <td class="px-4 py-3 border border-gray-700">4%</td>
+            <td class="px-4 py-3 border border-gray-700">500–2000 USDT</td>
+            <td class="px-4 py-3 border border-gray-700">15+</td>
+          </tr>
+          <tr>
+            <td class="px-4 py-3 border border-gray-700">🟠 Инвестор PRO</td>
+            <td class="px-4 py-3 border border-gray-700">5%</td>
+            <td class="px-4 py-3 border border-gray-700">2000–5000 USDT</td>
+            <td class="px-4 py-3 border border-gray-700">30+</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Уровень инвестора -->
+  <section class="bg-gray-800 py-16 px-6">
+    <h3 class="text-2xl font-bold text-center mb-8">Ваш уровень инвестора</h3>
+    <div class="max-w-3xl mx-auto bg-gray-900 p-6 rounded-xl">
+      <h4 class="text-xl font-semibold mb-4">Уровень: 🔵 Партнёр</h4>
+      <p class="text-gray-300">Инвестировано: <span class="text-white font-bold">$350</span></p>
+      <p class="text-gray-300">Активных рефералов: <span class="text-white font-bold">7</span></p>
+      <p class="text-green-400 mt-2">Текущий процент дохода: <span class="font-bold">3.5%</span></p>
+      <div class="mt-4 h-2 bg-gray-700 rounded-full">
+        <div class="h-full bg-blue-500 rounded-full" style="width: 35%;"></div>
+      </div>
+      <p class="text-sm text-gray-400 mt-1">Осталось $150 и 8 рефералов до уровня Премиум</p>
+    </div>
+  </section>
+
+  <!-- Подвал -->
+  <footer class="bg-gray-950 p-6 text-center text-gray-500">
+    <p>© 2025 Lit-cash. Все права защищены.</p>
+    <p class="text-xs mt-2">Контакты и ссылки будут добавлены позже.</p>
+  </footer>
+
+  <script>
+    function copyRef() {
+      const text = document.getElementById("ref-link").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Ссылка скопирована!");
+      });
+    }
+  </script>
 </body>
 </html>
