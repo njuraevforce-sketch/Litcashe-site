@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Регистрация — Litcash</title>
+  <style>
+    body { background: #0f1115; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .form-container { background: #1c1f26; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #1e90ff; width: 320px; }
+    input, button {
+      width: 100%; padding: 10px; margin-top: 10px;
+      border: none; border-radius: 5px;
+    }
+    input { background: #2a2d34; color: white; }
+    button { background: #1e90ff; color: white; cursor: pointer; }
+    label { font-size: 14px; }
+    a { display: block; margin-top: 15px; text-align: center; color: #00ccff; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Регистрация</h2>
+    <form onsubmit="handleRegister(event)">
+      <input type="text" id="firstname" placeholder="Имя" required>
+      <input type="text" id="lastname" placeholder="Фамилия" required>
+      <input type="email" id="email" placeholder="Почта" required>
+      <input type="text" id="phone" placeholder="Номер телефона" required>
+      <input type="text" id="username" placeholder="Логин" required>
+      <input type="password" id="password" placeholder="Пароль" required>
+      <label><input type="checkbox" required> Я принимаю условия</label>
+      <button type="submit">Зарегистрироваться</button>
+    </form>
+    <a href="/login.html">Уже есть аккаунт?</a>
+  </div>
+
+  <script>
+    function getReferral() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get("ref") || "";
+    }
+
+    function handleRegister(e) {
+      e.preventDefault();
+      const user = {
+        firstname: document.getElementById("firstname").value,
+        lastname: document.getElementById("lastname").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value,
+        balance: 0,
+        referrals: [],
+        referralFrom: getReferral()
+      };
+      localStorage.setItem("litcash_user_" + user.username, JSON.stringify(user));
+      localStorage.setItem("litcash_current_user", user.username);
+      alert("Успешная регистрация");
+      window.location.href = "/dashboard.html";
+    }
+  </script>
+</body>
+</html>

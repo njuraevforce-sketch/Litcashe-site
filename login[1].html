@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Вход — Litcash</title>
+  <style>
+    body { background: #0f1115; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .form-container { background: #1c1f26; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #1e90ff; width: 320px; }
+    input, button {
+      width: 100%; padding: 10px; margin-top: 10px;
+      border: none; border-radius: 5px;
+    }
+    input { background: #2a2d34; color: white; }
+    button { background: #1e90ff; color: white; cursor: pointer; }
+    a { display: block; margin-top: 15px; text-align: center; color: #00ccff; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Вход</h2>
+    <form onsubmit="handleLogin(event)">
+      <input type="text" id="username" placeholder="Логин" required>
+      <input type="password" id="password" placeholder="Пароль" required>
+      <button type="submit">Войти</button>
+    </form>
+    <a href="/register.html">Нет аккаунта? Зарегистрироваться</a>
+  </div>
+
+  <script>
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const userRaw = localStorage.getItem("litcash_user_" + username);
+      if (!userRaw) return alert("Пользователь не найден");
+      const user = JSON.parse(userRaw);
+      if (user.password !== password) return alert("Неверный пароль");
+      localStorage.setItem("litcash_current_user", username);
+      window.location.href = "/dashboard.html";
+    }
+  </script>
+</body>
+</html>

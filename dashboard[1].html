@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Кабинет — Litcash</title>
+  <style>
+    body { background: #0f1115; color: white; font-family: sans-serif; padding: 20px; }
+    h1, h2 { color: #1e90ff; }
+    .section { margin-bottom: 20px; padding: 15px; background: #1c1f26; border-radius: 10px; }
+    button { padding: 10px; background: #1e90ff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    input { width: 100%; margin-top: 10px; padding: 10px; background: #2a2d34; border: none; border-radius: 5px; color: white; }
+    .small { font-size: 14px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <h1>Личный кабинет</h1>
+
+  <div class="section">
+    <h2>Баланс: <span id="balance">0</span> USDT</h2>
+    <p>Ваш уровень: <span id="level">0</span></p>
+    <p>Реферальная ссылка:</p>
+    <input type="text" id="refLink" readonly>
+    <button onclick="copyRef()">Скопировать ссылку</button>
+  </div>
+
+  <div class="section">
+    <h2>Рефералы</h2>
+    <p>1 поколение: <span id="ref1">0</span> — Доход: <span id="income1">0</span> USDT</p>
+    <p>2 поколение: <span id="ref2">0</span> — Доход: <span id="income2">0</span> USDT</p>
+    <p>3 поколение: <span id="ref3">0</span> — Доход: <span id="income3">0</span> USDT</p>
+  </div>
+
+  <div class="section">
+    <a href="/videos.html"><button>Смотреть видео</button></a>
+  </div>
+
+  <script>
+    const username = localStorage.getItem("litcash_current_user");
+    if (!username) window.location.href = "/login.html";
+
+    const userRaw = localStorage.getItem("litcash_user_" + username);
+    if (!userRaw) window.location.href = "/login.html";
+
+    const user = JSON.parse(userRaw);
+    document.getElementById("balance").innerText = user.balance?.toFixed(2) || "0";
+
+    // Генерация и отображение реф. ссылки
+    const refUrl = window.location.origin + "/register.html?ref=" + username;
+    document.getElementById("refLink").value = refUrl;
+
+    function copyRef() {
+      navigator.clipboard.writeText(refUrl);
+      alert("Ссылка скопирована!");
+    }
+
+    // Определение уровня (примерные условия)
+    let level = 0;
+    if (user.balance >= 29 && user.referrals?.length >= 1) level = 1;
+    if (user.balance >= 100 && user.referrals?.length >= 3) level = 2;
+    if (user.balance >= 300 && user.referrals?.length >= 5) level = 3;
+    document.getElementById("level").innerText = level;
+
+    // Подсчёт поколений (заглушка, до полной реализации)
+    document.getElementById("ref1").innerText = user.referrals?.length || 0;
+    document.getElementById("income1").innerText = ((user.referrals?.length || 0) * 1).toFixed(2);
+    document.getElementById("ref2").innerText = 0;
+    document.getElementById("ref3").innerText = 0;
+    document.getElementById("income2").innerText = "0.00";
+    document.getElementById("income3").innerText = "0.00";
+  </script>
+</body>
+</html>
