@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Litcash - Просмотр рекламы</title>
+  <style>
+    body { margin: 0; background: #0f1115; font-family: sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    h1 { margin-top: 20px; }
+    video { max-width: 100%; border: 2px solid #1e90ff; border-radius: 12px; }
+    button { margin-top: 20px; padding: 10px 20px; background: #1e90ff; border: none; border-radius: 6px; color: white; cursor: pointer; }
+    #reward { margin-top: 20px; color: #00ffcc; }
+  </style>
+</head>
+<body>
+  <h1>🎥 Просмотр рекламы</h1>
+  <button id="startBtn">Старт</button>
+  <div id="videoBox" style="display:none;">
+    <video id="video" controls></video>
+    <button id="nextBtn" style="display:none;">Следующее видео</button>
+    <div id="reward"></div>
+  </div>
+
+  <script>
+    const videos = ["/public/test_video_1.mp4", "/public/test_video_2.mp4", "/public/test_video_3.mp4", "/public/test_video_4.mp4", "/public/test_video_5.mp4"];
+    let i = 0, total = 0;
+
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const video = document.getElementById("video");
+    const reward = document.getElementById("reward");
+
+    startBtn.onclick = () => {
+      startBtn.style.display = "none";
+      document.getElementById("videoBox").style.display = "block";
+      load(i);
+    };
+
+    nextBtn.onclick = () => {
+      i++;
+      if (i < videos.length) load(i);
+      else nextBtn.style.display = "none";
+    };
+
+    function load(n) {
+      video.src = videos[n];
+      video.load();
+      video.play();
+      nextBtn.style.display = "none";
+      reward.innerHTML = "";
+
+      video.onended = () => {
+        let part = 3 / videos.length;
+        total += part;
+        reward.innerHTML = `💰 Начислено: ${part.toFixed(2)}% (всего: ${total.toFixed(2)}%)`;
+        nextBtn.style.display = "block";
+      };
+    }
+  </script>
+</body>
+</html>
