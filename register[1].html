@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register – Litcash</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans min-h-screen flex items-center justify-center p-6">
+
+<div class="bg-gray-800 rounded p-8 w-full max-w-md shadow-md">
+  <h2 class="text-2xl font-bold text-blue-400 mb-4">Create an Account</h2>
+
+  <form id="registerForm" class="space-y-4">
+    <input required type="text" placeholder="First Name" class="w-full p-2 rounded bg-gray-700 text-white" id="firstName" />
+    <input required type="text" placeholder="Last Name" class="w-full p-2 rounded bg-gray-700 text-white" id="lastName" />
+    <input required type="email" placeholder="Email" class="w-full p-2 rounded bg-gray-700 text-white" id="email" />
+    <input required type="tel" placeholder="Phone Number" class="w-full p-2 rounded bg-gray-700 text-white" id="phone" />
+    <input required type="text" placeholder="Username" class="w-full p-2 rounded bg-gray-700 text-white" id="username" />
+    <input required type="password" placeholder="Password" class="w-full p-2 rounded bg-gray-700 text-white" id="password" />
+
+    <label class="text-sm flex items-center">
+      <input required type="checkbox" class="mr-2" /> I agree to the Terms & Conditions
+    </label>
+
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 w-full p-2 rounded text-white font-semibold">Register</button>
+
+    <div class="text-sm text-center mt-4 text-gray-400">
+      Already have an account? <a href="login.html" class="text-blue-400 underline hover:text-blue-500">Log in</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Получаем параметр ?ref из URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get('ref');
+  if (ref) {
+    localStorage.setItem('referred_by', ref);
+  }
+
+  document.getElementById("registerForm").onsubmit = function(e) {
+    e.preventDefault();
+
+    const user = {
+      id: Math.random().toString(36).substr(2, 9),
+      firstName: document.getElementById("firstName").value,
+      lastName: document.getElementById("lastName").value,
+      email: document.getElementById("email").value,
+      phone: document.getElementById("phone").value,
+      username: document.getElementById("username").value,
+      password: document.getElementById("password").value,
+      parent: localStorage.getItem("referred_by") || null
+    };
+
+    localStorage.setItem("current_user", JSON.stringify(user));
+
+    alert("Registration successful!");
+    window.location.href = "cabinet.html";
+  };
+</script>
+
+</body>
+</html>

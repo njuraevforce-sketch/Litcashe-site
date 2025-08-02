@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Litcash – Investor Cabinet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col">
+
+<header class="p-4 flex justify-between items-center bg-gray-800 shadow">
+  <h1 class="text-xl font-bold text-blue-400">Litcash</h1>
+  <a href="/" class="text-sm text-gray-300 hover:underline">← Back to Home</a>
+</header>
+
+<main class="flex-grow p-6">
+  <h2 class="text-2xl font-bold mb-4">Investor Cabinet</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-gray-800 p-4 rounded">
+      <p class="text-gray-400 text-sm">Your Balance</p>
+      <p class="text-2xl font-semibold text-green-400" id="balance">0.00 USDT</p>
+    </div>
+    <div class="bg-gray-800 p-4 rounded">
+      <p class="text-gray-400 text-sm">Today's Earnings</p>
+      <p class="text-2xl font-semibold text-yellow-300" id="today">+0.00 USDT</p>
+    </div>
+    <div class="bg-gray-800 p-4 rounded">
+      <p class="text-gray-400 text-sm">Investor Level</p>
+      <p class="text-2xl font-semibold" id="level">Level 1</p>
+    </div>
+  </div>
+
+  <div class="bg-gray-800 p-4 rounded mb-6">
+    <h3 class="text-xl font-semibold mb-2">Referral Program (3 Levels)</h3>
+    <p class="text-sm text-gray-300 mb-4">Your referral link:</p>
+    <div class="bg-gray-700 p-2 rounded text-sm overflow-auto mb-2 flex justify-between items-center">
+      <span id="ref-link">https://litcash.biz/?ref=</span>
+      <button onclick="copyLink()" class="bg-blue-500 px-2 py-1 text-xs rounded ml-2">Copy</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-300">
+      <div class="bg-gray-700 p-3 rounded">
+        <p class="font-bold text-white">Level 1</p>
+        <p>Referrals: <span id="ref1">0</span></p>
+        <p>Earnings: <span id="earn1">0.00</span> USDT</p>
+      </div>
+      <div class="bg-gray-700 p-3 rounded">
+        <p class="font-bold text-white">Level 2</p>
+        <p>Referrals: <span id="ref2">0</span></p>
+        <p>Earnings: <span id="earn2">0.00</span> USDT</p>
+      </div>
+      <div class="bg-gray-700 p-3 rounded">
+        <p class="font-bold text-white">Level 3</p>
+        <p>Referrals: <span id="ref3">0</span></p>
+        <p>Earnings: <span id="earn3">0.00</span> USDT</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <button class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white text-lg">Deposit USDT</button>
+    <button class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white text-lg">Withdraw</button>
+  </div>
+</main>
+
+<footer class="bg-gray-900 p-4 text-center text-sm text-gray-500">
+  © 2025 Litcash. All rights reserved.
+</footer>
+
+<script>
+function copyLink() {
+  const link = document.getElementById("ref-link").innerText;
+  navigator.clipboard.writeText(link).then(() => alert("Referral link copied!"));
+}
+
+const user = JSON.parse(localStorage.getItem("current_user"));
+const allUsers = JSON.parse(localStorage.getItem("all_users")) || [];
+
+// Считаем 3 уровня
+const level1 = allUsers.filter(u => u.parent === user.id);
+const level2 = allUsers.filter(u => u.grandparent === user.id);
+const level3 = allUsers.filter(u => u.greatGrandparent === user.id);
+
+// Доход реферала (тестовое значение, можно подгрузить из данных)
+function getReferralEarnings(refUser) {
+  return refUser?.earned || 15.0; // по умолчанию — 15 USDT доход за день
+}
+
+let earn1 = 0, earn2 = 0, earn3 = 0;
+
+level1.forEach(u => earn1 += getReferralEarnings(u) * 0.13);
+level2.forEach(u => earn2 += getReferralEarnings(u) * 0.05);
+level3.forEach(u => earn3 += getReferralEarnings(u) * 0.01);
+
+document.getElementById("ref-link").innerText = "https://litcash.biz/?ref=" + user.id;
+
+document.getElementById("ref1").innerText = level1.length;
+document.getElementById("ref2").innerText = level2.length;
+document.getElementById("ref3").innerText = level3.length;
+
+document.getElementById("earn1").innerText = earn1.toFixed(2);
+document.getElementById("earn2").innerText = earn2.toFixed(2);
+
+document.getElementById("earn3").innerText = earn3.toFixed(2);
+
+// 💰 Суммируем все доходы от рефералов
+const totalReferralIncome = earn1 + earn2 + earn3;
+
+// 📊 Добавляем к балансу инвестора
+user.balance = (user.balance || 0) + totalReferralIncome;
+localStorage.setItem("current_user", JSON.stringify(user));
+document.getElementById("balance").innerText = user.balance.toFixed(2) + " USDT";
+
+</script>
+
+</body>
+</html>
