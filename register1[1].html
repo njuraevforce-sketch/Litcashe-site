@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Регистрация — Litcash</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #1c1f26;
+      --accent: #1e90ff;
+      --text: #ffffff;
+      --radius: 16px;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+    h2 {
+      margin-bottom: 24px;
+      font-size: 24px;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 16px;
+      background: #2c2f36;
+      border: 1px solid #333;
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 16px;
+    }
+    .checkbox {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .checkbox input {
+      width: auto;
+      margin-right: 10px;
+    }
+    .checkbox label {
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0078dd;
+    }
+    .login-link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    .login-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Регистрация</h2>
+    <form>
+      <label for="fname">Имя</label>
+      <input type="text" id="fname" placeholder="Введите имя" required>
+
+      <label for="lname">Фамилия</label>
+      <input type="text" id="lname" placeholder="Введите фамилию" required>
+
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="Введите email" required>
+
+      <label for="login">Логин</label>
+      <input type="text" id="login" placeholder="Придумайте логин" required>
+
+      <label for="phone">Телефон</label>
+      <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
+
+      <label for="password">Пароль</label>
+      <input type="password" id="password" placeholder="Придумайте пароль" required>
+
+      <div class="checkbox">
+        <input type="checkbox" id="terms" required>
+        <label for="terms">Я согласен с <a href="#" style="color: var(--accent)">условиями платформы</a></label>
+      </div>
+
+      <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <div class="login-link">
+      Уже есть аккаунт? <a href="login.html">Войти</a>
+    </div>
+  </div>
+
+</body>
+</html>

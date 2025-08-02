@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Личный кабинет - Litcash</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #ffffff;
+      padding: 16px 32px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header-left {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .header-right button {
+      margin-left: 12px;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 50px;
+      background-color: #eff2f5;
+      cursor: pointer;
+    }
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 40px;
+    }
+    .card {
+      background-color: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      padding: 20px;
+      text-align: center;
+    }
+    .card h2 {
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: #666;
+    }
+    .card p {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0;
+    }
+    .start-circle {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      margin: 0 auto;
+      background: linear-gradient(to bottom right, #e0f0ff, #ffffff);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.05), 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .start-circle button {
+      border: none;
+      background-color: #008cff;
+      color: white;
+      font-size: 22px;
+      padding: 16px 32px;
+      border-radius: 100px;
+      box-shadow: 0 0 10px #008cff;
+      cursor: pointer;
+    }
+    canvas {
+      max-width: 180px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">Личный кабинет</div>
+  <div class="header-right">
+    <button>💸 Ввод</button>
+    <button>📤 Вывод</button>
+    <button>💬 Поддержка</button>
+    <button>⚙️ Настройки</button>
+    <button>🚪 Выход</button>
+  </div>
+</header>
+
+<main class="dashboard">
+  <div class="card">
+    <h2>Баланс</h2>
+    <p>112 USDT</p>
+  </div>
+  <div class="card">
+    <h2>Уровень</h2>
+    <p style="color: orange;">🟠 Elite</p>
+  </div>
+  <div class="card">
+    <h2>Доход от рефералов</h2>
+    <canvas id="refChart"></canvas>
+  </div>
+  <div class="card">
+    <h2>Просмотр рекламы</h2>
+    <div class="start-circle">
+      <button>START</button>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('refChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['1 поколение (13%)', '2 поколение (5%)', '3 поколение (1%)'],
+      datasets: [{
+        data: [130, 50, 10],
+        backgroundColor: ['#008cff', '#00c853', '#ffa000'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход — Litcash</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #1c1f26;
+      --accent: #1e90ff;
+      --text: #ffffff;
+      --radius: 16px;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+    h2 {
+      margin-bottom: 24px;
+      font-size: 24px;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      background: #2c2f36;
+      border: 1px solid #333;
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 16px;
+    }
+    .forgot {
+      text-align: right;
+      margin-bottom: 20px;
+    }
+    .forgot a {
+      color: var(--accent);
+      font-size: 14px;
+      text-decoration: none;
+    }
+    .forgot a:hover {
+      text-decoration: underline;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0078dd;
+    }
+    .register-link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    .register-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Вход в аккаунт</h2>
+    <form>
+      <label for="login">Логин</label>
+      <input type="text" id="login" placeholder="Введите логин" required>
+
+      <label for="password">Пароль</label>
+      <input type="password" id="password" placeholder="Введите пароль" required>
+
+      <div class="forgot">
+        <a href="#">Забыли пароль?</a>
+      </div>
+
+      <button type="submit">Войти</button>
+    </form>
+
+    <div class="register-link">
+      Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
+    </div>
+  </div>
+
+</body>
+</html>
