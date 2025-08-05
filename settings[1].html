@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Настройки</title>
+<style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0c0c0c, #1f1f2b);
+      color: white;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 28px;
+      color: #00bcd4;
+    }
+    .staking-card {
+      background: #161621;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .staking-card h3 {
+      margin-bottom: 10px;
+      font-size: 20px;
+      color: #ffffff;
+    }
+    .staking-card input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 10px;
+      background: #232333;
+      color: white;
+    }
+    .staking-card button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #00bcd4;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .staking-card button:hover {
+      background: #0196a1;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Litcash home button -->
+<div style="position: fixed; top: 20px; left: 20px; z-index: 999;">
+  <button onclick="goHome()" style="background: none; border: none; color: white; font-weight: bold; font-size: 20px; cursor: pointer;">
+    Litcash
+  </button>
+</div>
+<script>
+  function goHome() {
+    if (document.cookie.includes("user_logged_in=true")) {
+      window.location.href = "litcash_neo_final_blur_bg_light_adaptive_fixed.html";
+    } else {
+      window.location.href = "index.html";
+    }
+  }
+</script>
+
+<div class="container">
+<h2>Настройки</h2>
+<div class="staking-card">
+<h3>Смена пароля</h3>
+<input placeholder="Старый пароль" type="password"/>
+<input placeholder="Новый пароль" type="password"/>
+<input placeholder="Подтвердите новый пароль" type="password"/>
+<button>Изменить пароль</button>
+</div>
+<div class="staking-card">
+<h3>Смена кошелька</h3>
+<input placeholder="Старый кошелёк" type="text"/>
+<input placeholder="Новый кошелёк" type="text"/>
+<button>Сохранить кошелёк</button>
+</div>
+<div class="staking-card">
+<h3>Поддержка</h3>
+<input placeholder="Опишите вашу проблему" type="text"/>
+<button>Отправить</button>
+</div>
+</div>
+</body>
+</html>
