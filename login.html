@@ -1,12 +1,11 @@
 
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
-<meta charset="utf-8"/>
-<title>Вход — Litcash</title>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<style>
+  <meta charset="UTF-8">
+  <title>Вход — Litcash</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
 body::before {
   content: '';
   position: fixed;
@@ -110,22 +109,29 @@ body::before {
   </style>
 </head>
 <body>
-<div class="card">
-<h2>Вход в аккаунт</h2>
-<form>
-<label for="login">Логин</label>
-<input id="login" placeholder="Введите логин" required="" type="text"/>
-<label for="password">Пароль</label>
-<input id="password" placeholder="Введите пароль" required="" type="password"/>
-<div class="forgot">
-<a href="#">Забыли пароль?</a>
-</div>
-<button type="submit">Войти</button>
-</form>
-<div class="register-link">
+
+  <div class="card">
+    <h2>Вход в аккаунт</h2>
+    <form>
+      <label for="login">Логин</label>
+      <input type="text" id="login" placeholder="Введите логин" required>
+
+      <label for="password">Пароль</label>
+      <input type="password" id="password" placeholder="Введите пароль" required>
+
+      <div class="forgot">
+        <a href="#">Забыли пароль?</a>
+      </div>
+
+      <button type="submit">Войти</button>
+    </form>
+
+    <div class="register-link">
       Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
-</div>
-</div>
+    </div>
+  </div>
+
+
 <script>
   function loginUser() {
     // Простейшая симуляция входа
@@ -135,24 +141,5 @@ body::before {
   }
 </script>
 <form onsubmit="return loginUser()">
-<script>
-  document.querySelector('form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const login = document.querySelector('#login')?.value || '';
-    if (login) {
-      localStorage.setItem('login', login);
-    }
-    window.location.href = "dashboard.html";
-  });
-</script>
-</form><script>
-document.querySelector('form').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const login = document.querySelector('#login')?.value || '';
-  if (login) {
-    localStorage.setItem('login', login);
-  }
-  window.location.href = "dashboard.html";
-});
-    </script></body>
+</body>
 </html>
