@@ -256,7 +256,29 @@ body {
 <div class="header-buttons">
 <button>📦 Пакеты</button>
 <button>⚙️ Настройки</button>
-<button>🌐 Язык</button>
+
+<div class="language-dropdown" style="position: relative; display: inline-block;">
+<button id="lang-btn" style="padding: 8px 12px; background-color: #222; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Язык</button>
+<div id="lang-menu" style="display:none; position:absolute; top:100%; left:0; background:#333; border-radius:6px; padding:6px 0; z-index:1000;">
+<a href="#" style="display:block;padding:6px 12px;color:white;text-decoration:none;">🇺🇸 EN</a>
+<a href="#" style="display:block;padding:6px 12px;color:white;text-decoration:none;">🇷🇺 RU</a>
+<a href="#" style="display:block;padding:6px 12px;color:white;text-decoration:none;">🇺🇿 UZ</a>
+<a href="#" style="display:block;padding:6px 12px;color:white;text-decoration:none;">🇹🇷 Turk</a>
+<a href="#" style="display:block;padding:6px 12px;color:white;text-decoration:none;">🇸🇦 Arabia</a>
+</div>
+</div>
+<script>
+      document.addEventListener("click", function(e) {
+        const menu = document.getElementById("lang-menu");
+        const btn = document.getElementById("lang-btn");
+        if (btn.contains(e.target)) {
+          menu.style.display = menu.style.display === "block" ? "none" : "block";
+        } else {
+          menu.style.display = "none";
+        }
+      });
+    </script>
+
 <button>🚪 Выход</button>
 </div>
 </div><div class="grid">
@@ -347,7 +369,34 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
-</body>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!localStorage.getItem("login")) {
+    window.location.href = "login.html";
+  }
+
+  const packagesBtn = document.getElementById("go-to-packages");
+  const settingsBtn = document.getElementById("go-to-settings");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  if (packagesBtn) {
+    packagesBtn.addEventListener("click", () => {
+      window.location.href = "investments.html";
+    });
+  }
+
+  if (settingsBtn) {
+    settingsBtn.addEventListener("click", () => {
+      window.location.href = "settings.html";
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+  }
+});
+</script></body>
 </html>
-
-
