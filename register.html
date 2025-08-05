@@ -110,6 +110,19 @@ body::before {
   </style>
 </head>
 <body>
+<a href="#" id="backBtn" style="position: fixed; top: 20px; left: 20px; z-index: 9999; background: linear-gradient(135deg, #1f1f1f, #2c2c2c); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-family: Arial, sans-serif; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: background 0.3s ease;">
+  ← Назад
+</a>
+<div id="language-selector" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+<span id="globe-icon" style="font-size: 1.8em; cursor: pointer;">🌐</span>
+<div id="langMenu" style="display:none; position:absolute; right:0; background:#222; padding:10px; border-radius:5px;">
+<a href="#" style="color:white; display:block;">EN</a>
+<a href="#" style="color:white; display:block;">RU</a>
+<a href="#" style="color:white; display:block;">UZ</a>
+<a href="#" style="color:white; display:block;">Türkçe</a>
+<a href="#" style="color:white; display:block;">عربى</a>
+</div>
+</div>
 <div class="card">
 <h2>Регистрация</h2>
 <form>
@@ -129,7 +142,7 @@ body::before {
 <input id="terms" required="" type="checkbox"/>
 <label for="terms">Я согласен с <a href="#" style="color: var(--accent)">условиями платформы</a></label>
 </div>
-<button onclick="return registerUser()" type="button">Зарегистрироваться</button>
+<button type="submit">Зарегистрироваться</button>
 </form>
 <div class="login-link">
       Уже есть аккаунт? <a href="login.html">Войти</a>
@@ -137,20 +150,41 @@ body::before {
 </div>
 <script>
   function registerUser() {
-    const login = document.getElementById('login').value;
-    document.cookie = "user=" + login + "; path=/";
-
-    // сохранить также реферала, если передан через ?ref=
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get("ref");
-    if (ref) {
-      document.cookie = "referrer=" + ref + "; path=/";
-    }
-
-    window.location.href = "dashboard.html";
+    // Симуляция регистрации
+    document.cookie = "user_logged_in=true; path=/";
+    window.location.href = "litcash_neo_final_blur_bg_light_adaptive_fixed.html";
     return false;
   }
 </script>
 <form onsubmit="return registerUser()">
-</form></body>
+</form>
+<script>
+  const globe = document.getElementById("globe-icon");
+  const menu = document.getElementById("langMenu");
+  globe.addEventListener("click", function(event) {
+    event.stopPropagation();
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  });
+  document.addEventListener("click", function(event) {
+    if (!event.target.closest("#language-selector")) {
+      menu.style.display = "none";
+    }
+  });
+</script>
+
+
+
+<script>
+  document.getElementById("backBtn").addEventListener("click", function(event) {
+    event.preventDefault();
+    const cookies = document.cookie.split("; ");
+    const userCookie = cookies.find(row => row.startsWith("user="));
+    if (userCookie) {
+      window.location.href = "litcash_neo_final_blur_bg_light_adaptive_fixed.html";
+    } else {
+      window.location.href = "index.html";
+    }
+  });
+</script>
+</body>
 </html>
