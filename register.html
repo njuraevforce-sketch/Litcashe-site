@@ -1,11 +1,12 @@
 
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Регистрация — Litcash</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
+<meta charset="utf-8"/>
+<title>Регистрация — Litcash</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<style>
 body::before {
   content: '';
   position: fixed;
@@ -109,42 +110,31 @@ body::before {
   </style>
 </head>
 <body>
-
-  <div class="card">
-    <h2>Регистрация</h2>
-    <form>
-      <label for="fname">Имя</label>
-      <input type="text" id="fname" placeholder="Введите имя" required>
-
-      <label for="lname">Фамилия</label>
-      <input type="text" id="lname" placeholder="Введите фамилию" required>
-
-      <label for="email">Email</label>
-      <input type="email" id="email" placeholder="Введите email" required>
-
-      <label for="login">Логин</label>
-      <input type="text" id="login" placeholder="Придумайте логин" required>
-
-      <label for="phone">Телефон</label>
-      <input type="tel" id="phone" placeholder="+7 (___) ___-__-__" required>
-
-      <label for="password">Пароль</label>
-      <input type="password" id="password" placeholder="Придумайте пароль" required>
-
-      <div class="checkbox">
-        <input type="checkbox" id="terms" required>
-        <label for="terms">Я согласен с <a href="#" style="color: var(--accent)">условиями платформы</a></label>
-      </div>
-
-      <button type="submit">Зарегистрироваться</button>
-    </form>
-
-    <div class="login-link">
+<div class="card">
+<h2>Регистрация</h2>
+<form>
+<label for="fname">Имя</label>
+<input id="fname" placeholder="Введите имя" required="" type="text"/>
+<label for="lname">Фамилия</label>
+<input id="lname" placeholder="Введите фамилию" required="" type="text"/>
+<label for="email">Email</label>
+<input id="email" placeholder="Введите email" required="" type="email"/>
+<label for="login">Логин</label>
+<input id="login" placeholder="Придумайте логин" required="" type="text"/>
+<label for="phone">Телефон</label>
+<input id="phone" placeholder="+7 (___) ___-__-__" required="" type="tel"/>
+<label for="password">Пароль</label>
+<input id="password" placeholder="Придумайте пароль" required="" type="password"/>
+<div class="checkbox">
+<input id="terms" required="" type="checkbox"/>
+<label for="terms">Я согласен с <a href="#" style="color: var(--accent)">условиями платформы</a></label>
+</div>
+<button type="submit">Зарегистрироваться</button>
+</form>
+<div class="login-link">
       Уже есть аккаунт? <a href="login.html">Войти</a>
-    </div>
-  </div>
-
-
+</div>
+</div>
 <script>
   function registerUser() {
     // Симуляция регистрации
@@ -154,5 +144,25 @@ body::before {
   }
 </script>
 <form onsubmit="return registerUser()">
-</body>
+<script>
+  document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const login = document.querySelector('#login')?.value || '';
+    if (login) {
+      localStorage.setItem('login', login);
+    }
+    window.location.href = "dashboard.html";
+  });
+</script>
+</form><script>
+document.querySelector('form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const login = document.querySelector('#login')?.value || '';
+  if (login) {
+    localStorage.setItem('login', login);
+  }
+  window.location.href = "dashboard.html";
+});
+    </script></body>
 </html>
+
