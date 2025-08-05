@@ -1,11 +1,12 @@
 
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Вход — Litcash</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
+<meta charset="utf-8"/>
+<title>Вход — Litcash</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<style>
 body::before {
   content: '';
   position: fixed;
@@ -109,37 +110,30 @@ body::before {
   </style>
 </head>
 <body>
-
-  <div class="card">
-    <h2>Вход в аккаунт</h2>
-    <form>
-      <label for="login">Логин</label>
-      <input type="text" id="login" placeholder="Введите логин" required>
-
-      <label for="password">Пароль</label>
-      <input type="password" id="password" placeholder="Введите пароль" required>
-
-      <div class="forgot">
-        <a href="#">Забыли пароль?</a>
-      </div>
-
-      <button type="submit">Войти</button>
-    </form>
-
-    <div class="register-link">
+<div class="card">
+<h2>Вход в аккаунт</h2>
+<form>
+<label for="login">Логин</label>
+<input id="login" placeholder="Введите логин" required="" type="text"/>
+<label for="password">Пароль</label>
+<input id="password" placeholder="Введите пароль" required="" type="password"/>
+<div class="forgot">
+<a href="#">Забыли пароль?</a>
+</div>
+<button type="submit">Войти</button>
+</form>
+<div class="register-link">
       Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
-    </div>
-  </div>
-
-
+</div>
+</div>
 <script>
   function loginUser() {
-    // Простейшая симуляция входа
-    document.cookie = "user_logged_in=true; path=/";
-    window.location.href = "litcash_neo_final_blur_bg_light_adaptive_fixed.html";
+    const login = document.getElementById('login').value;
+    document.cookie = "user=" + login + "; path=/";
+    window.location.href = "dashboard.html";
     return false;
   }
 </script>
 <form onsubmit="return loginUser()">
-</body>
+</form></body>
 </html>
