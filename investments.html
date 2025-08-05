@@ -3,7 +3,6 @@
 <html class="dark" lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -364,9 +363,9 @@ function deleteCookie(name) {
 }
 </script>
 <style>html { scroll-behavior: smooth; }</style></head>
-<body class="bg-gray-900 text-gray-100 font-sans"><div style="position: fixed;  top: 0;  left: 0;  width: 100%;    z-index: 9998; ; height: 50px background: transparent; background: transparent;"></div><div style="max-width: 1100px; margin: 0 auto; padding: 20px; box-sizing: border-box;">
+<body class="bg-gray-900 text-gray-100 font-sans"><div style="max-width: 1100px; margin: 0 auto; padding: 20px; box-sizing: border-box;">
 <header style="display:flex; justify-content:space-between; align-items:center; padding:12px 24px; background: transparent; position:fixed; top:0; left:0; width:100%; z-index:100">
-<a href="index.html" style="position: fixed; top: 12px; left: 20px; z-index: 9999; padding: 10px 16px; font-size: 16px; font-weight: bold; border-radius: 50px; background: rgba(255, 255, 255, 0.1); color: white; text-decoration: none; border: 1px solid white;">← Назад</a>
+<a href="dashboard.html" style="position: fixed; top: 12px; left: 20px; z-index: 9999; padding: 10px 16px; font-size: 16px; font-weight: bold; border-radius: 50px; background: rgba(255, 255, 255, 0.1); color: white; text-decoration: none; border: 1px solid white;">← Назад в кабинет</a>
 <nav></nav>
 </header>
 <style>
@@ -374,7 +373,6 @@ function deleteCookie(name) {
   nav a:hover { color:#1e90ff; }
 </style>
 <script>
-  
 </script>
 <script>
   if (getCookie('auth') === '1') {
@@ -415,20 +413,56 @@ function deleteCookie(name) {
 </div>
 </div>
 </main>
-</div><script>
+</div>
+<div style="position: fixed;  top: 0;  left: 0;  width: 100%;    z-index: 9998; ; height: 50px background: transparent; background: transparent;"></div><script>
 window.addEventListener('load', function () {
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
 });
+</script>
+<script>
+function toggleLang() {
+  const menu = document.getElementById("langMenu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+function changeLang(lang) {
+  alert("Язык переключён на: " + lang);
+}
+</script>
+<script>
+  document.addEventListener('click', function(event) {
+    const menu = document.getElementById('langMenu');
+    if (!event.target.closest('.dropdown-content') && event.target.textContent !== '🌐') {
+      menu.classList.remove('show');
+    }
+  });
+</script>
+<style>
+  .dropdown-content.show { display: block !important; }
+</style>
+<div id="language-selector" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+<span id="globe-icon" style="font-size: 1.8em; cursor: pointer;">🌐</span>
+<div id="langMenu" style="display:none; position:absolute; right:0; background:#222; padding:10px; border-radius:5px;">
+<a href="#" style="color:white; display:block;">EN</a>
+<a href="#" style="color:white; display:block;">RU</a>
+<a href="#" style="color:white; display:block;">UZ</a>
+<a href="#" style="color:white; display:block;">Türkçe</a>
+<a href="#" style="color:white; display:block;">عربى</a>
+</div>
+</div>
+
+<script>
+  const globe = document.getElementById("globe-icon");
+  const menu = document.getElementById("langMenu");
+  globe.addEventListener("click", function(event) {
+    event.stopPropagation();
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  });
+  document.addEventListener("click", function(event) {
+    if (!event.target.closest("#language-selector")) {
+      menu.style.display = "none";
+    }
+  });
 </script></body>
 </html>
-<style>
-@media (max-width: 600px) {
-  button {
-    width: 100%;
-    min-width: 120px;
-    font-size: 16px;
-  }
-}
-</style>
