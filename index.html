@@ -4,7 +4,6 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Litcash — Инвестируй с прибылью</title>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <style>
@@ -107,6 +106,57 @@
       font-size: 14px;
     }
   </style>
+
+
+<style>
+.nav-fixed {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: auto;
+  padding: 10px 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 9999;
+}
+.nav-fixed a, .nav-fixed button {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 16px;
+  background: linear-gradient(145deg, #0e0e0e, #1c1c1c);
+  color: #ffffff;
+  border: 1px solid #007bff;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+.nav-fixed a:hover, .nav-fixed button:hover {
+  transform: scale(1.05);
+  background: linear-gradient(145deg, #1c1c1c, #2a2a2a);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+}
+#langMenu {
+  display: none;
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: #111;
+  border: 1px solid #444;
+  z-index: 99999;
+  border-radius: 6px;
+}
+#langMenu a {
+  display: block;
+  padding: 6px 12px;
+  color: white;
+  text-decoration: none;
+}
+#langMenu a:hover {
+  background-color: #222;
+}
+</style>
 </head>
 <body>
 <script>
@@ -117,20 +167,48 @@
 <header>
 <div class="logo">Litcash</div>
 <div class="nav-buttons">
-<a href="login.html">Вход</a>
-<a href="register.html">Регистрация</a>
 </div>
 </header>
 <section class="hero">
 <h1>Зарабатывай на рекламе. Инвестируй в Litcash.</h1>
 <p>Платформа, где ваши инвестиции работают на вас!</p>
-<a href="register.html">Начать сейчас</a>
 </section>
 <footer>
     © 2025 Litcash. Все права защищены.
   </footer>
 <script>
-  
+</script>
+<script>
+function toggleLang() {
+  const menu = document.getElementById("langMenu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+function changeLang(lang) {
+  alert("Язык переключён на: " + lang);
+}
+</script>
+<div class="nav-fixed">
+<a href="login.html">Вход</a>
+<a href="register.html">Регистрация</a>
+<div style="position:relative;">
+<button onclick="toggleLang()">🌐</button>
+<div id="langMenu">
+<a href="#" onclick="changeLang('en')">English</a>
+<a href="#" onclick="changeLang('ru')">Русский</a>
+<a href="#" onclick="changeLang('uz')">O‘zbek</a>
+<a href="#" onclick="changeLang('tr')">Türkçe</a>
+<a href="#" onclick="changeLang('ar')">العربية</a>
+</div>
+</div>
+</div>
+<script>
+function toggleLang() {
+  const menu = document.getElementById("langMenu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+function changeLang(lang) {
+  alert("Язык переключён на: " + lang);
+}
 </script>
 </body>
 </html>
