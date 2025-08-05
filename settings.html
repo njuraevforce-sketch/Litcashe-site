@@ -4,7 +4,6 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Настройки</title>
 <style>
@@ -61,25 +60,142 @@
       background: #0196a1;
     }
   </style>
-</head>
+<style>
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+}
+.fixed-header a {
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+.fixed-header .language-switcher {
+  font-size: 20px;
+}
+body {
+  padding-top: 70px; /* Чтобы контент не прятался за фиксированной шапкой */
+}
+</style></head>
 <body>
-
+<style>
+.nav-fixed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: transparent;
+  width: 100%;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+.nav-fixed a {
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  text-decoration: none;
+}
+#langBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: white;
+}
+#langMenu {
+  display: none;
+  position: absolute;
+  top: 36px;
+  right: 0;
+  background-color: #111;
+  border: 1px solid #444;
+  z-index: 99999;
+  border-radius: 6px;
+}
+#langMenu a {
+  display: block;
+  padding: 6px 12px;
+  color: white;
+  text-decoration: none;
+}
+@media screen and (max-width: 768px) {
+  .nav-fixed {
+    padding: 10px;
+  }
+  .nav-fixed a {
+    font-size: 16px;
+  }
+  #langBtn {
+    font-size: 18px;
+  }
+}
+</style>
+<div class="nav-fixed">
+<a href="litcash_neo_final_blur_bg_light_adaptive_fixed.html">Litcash</a>
+<div style="position: relative;">
+<button id="langBtn">🌐</button>
+<div id="langMenu"><a data-lang="en" href="#">English</a><a data-lang="ru" href="#">Русский</a><a data-lang="uz" href="#">Oʻzbekcha</a><a data-lang="tr" href="#">Türkçe</a><a data-lang="ar" href="#">العربية</a></div>
+</div>
+</div>
+<style>
+.nav-fixed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: transparent;
+  z-index: 1000;
+}
+.nav-fixed a {
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  text-decoration: none;
+}
+#langBtn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: white;
+}
+#langMenu {
+  display: none;
+  position: absolute;
+  top: 36px;
+  right: 0;
+  background-color: #111;
+  border: 1px solid #444;
+  z-index: 99999;
+  border-radius: 6px;
+}
+#langMenu a {
+  display: block;
+  padding: 6px 12px;
+  color: white;
+  text-decoration: none;
+}
+</style>
 <!-- Litcash home button -->
 <div style="position: fixed; top: 20px; left: 20px; z-index: 999;">
-  <button onclick="goHome()" style="background: none; border: none; color: white; font-weight: bold; font-size: 20px; cursor: pointer;">
-    Litcash
-  </button>
 </div>
-<script>
-  function goHome() {
-    if (document.cookie.includes("user_logged_in=true")) {
-      window.location.href = "litcash_neo_final_blur_bg_light_adaptive_fixed.html";
-    } else {
-      window.location.href = "index.html";
-    }
-  }
-</script>
-
 <div class="container">
 <h2>Настройки</h2>
 <div class="staking-card">
@@ -101,5 +217,14 @@
 <button>Отправить</button>
 </div>
 </div>
-</body>
+<script>
+function toggleLanguageMenu() {
+  const menu = document.getElementById("langMenu");
+  if (menu.style.display === "block") {
+    menu.style.display = "none";
+  } else {
+    menu.style.display = "block";
+  }
+}
+</script></body>
 </html>
