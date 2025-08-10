@@ -477,23 +477,61 @@ a[href*="/login_single.html"], a[href*="/register_single.html"] { display:none !
   </div>
 </section>
 <script>
-  const urlRef = new URLSearchParams(location.search).get("ref");
-  if(urlRef){ document.getElementById("refId").value = urlRef }
-  document.getElementById("regForm").addEventListener("submit", (e)=>{
-    e.preventDefault();
-    App.state.auth = true;
-    App.state.user = { id: crypto.randomUUID(), email: e.target[0].value, ref: e.target[2].value || null };
-    localStorage.setItem("auth", "true");
-    localStorage.setItem("user", JSON.stringify(App.state.user));
-    location.href = "dashboard_single.html";
+(function () {
+  if (!window.supabase) { console.error('supabase-js не загружен'); return; }
+  const cfg = window.__SUPABASE__ || {};
+  if (!cfg.url || !cfg.anon) { alert('Supabase config не найден'); return; }
+
+  const sb = window.sb = supabase.createClient(cfg.url, cfg.anon, {
+    auth: { persistSession: true, autoRefreshToken: true }
   });
+
+  // Если уже вошёл — сразу в дашборд
+  sb.auth.getSession().then(({ data:{ session } }) => {
+    if (session) location.href='dashboard_single.html';
+  });
+
+  // Проставим реферала из URL в поле
+  const fromUrlRef = new URLSearchParams(location.search).get('ref');
+  if (fromUrlRef) { const r = document.getElementById('refId'); if(r) r.value = fromUrlRef; }
+
+  const form = document.getElementById('regForm');
+  const msg  = document.getElementById('regMsg') || Object.assign(document.createElement('p'), {id:'regMsg', className:'muted'});
+  if (!document.getElementById('regMsg')) form.after(msg);
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    msg.textContent = '';
+
+    const email = form.elements['email']?.value.trim();
+    const password = form.elements['password']?.value.trim();
+    const refId = document.getElementById('refId')?.value.trim() || null;
+
+    if(!email || !password){ msg.textContent='Введите email и пароль'; return; }
+
+    try{
+      // sign up
+      const { error: se } = await sb.auth.signUp({ email, password });
+      if (se) { msg.textContent = 'Ошибка регистрации: ' + se.message; return; }
+
+      // sign in (у тебя email-confirm выключен)
+      const { data: si, error: sie } = await sb.auth.signInWithPassword({ email, password });
+      if (sie) { msg.textContent = 'Регистрация прошла, но вход не выполнен: ' + sie.message; return; }
+
+      // upsert профиля (если есть таблица profiles)
+      try { await sb.from('profiles').upsert({ id: si.user.id, email, referrer_id: refId }); } catch(_) {}
+
+      // локальное состояние — только из реальной сессии
+      localStorage.setItem('auth','true');
+      localStorage.setItem('user', JSON.stringify({ id: si.user.id, email, ref: refId }));
+
+      location.href = 'dashboard_single.html';
+    }catch(err){
+      msg.textContent = 'Ошибка: ' + String(err);
+    }
+  });
+})();
 </script>
-
-
-
-
-
-    
 <script>
 // basic lang selector (shared for both headers)
 (function(){
@@ -513,6 +551,80 @@ a[href*="/login_single.html"], a[href*="/register_single.html"] { display:none !
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="scripts/supabaseConfig.js"></script>
 <script src="scripts/app_supabase.js"></script>
+<script>
+(function () {
+  // Проверки наличия SDK и конфига
+  if (!window.supabase) { console.error('supabase-js не загружен'); return; }
+  const cfg = window.__SUPABASE__ || {};
+  if (!cfg.url || !cfg.anon) { console.error('Supabase config не найден'); return; }
+
+  // Клиент
+  const sb = window.sb = supabase.createClient(cfg.url, cfg.anon, {
+    auth: { persistSession: true, autoRefreshToken: true }
+  });
+
+  // Если уже вошёл — в дашборд
+  sb.auth.getSession().then(({ data:{ session } }) => {
+    if (session) location.href = 'dashboard_single.html';
+  });
+
+  // Подхват реферала из URL
+  const urlRef = new URLSearchParams(location.search).get('ref');
+  if (urlRef) {
+    const refInput = document.getElementById('refId');
+    if (refInput) refInput.value = urlRef;
+  }
+
+  // Сообщение под формой (если нет — создадим)
+  const form = document.getElementById('regForm');
+  if (!form) return;
+  let msg = document.getElementById('regMsg');
+  if (!msg) {
+    msg = document.createElement('p');
+    msg.id = 'regMsg';
+    msg.className = 'muted';
+    form.after(msg);
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.textContent = '';
+
+    const email = form.elements['email']?.value.trim();
+    const password = form.elements['password']?.value.trim();
+    const refId = document.getElementById('refId')?.value.trim() || null;
+
+    if (!email || !password) {
+      msg.textContent = 'Введите email и пароль';
+      return;
+    }
+
+    try {
+      // Регистрация (у тебя подтверждение e-mail выключено)
+      const { error: signUpErr } = await sb.auth.signUp({ email, password });
+      if (signUpErr) { msg.textContent = 'Ошибка регистрации: ' + signUpErr.message; return; }
+
+      // Автовход
+      const { data: signInData, error: signInErr } =
+        await sb.auth.signInWithPassword({ email, password });
+      if (signInErr) { msg.textContent = 'Регистрация прошла, но вход не выполнен: ' + signInErr.message; return; }
+
+      // Запишем профиль (если есть таблица profiles)
+      try {
+        await sb.from('profiles').upsert({ id: signInData.user.id, email, referrer_id: refId });
+      } catch (_) {}
+
+      // Локальное состояние (по реальной сессии)
+      localStorage.setItem('auth', 'true');
+      localStorage.setItem('user', JSON.stringify({ id: signInData.user.id, email, ref: refId }));
+
+      location.href = 'dashboard_single.html';
+    } catch (err) {
+      msg.textContent = 'Ошибка: ' + String(err);
+    }
+  });
+})();
+</script>
 
 <script type="module" src="litcash-supabase.js"></script>
 </body>
