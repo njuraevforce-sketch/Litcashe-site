@@ -61,29 +61,43 @@
   }
 
   // ---------------- register ----------------
-  const reg = document.getElementById('regForm');
-  if (reg) {
-    reg.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = getInputValue(reg,'Email') || reg.querySelector('input[type="email"]')?.value || '';
-      const pass  = getInputValue(reg,'Пароль')|| reg.querySelector('input[type="password"]')?.value || '';
-      if (!email || !pass) { alert('Email и пароль обязательны'); return; }
+const reg = document.getElementById("regForm");
+if (reg) {
+  reg.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      const { error } = await sb.auth.signUp({ email, password: pass });
-      if (error) { alert('Ошибка регистрации: ' + error.message); return; }
+    const email = getInputValue(reg, "Email") || reg.querySelector('input[type="email"]')?.value || "";
+    const pass  = getInputValue(reg, "Пароль")|| reg.querySelector('input[type="password"]')?.value || "";
+    if (!email || !pass) { alert("Email и пароль обязательны"); return; }
 
-      // реферал (если есть)
-      try {
-        const url  = new URL(location.href);
-        const code = url.searchParams.get('ref') || document.getElementById('refId')?.value || '';
-        if (code) await sb.rpc('set_referral_by_code', { p_ref_code: code });
-      } catch(e){}
+    try {
+      // 1) создаём пользователя на сервере (без писем)
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const payload = await res.json();
 
-      const { data: { session } } = await sb.auth.getSession();
-      if (session) location.href = 'dashboard_single.html';
-      else alert('Аккаунт создан. Проверьте почту для подтверждения.');
-    });
-  }
+      if (!res.ok || payload?.error) {
+        alert("Ошибка регистрации: " + (payload?.error || res.status));
+        return;
+      }
+
+      // 2) сразу логинимся обычным способом
+      const { error: loginErr } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (loginErr) {
+        alert("Пользователь создан, но вход не удался: " + loginErr.message);
+        return;
+      }
+
+      alert("Аккаунт создан и вход выполнен");
+      window.location.href = "dashboard_single.html";
+    } catch (err) {
+      alert("Ошибка регистрации: " + String(err));
+    }
+  });
+}
 
   // ---------------- login ----------------
   const login = document.getElementById('loginForm');
