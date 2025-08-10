@@ -2,14 +2,21 @@
   if(!window.supabase){
     console.error("supabase-js not loaded"); return;
   }
-  var cfg = (window.__SUPABASE__||{});
-  if(!cfg.url || !cfg.anon){
-    console.warn("Supabase config missing. Create scripts/supabaseConfig.js from supabaseConfig.sample.js");
-  }
-  var sb = window.supabase.createClient(cfg.url||"", cfg.anon||"");
+var cfg = (window.__SUPABASE__||{});
+if (!cfg.url || !cfg.anon) {
+  alert('Supabase config not loaded');
+  throw new Error('No Supabase config');
+}
 
-  // auth state => keep in localStorage for header logic already present
-  sb.auth.onAuthStateChange(async (event, session)=>{
+var sb = window.supabase.createClient(cfg.url, cfg.anon, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
+window.sb = sb; // чтобы было видно в консоли
+
+sb.auth.onAuthStateChange((ev, session) => {
+  console.log('[auth]', ev, session);
+});
+
     if(session && session.user){
       localStorage.setItem("auth", "true");
       localStorage.setItem("user", JSON.stringify(session.user));
