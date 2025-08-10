@@ -603,64 +603,57 @@ a[href*="/login_single.html"], a[href*="/register_single.html"] { display:none !
       }
     } catch (_) {}
   })();
+<script>
+document.getElementById('regForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-  document.getElementById("regForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  const form = e.currentTarget;
+  const email = form.email.value.trim();
+  const password = form.password.value;
+  const refId = document.getElementById('refId')?.value?.trim() || null;
 
-    const form = e.currentTarget;
-    const email = form.email.value.trim();
-    const password = form.password.value;
-    const refId = (document.getElementById('refId')?.value || "").trim() || null;
+  const msg = document.getElementById('regMsg') || document.createElement('div');
+  msg.id = 'regMsg';
+  msg.style.cssText = 'margin-top:8px;color:#f88';
+  if (!msg.parentNode) form.append(msg);
+  msg.textContent = '';
 
-    const msgEl = document.getElementById('regMsg') || document.getElementById('msg') || { textContent: '' };
-    const setMsg = (t) => { try { msgEl.textContent = t; } catch(_){} };
+  if (!email || !password) {
+    msg.textContent = 'Введите email и пароль';
+    return;
+  }
 
-    setMsg(""); // очистим сообщение
+  try {
+    const res = await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, referrer_id: refId }),
+    });
 
-    if (!email || !password) {
-      setMsg("Введите email и пароль");
-      return;
-    }
-
+    // Надежно читаем ответ: сперва пробуем JSON, если не вышло — читаем как текст
+    let data;
     try {
-      // 1) Регистрируем пользователя
-      const { error: signUpErr } = await sb.auth.signUp({ email, password });
-      if (signUpErr) {
-        setMsg("Ошибка регистрации: " + signUpErr.message);
-        return;
-      }
-
-      // 2) Сразу логинимся (если у тебя в проекте Supabase включено email подтверждение — логин может вернуть ошибку)
-      const { data: si, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
-      if (signInErr) {
-        // регистрация прошла, но автологин не получился (например, требуется подтвердить email)
-        setMsg("Регистрация прошла, но вход не выполнен: " + signInErr.message);
-        return;
-      }
-
-      // 3) upsert профиль (ВАЖНО: referrer_id должен быть NULL, если пустой)
-      try {
-        await sb.from('profiles').upsert({
-          id: si.user.id,
-          email,
-          referrer_id: refId || null
-        });
-      } catch (_) {
-        // не падаем из-за профиля — просто покажем уведомление
-        // setMsg("Профиль создан частично (upsert не прошёл).");
-      }
-
-      // 4) Локальное состояние (как у тебя было)
-      localStorage.setItem("auth", "true");
-      localStorage.setItem("user", JSON.stringify({ id: si.user.id, email, ref: refId || null }));
-
-      // 5) Переадресация
-      location.href = "dashboard_single.html";
-    } catch (err) {
-      setMsg("Ошибка: " + String(err));
+      data = await res.json();
+    } catch (_) {
+      const text = await res.text();
+      throw new Error(`Signup API ${res.status}: ${text}`);
     }
-  });
+
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.details || data?.error || `HTTP ${res.status}`);
+    }
+
+    // Успех: можно сразу проставить локальное состояние и уйти в кабинет
+    localStorage.setItem('auth', 'true');
+    localStorage.setItem('user', JSON.stringify({ id: data.user.id, email }));
+    location.href = 'dashboard_single.html';
+  } catch (err) {
+    msg.textContent = 'Ошибка регистрации: ' + String(err.message || err);
+    alert(msg.textContent);
+  }
+});
 </script>
+
 <script type="module" src="litcash-supabase.js"></script>
 </body>
     </html>
