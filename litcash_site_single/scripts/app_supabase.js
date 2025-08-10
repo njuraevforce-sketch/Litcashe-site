@@ -1,88 +1,117 @@
 (function(){
-  if(!window.supabase){
-    console.error("supabase-js not loaded"); return;
+  if (!window.supabase) { console.error('supabase-js not loaded'); return; }
+
+  const cfg = window.__SUPABASE__ || {};
+  if (!cfg.url || !cfg.anon) {
+    alert('Supabase config not loaded');
+    throw new Error('No Supabase config');
   }
-var cfg = (window.__SUPABASE__||{});
-if (!cfg.url || !cfg.anon) {
-  alert('Supabase config not loaded');
-  throw new Error('No Supabase config');
-}
 
-var sb = window.supabase.createClient(cfg.url, cfg.anon, {
-  auth: { persistSession: true, autoRefreshToken: true }
-});
-window.sb = sb; // чтобы было видно в консоли
-
-sb.auth.onAuthStateChange((ev, session) => {
-  console.log('[auth]', ev, session);
-});
-
-    if(session && session.user){
-      localStorage.setItem("auth", "true");
-      localStorage.setItem("user", JSON.stringify(session.user));
-    }else{
-      localStorage.removeItem("auth");
-      localStorage.removeItem("user");
-    }
+  const sb = window.sb = supabase.createClient(cfg.url, cfg.anon, {
+    auth: { persistSession: true, autoRefreshToken: true }
   });
+
+  // Синхронизируем localStorage только от реальной сессии
+  function syncFromSession(session){
+    if (session?.user) {
+      localStorage.setItem('auth', 'true');
+      localStorage.setItem('user', JSON.stringify(session.user));
+    } else {
+      localStorage.removeItem('auth');
+      localStorage.removeItem('user');
+    }
+  }
+
+  // 1) При изменениях (логин/логаут/рефреш)
+  sb.auth.onAuthStateChange((_ev, session) => {
+    console.log('[auth]', _ev, session);
+    syncFromSession(session);
+  });
+
+  // 2) При загрузке страницы
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    syncFromSession(session);
+  })();
+
+  // ========= ГАРДЫ для приватных страниц =========
+  const PRIVATE = [
+    'dashboard_single.html',
+    'settings_single.html',
+    'deposit_single.html',
+    'withdraw_single.html'
+    // добавь сюда все приватные страницы
+  ];
+  if (PRIVATE.some(p => location.pathname.endsWith(p))) {
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) location.href = 'login_single.html';
+    })();
+  }
 
   // helper
   function qs(sel){ return document.querySelector(sel); }
   function getInputValue(form, placeholder){
-    var el = Array.from(form.querySelectorAll("input")).find(i => (i.getAttribute("placeholder")||"").trim()===placeholder);
-    return el ? el.value : "";
+    const el = Array.from(form.querySelectorAll('input'))
+      .find(i => (i.getAttribute('placeholder')||'').trim() === placeholder);
+    return el ? el.value : '';
   }
 
-  // Register
-  var reg = document.getElementById("regForm");
-  if(reg){
-    reg.addEventListener("submit", async function(e){
+  // ===== Регистрация =====
+  const reg = document.getElementById('regForm');
+  if (reg) {
+    reg.addEventListener('submit', async (e) => {
       e.preventDefault();
-      var email = getInputValue(reg, "Email") || reg.querySelector('input[type="email"]')?.value || "";
-      var pass = getInputValue(reg, "Пароль") || reg.querySelector('input[type="password"]')?.value || "";
-      if(!email || !pass){ alert("Email и пароль обязательны"); return; }
+      const email = getInputValue(reg,'Email') || reg.querySelector('input[type="email"]')?.value || '';
+      const pass  = getInputValue(reg,'Пароль')|| reg.querySelector('input[type="password"]')?.value || '';
+      if (!email || !pass) { alert('Email и пароль обязательны'); return; }
+
       const { data, error } = await sb.auth.signUp({ email, password: pass });
-      if(error){ alert("Ошибка регистрации: "+error.message); return; }
-      // If ref code exists (?ref=CODE or input field), call RPC to set uplines
-      try{
-        var url = new URL(window.location.href);
-        var code = url.searchParams.get("ref") || document.getElementById("refId")?.value || "";
-        if(code){
-          await sb.rpc('set_referral_by_code', { p_ref_code: code });
-        }
-      }catch(e){}
-      alert("Аккаунт создан. Проверьте почту (если включено подтверждение).");
-      window.location.href = "dashboard_single.html";
+      if (error) { alert('Ошибка регистрации: ' + error.message); return; }
+
+      // Привязка реферала (если есть)
+      try {
+        const url  = new URL(location.href);
+        const code = url.searchParams.get('ref') || document.getElementById('refId')?.value || '';
+        if (code) await sb.rpc('set_referral_by_code', { p_ref_code: code });
+      } catch(e){}
+
+      // Если включено подтверждение email — сессии пока нет, редирект может не сработать
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) location.href = 'dashboard_single.html';
+      else alert('Аккаунт создан. Проверьте почту для подтверждения.');
     });
   }
 
-  // Login
-  var login = document.getElementById("loginForm");
-  if(login){
-    login.addEventListener("submit", async function(e){
+  // ===== Вход =====
+  const login = document.getElementById('loginForm');
+  if (login) {
+    login.addEventListener('submit', async (e) => {
       e.preventDefault();
-      var email = getInputValue(login, "Email") || login.querySelector('input[type="email"]')?.value || "";
-      var pass = getInputValue(login, "Пароль") || login.querySelector('input[type="password"]')?.value || "";
-      if(!email || !pass){ alert("Email и пароль обязательны"); return; }
+      const email = getInputValue(login,'Email') || login.querySelector('input[type="email"]')?.value || '';
+      const pass  = getInputValue(login,'Пароль')|| login.querySelector('input[type="password"]')?.value || '';
+      if (!email || !pass) { alert('Email и пароль обязательны'); return; }
+
       const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error){ alert("Ошибка входа: "+error.message); return; }
-      alert("Успешный вход");
-      window.location.href = "dashboard_single.html";
+      if (error) { alert('Ошибка входа: ' + error.message); return; }
+
+      location.href = 'dashboard_single.html';
     });
   }
 
-  // Logout buttons (JS header already has ids)
-  ["nav-logout","drawerLogout"].forEach(function(id){
-    var b = document.getElementById(id);
-    if(b){
-      b.addEventListener("click", async function(e){
-        e.preventDefault();
-        await sb.auth.signOut();
-        alert("Вы вышли из аккаунта");
-        window.location.href = "index_single.html";
-      });
-    }
+  // ===== Выход =====
+  ['nav-logout', 'drawerLogout'].forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await sb.auth.signOut();
+      alert('Вы вышли из аккаунта');
+      location.href = 'login_single.html';
+    });
   });
+
+  // Остальной код (депозиты/вывод/настройки) можно оставить как есть
+})();
 
   // Expose for console debug
   window._supabase = sb;
