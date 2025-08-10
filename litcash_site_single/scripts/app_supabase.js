@@ -83,10 +83,11 @@ if (reg) {
       });
       const payload = await res.json();
 
-      if (!res.ok || payload?.error) { ... }
-        alert("Ошибка регистрации: " + (payload?.error || res.status));
-        return;
-      }
+   if (!res.ok || payload?.error) {
+    alert("Ошибка регистрации: " + (payload?.error || res.status));
+    return;
+}
+
 
       // 2) сразу логинимся обычным способом
       const { error: loginErr } = await sb.auth.signInWithPassword({ email, password: pass });
