@@ -1,54 +1,73 @@
-// /api/signup.js  (Node/Serverless on Vercel)
+
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // ВАЖНО: только на сервере!
-);
-
 export default async function handler(req, res) {
-  // CORS (если дергаете с другого домена)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  if (req.method === 'OPTIONS') return res.status(204).end();
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { email, password } = req.body || {};
+    const { email, password, referrer_id } = req.body || {};
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Проверим, не существует ли уже
-    const { data: existing, error: getErr } =
-      await supabaseAdmin.auth.admin.getUserByEmail(email);
+    const url = process.env.SUPABASE_URL;
+    const service = process.env.SUPABASE_SERVICE_ROLE_KEY; // именно service-role!
 
-    if (getErr && getErr.message && getErr.status !== 404) {
-      // редкая сеть/ошибка — покажем её
-      return res.status(500).json({ error: getErr.message });
+    if (!url || !service) {
+      return res.status(500).json({ error: 'Server is not configured (env vars missing)' });
     }
 
-    if (existing?.user) {
-      return res.status(409).json({ error: 'User already exists' });
-    }
+    const sb = createClient(url, service, { auth: { autoRefreshToken: false, persistSession: false } });
 
-    // Создаём подтвержденного пользователя БЕЗ писем
-    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    const { data: created, error: createErr } = await sb.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: true
     });
-
-    if (error) {
-      return res.status(500).json({ error: error.message });
+    if (createErr) {
+      return res.status(400).json({ error: createErr.message });
     }
 
-    return res.status(201).json({ ok: true, user_id: data.user.id });
+    const userId = created?.user?.id;
+
+    const { error: profErr } = await sb.from('profiles').upsert({
+      id: userId,
+      email,
+      referrer_id: referrer_id || null
+    });
+    if (profErr) {
+      return res.status(500).json({ error: 'Database error saving new user', details: profErr.message });
+    }
+
+    const anon = process.env.SUPABASE_ANON_KEY;
+    const sbPublic = createClient(url, anon);
+    const { data: signInData, error: signErr } = await sbPublic.auth.signInWithPassword({ email, password });
+    if (signErr) {
+
+      return res.status(200).json({
+        ok: true,
+        created: true,
+        loggedIn: false,
+        message: `User created, but auto-login failed: ${signErr.message}`
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      created: true,
+      loggedIn: true,
+      user: { id: signInData.user.id, email }
+    });
   } catch (e) {
-    return res.status(500).json({ error: String(e) });
+
+    return res.status(500).json({ error: 'Internal error', details: String(e) });
   }
 }
