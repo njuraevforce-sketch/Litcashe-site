@@ -586,46 +586,81 @@ a[href*="/login_single.html"], a[href*="/register_single.html"] { display:none !
     form.after(msg);
   }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    msg.textContent = '';
+ <!-- Сообщение (если у тебя уже есть блок для сообщений, можно не добавлять) -->
+<div id="regMsg" style="margin-top:10px;color:#f59e0b;"></div>
 
-    const email = form.elements['email']?.value.trim();
-    const password = form.elements['password']?.value.trim();
-    const refId = document.getElementById('refId')?.value.trim() || null;
+<script>
+  // Инициализация клиента (как у тебя в логине)
+  const sb = supabase.createClient(window.__SUPABASE__.url, window.__SUPABASE__.anon);
+
+  // Подхват реферала из ?ref=... в адресной строке
+  (function syncRefFromUrl() {
+    try {
+      const refFromUrl = new URLSearchParams(location.search).get('ref');
+      if (refFromUrl) {
+        const refInput = document.getElementById('refId');
+        if (refInput) refInput.value = refFromUrl;
+      }
+    } catch (_) {}
+  })();
+
+  document.getElementById("regForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const form = e.currentTarget;
+    const email = form.email.value.trim();
+    const password = form.password.value;
+    const refId = (document.getElementById('refId')?.value || "").trim() || null;
+
+    const msgEl = document.getElementById('regMsg') || document.getElementById('msg') || { textContent: '' };
+    const setMsg = (t) => { try { msgEl.textContent = t; } catch(_){} };
+
+    setMsg(""); // очистим сообщение
 
     if (!email || !password) {
-      msg.textContent = 'Введите email и пароль';
+      setMsg("Введите email и пароль");
       return;
     }
 
     try {
-      // Регистрация (у тебя подтверждение e-mail выключено)
+      // 1) Регистрируем пользователя
       const { error: signUpErr } = await sb.auth.signUp({ email, password });
-      if (signUpErr) { msg.textContent = 'Ошибка регистрации: ' + signUpErr.message; return; }
+      if (signUpErr) {
+        setMsg("Ошибка регистрации: " + signUpErr.message);
+        return;
+      }
 
-      // Автовход
-      const { data: signInData, error: signInErr } =
-        await sb.auth.signInWithPassword({ email, password });
-      if (signInErr) { msg.textContent = 'Регистрация прошла, но вход не выполнен: ' + signInErr.message; return; }
+      // 2) Сразу логинимся (если у тебя в проекте Supabase включено email подтверждение — логин может вернуть ошибку)
+      const { data: si, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+      if (signInErr) {
+        // регистрация прошла, но автологин не получился (например, требуется подтвердить email)
+        setMsg("Регистрация прошла, но вход не выполнен: " + signInErr.message);
+        return;
+      }
 
-      // Запишем профиль (если есть таблица profiles)
+      // 3) upsert профиль (ВАЖНО: referrer_id должен быть NULL, если пустой)
       try {
-        await sb.from('profiles').upsert({ id: signInData.user.id, email, referrer_id: refId });
-      } catch (_) {}
+        await sb.from('profiles').upsert({
+          id: si.user.id,
+          email,
+          referrer_id: refId || null
+        });
+      } catch (_) {
+        // не падаем из-за профиля — просто покажем уведомление
+        // setMsg("Профиль создан частично (upsert не прошёл).");
+      }
 
-      // Локальное состояние (по реальной сессии)
-      localStorage.setItem('auth', 'true');
-      localStorage.setItem('user', JSON.stringify({ id: signInData.user.id, email, ref: refId }));
+      // 4) Локальное состояние (как у тебя было)
+      localStorage.setItem("auth", "true");
+      localStorage.setItem("user", JSON.stringify({ id: si.user.id, email, ref: refId || null }));
 
-      location.href = 'dashboard_single.html';
+      // 5) Переадресация
+      location.href = "dashboard_single.html";
     } catch (err) {
-      msg.textContent = 'Ошибка: ' + String(err);
+      setMsg("Ошибка: " + String(err));
     }
   });
-})();
 </script>
-
 <script type="module" src="litcash-supabase.js"></script>
 </body>
     </html>
