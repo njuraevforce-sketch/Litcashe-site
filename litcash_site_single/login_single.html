@@ -477,47 +477,46 @@ a[href*="/login_single.html"], a[href*="/register_single.html"] { display:none !
   </div>
 </section>
 <script>
-document.getElementById("loginForm").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const form = e.currentTarget;
-  const email = form.email.value.trim();
-  const password = form.password.value;
-  const msg = document.getElementById("loginMsg");
-  if (msg) msg.textContent = "";
+<div id="loginMsg" style="margin-top:10px;color:#f59e0b;"></div>
 
-  if (!email || !password) {
-    if (msg) msg.textContent = "Введите email и пароль";
-    else alert("Введите email и пароль");
-    return;
-  }
+<script>
+  const sb = supabase.createClient(window.__SUPABASE__.url, window.__SUPABASE__.anon);
 
-  try {
-    const sb = supabase.createClient(window.__SUPABASE__.url, window.__SUPABASE__.anon);
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) {
-      if (msg) msg.textContent = "Ошибка входа: " + (error.message || "неверные данные");
-      else alert("Ошибка входа: " + (error.message || "неверные данные"));
+    const form = e.currentTarget;
+    const email = form.email.value.trim();
+    const password = form.password.value;
+
+    const msgEl = document.getElementById('loginMsg') || document.getElementById('msg') || { textContent: '' };
+    const setMsg = (t) => { try { msgEl.textContent = t; } catch(_){} };
+    setMsg("");
+
+    if (!email || !password) {
+      setMsg("Введите email и пароль");
       return;
     }
-    localStorage.setItem("auth", "true");
-    localStorage.setItem("user", JSON.stringify({ id: data.user.id, email }));
 
-    location.href = "dashboard_single.html";
-  } catch (err) {
-    if (msg) msg.textContent = "Ошибка входа: " + String(err);
-    else alert("Ошибка входа: " + String(err));
-  }
-});
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        setMsg("Ошибка входа: " + (error.message || "неверные данные"));
+        return;
+        // либо alert("Ошибка входа: " + (error.message || "неверные данные"));
+      }
 
+      // Сохраняем локально и в кабинет
+      localStorage.setItem("auth", "true");
+      localStorage.setItem("user", JSON.stringify({ id: data.user.id, email }));
+
+      location.href = "dashboard_single.html";
+    } catch (err) {
+      setMsg("Ошибка входа: " + String(err));
+    }
   });
 </script>
 
-
-
-
-
-    
 <script>
 // basic lang selector (shared for both headers)
 (function(){
