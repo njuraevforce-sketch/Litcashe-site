@@ -67,8 +67,12 @@ if (reg) {
     e.preventDefault();
 
     const email = getInputValue(reg, "Email") || reg.querySelector('input[type="email"]')?.value || "";
-    const pass  = getInputValue(reg, "Пароль")|| reg.querySelector('input[type="password"]')?.value || "";
-    if (!email || !pass) { alert("Email и пароль обязательны"); return; }
+    const pass  = getInputValue(reg, "Пароль") || reg.querySelector('input[type="password"]')?.value || "";
+
+    if (!email || !pass) { 
+      alert("Email и пароль обязательны"); 
+      return; 
+    }
 
     try {
       // 1) создаём пользователя на сервере (без писем)
@@ -93,11 +97,13 @@ if (reg) {
 
       alert("Аккаунт создан и вход выполнен");
       window.location.href = "dashboard_single.html";
+
     } catch (err) {
       alert("Ошибка регистрации: " + String(err));
     }
   });
 }
+
 
   // ---------------- login ----------------
   const login = document.getElementById('loginForm');
