@@ -83,7 +83,7 @@ if (reg) {
       });
       const payload = await res.json();
 
-      if (!res.ok || payload?.error) {
+      if (!res.ok || payload?.error) { ... }
         alert("Ошибка регистрации: " + (payload?.error || res.status));
         return;
       }
