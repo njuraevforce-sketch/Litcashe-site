@@ -465,8 +465,9 @@ a[href*="/login_single.html"], a[href*="/register_single.html"] { display:none !
       <form id="loginForm" class="grid" style="gap:12px; margin-top:8px">
         <input class="input" type="email" placeholder="Email" required/ name="email">
         <input class="input" type="password" placeholder="Пароль" required/ name="password">
-        <button class="btn" type="submit">Войти</button>
-      </form>
+        <button class="btn" type="submit">Войти</button> 
+   <div id="loginMsg" class="muted" style="min-height:18px"></div>
+</form>
     </div>
     <div class="card">
       <h3>Нет аккаунта?</h3>
@@ -476,13 +477,39 @@ a[href*="/login_single.html"], a[href*="/register_single.html"] { display:none !
   </div>
 </section>
 <script>
-  document.getElementById("loginForm").addEventListener("submit", (e)=>{
-    e.preventDefault();
-    App.state.auth = true;
+document.getElementById("loginForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const form = e.currentTarget;
+  const email = form.email.value.trim();
+  const password = form.password.value;
+  const msg = document.getElementById("loginMsg");
+  if (msg) msg.textContent = "";
+
+  if (!email || !password) {
+    if (msg) msg.textContent = "Введите email и пароль";
+    else alert("Введите email и пароль");
+    return;
+  }
+
+  try {
+    const sb = supabase.createClient(window.__SUPABASE__.url, window.__SUPABASE__.anon);
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      if (msg) msg.textContent = "Ошибка входа: " + (error.message || "неверные данные");
+      else alert("Ошибка входа: " + (error.message || "неверные данные"));
+      return;
+    }
     localStorage.setItem("auth", "true");
-    App.state.user = { id: crypto.randomUUID(), email: e.target[0].value };
-    localStorage.setItem("user", JSON.stringify(App.state.user));
+    localStorage.setItem("user", JSON.stringify({ id: data.user.id, email }));
+
     location.href = "dashboard_single.html";
+  } catch (err) {
+    if (msg) msg.textContent = "Ошибка входа: " + String(err);
+    else alert("Ошибка входа: " + String(err));
+  }
+});
+
   });
 </script>
 
