@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Регистрация — Litcash</title>
+<link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
+<style>
+:root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg-2),var(--bg));color:var(--text);font:15px/1.6 Inter,system-ui}
+.container{width:min(1100px,92vw);margin:0 auto;padding:24px 0}
+.card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:20px}
+.grid{display:grid;gap:16px} .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))} @media (max-width:900px){.grid-2{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18));color:white;font-weight:700;cursor:pointer}
+.input{width:100%;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);padding:0 12px}
+.header{position:sticky;top:0;background:rgba(10,12,18,.6);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0} .nav a{color:#cfe9ff;margin-right:12px;text-decoration:none}
+  </style>
+<link href="assets/css/lang-switcher.css" rel="stylesheet"/>
+<style id="lc-lang-style-inline">
+/* LC Globe (inline) */
+#lc-inline-lang{position:relative;display:inline-flex;align-items:center}
+#lc-inline-lang .lc-lang__btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#eee;cursor:pointer;transition:transform .08s ease,box-shadow .2s ease,background .2s ease;backdrop-filter:blur(6px)}
+#lc-inline-lang .lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)}
+#lc-inline-lang .lc-lang__btn:active{transform:translateY(1px)}
+#lc-inline-lang .lc-lang__icon{width:18px;height:18px}
+#lc-inline-lang .lc-lang__menu{list-style:none;margin:8px 0 0;padding:6px 0;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96);color:#eee;position:absolute;right:0;min-width:140px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:99999}
+#lc-inline-lang.is-open .lc-lang__menu{display:block}
+#lc-inline-lang .lc-lang__menu li{padding:8px 12px;cursor:pointer}
+#lc-inline-lang .lc-lang__menu li:hover{background:rgba(255,255,255,.08)}
+body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:99999}
+@media (prefers-color-scheme:light){
+  #lc-inline-lang .lc-lang__btn{border-color:rgba(0,0,0,.12);background:rgba(255,255,255,.85);color:#111}
+  #lc-inline-lang .lc-lang__menu{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}
+  #lc-inline-lang .lc-lang__menu li:hover{background:rgba(0,0,0,.06)}
+}
+</style><style id="lc-lang-inline">/* LC Globe — forced dark style */
+.lc-lang{position:relative;display:inline-flex;align-items:center}
+.lc-lang__btn{height:36px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18)!important;background:rgba(255,255,255,.06)!important;color:#eee!important;display:inline-flex;gap:8px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:transform .08s ease,box-shadow .2s ease,background .2s ease}
+.lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)!important}
+.lc-lang__btn:active{transform:translateY(1px)}
+.lc-lang__icon{width:16px;height:16px}
+.lc-lang__label{font-size:12px;line-height:1}
+.lc-lang__menu{position:absolute;top:calc(100% + 8px);right:0;list-style:none!important;padding-left:0!important;margin:8px 0 0;padding:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96)!important;color:#eee!important;min-width:160px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:10000}
+.lc-lang.is-open .lc-lang__menu{display:block}
+.lc-lang__menu li{padding:8px 12px;cursor:pointer}
+.lc-lang__menu li:hover{background:rgba(255,255,255,.08)}</style><style id="lang-select-inline">
+/* Styled <select> pill with globe */
+.lang-select{
+  -webkit-appearance:none; -moz-appearance:none; appearance:none;
+  background: rgba(255,255,255,.06) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="white" stroke-width="1.4"/></svg>') no-repeat 10px 50%;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  padding: 8px 28px 8px 34px;
+  color: #eee; font-size: 12px; line-height: 1; cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.lang-select:focus{ outline:none; box-shadow:0 2px 12px rgba(0,0,0,.35); }
+.lang-select option{ color:#111; }
+@media (prefers-color-scheme:light){
+  .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
+}
+</style></head>
+<body><header class="header noscript-header">
+<div class="container nav">
+<a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
+<nav class="nav-links">
+<a href="index.html" data-i18n="home_nav">Главная</a>
+<a href="dashboard_single.html" data-i18n="dashboard_nav">Личный кабинет</a>
+<a href="deposit_single.html" data-i18n="deposit_nav">Пополнение</a>
+<a href="withdraw_single.html" data-i18n="withdraw_nav">Вывод</a>
+<a href="faq_single.html" data-i18n="faq_nav">FAQ</a>
+<a href="settings_single.html" data-i18n="settings_nav">Настройки</a>
+</nav>
+<div class="lang"><div class="lc-lang">
+<button aria-expanded="false" aria-haspopup="listbox" class="lc-lang__btn">
+<svg aria-hidden="true" class="lc-lang__icon" viewbox="0 0 24 24">
+<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+</svg>
+<span class="lc-lang__label">EN</span>
+</button>
+<ul class="lc-lang__menu" role="listbox" tabindex="-1">
+<li data-lang="ru" role="option">RU Русский</li>
+<li data-lang="en" role="option">GB English</li>
+</ul>
+</div></div><div class="nav-cta">
+<a class="btn ghost" href="login_single.html">Вход</a>
+<a class="btn primary" href="register_single.html">Регистрация</a>
+</div>
+</div>
+</header>
+<main class="container">
+<div class="card">
+<h1>Регистрация</h1>
+<form class="grid" id="regForm">
+<input class="input" id="regEmail" placeholder="Email" required="" type="email"/>
+<input class="input" id="regPhone" placeholder="Телефон (с кодом страны)" required="" type="tel"/>
+<input class="input" id="regPass" placeholder="Пароль" required="" type="password"/>
+<input class="input" id="refId" placeholder="Реферальный код (по желанию)" type="text"/>
+<button class="btn" type="submit">Создать аккаунт</button>
+</form>
+</div>
+<script>(function(){const ref=new URLSearchParams(location.search).get('ref');const input=document.getElementById('refId');if(ref&&input)input.value=ref;})();</script>
+</main>
+<footer class="footer"><div class="container">© 2025 Litcash</div></footer>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="supabaseConfig.js"></script>
+<script defer src="assets/js/i18n.js"></script>
+<script defer src="app_supabase.js"></script>
+<script defer src="assets/js/lang-switcher.js"></script>
+<script id="lc-lang-script-inline" type="text/plain">
+(function(){
+  if (!window.LC_I18N) {
+    const DEFAULT_LANG='ru', KEY='litcash_lang';
+    const dict={ru:{}, en:{}}; // fill later as needed
+    function getLang(){ try{ return localStorage.getItem(KEY)||DEFAULT_LANG }catch(e){ return DEFAULT_LANG } }
+    function setLang(l){ try{ localStorage.setItem(KEY,l) }catch(e){} }
+    function t(key,lang){ lang=lang||getLang(); if(dict[lang]&&key in dict[lang]) return dict[lang][key]; if(dict[DEFAULT_LANG]&&key in dict[DEFAULT_LANG]) return dict[DEFAULT_LANG][key]; return null }
+    function apply(root=document){
+      const lang=getLang();
+      document.documentElement&&document.documentElement.setAttribute('lang',lang);
+      const nodes=root.querySelectorAll('[data-i18n]');
+      nodes.forEach(n=>{
+        const key=n.getAttribute('data-i18n'); const val=t(key,lang);
+        if(val!==null){ if(!n.firstElementChild) n.textContent=val; else n.innerHTML=val; }
+        const attrs=(n.getAttribute('data-i18n-attr')||'').split(',').map(s=>s.trim()).filter(Boolean);
+        attrs.forEach(a=>{ const v=t(key+':'+a,lang); if(v!==null) n.setAttribute(a,v); });
+      });
+    }
+    window.LC_I18N={getLang,setLang,apply,t,dict};
+    document.addEventListener('DOMContentLoaded',()=>apply());
+  }
+  // Bind globe
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  ready(function(){
+    var root = document.querySelector('#lc-inline-lang') || document.querySelector('.lc-lang');
+    if (!root) return;
+    var btn = root.querySelector('.lc-lang__btn');
+    var menu = root.querySelector('.lc-lang__menu');
+    if(!btn||!menu) return;
+    function open(){ btn.setAttribute('aria-expanded','true'); root.classList.add('is-open'); menu.focus(); }
+    function close(){ btn.setAttribute('aria-expanded','false'); root.classList.remove('is-open'); }
+    btn.addEventListener('click', function(e){ e.preventDefault(); root.classList.contains('is-open')?close():open(); });
+    document.addEventListener('click', function(e){ if(!root.contains(e.target)) close(); });
+    menu.addEventListener('click', function(e){ var li=e.target.closest('[data-lang]'); if(!li) return; var lang=li.getAttribute('data-lang'); if(!lang) return; if(window.LC_I18N){ LC_I18N.setLang(lang); LC_I18N.apply(); } try{ localStorage.setItem('litcash_lang',lang) }catch(_){ } close(); });
+    menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  });
+})();
+</script><script id="lc-lang-inline" type="text/plain">(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  function getLang(){ try{return localStorage.getItem('litcash_lang')||'en'}catch(e){return 'en'} }
+  function setLang(l){ try{localStorage.setItem('litcash_lang',l)}catch(e){} }
+  ready(function(){
+    var c=document.querySelector('.lc-lang'); if(!c) return;
+    var btn=c.querySelector('.lc-lang__btn'), menu=c.querySelector('.lc-lang__menu'), label=c.querySelector('.lc-lang__label');
+    if(!btn||!menu) return;
+    function apply(){
+      var lang=getLang();
+      if(window.LC_I18N){ try{ LC_I18N.setLang(lang); LC_I18N.apply(); }catch(_){ } }
+      if(label){ label.textContent = (lang==='ru'?'RU':'EN'); }
+      try{ document.documentElement.setAttribute('lang', lang); }catch(_){}
+    }
+    function open(){ btn.setAttribute('aria-expanded','true'); c.classList.add('is-open'); menu.focus(); }
+    function close(){ btn.setAttribute('aria-expanded','false'); c.classList.remove('is-open'); }
+    btn.addEventListener('click', function(e){ e.preventDefault(); c.classList.contains('is-open')?close():open(); });
+    document.addEventListener('click', function(e){ if(!c.contains(e.target)) close(); });
+    menu.addEventListener('click', function(e){ var li=e.target.closest('[data-lang]'); if(!li) return; var lang=li.getAttribute('data-lang'); if(!lang) return; setLang(lang); apply(); close(); });
+    menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+    apply();
+  });
+})();</script><script id="lang-select-inline" type="text/plain">
+(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  ready(function(){
+    var sel = document.querySelector('.lang-select') || document.getElementById('langSelect');
+    if(!sel) return;
+    // init value from storage
+    try{
+      var cur = localStorage.getItem('litcash_lang') || 'ru';
+      if ([].some.call(sel.options, o => o.value === cur)) sel.value = cur;
+    }catch(_){}
+    function apply(l){
+      try{ localStorage.setItem('litcash_lang', l); }catch(_){}
+      if (window.LC_I18N) { try{ LC_I18N.setLang(l); LC_I18N.apply(); }catch(_){ } }
+      try{ document.documentElement.setAttribute('lang', l); }catch(_){}
+    }
+    sel.addEventListener('change', function(){ apply(this.value); });
+    // Also apply on load
+    apply(sel.value);
+  });
+})();
+</script></body></html>
