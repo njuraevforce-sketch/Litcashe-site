@@ -1,0 +1,1 @@
+Static deploy for Vercel. Framework: Other, Build Command: empty, Output: /.
