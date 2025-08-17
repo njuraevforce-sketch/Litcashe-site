@@ -40,12 +40,37 @@
       goto('dashboard_single.html');
     }
 
-    // ---------- wiring ----------
-    document.addEventListener('DOMContentLoaded', async () => {
-      const loginForm = q('loginForm');
-      const regForm   = q('regForm');
-      if (loginForm) loginForm.addEventListener('submit', handleLogin);
-      if (regForm)   regForm.addEventListener('submit', handleRegister);
+ document.addEventListener('DOMContentLoaded', async function () {
+  const loginForm = q('loginForm');
+  const regForm   = q('regForm');
+  if (loginForm) loginForm.addEventListener('submit', handleLogin);
+  if (regForm)   regForm.addEventListener('submit', handleRegister);
+
+  // ---- Исправленный блок ----
+  const { data: { session } } = await window.sb.auth.getSession();
+  const here = location.pathname.split('/').pop();
+
+  // Редиректим ТОЛЬКО со страницы логина.
+  if (session && here === 'login_single.html') {
+    goto('dashboard_single.html');
+    return;
+  }
+
+  // На странице регистрации не редиректим.
+  // Если хочешь, можно разлогинивать автоматически:
+  // if (session && here === 'register_single.html') { await window.sb.auth.signOut(); }
+  // ---- /исправленный блок ----
+
+  // резервный логаут
+  ['nav-logout','drawerLogout'].forEach(function(id){
+    const el = q(id);
+    if (el) el.addEventListener('click', async function(e){
+      e.preventDefault();
+      await window.sb.auth.signOut();
+      goto('login_single.html');
+    });
+  });
+});
 
       // если уже авторизован — уводим с login/register
       try {
