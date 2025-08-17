@@ -203,9 +203,49 @@
     }
   };
 
+  // ----- Auth UI (nav) -----
+  function renderAuthUI(session) {
+    const cta = document.querySelector('.nav-cta');
+    const drawerCta = document.getElementById('lc-drawer-cta');
+    if (!cta) return;
+
+    if (session) {
+      cta.innerHTML = `
+        <a class="btn ghost" href="dashboard_single.html" id="nav-dashboard">Кабинет</a>
+        <a class="btn" href="#" id="nav-logout">Выход</a>
+      `;
+    } else {
+      cta.innerHTML = `
+        <a class="btn ghost" href="login_single.html">Вход</a>
+        <a class="btn primary" href="register_single.html">Регистрация</a>
+      `;
+    }
+
+    if (drawerCta) {
+      drawerCta.innerHTML = cta.innerHTML.replace('id="nav-logout"', 'id="drawerLogout"');
+    }
+
+    const logout1 = document.getElementById('nav-logout');
+    const logout2 = document.getElementById('drawerLogout');
+    [logout1, logout2].forEach(el => {
+      if (el) el.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try { await window.LC.logout(); } catch (_) {}
+      });
+    });
+  }
+  // --------------------------
+
   // 4) Автоподключение кнопок/форм (если есть на странице)
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     window.LC.setupVideoTracking();
+
+    // нарисовать правильные кнопки в шапке и подписаться на изменения сессии
+    try {
+      const { data: { session } } = await window.sb.auth.getSession();
+      renderAuthUI(session);
+      window.sb.auth.onAuthStateChange((_evt, sess) => renderAuthUI(sess));
+    } catch (_) {}
 
     const btnCredit = document.getElementById('btnCreditView');
     if (btnCredit) {
