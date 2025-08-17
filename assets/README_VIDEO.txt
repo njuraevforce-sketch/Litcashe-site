@@ -1,1 +1,0 @@
-Place your landing preview video as assets/hero.mp4 (MP4, H.264/AAC). Suggested size: up to 20–30 MB.
