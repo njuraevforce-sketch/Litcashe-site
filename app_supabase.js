@@ -15,11 +15,35 @@ if (window.sb) { document.dispatchEvent(new Event('sb-ready')); }
     return { session };
   }
 
-  window.LC = {
-    async afterAuth() {
-      await this.applyReferral();
-      await this.refreshBalance();
-      await this.mountReferral();
+window.LC = {
+  async afterAuth() {
+    await this.ensureProfile();      // ← добавили
+    await this.applyReferral();
+    await this.refreshBalance();
+    await this.mountReferral();
+  },
+
+  async ensureProfile() {
+    try {
+      const { data: { user } } = await window.sb.auth.getUser();
+      if (!user) return;
+
+      // уже есть?
+      const { data, error } = await window.sb
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!error && data) return; // профиль существует
+
+      // создаём свою строку (разрешили политикой profiles_insert_own)
+      await window.sb.from('profiles').insert({ id: user.id });
+    } catch (e) { console.error('ensureProfile error', e); }
+  },
+  ...
+}
+
     },
 
     async applyReferral() {
