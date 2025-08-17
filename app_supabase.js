@@ -8,7 +8,7 @@
     console.warn('supabase global not found. Make sure <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> is included.');
   }
   window.sb = window.supabase ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null;
-
+if (window.sb) { document.dispatchEvent(new Event('sb-ready')); }
   async function getSession() {
     if (!window.sb) return { session: null };
     const { data: { session } } = await window.sb.auth.getSession();
