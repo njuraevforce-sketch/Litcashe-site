@@ -1,10 +1,17 @@
-// assets/js/auth.js
 ;(function(){
-  if (!window.sb) return;
 
   function q(id){ return document.getElementById(id); }
   function goto(url){ window.location.href = url; }
 
+  function startAuth(){
+    if (!window.sb) { console.error('Supabase client not ready'); return; }
+    // весь твой остальной код остаётся тут
+    // handleLogin, handleRegister и т.д.
+  }
+
+  if (window.sb) startAuth();
+  else document.addEventListener('sb-ready', startAuth, { once: true });
+})();
   async function handleLogin(e){
     e.preventDefault();
     const email = (q('loginEmail')?.value || '').trim();
