@@ -1,0 +1,1 @@
+Place your ad videos as MP4 (H.264/AAC) here: ad1.mp4, ad2.mp4, ad3.mp4
