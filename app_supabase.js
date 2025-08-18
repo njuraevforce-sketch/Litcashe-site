@@ -100,7 +100,7 @@ if (!error && data) {
   const fmtRU = (cents) =>
     ((cents ?? 0) / 100).toLocaleString('ru-RU', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 1,
     });
 
   if (el) el.textContent = fmtRU(data.balance_cents); // без суффикса и без «.00»
