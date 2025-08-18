@@ -299,5 +299,54 @@ document.addEventListener('DOMContentLoaded', function(){
   if(cta && dc){ dc.innerHTML = cta.outerHTML; }
 });
 </script>
+
+<!-- ✅ Точечное дополнение: обработка кнопки "Подтвердить пополнение" -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const amountEl  = document.getElementById('depAmount');
+  const txidEl    = document.getElementById('depTxid');
+  const submitEl  = document.getElementById('depSubmit');
+
+  async function handleSubmit() {
+    try {
+      if (!window.LC || !window.sb) { alert('Инициализация не завершена'); return; }
+
+      const amount = parseFloat(amountEl.value || '0');
+      if (!Number.isFinite(amount) || amount <= 0) {
+        alert('Введите корректную сумму в USDT');
+        return;
+      }
+
+      const cents = Math.round(amount * 100);
+      const txid  = (txidEl.value || '').trim();
+
+      // 1) Создаём заявку
+      const dep = await window.LC.createDeposit(cents, 'TRC20', 'USDT', '');
+      if (!dep || !dep.id) {
+        alert('Не удалось создать заявку на пополнение');
+        return;
+      }
+
+      // 2) Если введён TXID — прикрепляем к только что созданной заявке
+      if (txid) {
+        await window.LC.attachTxToDeposit(dep.id, txid);
+        window.LC_TOAST?.ok?.('TXID прикреплён');
+        alert('Заявка создана и TXID прикреплён.');
+      } else {
+        alert('Заявка на пополнение создана.');
+      }
+
+      amountEl.value = '';
+      txidEl.value   = '';
+    } catch (e) {
+      console.error(e);
+      alert(e?.message || 'Ошибка при создании пополнения');
+    }
+  }
+
+  if (submitEl) submitEl.addEventListener('click', handleSubmit);
+});
+</script>
+
 <script defer src="assets/js/guard.js"></script>
 </body></html>
