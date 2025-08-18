@@ -368,125 +368,58 @@ img,video{max-width:100%;height:auto}
   });
 })();
 </script>
-<script>
-document.addEventListener('DOMContentLoaded', async function(){
-  try{
-    const sb = window._supabase;
-    if(!sb) return;
-    const cta = document.querySelector('.nav-cta');
-    const { data } = await sb.auth.getUser();
-    const isAuth = !!(data && data.user);
-    if(isAuth && cta){
-      cta.innerHTML = '<button id="nav-logout" class="btn danger" data-i18n="nav_logout">Выйти</button>';
-      const btn = document.getElementById('nav-logout');
-      if(btn){ btn.addEventListener('click', function(e){ e.preventDefault(); if(window.logout){ logout(); } }); }
-      // Apply i18n if available
-      if(window.LC_I18N){ try{ LC_I18N.apply(); }catch(_){} }
-    }
-  }catch(_){}
-});
-</script>
-
-
-<div class="lc-drawer" id="lc-drawer" aria-hidden="true">
-  <div class="lc-drawer__panel">
-    <nav id="lc-drawer-links"></nav>
-    <div style="margin-top:12px" id="lc-drawer-cta"></div>
-  </div>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  var burger=document.getElementById('lc-burger');
-  var drawer=document.getElementById('lc-drawer');
-  if(!burger||!drawer) return;
-  var links=document.querySelector('.nav-links');
-  var cta=document.querySelector('.nav-cta');
-  var dl=document.getElementById('lc-drawer-links');
-  var dc=document.getElementById('lc-drawer-cta');
-  function open(){ drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden','false'); }
-  function close(){ drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden','true'); }
-  burger.addEventListener('click', function(e){ e.preventDefault(); open(); });
-  drawer.addEventListener('click', function(e){ if(e.target===drawer) close(); });
-  // Clone links/cta
-  if(links && dl){ dl.innerHTML = links.outerHTML; }
-  if(cta && dc){ dc.innerHTML = cta.outerHTML; }
-});
-</script>
-
-<script>window.LC_TOAST=(function(){let box;function ensure(){if(!box){box=document.createElement('div');box.className='lc-toast';document.body.appendChild(box);}}function show(msg){ensure();const item=document.createElement('div');item.className='lc-toast__item';item.textContent=msg;box.appendChild(item);setTimeout(()=>{item.remove();},1700);}return{ok:show,err:show};})();</script>
-
-<div id="refLinkWrap" style="display:none;margin:1rem 0;">
-  <label style="display:block;margin-bottom:.25rem;">Ваша реферальная ссылка</label>
-  <input id="refLink" readonly onclick="this.select()" style="width:100%;max-width:520px;padding:.5rem;border:1px solid #ccc;border-radius:6px;" />
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  if (!window.LC || !window.sb) return;
-  window.LC.loadLevelInfo = async function() {
-    try {
-      const { data: { session } } = await window.sb.auth.getSession();
-      if (!session) return;
-      const { data, error } = await window.sb.rpc('get_level_info');
-      if (error) { console.error(error); return; }
-      const info = Array.isArray(data) ? data[0] : data;
-      if (!info) return;
-      const usd = (c) => (c/100).toFixed(2) + ' USDT';
-      const rateEl = document.querySelector('[data-rate]');
-      const pvEl = document.getElementById('perViewCell');
-      const leftEl = document.querySelector('[data-views-left]');
-      if (rateEl) rateEl.textContent = info.level_code;
-      if (pvEl) pvEl.textContent = usd(info.per_view_cents);
-      if (leftEl) leftEl.textContent = Math.max(info.daily_cap - info.views_used_today, 0);
-      // Дополнительно: база уровня и цель (если отданы из бэкенда)
-      const bcEl = document.getElementById('baseCapCell');
-      const ntEl = document.getElementById('nextTargetCell');
-      if (bcEl && typeof info.base_cap_cents === 'number') bcEl.textContent = usd(info.base_cap_cents);
-      if (ntEl && info.next_target) ntEl.textContent = info.next_target;
-    } catch(e) { console.error(e); }
-  };
-  window.LC.loadLevelInfo();
-});
-</script>
-<script defer src="assets/js/guard.js"></script>
-
 <script defer>
 document.addEventListener('DOMContentLoaded', () => {
-  try{
+  try {
     const sb = window.sb;
     const reload = window.LC && window.LC.loadLevelInfo ? window.LC.loadLevelInfo : null;
     const btn = document.getElementById('startBtn');
     if (!sb || !btn) return;
 
-    async function award(){
+    // Начисление за просмотр — через RPC public.credit_view(text,int)
+    async function award() {
       const video = document.querySelector('video');
-      const videoId = (video && (video.currentSrc || video.dataset.id)) || 'video-1';
-      const seconds = Math.max(30, Math.floor((video && video.currentTime) || 35));
-      const { data, error } = await sb.rpc('credit_view', { p_video_id: videoId, p_seconds: seconds });
-      if (error){ alert(error.message || 'Ошибка начисления'); return; }
-      if (!data || !data.ok){
-        alert(data && data.reason === 'limit' ? 'Лимит 5 просмотров на сегодня' : 'Не удалось зачесть просмотр');
+      const videoId =
+        (video && (video.dataset.videoId || video.dataset.id || video.currentSrc)) || 'video-1';
+      const watched = video ? Math.floor(video.currentTime || 35) : 35;
+
+      const { data, error } = await sb.rpc('credit_view', {
+        p_video_id: String(videoId),
+        p_watched_seconds: watched
+      });
+
+      if (error) { alert(error.message || 'Ошибка начисления'); return; }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row || !row.ok) {
+        alert(row && row.reason === 'limit'
+          ? 'Лимит 5 просмотров на сегодня'
+          : (row && row.reason) || 'Не удалось зачесть просмотр');
         return;
       }
+
       if (reload) await reload();
-      // Обновим прогресс-бар, если он есть
+
       const leftEl = document.querySelector('[data-views-left]');
       const progressText = document.getElementById('progressText');
+      if (leftEl && typeof row.views_left_today === 'number') {
+        leftEl.textContent = String(row.views_left_today);
+        if (progressText) progressText.textContent = `Просмотров осталось сегодня: ${row.views_left_today}`;
+      }
+
+      const balEl = document.querySelector('[data-balance]');
+      if (balEl && typeof row.new_balance === 'number') {
+        balEl.textContent = (row.new_balance / 100).toFixed(2) + ' USDT';
+      }
+
       const fill = document.getElementById('progressFill');
-      if (leftEl && progressText){
-        const left = parseInt(leftEl.textContent || '0', 10);
-        progressText.textContent = `Просмотров осталось сегодня: ${left}`;
-      }
-      if (fill && reload){
-        // reload уже обновит цифры; здесь можно плавно подсветить
-        fill.style.transition = 'width .4s ease';
-      }
+      if (fill) fill.style.transition = 'width .4s ease';
     }
 
     btn.addEventListener('click', award);
     const video = document.querySelector('video');
     if (video) video.addEventListener('ended', award);
-  }catch(e){ console.error(e); }
+  } catch (e) { console.error(e); }
 });
 </script>
 
