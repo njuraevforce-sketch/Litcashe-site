@@ -2,50 +2,40 @@ name: auto-confirm-deposits
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # запуск каждые 5 минут
-  workflow_dispatch:        # ручной запуск из вкладки Actions
+    - cron: "* * * * *"   # запуск каждую минуту
+  workflow_dispatch:       # возможность запуска вручную из Actions
+
+concurrency:
+  group: auto-confirm-deposits
+  cancel-in-progress: true
 
 jobs:
-  call-edge-func:
+  ping:
     runs-on: ubuntu-latest
     timeout-minutes: 3
 
     env:
-      # URL твоей Edge-функции (НЕ сайт, а именно functions.*)
       FUNC_URL: https://einpfuegfsilnoiareco.functions.supabase.co/auto-confirm-deposits
-      # сколько раз дёрнуть за один прогон (для подстраховки)
-      CALLS: "2"
-      # пауза между вызовами (сек)
-      SLEEP_BETWEEN: "20"
-      # наш ключ авторизации (создай в GitHub Secrets: CRON_KEY)
       AUTH: ${{ secrets.CRON_KEY }}
 
     steps:
-      - name: Show config
-        run: |
-          echo "Function URL:  $FUNC_URL"
-          echo "Calls per run: $CALLS"
-          echo "Sleep (sec):   $SLEEP_BETWEEN"
-
-      - name: Ping Edge Function (Authorization: Bearer <CRON_KEY>)
+      - name: Call edge function
         shell: bash
         run: |
-          for i in $(seq 1 "$CALLS"); do
-            echo "---- Call #$i ----"
-            # можешь использовать GET или POST — функция принимает оба
-            RESP=$(curl -sS -X GET \
-              -H "Authorization: Bearer $AUTH" \
-              -H "Accept: application/json" \
-              "$FUNC_URL" -w " HTTPSTATUS:%{http_code}")
-            BODY="${RESP%HTTPSTATUS:*}"
-            CODE="${RESP##*HTTPSTATUS:}"
-            echo "HTTP $CODE"
-            echo "$BODY"
-            # не валим весь workflow при 5xx — просто покажем
-            if [[ "$CODE" -ge 500 ]]; then
-              echo "::warning::Function returned 5xx"
-            fi
-            if [[ "$i" -lt "$CALLS" ]]; then
-              sleep "$SLEEP_BETWEEN"
-            fi
-          done
+          set -euo pipefail
+          echo "🔄 Calling $FUNC_URL"
+          http_code=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
+            -H "Authorization: Bearer $AUTH" \
+            -H "Accept: application/json" \
+            "$FUNC_URL")
+
+          echo "HTTP $http_code"
+          echo "Response:"
+          cat /tmp/resp.json || true
+
+          if [[ "$http_code" -ge 400 ]]; then
+            echo "❌ Function returned error"
+            exit 1
+          fi
+
+          echo "✅ Done"
