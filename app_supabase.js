@@ -96,7 +96,14 @@
           .from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle();
         if (!error && data) {
           const el = document.querySelector('[data-balance]');
-          if (el) el.textContent = (data.balance_cents / 100).toFixed(2) + ' $';
+          if (el) {
+            // RU-формат, без суффикса и без «лишних нулей» (29,2 / 400 / 1 234,56)
+            const formatted = ((data.balance_cents ?? 0) / 100).toLocaleString('ru-RU', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2,
+            });
+            el.textContent = formatted;
+          }
         }
       } catch (e) { console.error(e); }
     },
