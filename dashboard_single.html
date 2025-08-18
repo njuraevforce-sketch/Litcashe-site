@@ -189,7 +189,7 @@ img,video{max-width:100%;height:auto}
 <div class="flex" style="gap:10px;flex-wrap:wrap">
 <input class="input" id="refLink" readonly="" style="flex:1;min-width:240px;height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text)" value=""/>
 <button class="btn" id="copyRef">Скопировать</button>
-<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today" data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b id="viewsLeftToday">5</b></div>
+<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today" data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b id="viewsLeftToday" data-views-left>5</b></div>
 </div>
 <div class="grid grid-3" style="margin-top:12px">
 <div class="card"><div class="muted" data-i18n="gen1"> 1 поколение</div><div id="gen1Count" style="font-size:22px;font-weight:700">0</div></div>
@@ -209,11 +209,50 @@ img,video{max-width:100%;height:auto}
 <table class="table">
 <thead><tr><th data-i18n="indicator">Показатель</th><th data-i18n="value">Значение</th><th data-i18n="comment">Комментарий</th></tr></thead>
 <tbody id="infoRows">
-<tr><td>Уровень</td><td><span data-level="">—</span></td><td>Starter / Advanced / Pro Elite / Titanium</td></tr>
-<tr><td>Процент</td><td><span data-rate="">—</span></td><td>Начисляется от базового капитала уровня</td></tr>
-<tr><td>База уровня</td><td><span id="baseCapCell">—</span></td><td>min(капитал, потолок уровня)</td></tr>
-<tr><td>За 1 просмотр</td><td><span id="perViewCell">0.00 USDT</span></td><td>5 просмотров = полный дневной %</td></tr>
-<tr><td>Цель следующего уровня</td><td colspan="2"><span id="nextTargetCell">—</span></td></tr>
+  <tr>
+    <td>Уровень</td>
+    <td><span data-level-name>—</span></td>
+    <td>Starter / Advanced / Pro Elite / Titanium</td>
+  </tr>
+
+  <tr>
+    <td>Процент</td>
+    <td><span data-rate="">—</span></td>
+    <td>Начисляется от базового капитала уровня</td>
+  </tr>
+
+  <tr>
+    <td>База уровня</td>
+    <td><span id="baseCapCell">—</span></td>
+    <td>min(капитал, потолок уровня)</td>
+  </tr>
+
+  <tr>
+    <td>За 1 просмотр</td>
+    <td>
+      <span id="perViewCell">
+        <span data-reward-per-view>0.00 USDT</span>
+      </span>
+    </td>
+    <td>5 просмотров = полный дневной %</td>
+  </tr>
+
+  <tr>
+    <td>За 5 просмотров (сегодня)</td>
+    <td><span data-daily-reward>0.00 USDT</span></td>
+    <td>Сумма за сутки по уровню</td>
+  </tr>
+
+  <tr>
+    <td>Просмотров осталось сегодня</td>
+    <td><span data-views-left>0</span></td>
+    <td>Макс. 5 в день</td>
+  </tr>
+
+  <tr>
+    <td>Цель следующего уровня</td>
+    <td colspan="2"><span id="nextTargetCell">—</span></td>
+  </tr>
 </tbody>
 </table>
 </section>
