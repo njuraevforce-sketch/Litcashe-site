@@ -12,7 +12,7 @@
   window.sb = window.supabase
     ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
     : null;
-window._supabase = window.sb;
+
   // событие «клиент готов» для скриптов, которые ждут его
   if (window.sb) { document.dispatchEvent(new Event('sb-ready')); }
 
@@ -94,18 +94,9 @@ window._supabase = window.sb;
         if (!user) return;
         const { data, error } = await window.sb
           .from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle();
-if (!error && data) {
-  const el = document.querySelector('[data-balance]');
-  // 29,2 / 29 / 1 234,56 — RU-формат, без принудительных двух знаков
-  const fmtRU = (cents) =>
-    ((cents ?? 0) / 100).toLocaleString('ru-RU', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 1,
-    });
-
-  if (el) el.textContent = fmtRU(data.balance_cents); // без суффикса и без «.00»
-}
-
+        if (!error && data) {
+          const el = document.querySelector('[data-balance]');
+          if (el) el.textContent = (data.balance_cents / 100).toFixed(2) + ' $';
         }
       } catch (e) { console.error(e); }
     },
