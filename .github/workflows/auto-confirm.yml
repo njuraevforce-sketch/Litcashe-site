@@ -2,38 +2,56 @@ name: Auto Confirm Deposits
 
 on:
   schedule:
-    - cron: "*/1 * * * *"      # каждую минуту
-  workflow_dispatch: {}
+    - cron: "*/1 * * * *"    # каждую минуту
+  workflow_dispatch: {}      # возможность ручного запуска
+
+concurrency:
+  group: auto-confirm-deposits
+  cancel-in-progress: false
 
 jobs:
   call-edge-func:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
+
     env:
-      FUNC_URL: https://einpfuegfsilnoiareco.supabase.co
-      CALLS: "2"          # 2 раза за запуск
-      SLEEP_BETWEEN: "30"  # пауза 30с
+      # URL твоей edge-функции (НЕ страница домена, именно functions URL)
+      FUNC_URL: https://einpfuegfsilnoiareco.functions.supabase.co/auto-confirm-deposits
+      CALLS: "2"           # сколько раз дёргать за один запуск
+      SLEEP_BETWEEN: "30"  # пауза между вызовами (сек)
+
+      # секрета достаточно с публичным anon-key (Project Settings → API → anon)
+      AUTH: ${{ secrets.SUPABASE_ANON_KEY }}
 
     steps:
       - name: Show config
         run: |
-          echo "Function URL: $FUNC_URL"
-          echo "Calls: $CALLS"
-          echo "Sleep between: $SLEEP_BETWEEN"
+          echo "Function URL:  $FUNC_URL"
+          echo "Calls per run: $CALLS"
+          echo "Sleep sec:     $SLEEP_BETWEEN"
 
       - name: Install jq (for pretty logs)
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Loop calls
+        shell: bash
         run: |
           for i in $(seq 1 "$CALLS"); do
             echo "---- Call #$i ----"
-            RESP=$(curl -sS -w '\nHTTP:%{http_code}\n' "$FUNC_URL")
+
+            # Делаем POST с заголовком Authorization
+            RESP=$(curl -sS -X POST \
+              -H "Authorization: Bearer $AUTH" \
+              -H "Content-Type: application/json" \
+              "$FUNC_URL" -w "\nHTTP:%{http_code}")
+
             BODY=$(echo "$RESP" | sed '$d')
             CODE=$(echo "$RESP" | tail -n1 | sed 's/HTTP://')
             echo "Status: $CODE"
-            echo "Body:"; echo "$BODY" | jq . || echo "$BODY"
+            echo "Body:   "; echo "$BODY" | jq . || echo "$BODY"
 
             if [ "$i" -lt "$CALLS" ]; then
-              echo "Sleep $SLEEP_BETWEEN sec…"; sleep "$SLEEP_BETWEEN"
+              echo "Sleep $SLEEP_BETWEEN sec…"
+              sleep "$SLEEP_BETWEEN"
             fi
           done
