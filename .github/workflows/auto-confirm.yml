@@ -1,0 +1,84 @@
+name: Auto Confirm Deposits
+
+on:
+  schedule:
+    # каждые 1 минуту
+    - cron: "*/1 * * * *"
+  workflow_dispatch: {}   # возможность ручного запуска
+
+# не пускать параллельные запуски этого воркфлоу
+concurrency:
+  group: auto-confirm-deposits
+  cancel-in-progress: false
+
+jobs:
+  call-edge-func:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    env:
+      # URL твоей функции (замени на свой при необходимости)
+      FUNC_URL: https://einpfuegfsilnoiareco.supabase.co/functions/v1/auto-confirm-deposits
+      # секрет с публичным anon key из Supabase → Project Settings → API
+      AUTH: ${{ secrets.SUPABASE_ANON_KEY }}
+      # Сколько раз дёргать за один запуск воркфлоу
+      CALLS: "2"
+      # Пауза между вызовами, сек
+      SLEEP_BETWEEN: "30"
+
+    steps:
+      - name: Show config
+        run: |
+          echo "Function URL: $FUNC_URL"
+          echo "Calls per run: $CALLS"
+          echo "Sleep sec:     $SLEEP_BETWEEN"
+
+      - name: Install jq for pretty JSON logs
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Call edge function in a loop
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for i in $(seq 1 "$CALLS"); do
+            echo ""
+            echo "▶️  Call #$i at $(date -Is)"
+
+            # выполняем запрос; пишем http-код в конец как последнюю строку
+            RESP="$(curl -sS -X POST "$FUNC_URL" \
+              -H "Authorization: Bearer $AUTH" \
+              -H "Content-Type: application/json" \
+              --data '{}' \
+              -w '\n%{http_code}')"
+
+            # отделяем тело/код
+            BODY="${RESP%$'\n'*}"
+            CODE="${RESP##*$'\n'}"
+
+            echo "HTTP: $CODE"
+            echo "Raw body:"
+            echo "$BODY" | jq . 2>/dev/null || echo "$BODY"
+
+            # если есть ожидаемые поля — напечатаем сводку
+            if command -v jq >/dev/null && echo "$BODY" | jq -e . >/dev/null 2>&1; then
+              OK=$(echo "$BODY" | jq -r '.ok // empty')
+              CH=$(echo "$BODY" | jq -r '.checked // empty')
+              CF=$(echo "$BODY" | jq -r '.confirmed // empty')
+              NM=$(echo "$BODY" | jq -r '.notMatched // empty')
+              FL=$(echo "$BODY" | jq -r '.failCount // empty')
+              echo "Summary: ok=${OK:-?} checked=${CH:-0} confirmed=${CF:-0} notMatched=${NM:-0} failCount=${FL:-0}"
+            fi
+
+            # фейлим шаг, если код ≥ 400
+            if [[ "$CODE" -ge 400 ]]; then
+              echo "❌ Function returned HTTP $CODE — failing the job."
+              exit 1
+            fi
+
+            # спим между вызовами (кроме последнего)
+            if [[ "$i" -lt "$CALLS" ]]; then
+              echo "⏸  Sleeping ${SLEEP_BETWEEN}s..."
+              sleep "$SLEEP_BETWEEN"
+            fi
+          done
