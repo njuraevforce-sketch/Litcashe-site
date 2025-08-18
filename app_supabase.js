@@ -16,7 +16,7 @@
   // событие «клиент готов» для скриптов, которые ждут его
   if (window.sb) { document.dispatchEvent(new Event('sb-ready')); }
 
-  // 2) Хелпер для serverless-функций
+  // 2) Хелпер для serverless-функций (оставляем — нужен для вывода)
   async function getSession() {
     if (!window.sb) return { session: null };
     const { data: { session } } = await window.sb.auth.getSession();
@@ -30,6 +30,7 @@
       await this.ensureProfile();       // гарантируем, что есть строка в profiles
       await this.applyReferral();       // применяем реферальный код, если есть
       await this.refreshBalance();      // обновляем баланс, если есть таблица wallets
+      await this.refreshLevelInfo?.();  // ← тянем лимиты/уровень/награду
       await this.mountReferral();       // показываем реф-ссылку, если есть
     },
 
@@ -132,26 +133,33 @@
       } catch (e) { console.error(e); }
     },
 
-    // начисление за просмотр с функцией
+    // *** начисление за просмотр — через RPC credit_view ***
     async creditView(videoId, watchedSeconds) {
-      const { session } = await getSession();
-      if (!session) { alert('Войдите в аккаунт'); return; }
-      const base = window.SUPABASE_URL.replace('.co', '.co/functions/v1');
-      const res = await fetch(`${base}/credit-view`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ video_id: videoId, watched_seconds: watchedSeconds })
+      const { data: { user } } = await window.sb.auth.getUser();
+      if (!user) { alert('Войдите в аккаунт'); return; }
+
+      const { data, error } = await window.sb.rpc('credit_view', {
+        p_video_id: String(videoId || 'video'),
+        p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
       });
-      const data = await res.json();
-      if (!res.ok) { alert(data.error || 'Ошибка начисления'); return; }
+
+      if (error) {
+        console.error(error);
+        alert(error.message || 'Ошибка начисления');
+        return;
+      }
+      if (!data?.ok) {
+        alert(data?.message || 'Начисление отклонено');
+        return;
+      }
+
       await window.LC.refreshBalance();
-      return data;
+      await window.LC.refreshLevelInfo?.();
+
+      return data; // { ok, message, views_used, views_left, reward_per_view_cents, balance_cents }
     },
 
-    // запрос на вывод
+    // запрос на вывод (оставляем через Edge Function)
     async requestWithdrawal(amountCents, method, address) {
       const { session } = await getSession();
       if (!session) { alert('Войдите в аккаунт'); return; }
@@ -194,6 +202,33 @@
           wrap.style.display = 'block';
         }
       } catch (e) { console.error(e); }
+    },
+
+    // *** подтяжка данных уровня/лимитов/награды ***
+    async refreshLevelInfo() {
+      try {
+        const { data, error } = await window.sb.rpc('get_level_info');
+        if (error || !Array.isArray(data) || !data.length) return;
+
+        const info = data[0];
+
+        const setTxt = (sel, val) => {
+          const el = document.querySelector(sel);
+          if (el != null) el.textContent = String(val);
+        };
+
+        // Основные поля (поддержка возможных названий из SQL)
+        setTxt('[data-level-name]', info.level_name ?? '');
+        setTxt('[data-views-left]', info.views_left_today ?? 0);
+
+        const perView = (info.reward_per_view_cents ?? 0) / 100;
+        const daily   = (info.daily_reward_cents ?? 0) / 100;
+
+        setTxt('[data-reward-per-view]', perView.toFixed(2) + ' USDT');
+        setTxt('[data-daily-reward]', daily.toFixed(2) + ' USDT');
+      } catch (e) {
+        console.error(e);
+      }
     },
 
     async logout() {
@@ -266,7 +301,9 @@
       });
     }
 
+    // первичное наполнение UI
     window.LC.refreshBalance();
+    window.LC.refreshLevelInfo?.();   // ← добавили
     window.LC.mountReferral();
   });
 })();
