@@ -88,19 +88,33 @@
       } catch (e) { console.error(e); }
     },
 
-    async refreshBalance() {
-      try {
-        const { data: { user } } = await window.sb.auth.getUser();
-        if (!user) return;
-        const { data, error } = await window.sb
-          .from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle();
-        if (!error && data) {
-          const el = document.querySelector('[data-balance]');
-          if (el) el.textContent = (data.balance_cents / 100).toFixed(2) + ' $';
-        }
-      } catch (e) { console.error(e); }
-    },
+async function refreshBalance() {
+  try {
+    const { data: { user } } = await window.sb.auth.getUser();
+    if (!user) return;
 
+    const { data, error } = await window.sb
+      .from('wallets')
+      .select('balance_cents')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!error && data) {
+      const el = document.querySelector('[data-balance]');
+
+      // 29,2 / 1 234,56 — RU формат, без принудительных двух знаков
+      const fmtRU = (cents) =>
+        ((cents ?? 0) / 100).toLocaleString('ru-RU', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
+
+      if (el) el.textContent = fmtRU(data.balance_cents); // без «$», только число с запятой
+    }
+  } catch (e) {
+    console.error('refreshBalance error:', e);
+  }
+}
     // ====== Просмотры
     async creditView(videoId, watchedSeconds) {
       const { data: { user } } = await window.sb.auth.getUser();
