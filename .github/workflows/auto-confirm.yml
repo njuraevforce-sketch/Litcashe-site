@@ -2,56 +2,38 @@ name: Auto Confirm Deposits
 
 on:
   schedule:
-    - cron: "*/1 * * * *"   # каждые 1 минуту
-  workflow_dispatch: {}     # ручной запуск
-
-# не запускать параллельно
-concurrency:
-  group: auto-confirm-deposits
-  cancel-in-progress: false
+    - cron: "*/1 * * * *"      # каждую минуту
+  workflow_dispatch: {}
 
 jobs:
   call-edge-func:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
-
     env:
-      FUNC_URL: https://einpfuegfsilnoiareco.supabase.co/functions/v1/auto-confirm-deposits
-      AUTH: ${{ secrets.SUPABASE_ANON_KEY }}
-      CALLS: "2"          # сколько раз дернуть за 1 цикл
-      SLEEP_BETWEEN: "30" # пауза между вызовами (сек)
+      FUNC_URL: https://<PROJECT>.supabase.co/functions/v1/auto-confirm-deposits
+      CALLS: "2"          # 2 раза за запуск
+      SLEEP_BETWEEN: "30"  # пауза 30с
 
     steps:
       - name: Show config
         run: |
           echo "Function URL: $FUNC_URL"
-          echo "Calls per run: $CALLS"
-          echo "Sleep sec: $SLEEP_BETWEEN"
+          echo "Calls: $CALLS"
+          echo "Sleep between: $SLEEP_BETWEEN"
 
       - name: Install jq (for pretty logs)
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Call Edge Function in loop
+      - name: Loop calls
         run: |
-          for i in $(seq 1 $CALLS); do
-            echo "=== Вызов #$i ==="
-            RESP=$(curl -s -w "\n%{http_code}" -X POST "$FUNC_URL" \
-              -H "Authorization: Bearer $AUTH" \
-              -H "Content-Type: application/json")
+          for i in $(seq 1 "$CALLS"); do
+            echo "---- Call #$i ----"
+            RESP=$(curl -sS -w '\nHTTP:%{http_code}\n' "$FUNC_URL")
+            BODY=$(echo "$RESP" | sed '$d')
+            CODE=$(echo "$RESP" | tail -n1 | sed 's/HTTP://')
+            echo "Status: $CODE"
+            echo "Body:"; echo "$BODY" | jq . || echo "$BODY"
 
-            BODY=$(echo "$RESP" | head -n -1)
-            CODE=$(echo "$RESP" | tail -n1)
-
-            echo "HTTP $CODE"
-            echo "$BODY" | jq .
-
-            if [ "$CODE" -ne 200 ]; then
-              echo "❌ Ошибка! Код $CODE"
-              exit 1
-            fi
-
-            if [ $i -lt $CALLS ]; then
-              echo "Ждём $SLEEP_BETWEEN сек..."
-              sleep $SLEEP_BETWEEN
+            if [ "$i" -lt "$CALLS" ]; then
+              echo "Sleep $SLEEP_BETWEEN sec…"; sleep "$SLEEP_BETWEEN"
             fi
           done
