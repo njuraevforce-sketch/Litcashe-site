@@ -12,7 +12,7 @@
   window.sb = window.supabase
     ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
     : null;
-
+window._supabase = window.sb;
   // событие «клиент готов» для скриптов, которые ждут его
   if (window.sb) { document.dispatchEvent(new Event('sb-ready')); }
 
