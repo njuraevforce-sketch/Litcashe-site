@@ -414,7 +414,8 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <script>window.LC_TOAST=(function(){let box;function ensure(){if(!box){box=document.createElement('div');box.className='lc-toast';document.body.appendChild(box);}}function show(msg){ensure();const item=document.createElement('div');item.className='lc-toast__item';item.textContent=msg;box.appendChild(item);setTimeout(()=>{item.remove();},1700);}return{ok:show,err:show};})();</script>
-
+<div id="refLinkWrap" style="display:none;margin:1rem 0;">
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (!window.LC || !window.sb) return;
