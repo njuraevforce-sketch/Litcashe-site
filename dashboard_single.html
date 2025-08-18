@@ -503,6 +503,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!sb || !btn) return;
 
     async function award(){
+    // prevent multiple calls
+
       const video = document.querySelector('video');
       const videoId = (video && (video.currentSrc || video.dataset.id)) || 'video-1';
       const { data, error } = await sb.rpc('award_view', { p_video_id: videoId });
@@ -514,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (reload) await reload();
       // Обновим прогресс-бар, если он есть
       const leftEl = document.querySelector('[data-views-left]');
-      const progressText = document.getElementById('progressText');
+      const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
       const fill = document.getElementById('progressFill');
       if (leftEl && progressText){
         const left = parseInt(leftEl.textContent || '0', 10);
@@ -532,5 +534,253 @@ document.addEventListener('DOMContentLoaded', () => {
   }catch(e){ console.error(e); }
 });
 </script>
+
+
+<!-- === Litcash minimal fixes pack (start) === -->
+<script>
+// ===== Video playlist config =====
+window.LC_VIDEO_CFG = {
+  basePath: '/assets/videos',
+  prefix: 'ad',
+  ext: '.mp4',
+  total: 20
+};
+</script>
+<script>
+// Inject initial <source> for the video if missing and rotate files ad1..ad20
+document.addEventListener('DOMContentLoaded', () => {
+  const cfg = window.LC_VIDEO_CFG || {basePath:'/assets/videos', prefix:'ad', ext:'.mp4', total:20};
+  const video = document.getElementById('promoVid') || document.querySelector('video');
+  if (!video) return;
+  let source = video.querySelector('source');
+  if (!source){
+    source = document.createElement('source');
+    source.type = 'video/mp4';
+    video.appendChild(source);
+  }
+  let current = Number(localStorage.getItem('lc_vid_idx') || '1');
+  if (!current || current<1) current = 1;
+  if (current>cfg.total) current = 1;
+
+  function setSrc(idx){
+    const url = `${cfg.basePath}/${cfg.prefix}${idx}${cfg.ext}`;
+    source.src = url;
+    video.load();
+    localStorage.setItem('lc_vid_idx', String(idx));
+    // store the video "id" for backend
+    video.dataset.id = `${cfg.prefix}${idx}`;
+  }
+
+  setSrc(current);
+
+  // After finish prepare next
+  video.addEventListener('ended', () => {
+    current += 1;
+    if (current > cfg.total) current = 1;
+    setSrc(current);
+  });
+
+  // Also if the user switches quickly near the end
+  video.addEventListener('timeupdate', () => {
+    if (video.duration && video.currentTime / video.duration >= 0.995){
+      // will be handled by the award() in the other script
+    }
+  });
+});
+</script>
+<script>
+// 1) Make "Earn for watching" actually play video and award only after full watch
+document.addEventListener('DOMContentLoaded', () => {
+  const sb = window.sb || window._supabase;
+  const video = document.getElementById('promoVid') || document.querySelector('video');
+  const startBtn = document.getElementById('startBtn');
+  const fill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
+  let ticking = null;
+  let awarded = false;
+
+  function setProgress(p){
+    if(!fill) return;
+    fill.style.width = Math.max(0, Math.min(100, p)) + '%';
+  }
+
+  function startWatching(){
+    if (!video) return;
+    awarded = false;
+    setProgress(0);
+    if (startBtn){
+      startBtn.disabled = true;
+      startBtn.textContent = 'Смотрим...';
+    }
+    try { video.currentTime = 0; } catch(_){}
+    const playPromise = video.play && video.play();
+    if (playPromise && typeof playPromise.then === 'function'){
+      playPromise.catch(() => { /* autoplay blocked, user will press play manually */ });
+    }
+
+    // track progress
+    function tick(){
+      if (!video || !video.duration) { setProgress(0); return; }
+      const p = (video.currentTime / video.duration) * 100;
+      setProgress(p);
+      if (progressText){
+        const leftEl = document.querySelector('[data-views-left]');
+        const left = leftEl ? parseInt(leftEl.textContent || '0', 10) : null;
+        progressText.textContent = (p >= 100 ? 'Готово' : `Прогресс: ${Math.floor(p)}%`) + (left!==null ? ` · осталось: ${left}` : '');
+      }
+      if (p >= 99 && !awarded){ // safety for odd "ended" not firing on some mobiles
+        award();
+      }
+      ticking = requestAnimationFrame(tick);
+    }
+    if (!ticking) ticking = requestAnimationFrame(tick);
+  }
+
+  async function award(){
+    // prevent multiple calls
+
+    if (awarded) return;
+    awarded = true;
+    try{
+      if (!sb){ throw new Error('Нет подключения к бэкенду'); }
+      const vid = (video && (video.currentSrc || video.dataset.id)) || 'video-1';
+      const { data, error } = await sb.rpc('award_view', { p_video_id: vid });
+      if (error) throw error;
+      if (!data || data.ok !== true){
+        const reason = data && data.reason;
+        window.LC_TOAST ? LC_TOAST.err(reason==='limit' ? 'Лимит 5 просмотров на сегодня' : 'Не удалось зачесть просмотр') : alert('Не удалось зачесть просмотр');
+      }else{
+        // Update counters if backend returned them
+        if (data.left !== undefined){
+          const leftEl = document.querySelector('[data-views-left]');
+          if (leftEl) leftEl.textContent = String(data.left);
+        }
+        if (data.balance !== undefined){
+          const balEl = document.querySelector('[data-balance]');
+          if (balEl) balEl.textContent = String(data.balance);
+        }
+        if (data.income_last !== undefined){
+          const incEl = document.querySelector('[data-income-last]');
+          if (incEl) incEl.textContent = String(data.income_last);
+        }
+
+        if (window.LC && typeof window.LC.loadLevelInfo === 'function'){
+          await window.LC.loadLevelInfo();
+        }
+        window.LC_TOAST && LC_TOAST.ok('Зачтено!');
+      }
+    }catch(e){
+      console.error(e);
+      window.LC_TOAST ? LC_TOAST.err(e.message || 'Ошибка начисления') : alert(e.message || 'Ошибка начисления');
+    }finally{
+      if (ticking){ cancelAnimationFrame(ticking); ticking = null; }
+      setProgress(100);
+      if (startBtn){
+        startBtn.disabled = false;
+        startBtn.textContent = 'Заработать за просмотр';
+      }
+    }
+  }
+
+  if (startBtn){
+    startBtn.addEventListener('click', (e) => { e.preventDefault(); startWatching(); });
+  }
+  if (video){
+    video.addEventListener('ended', award);
+    // On manual seeking near end, still award once
+    video.addEventListener('timeupdate', () => {
+      if (video.duration && video.currentTime / video.duration >= 0.99) award();
+    });
+  }
+});
+</script>
+
+<script>
+// 2) "Copy" button: fill referral link and copy to clipboard with toast
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  const input = document.getElementById('refLink');
+  const copyBtn = document.getElementById('copyRef');
+
+  async function resolveRefCode(){
+    try{
+      if (!sb) return null;
+      const { data } = await sb.auth.getUser();
+      const user = data && data.user;
+      const meta = user && user.user_metadata || {};
+      // Prefer explicit ref code if present; else use user id
+      return (meta.ref_code || meta.ref || user?.id || '').toString();
+    }catch(_){ return null; }
+  }
+
+  async function putLink(){
+    if (!input) return;
+    const ref = await resolveRefCode();
+    const base = window.location.origin || (window.location.protocol + '//' + window.location.host);
+    input.value = `${base}/register_single.html?ref=${encodeURIComponent(ref || 'user')}`;
+  }
+
+  async function doCopy(){
+    if (!input) return;
+    try{
+      if (!input.value) await putLink();
+      await navigator.clipboard.writeText(input.value);
+      window.LC_TOAST ? LC_TOAST.ok('Скопировано') : alert('Скопировано');
+    }catch(e){
+      // Fallback
+      input.select();
+      document.execCommand && document.execCommand('copy');
+      window.LC_TOAST ? LC_TOAST.ok('Скопировано') : alert('Скопировано');
+    }
+  }
+
+  await putLink();
+  copyBtn && copyBtn.addEventListener('click', (e) => { e.preventDefault(); doCopy(); });
+});
+</script>
+
+<script>
+// 3) Mobile nav: ensure burger shows links + 4) Home goes to dashboard after login
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  let isAuth = false;
+  try{
+    if (sb){
+      const { data } = await sb.auth.getUser();
+      isAuth = !!(data && data.user);
+    }
+  }catch(_){}
+
+  function swapHomeToDashboard(root=document){
+    const home = root.querySelector('a[href="index.html"]');
+    if (home) home.setAttribute('href','dashboard_single.html');
+    const brand = document.querySelector('.brand[href="index.html"]');
+    if (brand) brand.setAttribute('href','dashboard_single.html');
+  }
+
+  // Ensure burger is visible on narrow screens (in case of CSS conflicts)
+  const burger = document.getElementById('lc-burger');
+  if (burger){
+    burger.style.display = (window.innerWidth <= 900 ? 'inline-flex' : burger.style.display || '');
+    window.addEventListener('resize', () => {
+      burger.style.display = (window.innerWidth <= 900 ? 'inline-flex' : '');
+    });
+  }
+
+  if (isAuth){
+    swapHomeToDashboard(document);
+    // Also fix in drawer contents if already cloned
+    const dl = document.getElementById('lc-drawer-links');
+    if (dl) swapHomeToDashboard(dl);
+  }
+
+  // If drawer hasn't been populated yet, patch after it's filled
+  setTimeout(() => {
+    const dl = document.getElementById('lc-drawer-links');
+    if (dl && isAuth) swapHomeToDashboard(dl);
+  }, 400);
+});
+</script>
+<!-- === Litcash minimal fixes pack (end) === -->
 
 </body></html>
