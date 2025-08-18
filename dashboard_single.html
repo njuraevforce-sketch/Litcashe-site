@@ -461,7 +461,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function award(){
       const video = document.querySelector('video');
       const videoId = (video && (video.currentSrc || video.dataset.id)) || 'video-1';
-      const { data, error } = await sb.rpc('award_view', { p_video_id: videoId });
+      const seconds = Math.max(30, Math.floor((video && video.currentTime) || 35));
+      const { data, error } = await sb.rpc('credit_view', { p_video_id: videoId, p_seconds: seconds });
       if (error){ alert(error.message || 'Ошибка начисления'); return; }
       if (!data || !data.ok){
         alert(data && data.reason === 'limit' ? 'Лимит 5 просмотров на сегодня' : 'Не удалось зачесть просмотр');
