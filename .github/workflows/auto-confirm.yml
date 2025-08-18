@@ -1,13 +1,9 @@
-name: Auto Confirm Deposits
+name: auto-confirm-deposits
 
 on:
   schedule:
-    - cron: "*/1 * * * *"    # каждую минуту
-  workflow_dispatch: {}      # возможность ручного запуска
-
-concurrency:
-  group: auto-confirm-deposits
-  cancel-in-progress: false
+    - cron: "*/5 * * * *"   # запуск каждые 5 минут
+  workflow_dispatch:        # ручной запуск из вкладки Actions
 
 jobs:
   call-edge-func:
@@ -15,43 +11,41 @@ jobs:
     timeout-minutes: 3
 
     env:
-      # URL твоей edge-функции (НЕ страница домена, именно functions URL)
+      # URL твоей Edge-функции (НЕ сайт, а именно functions.*)
       FUNC_URL: https://einpfuegfsilnoiareco.functions.supabase.co/auto-confirm-deposits
-      CALLS: "2"           # сколько раз дёргать за один запуск
-      SLEEP_BETWEEN: "30"  # пауза между вызовами (сек)
-
-      # секрета достаточно с публичным anon-key (Project Settings → API → anon)
-      AUTH: ${{ secrets.SUPABASE_ANON_KEY }}
+      # сколько раз дёрнуть за один прогон (для подстраховки)
+      CALLS: "2"
+      # пауза между вызовами (сек)
+      SLEEP_BETWEEN: "20"
+      # наш ключ авторизации (создай в GitHub Secrets: CRON_KEY)
+      AUTH: ${{ secrets.CRON_KEY }}
 
     steps:
       - name: Show config
         run: |
           echo "Function URL:  $FUNC_URL"
           echo "Calls per run: $CALLS"
-          echo "Sleep sec:     $SLEEP_BETWEEN"
+          echo "Sleep (sec):   $SLEEP_BETWEEN"
 
-      - name: Install jq (for pretty logs)
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Loop calls
+      - name: Ping Edge Function (Authorization: Bearer <CRON_KEY>)
         shell: bash
         run: |
           for i in $(seq 1 "$CALLS"); do
             echo "---- Call #$i ----"
-
-            # Делаем POST с заголовком Authorization
-            RESP=$(curl -sS -X POST \
+            # можешь использовать GET или POST — функция принимает оба
+            RESP=$(curl -sS -X GET \
               -H "Authorization: Bearer $AUTH" \
-              -H "Content-Type: application/json" \
-              "$FUNC_URL" -w "\nHTTP:%{http_code}")
-
-            BODY=$(echo "$RESP" | sed '$d')
-            CODE=$(echo "$RESP" | tail -n1 | sed 's/HTTP://')
-            echo "Status: $CODE"
-            echo "Body:   "; echo "$BODY" | jq . || echo "$BODY"
-
-            if [ "$i" -lt "$CALLS" ]; then
-              echo "Sleep $SLEEP_BETWEEN sec…"
+              -H "Accept: application/json" \
+              "$FUNC_URL" -w " HTTPSTATUS:%{http_code}")
+            BODY="${RESP%HTTPSTATUS:*}"
+            CODE="${RESP##*HTTPSTATUS:}"
+            echo "HTTP $CODE"
+            echo "$BODY"
+            # не валим весь workflow при 5xx — просто покажем
+            if [[ "$CODE" -ge 500 ]]; then
+              echo "::warning::Function returned 5xx"
+            fi
+            if [[ "$i" -lt "$CALLS" ]]; then
               sleep "$SLEEP_BETWEEN"
             fi
           done
