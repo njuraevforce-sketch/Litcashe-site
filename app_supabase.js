@@ -16,7 +16,7 @@
   // событие «клиент готов» для скриптов, которые ждут его
   if (window.sb) { document.dispatchEvent(new Event('sb-ready')); }
 
-  // 2) Хелпер для serverless-функций (оставляем — нужен для вывода)
+  // 2) Хелпер (оставлен)
   async function getSession() {
     if (!window.sb) return { session: null };
     const { data: { session } } = await window.sb.auth.getSession();
@@ -25,84 +25,56 @@
 
   // 3) Глобальный LC
   window.LC = {
-    // вызываем после успешной аутентификации
     async afterAuth() {
-      await this.ensureProfile();       // гарантируем, что есть строка в profiles
-      await this.applyReferral();       // применяем реферальный код, если есть
-      await this.refreshBalance();      // обновляем баланс, если есть таблица wallets
-      await this.refreshLevelInfo?.();  // ← тянем лимиты/уровень/награду
-      await this.mountReferral();       // показываем реф-ссылку, если есть
+      await this.ensureProfile();
+      await this.applyReferral();
+      await this.refreshBalance();
+      await this.refreshLevelInfo?.();
+      await this.mountReferral();
     },
 
-    // создаёт профайл, если его ещё нет (разрешено политикой profiles_insert_own)
     async ensureProfile() {
       try {
         const { data: { user } } = await window.sb.auth.getUser();
         if (!user) return;
-
         const { data, error } = await window.sb
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!error && data) return; // профиль уже есть
-
-        const { error: insErr } = await window.sb
-          .from('profiles')
-          .insert({ id: user.id });
-
+          .from('profiles').select('id').eq('id', user.id).maybeSingle();
+        if (!error && data) return;
+        const { error: insErr } = await window.sb.from('profiles').insert({ id: user.id });
         if (insErr) console.error('insert profile error', insErr);
-      } catch (e) {
-        console.error('ensureProfile error', e);
-      }
+      } catch (e) { console.error('ensureProfile error', e); }
     },
 
-    // применяем реферальный код из URL/localStorage
     async applyReferral() {
       try {
         const urlParams = new URLSearchParams(location.search);
         const refParam = urlParams.get('ref') || localStorage.getItem('lc_ref_code');
         if (!refParam) return;
-
         localStorage.setItem('lc_ref_code', refParam);
-
         const { data: { user } } = await window.sb.auth.getUser();
         if (!user) return;
 
-        // если уже установлен — выходим
         const { data: prof, error: e1 } = await window.sb
-          .from('profiles')
-          .select('referred_by')
-          .eq('id', user.id)
-          .maybeSingle();
+          .from('profiles').select('referred_by').eq('id', user.id).maybeSingle();
         if (e1 || (prof && prof.referred_by)) return;
 
-        // находим владельца кода и проставляем ссылку
         const { data: refOwner, error: e2 } = await window.sb
-          .from('profiles')
-          .select('id')
-          .eq('ref_code', refParam)
-          .maybeSingle();
+          .from('profiles').select('id').eq('ref_code', refParam).maybeSingle();
         if (e2 || !refOwner || refOwner.id === user.id) return;
 
-        await window.sb
-          .from('profiles')
+        await window.sb.from('profiles')
           .update({ referred_by: refOwner.id })
           .eq('id', user.id);
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
     },
 
-    // учёт просмотра видео (по достижении N сек)
     async setupVideoTracking() {
       try {
         const videos = Array.from(document.querySelectorAll('video[data-video-id]'));
         for (const v of videos) {
           let credited = false;
           let watched = 0;
-          const required = 30; // секунд
+          const required = 30;
           v.addEventListener('timeupdate', async () => {
             if (v.seeking || v.paused) return;
             watched = Math.floor(v.currentTime);
@@ -116,16 +88,12 @@
       } catch (e) { console.error(e); }
     },
 
-    // обновление баланса (если таблица wallets присутствует)
     async refreshBalance() {
       try {
         const { data: { user } } = await window.sb.auth.getUser();
         if (!user) return;
         const { data, error } = await window.sb
-          .from('wallets')
-          .select('balance_cents')
-          .eq('user_id', user.id)
-          .maybeSingle();
+          .from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle();
         if (!error && data) {
           const el = document.querySelector('[data-balance]');
           if (el) el.textContent = (data.balance_cents / 100).toFixed(2) + ' $';
@@ -133,53 +101,93 @@
       } catch (e) { console.error(e); }
     },
 
-    // *** начисление за просмотр — через RPC credit_view ***
+    // ====== Просмотры
     async creditView(videoId, watchedSeconds) {
       const { data: { user } } = await window.sb.auth.getUser();
       if (!user) { alert('Войдите в аккаунт'); return; }
-
       const { data, error } = await window.sb.rpc('credit_view', {
         p_video_id: String(videoId || 'video'),
         p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
       });
-
-      if (error) {
-        console.error(error);
-        alert(error.message || 'Ошибка начисления');
-        return;
-      }
-      if (!data?.ok) {
-        alert(data?.message || 'Начисление отклонено');
-        return;
-      }
-
+      if (error) { console.error(error); alert(error.message || 'Ошибка начисления'); return; }
+      if (!data?.ok) { alert(data?.message || 'Начисление отклонено'); return; }
       await window.LC.refreshBalance();
       await window.LC.refreshLevelInfo?.();
-
-      return data; // { ok, message, views_used, views_left, reward_per_view_cents, balance_cents }
-    },
-
-    // запрос на вывод (оставляем через Edge Function)
-    async requestWithdrawal(amountCents, method, address) {
-      const { session } = await getSession();
-      if (!session) { alert('Войдите в аккаунт'); return; }
-      const base = window.SUPABASE_URL.replace('.co', '.co/functions/v1');
-      const res = await fetch(`${base}/request-withdrawal`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ amount_cents: amountCents, method, address })
-      });
-      const data = await res.json();
-      if (!res.ok) { alert(data.error || 'Ошибка запроса вывода'); return; }
-      await window.LC.refreshBalance();
-      alert('Заявка на вывод создана: pending');
       return data;
     },
 
-    // отображение личной реф-ссылки
+    // ====== Вывод (RPC)
+    async requestWithdrawal(amountCents, method, address) {
+      try {
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) { alert('Войдите в аккаунт'); return; }
+
+        const network = method || 'TRC20';
+        const { data, error } = await window.sb.rpc('request_withdrawal', {
+          p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
+          p_network: network,
+          p_address: String(address || ''),
+          p_currency: 'USDT'
+        });
+        if (error) { console.error(error); alert(error.message || 'Ошибка запроса вывода'); return; }
+
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row?.ok) { alert(row?.reason || 'Заявка отклонена'); return; }
+
+        await window.LC.refreshBalance();
+        alert('Заявка на вывод создана: pending');
+        return row;
+      } catch (e) { console.error(e); alert('Ошибка запроса вывода'); }
+    },
+
+    // ====== Депозит (RPC)
+    async createDeposit(amountCents, network = 'TRC20', currency = 'USDT', address = '') {
+      try {
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) { alert('Войдите в аккаунт'); return; }
+
+        const { data, error } = await window.sb.rpc('create_deposit', {
+          p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
+          p_network: String(network || 'TRC20'),
+          p_currency: String(currency || 'USDT'),
+          p_address: String(address || '')
+        });
+
+        if (error) { console.error(error); alert(error.message || 'Ошибка создания заявки'); return; }
+
+        const rec = Array.isArray(data) ? data[0] : data;
+        // ожидаемые поля: id, address, amount_cents, currency, network, status
+        if (rec?.address) {
+          const addrEl = document.getElementById('depositAddress');
+          if (addrEl) addrEl.textContent = rec.address;
+        }
+        if (rec?.id) {
+          const idEl = document.getElementById('createdDepositId');
+          if (idEl) idEl.textContent = rec.id;
+        }
+        window.LC_TOAST?.ok('Заявка на пополнение создана');
+        return rec;
+      } catch (e) { console.error(e); alert('Ошибка создания заявки'); }
+    },
+
+    async attachTxToDeposit(depositId, txHash) {
+      try {
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) { alert('Войдите в аккаунт'); return; }
+
+        // Имена параметров предположительные: p_deposit_id, p_tx_hash
+        const { data, error } = await window.sb.rpc('attach_tx_to_deposit', {
+          p_deposit_id: String(depositId),
+          p_tx_hash: String(txHash)
+        });
+
+        if (error) { console.error(error); alert(error.message || 'Ошибка сохранения TX'); return; }
+        const row = Array.isArray(data) ? data[0] : data;
+        window.LC_TOAST?.ok('TX сохранён. Ожидайте подтверждение.');
+        return row;
+      } catch (e) { console.error(e); alert('Ошибка сохранения TX'); }
+    },
+
     async mountReferral() {
       try {
         const wrap = document.getElementById('refLinkWrap');
@@ -190,10 +198,7 @@
         if (!user) return;
 
         const { data, error } = await window.sb
-          .from('profiles')
-          .select('ref_code')
-          .eq('id', user.id)
-          .maybeSingle();
+          .from('profiles').select('ref_code').eq('id', user.id).maybeSingle();
 
         if (!error && data?.ref_code) {
           const url = new URL(location.origin + '/register_single.html');
@@ -204,20 +209,14 @@
       } catch (e) { console.error(e); }
     },
 
-    // *** подтяжка данных уровня/лимитов/награды ***
     async refreshLevelInfo() {
       try {
         const { data, error } = await window.sb.rpc('get_level_info');
         if (error || !Array.isArray(data) || !data.length) return;
 
         const info = data[0];
+        const setTxt = (sel, val) => { const el = document.querySelector(sel); if (el != null) el.textContent = String(val); };
 
-        const setTxt = (sel, val) => {
-          const el = document.querySelector(sel);
-          if (el != null) el.textContent = String(val);
-        };
-
-        // Основные поля (поддержка возможных названий из SQL)
         setTxt('[data-level-name]', info.level_name ?? '');
         setTxt('[data-views-left]', info.views_left_today ?? 0);
 
@@ -226,19 +225,13 @@
 
         setTxt('[data-reward-per-view]', perView.toFixed(2) + ' USDT');
         setTxt('[data-daily-reward]', daily.toFixed(2) + ' USDT');
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) { console.error(e); }
     },
 
-    async logout() {
-      if (!window.sb) return;
-      await window.sb.auth.signOut();
-      location.href = '/';
-    }
+    async logout() { if (!window.sb) return; await window.sb.auth.signOut(); location.href = '/'; }
   };
 
-  // ----- Auth UI (nav) -----
+  // ----- Auth UI (nav)
   function renderAuthUI(session) {
     const cta = document.querySelector('.nav-cta');
     const drawerCta = document.getElementById('lc-drawer-cta');
@@ -269,19 +262,18 @@
       });
     });
   }
-  // --------------------------
 
-  // 4) Автоподключение кнопок/форм (если есть на странице)
+  // 4) Автоподключение кнопок/форм
   document.addEventListener('DOMContentLoaded', async () => {
     window.LC.setupVideoTracking();
 
-    // нарисовать правильные кнопки в шапке и подписаться на изменения сессии
     try {
       const { data: { session } } = await window.sb.auth.getSession();
       renderAuthUI(session);
       window.sb.auth.onAuthStateChange((_evt, sess) => renderAuthUI(sess));
     } catch (_) {}
 
+    // Кнопка тестового начисления
     const btnCredit = document.getElementById('btnCreditView');
     if (btnCredit) {
       btnCredit.addEventListener('click', async () => {
@@ -290,20 +282,51 @@
       });
     }
 
+    // Форма вывода
     const wForm = document.getElementById('withdrawForm');
     if (wForm) {
       wForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const amount = parseFloat(document.getElementById('amount').value || '0');
-        const method = document.getElementById('method').value || 'tron';
-        const address = document.getElementById('address').value || '';
+        const amount  = parseFloat(document.getElementById('amount')?.value || '0');
+        const method  = document.getElementById('method')?.value || 'TRC20';
+        const address = document.getElementById('address')?.value || '';
         await window.LC.requestWithdrawal(Math.round(amount * 100), method, address);
+      });
+    }
+
+    // Форма депозита (мягкая автоподвязка)
+    const dForm = document.getElementById('depositForm');
+    if (dForm) {
+      dForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const get = (id, def='') => document.getElementById(id)?.value || def;
+        const amount   = parseFloat(get('dAmount', '0'));
+        const network  = get('dNetwork', 'TRC20');
+        const currency = get('dCurrency', 'USDT');
+        const addr     = get('dAddress', '');
+        const rec = await window.LC.createDeposit(Math.round(amount * 100), network, currency, addr);
+        if (rec?.address) {
+          const a = document.getElementById('depositAddress');
+          if (a) a.textContent = rec.address;
+        }
+      });
+    }
+
+    // Форма привязки TX
+    const tForm = document.getElementById('attachTxForm');
+    if (tForm) {
+      tForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const depId = document.getElementById('depositId')?.value || '';
+        const tx    = document.getElementById('txHash')?.value || '';
+        if (!depId || !tx) { alert('Укажите ID депозита и TX hash'); return; }
+        await window.LC.attachTxToDeposit(depId, tx);
       });
     }
 
     // первичное наполнение UI
     window.LC.refreshBalance();
-    window.LC.refreshLevelInfo?.();   // ← добавили
+    window.LC.refreshLevelInfo?.();
     window.LC.mountReferral();
   });
 })();
