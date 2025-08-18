@@ -9,7 +9,7 @@ jobs:
   call-edge-func:
     runs-on: ubuntu-latest
     env:
-      FUNC_URL: https://<PROJECT>.supabase.co/functions/v1/auto-confirm-deposits
+      FUNC_URL: https://einpfuegfsilnoiareco.functions.supabase.co/auto-confirm-deposits
       CALLS: "2"          # 2 раза за запуск
       SLEEP_BETWEEN: "30"  # пауза 30с
 
