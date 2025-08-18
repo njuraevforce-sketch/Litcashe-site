@@ -415,11 +415,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <script>window.LC_TOAST=(function(){let box;function ensure(){if(!box){box=document.createElement('div');box.className='lc-toast';document.body.appendChild(box);}}function show(msg){ensure();const item=document.createElement('div');item.className='lc-toast__item';item.textContent=msg;box.appendChild(item);setTimeout(()=>{item.remove();},1700);}return{ok:show,err:show};})();</script>
 
-<div id="refLinkWrap" style="display:none;margin:1rem 0;">
-  <label style="display:block;margin-bottom:.25rem;">Ваша реферальная ссылка</label>
-  <input id="refLink" readonly onclick="this.select()" style="width:100%;max-width:520px;padding:.5rem;border:1px solid #ccc;border-radius:6px;" />
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (!window.LC || !window.sb) return;
