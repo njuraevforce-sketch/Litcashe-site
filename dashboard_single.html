@@ -966,20 +966,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Первичная подгрузка инфо и баланса
     (async () => {
+      // 1) load level info via Supabase RPC (no /api/me dependency)
       if (window.LC && typeof window.LC.loadLevelInfo === 'function') window.LC.loadLevelInfo();
-      // Если есть эндпоинт /api/me в проекте — попробуем его для первичного баланса
+
+      // 2) Try to pre-read balance using an RPC if available
       try {
-        const res = await fetch('/api/me', { credentials: 'include', cache: 'no-store' });
-        if (res.ok) {
-          const me = await res.json().catch(()=>({}));
-          if (me) {
-            renderBalanceFrom(me);
-            if (typeof me.views_left !== 'undefined' && limitMsg) limitMsg.style.display = me.views_left > 0 ? 'none' : 'block';
-            const watchBtn = cleanBtn;
-            if (watchBtn && typeof me.balance !== 'undefined') {
-              const cents = balanceToCents(me);
+        const sb = window.sb || window._supabase;
+        if (sb && sb.rpc){
+          // Prefer a dedicated get_balance() if present, else fall back to get_level_info() fields
+          let balUnits = null;
+          try {
+            const { data } = await sb.rpc('get_balance');
+            if (data && (typeof data.balance_cents !== 'undefined' || typeof data.balance !== 'undefined')) {
+              const tmp = (typeof data.balance_cents !== 'undefined') ? { balance_cents: data.balance_cents } : { balance: data.balance };
+              renderBalanceFrom(tmp);
+              balUnits = true;
+            }
+          } catch {}
+          if (!balUnits){
+            const { data } = await sb.rpc('get_level_info');
+            const info = Array.isArray(data) ? data[0] : data;
+            if (info && (typeof info.balance_cents !== 'undefined' || typeof info.balance !== 'undefined')) {
+              const tmp = (typeof info.balance_cents !== 'undefined') ? { balance_cents: info.balance_cents } : { balance: info.balance };
+              renderBalanceFrom(tmp);
+            }
+            if (info && typeof info.views_left_today !== 'undefined'){
+              const limitMsg = document.querySelector('[data-limit-msg],#limitMsg,.js-limit-msg');
+              if (limitMsg) limitMsg.style.display = info.views_left_today > 0 ? 'none' : 'block';
+            }
+            const watchBtn = document.querySelector('#startBtn,[data-watch],.js-watch');
+            if (watchBtn && info && (typeof info.balance_cents !== 'undefined' || typeof info.balance !== 'undefined')){
+              const cents = (typeof info.balance_cents !== 'undefined') ? Number(info.balance_cents) : Math.round(Number(info.balance||0)*100);
               const units = cents/100;
-              watchBtn.disabled = units < 29; // блокировка если баланс < 29
+              watchBtn.disabled = units < 29;
               watchBtn.title = watchBtn.disabled ? 'Недостаточно баланса (< 29)' : '';
             }
           }
@@ -992,6 +1011,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const res = await fetch('/api/me', { credentials: 'include', cache: 'no-store' });
         if (!res.ok) return null;
+        const ct = (res.headers.get('content-type')||'').toLowerCase();
+        if (!ct.includes('application/json')) return null;
         const me = await res.json().catch(()=>null);
         if (me) renderBalanceFrom(me);
         return me;
