@@ -125,6 +125,43 @@ img,video{max-width:100%;height:auto}
 .lc-drawer__panel a{display:block;padding:12px;border-radius:10px;color:#cfe9ff;text-decoration:none;border:1px solid rgba(255,255,255,.08);margin:6px 0}
 </style>
 <style>/* toast */.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}/* skeleton */.skel{position:relative;overflow:hidden;background:rgba(255,255,255,.06);border-radius:10px}.skel:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:sh 1.2s infinite}@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}</style>
+
+<style>
+/* --- Mobile-friendly base fixes --- */
+* { box-sizing: border-box; }
+html, body { width:100%; max-width:100%; overflow-x:hidden; }
+img, video, canvas, iframe { max-width:100%; height:auto; display:block; }
+
+/* Cards/grid common names */
+.dashboard-grid, .grid, .cards, .cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* Generic card fix */
+.card { width:100%; min-width:0; }
+
+/* Buttons */
+button, .btn { touch-action: manipulation; }
+
+/* Burger */
+.burger-btn {
+  display:none; cursor:pointer; user-select:none;
+  padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
+}
+#mobileMenu { display:none; }
+
+@media (max-width: 768px) {
+  .burger-btn { display:inline-flex; align-items:center; gap:8px; }
+  #mobileMenu.open { display:block; }
+  .row, .cols, .flex { flex-direction:column !important; gap:12px; }
+  .card h2, .card h3 { font-size:1rem; }
+  .card .big, [data-balance] { font-size:24px !important; }
+  .container, .wrap, main { padding-left:12px; padding-right:12px; }
+}
+</style>
+
 </head>
 <body><header class="header noscript-header">
 <div class="container nav">
@@ -159,9 +196,9 @@ img,video{max-width:100%;height:auto}
 <main class="container">
 <section class="grid grid-3">
 <div class="card" id="notActiveWarn" style="display:none;background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.25)"><strong data-i18n="not_active_warning">Аккаунт не активен...</strong></div>
-<div class="card"><div class="muted" data-i18n="balance">Баланс</div><div class="n" data-balance="" style="font-size:28px;font-weight:800">0.00 USDT</div></div>
+<div class="card"><div class="muted" data-i18n="balance">Баланс</div><div class="n" data-balance="" style="font-size:28px;font-weight:800">$0.00</div></div>
 <div class="card"><div class="muted" data-i18n="views">Просмотры</div><div class="n" data-views="" style="font-size:28px;font-weight:800">0</div></div>
-<div class="card"><div class="muted">Уровень</div><div class="n" style="font-size:20px;font-weight:700"><span data-level="">—</span> <span class="badge" id="perViewBadge">+0.00 USDT за просмотр</span></div></div>
+<div class="card"><div class="muted">Уровень</div><div class="n" style="font-size:20px;font-weight:700"><span data-level="">—</span> <span class="badge" id="perViewBadge">+$0.00 за просмотр</span></div></div>
 </section>
 <section class="grid grid-3">
 <div class="card"><div class="muted">Ставка</div><div class="n" data-rate="" style="font-size:22px;font-weight:700">—</div></div>
@@ -231,7 +268,7 @@ img,video{max-width:100%;height:auto}
     <td>За 1 просмотр</td>
     <td>
       <span id="perViewCell">
-        <span data-reward-per-view>0.00 USDT</span>
+        <span data-reward-per-view>$0.00</span>
       </span>
     </td>
     <td>5 просмотров = полный дневной %</td>
@@ -239,7 +276,7 @@ img,video{max-width:100%;height:auto}
 
   <tr>
     <td>За 5 просмотров (сегодня)</td>
-    <td><span data-daily-reward>0.00 USDT</span></td>
+    <td><span data-daily-reward>$0.00</span></td>
     <td>Сумма за сутки по уровню</td>
   </tr>
 
@@ -262,10 +299,10 @@ img,video{max-width:100%;height:auto}
 <table class="table">
 <thead><tr><th>Поколение</th><th>Сумма</th></tr></thead>
 <tbody id="refRows">
-<tr><td>1-е поколение (13%)</td><td id="gen1Cell">0.00 USDT</td></tr>
-<tr><td>2-е поколение (5%)</td><td id="gen2Cell">0.00 USDT</td></tr>
-<tr><td>3-е поколение (1%)</td><td id="gen3Cell">0.00 USDT</td></tr>
-<tr><td><b>Итого</b></td><td id="refTotalCell"><b>0.00 USDT</b></td></tr>
+<tr><td>1-е поколение (13%)</td><td id="gen1Cell">$0.00</td></tr>
+<tr><td>2-е поколение (5%)</td><td id="gen2Cell">$0.00</td></tr>
+<tr><td>3-е поколение (1%)</td><td id="gen3Cell">$0.00</td></tr>
+<tr><td><b>Итого</b></td><td id="refTotalCell"><b>$0.00</b></td></tr>
 </tbody>
 </table>
 </div>
@@ -598,38 +635,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
   let ticking = null;
   let awarded = false;
-  // === Подписка на изменения кошелька ===
-  (async () => {
-    try {
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user?.id) return;
-
-      const toUsdText = (cents) => {
-        const n = Number(cents || 0);
-        const usd = n / 100;
-        return usd.toFixed(2) + ' USDT';
-      };
-      const setBalance = (cents) => {
-        const balEl = document.querySelector('[data-balance]');
-        if (balEl) balEl.textContent = toUsdText(cents);
-      };
-
-      // Подписка на UPDATE по wallets именно этой строки
-      sb.channel('wallet-balance')
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'wallets',
-          filter: `user_id=eq.${user.id}`
-        }, (payload) => {
-          const cents = payload?.new?.balance_cents ?? 0;
-          setBalance(cents);
-        })
-        .subscribe();
-    } catch (e) {
-      console.error('wallet realtime error', e);
-    }
-  })();
 
   function setProgress(p){
     if(!fill) return;
@@ -839,7 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const n = Number(v || 0);
         const asCents = Math.abs(n) >= 100 && Number.isInteger(n);
         const usd = asCents ? n / 100 : n;
-        return usd.toFixed(2) + ' USDT';
+        return '$' + usd.toFixed(2);
       };
 
       // === Баланс ===
@@ -906,6 +911,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3) Первый прогон
   window.LC.loadLevelInfo();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
+
+  const toUsdText = (cents) => {
+    const n = Number(cents || 0);
+    const usd = n / 100;
+    return '$' + usd.toFixed(2);
+  };
+  const setBalance = (cents) => {
+    const balEl = document.querySelector('[data-balance]');
+    if (balEl) balEl.textContent = toUsdText(cents);
+  };
+
+  // первичная подстановка
+  try {
+    const { data } = await sb.rpc('get_level_info_v2');
+    const cents = (data?.balance_cents ?? data?.balance_usd_cents ?? (data?.balance_usd != null ? data.balance_usd*100 : data?.balance) ?? 0);
+    setBalance(cents);
+  } catch (e) { console.error(e); }
+
+  // realtime подписка на wallets по user_id
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (user?.id) {
+      sb.channel('wallet-balance')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'wallets',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const cents = payload?.new?.balance_cents ?? 0;
+          setBalance(cents);
+        })
+        .subscribe();
+    }
+  } catch (e) {
+    console.error('wallet realtime error', e);
+  }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  // --- 3.1 Redirect authenticated users from index to dashboard ---
+  try {
+    if (sb) {
+      const { data: { session } } = await sb.auth.getSession();
+      const onIndex = /(^|\/)index(\.html)?(\?|#|$)/i.test(location.pathname) || location.pathname === '/';
+      if (session && onIndex) {
+        // change to your dashboard route if different
+        window.location.replace('/dashboard_single.html');
+        return;
+      }
+      // --- 3.2 Update "Главная" link to dashboard when logged in ---
+      if (session) {
+        const homeLinks = Array.from(document.querySelectorAll('a')).filter(a => /главн|home|index/i.test(a.textContent) || /index(\.html)?$/i.test(a.getAttribute('href')||''));
+        homeLinks.forEach(a => a.setAttribute('href', '/dashboard_single.html'));
+      }
+    }
+  } catch(e){ console.warn('redirect/home patch error', e); }
+
+  // --- 3.3 Burger enhancer ---
+  try {
+    let burger = document.querySelector('.burger-btn');
+    let menu = document.getElementById('mobileMenu');
+    if (!burger) {
+      burger = document.createElement('button');
+      burger.className = 'burger-btn';
+      burger.setAttribute('aria-label','Menu');
+      burger.innerHTML = '<span>☰</span>';
+      const header = document.querySelector('header') || document.body;
+      header.insertBefore(burger, header.firstChild);
+    }
+    if (!menu) {
+      menu = document.createElement('nav');
+      menu.id = 'mobileMenu';
+      // try to reuse an existing nav list
+      const existing = document.querySelector('nav ul, header nav, .nav ul');
+      if (existing) menu.appendChild(existing.cloneNode(true));
+      document.body.insertBefore(menu, document.body.firstChild);
+    }
+    burger.addEventListener('click', () => menu.classList.toggle('open'));
+  } catch(e){ console.warn('burger init error', e); }
 });
 </script>
 </body></html>
