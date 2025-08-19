@@ -162,6 +162,35 @@ button, .btn { touch-action: manipulation; }
 }
 </style>
 
+
+<style>
+/* Header flexible wrap */
+header nav, header .menu, .header-buttons {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+@media(max-width:768px){
+  header nav, header .menu, .header-buttons {
+    justify-content:center;
+  }
+}
+
+/* Tables responsive */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; }
+@media(max-width:768px){
+  table td, table th {
+    font-size:13px; padding:6px; white-space:nowrap;
+  }
+}
+
+/* Cards full width on mobile */
+@media(max-width:768px){
+  .card, .dashboard-card { width:100% !important; min-width:0 !important; }
+}
+</style>
+
 </head>
 <body><header class="header noscript-header">
 <div class="container nav">
