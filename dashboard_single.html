@@ -191,6 +191,52 @@ table { width:100%; border-collapse:collapse; }
 }
 </style>
 
+
+<style>
+/* --- MOBILE OVERFLOW & GLOW FIXES --- */
+html, body { overflow-x:hidden; }
+:root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+body { padding-bottom: calc(var(--safe-bottom) + 8px); -webkit-text-size-adjust: 100%; }
+
+/* Header: keep inside screen and allow wrap */
+header { position: sticky; top: 0; left:0; right:0; overflow: clip; z-index: 50; }
+header * { max-width:100%; }
+header nav, header .menu, .header-buttons { flex-wrap: wrap; }
+header a, header button { max-width: 100%; }
+
+/* Cards: clip inner glows/shadows so they don't stick out */
+.card, .dashboard-card, .panel, .box, .widget {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+/* Tables: prevent horizontal bleed; ellipsis on narrow screens */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse: collapse; table-layout: auto; }
+@media(max-width:768px){
+  table th, table td {
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Utility: wrap any long text tokens/urls */
+.wrap, .text, .content, .card, .panel {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Buttons/chips: avoid huge glow spill */
+.btn, .chip, .badge {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
+
 </head>
 <body><header class="header noscript-header">
 <div class="container nav">
