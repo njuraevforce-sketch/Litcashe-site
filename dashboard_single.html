@@ -1456,4 +1456,64 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+
+<script>
+// Referrals widgets: fill left "Реферальный доход" and right "Последние реферальные начисления"
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb) return;
+
+    // Загрузим выплаты (RLS: только для своего referrer_id)
+    const { data: rows, error } = await sb
+      .from('v_referral_payouts')
+      .select('created_at, level, reward_usdt')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) { console.warn('v_referral_payouts error', error); return; }
+
+    // Агрегаты по поколениям
+    const sum = {1:0,2:0,3:0};
+    (rows||[]).forEach(r => {
+      const lvl = Number(r.level||0);
+      const amt = Number(r.reward_usdt||0);
+      if (lvl>=1 && lvl<=3) sum[lvl] += amt;
+    });
+    const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
+
+    // Левая таблица
+    const g1 = document.getElementById('gen1Cell');
+    const g2 = document.getElementById('gen2Cell');
+    const g3 = document.getElementById('gen3Cell');
+    const total = document.getElementById('refTotalCell');
+    if (g1) g1.textContent = fmt(sum[1]);
+    if (g2) g2.textContent = fmt(sum[2]);
+    if (g3) g3.textContent = fmt(sum[3]);
+    if (total) total.textContent = fmt(sum[1] + sum[2] + sum[3]);
+
+    // Правая таблица
+    const list = document.getElementById('refList');
+    if (list) {
+      list.innerHTML = '';
+      if (!rows || !rows.length) {
+        list.innerHTML = '<tr><td class="muted" colspan="4">Нет данных</td></tr>';
+      } else {
+        rows.slice(0,12).forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date(r.created_at).toLocaleString()}</td>
+            <td>${r.level}</td>
+            <td style="text-align:right">${fmt(r.reward_usdt)}</td>
+            <td>доход</td>`;
+          list.appendChild(tr);
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('ref tables init error', e);
+  }
+});
+</script>
+
 </body></html>
