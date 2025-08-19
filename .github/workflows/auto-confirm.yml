@@ -2,8 +2,8 @@ name: auto-confirm-deposits
 
 on:
   schedule:
-    - cron: "* * * * *"   # каждый 1 мин
-  workflow_dispatch:       # ручной запуск
+    - cron: "*/10 * * * *"   # каждые 10 минут
+  workflow_dispatch:
 
 concurrency:
   group: auto-confirm-deposits
@@ -14,49 +14,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     env:
-      # добавь эти секреты в GitHub → Settings → Secrets → Actions
-      FUNC_URL: ${{ secrets.SUPABASE_FUNC_URL }}   # напр.: https://einpfuegfsilnoiareco.functions.supabase.co/auto-confirm-deposits
-      CRON_KEY: ${{ secrets.CRON_KEY }}            # тот же, что CRON_KEY в Secrets функции Supabase
+      CRON_KEY: ${{ secrets.CRON_KEY }}   # уже есть у вас
 
     steps:
-      - name: Call edge function (with retry)
+      - name: Call edge function (retry)
         shell: bash
         run: |
           set -euo pipefail
-
-          if [[ -z "${FUNC_URL:-}" || -z "${CRON_KEY:-}" ]]; then
-            echo "FUNC_URL or CRON_KEY is not set"; exit 1
-          fi
-
-          # окно сканирования: последние 90 минут
-          FROM=$(( $(date -u +%s%3N) - 90*60*1000 ))
-
+          FUNC_URL="https://einpfuegfsilnoiareco.functions.supabase.co/auto-confirm-deposits"
+          FROM=$(( $(date -u +%s%3N) - 90*60*1000 ))  # окно последних 90 минут
           ATTEMPTS=3
-          SLEEP=6
-          CODE=0
-          BODY=""
-
           for i in $(seq 1 $ATTEMPTS); do
-            echo "🔄 Attempt $i: ${FUNC_URL}?key=***&from=${FROM}"
+            echo "🔄 Attempt $i"
             RESP="$(curl -sS -w '\nHTTP:%{http_code}\n' \
               "${FUNC_URL}?key=${CRON_KEY}&from=${FROM}")" || true
-
             echo "$RESP"
             CODE="$(echo "$RESP" | tail -n1 | sed 's/HTTP://')"
-            BODY="$(echo "$RESP" | sed '$d')"
-
-            if [[ "$CODE" == "200" ]]; then
-              echo "✅ OK (HTTP 200)"; break
-            fi
-            if [[ $i -lt $ATTEMPTS ]]; then
-              echo "⏳ Retry in ${SLEEP}s…"; sleep "$SLEEP"
-            fi
+            [[ "$CODE" == "200" ]] && { echo "✅ OK"; exit 0; }
+            [[ $i -lt $ATTEMPTS ]] && { echo "⏳ retry…"; sleep 6; }
           done
-
-          if [[ "$CODE" != "200" ]]; then
-            echo "❌ Function returned HTTP $CODE"; exit 1
-          fi
-
-          # Не критично, но покажем полезные поля
-          echo "Response body:"
-          echo "$BODY"
+          echo "❌ Function returned non-200"; exit 1
