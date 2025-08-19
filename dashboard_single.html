@@ -237,6 +237,42 @@ table { width:100%; border-collapse: collapse; table-layout: auto; }
 }
 </style>
 
+
+<style>
+/* ==== COMPACT SPACING PRESET ==== */
+/* Reduce global paddings/margins and grid gaps */
+.container, .wrap, main { padding-left:8px !important; padding-right:8px !important; }
+.dashboard-grid, .grid, .cards, .cards-grid { gap:8px !important; }
+
+/* Cards / panels tighter */
+.card, .dashboard-card, .panel, .box, .widget {
+  margin-bottom:8px !important;
+  padding:12px !important;
+  border-radius:14px !important;
+}
+
+/* Headings tighter */
+h1, h2, h3 { margin:8px 0 8px 0 !important; }
+.section-title, .card h2, .card h3 { margin-bottom:8px !important; }
+
+/* Tables tighter */
+table { border-collapse:collapse; }
+table th, table td { padding:8px 10px !important; }
+@media (max-width:768px){
+  .dashboard-grid, .grid, .cards, .cards-grid { gap:6px !important; }
+  .card, .dashboard-card, .panel, .box, .widget { margin-bottom:6px !important; padding:10px !important; }
+  table th, table td { padding:6px 8px !important; }
+  .container, .wrap, main { padding-left:6px !important; padding-right:6px !important; }
+}
+
+/* Buttons / chips tighter */
+button, .btn, .chip, .badge { padding:6px 10px !important; line-height:1.15 !important; }
+
+/* Lists tighter */
+ul, ol { margin:6px 0 !important; }
+ul li, ol li { margin:4px 0 !important; }
+</style>
+
 </head>
 <body><header class="header noscript-header">
 <div class="container nav">
