@@ -598,6 +598,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
   let ticking = null;
   let awarded = false;
+  // === Подписка на изменения кошелька ===
+  (async () => {
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user?.id) return;
+
+      const toUsdText = (cents) => {
+        const n = Number(cents || 0);
+        const usd = n / 100;
+        return usd.toFixed(2) + ' USDT';
+      };
+      const setBalance = (cents) => {
+        const balEl = document.querySelector('[data-balance]');
+        if (balEl) balEl.textContent = toUsdText(cents);
+      };
+
+      // Подписка на UPDATE по wallets именно этой строки
+      sb.channel('wallet-balance')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'wallets',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const cents = payload?.new?.balance_cents ?? 0;
+          setBalance(cents);
+        })
+        .subscribe();
+    } catch (e) {
+      console.error('wallet realtime error', e);
+    }
+  })();
 
   function setProgress(p){
     if(!fill) return;
