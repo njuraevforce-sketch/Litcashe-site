@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <title>Кабинет — Litcash</title>
 <style>
 :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
@@ -125,6 +125,254 @@ img,video{max-width:100%;height:auto}
 .lc-drawer__panel a{display:block;padding:12px;border-radius:10px;color:#cfe9ff;text-decoration:none;border:1px solid rgba(255,255,255,.08);margin:6px 0}
 </style>
 <style>/* toast */.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}/* skeleton */.skel{position:relative;overflow:hidden;background:rgba(255,255,255,.06);border-radius:10px}.skel:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:sh 1.2s infinite}@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}</style>
+
+<style>
+/* --- Mobile-friendly base fixes --- */
+* { box-sizing: border-box; }
+html, body { width:100%; max-width:100%; overflow-x:hidden; }
+img, video, canvas, iframe { max-width:100%; height:auto; display:block; }
+
+/* Cards/grid common names */
+.dashboard-grid, .grid, .cards, .cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* Generic card fix */
+.card { width:100%; min-width:0; }
+
+/* Buttons */
+button, .btn { touch-action: manipulation; }
+
+/* Burger */
+.burger-btn {
+  display:none; cursor:pointer; user-select:none;
+  padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
+}
+#mobileMenu { display:none; }
+
+@media (max-width: 768px) {
+  .burger-btn { display:inline-flex; align-items:center; gap:8px; }
+  #mobileMenu.open { display:block; }
+  .row, .cols, .flex { flex-direction:column !important; gap:12px; }
+  .card h2, .card h3 { font-size:1rem; }
+  .card .big, [data-balance] { font-size:24px !important; }
+  .container, .wrap, main { padding-left:12px; padding-right:12px; }
+}
+</style>
+
+
+<style>
+/* Header flexible wrap */
+header nav, header .menu, .header-buttons {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+@media(max-width:768px){
+  header nav, header .menu, .header-buttons {
+    justify-content:center;
+  }
+}
+
+/* Tables responsive */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; }
+@media(max-width:768px){
+  table td, table th {
+    font-size:13px; padding:6px; white-space:nowrap;
+  }
+}
+
+/* Cards full width on mobile */
+@media(max-width:768px){
+  .card, .dashboard-card { width:100% !important; min-width:0 !important; }
+}
+</style>
+
+
+<style>
+/* --- MOBILE OVERFLOW & GLOW FIXES --- */
+html, body { overflow-x:hidden; }
+:root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+body { padding-bottom: calc(var(--safe-bottom) + 8px); -webkit-text-size-adjust: 100%; }
+
+/* Header: keep inside screen and allow wrap */
+header { position: sticky; top: 0; left:0; right:0; overflow: clip; z-index: 50; }
+header * { max-width:100%; }
+header nav, header .menu, .header-buttons { flex-wrap: wrap; }
+header a, header button { max-width: 100%; }
+
+/* Cards: clip inner glows/shadows so they don't stick out */
+.card, .dashboard-card, .panel, .box, .widget {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+/* Tables: prevent horizontal bleed; ellipsis on narrow screens */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse: collapse; table-layout: auto; }
+@media(max-width:768px){
+  table th, table td {
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Utility: wrap any long text tokens/urls */
+.wrap, .text, .content, .card, .panel {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Buttons/chips: avoid huge glow spill */
+.btn, .chip, .badge {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
+
+
+<style>
+/* ==== COMPACT SPACING PRESET ==== */
+/* Reduce global paddings/margins and grid gaps */
+.container, .wrap, main { padding-left:8px !important; padding-right:8px !important; }
+.dashboard-grid, .grid, .cards, .cards-grid { gap:8px !important; }
+
+/* Cards / panels tighter */
+.card, .dashboard-card, .panel, .box, .widget {
+  margin-bottom:8px !important;
+  padding:12px !important;
+  border-radius:14px !important;
+}
+
+/* Headings tighter */
+h1, h2, h3 { margin:8px 0 8px 0 !important; }
+.section-title, .card h2, .card h3 { margin-bottom:8px !important; }
+
+/* Tables tighter */
+table { border-collapse:collapse; }
+table th, table td { padding:8px 10px !important; }
+@media (max-width:768px){
+  .dashboard-grid, .grid, .cards, .cards-grid { gap:6px !important; }
+  .card, .dashboard-card, .panel, .box, .widget { margin-bottom:6px !important; padding:10px !important; }
+  table th, table td { padding:6px 8px !important; }
+  .container, .wrap, main { padding-left:6px !important; padding-right:6px !important; }
+}
+
+/* Buttons / chips tighter */
+button, .btn, .chip, .badge { padding:6px 10px !important; line-height:1.15 !important; }
+
+/* Lists tighter */
+ul, ol { margin:6px 0 !important; }
+ul li, ol li { margin:4px 0 !important; }
+</style>
+
+
+<style>
+/* === Conservative mobile wrap for tables inside cards (no layout surprises) === */
+@media (max-width: 768px){
+  .card table, .dashboard-card table, .panel table, .widget table {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+  .card table th, .card table td,
+  .dashboard-card table th, .dashboard-card table td,
+  .panel table th, .panel table td,
+  .widget table th, .widget table td {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+    padding: 6px 8px !important;
+  }
+  /* Keep cards clipping glows to avoid spill */
+  .card, .dashboard-card, .panel, .widget { overflow: hidden !important; }
+}
+</style>
+
+
+<style>
+/* === Floating Mobile Joystick (Litcash) === */
+@media (max-width: 768px){
+  #lcJoy {
+    position: fixed;
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    width: 68px; height: 68px;
+    z-index: 9999;
+    touch-action: none;
+    user-select: none;
+  }
+  #lcJoy .base {
+    width: 100%; height: 100%;
+    border-radius: 9999px;
+    background: radial-gradient(120% 120% at 30% 30%, rgba(255,255,255,.15), rgba(0,0,0,.4));
+    box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
+    backdrop-filter: blur(6px);
+    position: relative;
+    overflow: hidden;
+  }
+  #lcJoy .knob {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 36px; height: 36px;
+    margin-left: -18px; margin-top: -18px;
+    border-radius: 9999px;
+    background: radial-gradient(120% 120% at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.2));
+    box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    transition: transform 120ms ease;
+  }
+  #lcJoy.hint .base::after{
+    content:''; position:absolute; inset:0;
+    background: conic-gradient(from 0deg, rgba(255,255,255,.12), transparent 25%);
+    pointer-events:none;
+  }
+}
+</style>
+
+
+<style id="hard-mobile-fixes">
+/* === HARD MOBILE ADAPTATION PACK === */
+/* Strictly prevent horizontal scroll & glow spill */
+html, body { width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior-y:none; -webkit-text-size-adjust:100%; }
+* { box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+img, video, canvas, iframe { max-width:100%; height:auto; display:block; }
+/* Sticky header stays clipped inside viewport */
+header.header { position: sticky; top:0; left:0; right:0; z-index:60; overflow:clip; backdrop-filter:saturate(180%) blur(8px); }
+header .container, .container { padding-left:12px; padding-right:12px; }
+/* Force grids into single column on small screens */
+@media (max-width: 900px){
+  .grid-3, .grid-2, .dashboard-grid, .cards, .cards-grid { grid-template-columns:1fr !important; }
+  .nav-links { display:none !important; }
+  #lc-burger { display:inline-flex !important; }
+}
+/* Safer typography scaling to avoid wrapping */
+.card .n, [data-balance], [data-views], #gen1Cell, #gen2Cell, #gen3Cell {
+  font-size: clamp(18px, 5.2vw, 28px) !important;
+  line-height:1.15;
+}
+.card h2, .section-title { font-size: clamp(16px, 4.4vw, 22px); line-height:1.2; }
+/* Buttons: comfortable taps and no overflow */
+button, .btn { min-height:48px; touch-action:manipulation; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.badge { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+/* Tables: always wrapped with horizontal scroll container */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+@media (max-width: 768px){
+  table.table { min-width: 600px; } /* force wrap container to scroll instead of breaking layout */
+}
+/* Video: keep aspect ratio and borders inside card */
+.video, #promoVid { width:100% !important; height:auto !important; aspect-ratio:16/9; border-radius:16px; overflow:hidden; }
+:root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+body { padding-bottom: calc(var(--safe-bottom) + 8px); }
+</style>
+
 </head>
 <body><header class="header noscript-header">
 <div class="container nav">
@@ -159,9 +407,9 @@ img,video{max-width:100%;height:auto}
 <main class="container">
 <section class="grid grid-3">
 <div class="card" id="notActiveWarn" style="display:none;background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.25)"><strong data-i18n="not_active_warning">Аккаунт не активен...</strong></div>
-<div class="card"><div class="muted" data-i18n="balance">Баланс</div><div class="n" data-balance="" style="font-size:28px;font-weight:800">0.00 USDT</div></div>
+<div class="card"><div class="muted" data-i18n="balance">Баланс</div><div class="n" data-balance="" style="font-size:28px;font-weight:800">$0.00</div></div>
 <div class="card"><div class="muted" data-i18n="views">Просмотры</div><div class="n" data-views="" style="font-size:28px;font-weight:800">0</div></div>
-<div class="card"><div class="muted">Уровень</div><div class="n" style="font-size:20px;font-weight:700"><span data-level="">—</span> <span class="badge" id="perViewBadge">+0.00 USDT за просмотр</span></div></div>
+<div class="card"><div class="muted">Уровень</div><div class="n" style="font-size:20px;font-weight:700"><span data-level="">—</span> <span class="badge" id="perViewBadge">+$0.00 за просмотр</span></div></div>
 </section>
 <section class="grid grid-3">
 <div class="card"><div class="muted">Ставка</div><div class="n" data-rate="" style="font-size:22px;font-weight:700">—</div></div>
@@ -231,7 +479,7 @@ img,video{max-width:100%;height:auto}
     <td>За 1 просмотр</td>
     <td>
       <span id="perViewCell">
-        <span data-reward-per-view>0.00 USDT</span>
+        <span data-reward-per-view>$0.00</span>
       </span>
     </td>
     <td>5 просмотров = полный дневной %</td>
@@ -239,7 +487,7 @@ img,video{max-width:100%;height:auto}
 
   <tr>
     <td>За 5 просмотров (сегодня)</td>
-    <td><span data-daily-reward>0.00 USDT</span></td>
+    <td><span data-daily-reward>$0.00</span></td>
     <td>Сумма за сутки по уровню</td>
   </tr>
 
@@ -262,10 +510,10 @@ img,video{max-width:100%;height:auto}
 <table class="table">
 <thead><tr><th>Поколение</th><th>Сумма</th></tr></thead>
 <tbody id="refRows">
-<tr><td>1-е поколение (13%)</td><td id="gen1Cell">0.00 USDT</td></tr>
-<tr><td>2-е поколение (5%)</td><td id="gen2Cell">0.00 USDT</td></tr>
-<tr><td>3-е поколение (1%)</td><td id="gen3Cell">0.00 USDT</td></tr>
-<tr><td><b>Итого</b></td><td id="refTotalCell"><b>0.00 USDT</b></td></tr>
+<tr><td>1-е поколение (13%)</td><td id="gen1Cell">$0.00</td></tr>
+<tr><td>2-е поколение (5%)</td><td id="gen2Cell">$0.00</td></tr>
+<tr><td>3-е поколение (1%)</td><td id="gen3Cell">$0.00</td></tr>
+<tr><td><b>Итого</b></td><td id="refTotalCell"><b>$0.00</b></td></tr>
 </tbody>
 </table>
 </div>
@@ -430,7 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data: { session } } = await window.sb.auth.getSession();
       if (!session) return;
 
-      const { data, error } = await window.sb.rpc('get_level_info');
+      const { data, error } = await window.sb.rpc('get_level_info_v2');
       if (error) { console.error(error); return; }
       const info = Array.isArray(data) ? data[0] : data;
       if (!info) return;
@@ -782,5 +1030,347 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 <!-- === Litcash minimal fixes pack (end) === -->
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 1) Гарантируем объекты и единый alias для Supabase
+  window.LC = window.LC || {};
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
+
+  // 2) Создаём/переопределяем функцию загрузки и прорисовки данных уровня/баланса
+  window.LC.loadLevelInfo = async function () {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await sb.rpc('get_level_info_v2');
+      if (error) { console.error(error); return; }
+      const info = Array.isArray(data) ? data[0] : data;
+      if (!info) return;
+
+      // Хелпер для USDT-формата: поддержка "в центах" и "в целых"
+      const toUsdText = (v) => {
+        const n = Number(v || 0);
+        const asCents = Math.abs(n) >= 100 && Number.isInteger(n);
+        const usd = asCents ? n / 100 : n;
+        return '$' + usd.toFixed(2);
+      };
+
+      // === Баланс ===
+      const balanceSrc =
+        (info.balance_cents ??
+         info.balance_usd_cents ??
+         (info.balance_usd !== undefined ? info.balance_usd * 100 : undefined) ??
+         info.balance);
+
+      const balEl = document.querySelector('[data-balance]');
+      if (balEl) balEl.textContent = toUsdText(balanceSrc);
+
+      // === Уровень ===
+      const lvlName = info.level_name || info.lvl_name || info.level_key || '—';
+      document.querySelectorAll('[data-level],[data-level-name]').forEach(n => n.textContent = lvlName);
+
+      // === Процент (bps → %) ===
+      const bp = Number(info.reward_percent_bp ?? info.pct_bp ?? info.percent_bp ?? 0);
+      const percent = (bp / 100).toFixed(2) + ' %';
+      document.querySelectorAll('[data-rate]').forEach(n => n.textContent = percent);
+
+      // === За 1 просмотр ===
+      const perViewCents = Number(info.reward_per_view_cents ?? info.per_view_cents ?? 0);
+      const pvText = toUsdText(perViewCents);
+      const pvSpan = document.querySelector('[data-reward-per-view]');
+      if (pvSpan) pvSpan.textContent = pvText;
+      const pvBadge = document.getElementById('perViewBadge');
+      if (pvBadge) pvBadge.textContent = `+${pvText} за просмотр`;
+
+      // === За 5 просмотров (сегодня) ===
+      const daily = info.daily_reward_cents ?? info.daily_reward ?? 0;
+      document.querySelectorAll('[data-daily-reward]').forEach(n => n.textContent = toUsdText(daily));
+
+      // === Осталось просмотров сегодня ===
+      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+      document.querySelectorAll('[data-views-left]').forEach(n => n.textContent = String(Math.max(left, 0)));
+
+      // === База уровня / Капитал (расч.) ===
+      const baseCents = Number(info.base_amount_cents ?? info.base_cap_cents ?? 0);
+      const bcEl = document.getElementById('baseCapCell');
+      if (bcEl) bcEl.textContent = toUsdText(baseCents);
+      const capEl = document.querySelector('[data-cap]');
+      if (capEl) capEl.textContent = toUsdText(baseCents);
+
+      // === (Опционально) Всего просмотров ===
+      const viewsEl = document.querySelector('[data-views]');
+      if (viewsEl) viewsEl.textContent = Number(info.views_total ?? info.views_today ?? info.views ?? 0);
+
+      // === Рефералы ===
+      const refsEl = document.querySelector('[data-refs]');
+      if (refsEl) refsEl.textContent = Number(info.refs_total ?? info.active_refs ?? 0);
+
+      // === Индикация активности ===
+      const warn = document.getElementById('notActiveWarn');
+      if (warn) warn.style.display = (info.is_active === false) ? '' : 'none';
+
+      // === Цель следующего уровня ===
+      const ntEl = document.getElementById('nextTargetCell');
+      if (ntEl && info.next_target) ntEl.textContent = String(info.next_target);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // 3) Первый прогон
+  window.LC.loadLevelInfo();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
+
+  const toUsdText = (cents) => {
+    const n = Number(cents || 0);
+    const usd = n / 100;
+    return '$' + usd.toFixed(2);
+  };
+  const setBalance = (cents) => {
+    const balEl = document.querySelector('[data-balance]');
+    if (balEl) balEl.textContent = toUsdText(cents);
+  };
+
+  // первичная подстановка
+  try {
+    const { data } = await sb.rpc('get_level_info_v2');
+    const cents = (data?.balance_cents ?? data?.balance_usd_cents ?? (data?.balance_usd != null ? data.balance_usd*100 : data?.balance) ?? 0);
+    setBalance(cents);
+  } catch (e) { console.error(e); }
+
+  // realtime подписка на wallets по user_id
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (user?.id) {
+      sb.channel('wallet-balance')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'wallets',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const cents = payload?.new?.balance_cents ?? 0;
+          setBalance(cents);
+        })
+        .subscribe();
+    }
+  } catch (e) {
+    console.error('wallet realtime error', e);
+  }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  // --- 3.1 Redirect authenticated users from index to dashboard ---
+  try {
+    if (sb) {
+      const { data: { session } } = await sb.auth.getSession();
+      const onIndex = /(^|\/)index(\.html)?(\?|#|$)/i.test(location.pathname) || location.pathname === '/';
+      if (session && onIndex) {
+        // change to your dashboard route if different
+        window.location.replace('/dashboard_single.html');
+        return;
+      }
+      // --- 3.2 Update "Главная" link to dashboard when logged in ---
+      if (session) {
+        const homeLinks = Array.from(document.querySelectorAll('a')).filter(a => /главн|home|index/i.test(a.textContent) || /index(\.html)?$/i.test(a.getAttribute('href')||''));
+        homeLinks.forEach(a => a.setAttribute('href', '/dashboard_single.html'));
+      }
+    }
+  } catch(e){ console.warn('redirect/home patch error', e); }
+
+  // --- 3.3 Burger enhancer ---
+  try {
+    let burger = document.querySelector('.burger-btn');
+    let menu = document.getElementById('mobileMenu');
+    if (!burger) {
+      burger = document.createElement('button');
+      burger.className = 'burger-btn';
+      burger.setAttribute('aria-label','Menu');
+      burger.innerHTML = '<span>☰</span>';
+      const header = document.querySelector('header') || document.body;
+      header.insertBefore(burger, header.firstChild);
+    }
+    if (!menu) {
+      menu = document.createElement('nav');
+      menu.id = 'mobileMenu';
+      // try to reuse an existing nav list
+      const existing = document.querySelector('nav ul, header nav, .nav ul');
+      if (existing) menu.appendChild(existing.cloneNode(true));
+      document.body.insertBefore(menu, document.body.firstChild);
+    }
+    burger.addEventListener('click', () => menu.classList.toggle('open'));
+  } catch(e){ console.warn('burger init error', e); }
+});
+</script>
+
+<script>
+(function(){
+  if (window.__lcJoyInit) return; window.__lcJoyInit = true;
+
+  const sb = window.sb || window._supabase;
+
+  function ensureJoy(){
+    if (window.innerWidth > 768) return; // mobile only
+    if (document.getElementById('lcJoy')) return;
+
+    const joy = document.createElement('div');
+    joy.id = 'lcJoy';
+    joy.innerHTML = '<div class="base"><div class="knob"></div></div>';
+    document.body.appendChild(joy);
+
+    const base = joy.querySelector('.base');
+    const knob = joy.querySelector('.knob');
+
+    const radius = 26; // movement radius for knob
+    let dragging = false;
+    let startX = 0, startY = 0;
+    let joyStartX = 0, joyStartY = 0;
+    let moved = false;
+
+    // Drag the whole joystick around by long-pressing outside the knob
+    let dragJoy = false;
+    let joyBox = joy.getBoundingClientRect();
+
+    function centerKnob(){ knob.style.transform = 'translate(0,0)'; }
+
+    function toggleMenu(){
+      // try mobileMenu first
+      const menu = document.getElementById('mobileMenu');
+      if (menu) { menu.classList.toggle('open'); return; }
+      // fallback: find nav
+      const nav = document.querySelector('nav'); if (nav) nav.classList.toggle('open');
+    }
+
+    function onPointerDown(e){
+      const t = e.target;
+      const isKnob = t === knob;
+      dragging = true; moved = false;
+      dragJoy = !isKnob && e.pointerType !== 'touch'; // desktop drag with mouse outside knob
+      const p = e.touches ? e.touches[0] : e;
+      startX = p.clientX; startY = p.clientY;
+      joyBox = joy.getBoundingClientRect();
+      joyStartX = joyBox.left; joyStartY = joyBox.top;
+      joy.classList.add('hint');
+      e.preventDefault();
+    }
+
+    function onPointerMove(e){
+      if (!dragging) return;
+      const p = e.touches ? e.touches[0] : e;
+      const dx = p.clientX - startX;
+      const dy = p.clientY - startY;
+
+      if (dragJoy){
+        // move entire joystick
+        let nx = joyStartX + dx;
+        let ny = joyStartY + dy;
+        // keep inside viewport
+        nx = Math.min(window.innerWidth - joy.offsetWidth - 4, Math.max(4, nx));
+        ny = Math.min(window.innerHeight - joy.offsetHeight - 4, Math.max(4, ny));
+        joy.style.left = nx + 'px';
+        joy.style.top  = ny + 'px';
+        joy.style.right = 'auto'; joy.style.bottom = 'auto';
+        moved = true;
+        return;
+      }
+
+      // move knob within radius
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist > radius ? radius / dist : 1;
+      const kx = dx * ratio;
+      const ky = dy * ratio;
+      knob.style.transform = 'translate(' + kx + 'px,' + ky + 'px)';
+      if (dist > 6) moved = true;
+    }
+
+    function onPointerUp(e){
+      if (!dragging) return;
+      dragging = false; joy.classList.remove('hint');
+
+      // if moved enough, interpret direction
+      const style = getComputedStyle(knob);
+      const matrix = new DOMMatrixReadOnly(style.transform);
+      const kx = matrix.m41, ky = matrix.m42;
+      const dist = Math.hypot(kx, ky);
+
+      centerKnob();
+
+      const TH = 14;
+      if (!moved || dist < TH){
+        // tap -> toggle menu
+        toggleMenu();
+        return;
+      }
+
+      // determine direction
+      if (Math.abs(kx) > Math.abs(ky)){
+        if (kx > 0){
+          // RIGHT -> toggle menu
+          toggleMenu();
+        } else {
+          // LEFT -> scroll to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        if (ky < 0){
+          // UP -> scroll up a bit
+          window.scrollBy({ top: -Math.round(window.innerHeight * 0.6), behavior: 'smooth' });
+        } else {
+          // DOWN -> scroll down a bit
+          window.scrollBy({ top: Math.round(window.innerHeight * 0.6), behavior: 'smooth' });
+        }
+      }
+    }
+
+    // Pointer events
+    joy.addEventListener('pointerdown', onPointerDown, { passive:false });
+    window.addEventListener('pointermove', onPointerMove, { passive:false });
+    window.addEventListener('pointerup', onPointerUp, { passive:true });
+    // Touch events
+    joy.addEventListener('touchstart', onPointerDown, { passive:false });
+    window.addEventListener('touchmove', onPointerMove, { passive:false });
+    window.addEventListener('touchend', onPointerUp, { passive:true });
+
+    // Reposition when orientation changes
+    window.addEventListener('orientationchange', () => { joy.style.right = '14px'; joy.style.bottom = '14px'; });
+
+  }
+
+  document.addEventListener('DOMContentLoaded', ensureJoy);
+  window.addEventListener('resize', () => {
+    const el = document.getElementById('lcJoy');
+    if (window.innerWidth <= 768){
+      if (!el) ensureJoy();
+    } else {
+      if (el) el.remove();
+    }
+  });
+})();
+</script>
+
+<script id="wrap-tables-mobile">
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('table.table').forEach(function(tbl){
+    if (!tbl.parentElement || !tbl.parentElement.classList || !tbl.parentElement.classList.contains('table-wrap')){
+      var wrap = document.createElement('div');
+      wrap.className = 'table-wrap';
+      tbl.parentNode.insertBefore(wrap, tbl);
+      wrap.appendChild(tbl);
+    }
+  });
+});
+</script>
 
 </body></html>
