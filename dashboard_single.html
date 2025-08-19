@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Кабинет — Litcash</title>
 <style>
 :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
@@ -38,8 +38,7 @@ a{color:var(--text);text-decoration:none}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;color:white}
 .brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 6px 18px rgba(0,234,255,.45)}
 .nav-links{display:flex;align-items:center;gap:14px}
-.nav-cta{display:flex;align-items:center;gap:10px}
-</style>
+.nav-cta{display:flex;align-items:center;gap:10px}</style>
 <link href="assets/css/lang-switcher.css" rel="stylesheet"/>
 <style id="lc-lang-style-inline">
 /* LC Globe (inline) */
@@ -57,8 +56,7 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
   #lc-inline-lang .lc-lang__btn{border-color:rgba(0,0,0,.12);background:rgba(255,255,255,.85);color:#111}
   #lc-inline-lang .lc-lang__menu{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}
   #lc-inline-lang .lc-lang__menu li:hover{background:rgba(0,0,0,.06)}
-}
-</style><style id="lc-lang-inline">/* LC Globe — forced dark style */
+}</style><style id="lc-lang-inline">/* LC Globe — forced dark style */
 .lc-lang{position:relative;display:inline-flex;align-items:center}
 .lc-lang__btn{height:36px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18)!important;background:rgba(255,255,255,.06)!important;color:#eee!important;display:inline-flex;gap:8px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:transform .08s ease,box-shadow .2s ease,background .2s ease}
 .lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)!important}
@@ -83,8 +81,7 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
 .lang-select option{ color:#111; }
 @media (prefers-color-scheme:light){
   .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
-}
-</style>
+}</style>
 <style>
 /* tidy utils */
 .container{width:min(1100px,92vw);margin:0 auto;padding:20px 0}
@@ -97,8 +94,7 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
 .btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(90deg, rgba(30,136,229,.25), rgba(0,234,255,.18));color:#fff;font-weight:700;cursor:pointer}
 .muted{color:var(--muted)}
 .video{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;aspect-ratio:16/9;background:#0b0e13}
-.section-title{margin:10px 0 12px;font-size:20px}
-</style>
+.section-title{margin:10px 0 12px;font-size:20px}</style>
 
 <style>
 /* ideal-mobile */
@@ -122,8 +118,7 @@ img,video{max-width:100%;height:auto}
 .lc-drawer{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none}
 .lc-drawer.is-open{display:block}
 .lc-drawer__panel{position:absolute;right:0;top:0;height:100%;width:min(86vw,320px);background:#0b0e13;border-left:1px solid rgba(255,255,255,.08);padding:16px;overflow:auto}
-.lc-drawer__panel a{display:block;padding:12px;border-radius:10px;color:#cfe9ff;text-decoration:none;border:1px solid rgba(255,255,255,.08);margin:6px 0}
-</style>
+.lc-drawer__panel a{display:block;padding:12px;border-radius:10px;color:#cfe9ff;text-decoration:none;border:1px solid rgba(255,255,255,.08);margin:6px 0}</style>
 <style>/* toast */.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}/* skeleton */.skel{position:relative;overflow:hidden;background:rgba(255,255,255,.06);border-radius:10px}.skel:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:sh 1.2s infinite}@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}</style>
 
 <style>
@@ -159,8 +154,7 @@ button, .btn { touch-action: manipulation; }
   .card h2, .card h3 { font-size:1rem; }
   .card .big, [data-balance] { font-size:24px !important; }
   .container, .wrap, main { padding-left:12px; padding-right:12px; }
-}
-</style>
+}</style>
 
 
 <style>
@@ -188,8 +182,7 @@ table { width:100%; border-collapse:collapse; }
 /* Cards full width on mobile */
 @media(max-width:768px){
   .card, .dashboard-card { width:100% !important; min-width:0 !important; }
-}
-</style>
+}</style>
 
 
 <style>
@@ -234,8 +227,7 @@ table { width:100%; border-collapse: collapse; table-layout: auto; }
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-</style>
+}</style>
 
 
 <style>
@@ -270,8 +262,7 @@ button, .btn, .chip, .badge { padding:6px 10px !important; line-height:1.15 !imp
 
 /* Lists tighter */
 ul, ol { margin:6px 0 !important; }
-ul li, ol li { margin:4px 0 !important; }
-</style>
+ul li, ol li { margin:4px 0 !important; }</style>
 
 
 <style>
@@ -294,12 +285,10 @@ ul li, ol li { margin:4px 0 !important; }
   }
   /* Keep cards clipping glows to avoid spill */
   .card, .dashboard-card, .panel, .widget { overflow: hidden !important; }
-}
-</style>
+}</style>
 
 
 <style>
-/* === Floating Mobile Joystick (Litcash) === */
 @media (max-width: 768px){
   #lcJoy {
     position: fixed;
@@ -334,44 +323,56 @@ ul li, ol li { margin:4px 0 !important; }
     background: conic-gradient(from 0deg, rgba(255,255,255,.12), transparent 25%);
     pointer-events:none;
   }
-}
-</style>
+}</style>
 
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 
 <style id="hard-mobile-fixes">
 /* === HARD MOBILE ADAPTATION PACK === */
-/* Strictly prevent horizontal scroll & glow spill */
 html, body { width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior-y:none; -webkit-text-size-adjust:100%; }
 * { box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
 img, video, canvas, iframe { max-width:100%; height:auto; display:block; }
-/* Sticky header stays clipped inside viewport */
-header.header { position: sticky; top:0; left:0; right:0; z-index:60; overflow:clip; backdrop-filter:saturate(180%) blur(8px); }
+header.header, header { position: sticky; top:0; left:0; right:0; z-index:60; overflow:visible; backdrop-filter:saturate(180%) blur(8px); }
 header .container, .container { padding-left:12px; padding-right:12px; }
-/* Force grids into single column on small screens */
 @media (max-width: 900px){
   .grid-3, .grid-2, .dashboard-grid, .cards, .cards-grid { grid-template-columns:1fr !important; }
-  .nav-links { display:none !important; }
-  #lc-burger { display:inline-flex !important; }
 }
-/* Safer typography scaling to avoid wrapping */
 .card .n, [data-balance], [data-views], #gen1Cell, #gen2Cell, #gen3Cell {
   font-size: clamp(18px, 5.2vw, 28px) !important;
   line-height:1.15;
 }
 .card h2, .section-title { font-size: clamp(16px, 4.4vw, 22px); line-height:1.2; }
-/* Buttons: comfortable taps and no overflow */
 button, .btn { min-height:48px; touch-action:manipulation; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 .badge { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
-/* Tables: always wrapped with horizontal scroll container */
 .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-@media (max-width: 768px){
-  table.table { min-width: 600px; } /* force wrap container to scroll instead of breaking layout */
-}
-/* Video: keep aspect ratio and borders inside card */
+@media (max-width: 768px){ table.table { min-width: 600px; } }
 .video, #promoVid { width:100% !important; height:auto !important; aspect-ratio:16/9; border-radius:16px; overflow:hidden; }
 :root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
 body { padding-bottom: calc(var(--safe-bottom) + 8px); }
-</style>
+/* === MOBILE NAV DRAWER (moves nodes; prevents duplicates) === */
+#lc-burger { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; gap:3px; border:none; background:transparent; }
+#lc-burger .burger-bar{ display:block; width:22px; height:2px; border-radius:2px; background:currentColor; }
+@media (min-width: 901px){ #lc-burger{ display:none !important; } }
+#lc-drawer[hidden]{ display:none; }
+#lc-drawer{ position:fixed; inset:0; z-index:9999; }
+#lc-drawer .drawer-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
+#lc-drawer .drawer-panel{
+  position:absolute; top:0; right:0; height:100%; width:min(86vw, 360px);
+  background:var(--bg, #0f1115); box-shadow: -6px 0 24px rgba(0,0,0,.35); padding:16px;
+  display:flex; flex-direction:column; gap:12px;
+}
+#lc-drawer .drawer-close{ align-self:flex-end; width:40px; height:40px; font-size:20px; background:transparent; border:none; color:var(--text, #e6e9ef); }
+#lc-drawer .drawer-links{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+#lc-drawer .drawer-links a, #lc-drawer .drawer-links button{
+  display:flex; align-items:center; min-height:44px; padding:10px 12px; border-radius:12px;
+  color:var(--text, #e6e9ef); text-decoration:none; background:var(--card, #161a22);
+}
+@media (max-width:900px){
+  header .nav-links, header nav .links, header nav ul { display:none !important; }
+}
+/* Ensure header can show burger without overflow issues */
+header { overflow: visible; }
+.mobile-nav-only{ display:flex; align-items:center; gap:8px; }</style>
 
 </head>
 <body><header class="header noscript-header">
@@ -1371,6 +1372,88 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 });
+</script>
+
+
+<script id="mobile-nav-dedupe">
+(function(){
+  const qs = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+  const burger = qs('#lc-burger');
+  const drawer = qs('#lc-drawer');
+  if(!burger || !drawer) return;
+
+  const drawerLinks = drawer.querySelector('.drawer-links');
+  let source = qs('header .nav-links') || qs('header nav .nav-links') || qs('header nav ul') || qs('header .nav ul') || qs('header nav');
+  if(!source){ return; }
+
+  const originalParent = source;
+
+  function moveChildren(from, to){
+    const children = Array.from(from.children);
+    children.forEach(node => {
+      if(node.contains(burger) || burger.contains(node)) return;
+      to.appendChild(node);
+    });
+  }
+
+  function moveBack(to, from){
+    const items = Array.from(to.children);
+    items.forEach(node => {
+      from.appendChild(node);
+    });
+  }
+
+  function adapt(){
+    if(window.innerWidth <= 900){
+      if(drawerLinks.childElementCount === 0 && originalParent.childElementCount > 0){
+        moveChildren(originalParent, drawerLinks);
+      }
+    }else{
+      if(drawerLinks.childElementCount > 0){
+        moveBack(drawerLinks, originalParent);
+      }
+      drawer.setAttribute('hidden','');
+      burger.setAttribute('aria-expanded','false');
+      document.documentElement.classList.remove('drawer-open');
+    }
+  }
+
+  // Remove duplicate buttons/links inside header only
+  function dedupeHeaderButtons(){
+    const header = qs('header');
+    if(!header) return;
+    const map = new Map();
+    qsa('header button, header a.btn, header .btn').forEach(el => {
+      const key = (el.id || el.getAttribute('data-action') || el.textContent || '').trim().toLowerCase();
+      if(!key) return;
+      if(map.has(key)){
+        el.remove();
+      }else{
+        map.set(key, el);
+      }
+    });
+  }
+
+  function openDrawer(){ drawer.removeAttribute('hidden'); burger.setAttribute('aria-expanded','true'); document.documentElement.classList.add('drawer-open'); }
+  function closeDrawer(){ drawer.setAttribute('hidden',''); burger.setAttribute('aria-expanded','false'); document.documentElement.classList.remove('drawer-open'); }
+
+  burger.addEventListener('click', () => {
+    if(drawer.hasAttribute('hidden')) openDrawer(); else closeDrawer();
+  });
+  drawer.addEventListener('click', (e) => {
+    if(e.target.matches('[data-close]') || e.target.classList.contains('drawer-backdrop')) closeDrawer();
+  });
+
+  const style = document.createElement('style');
+  style.textContent = `.drawer-open body{ overflow:hidden !important; }`;
+  document.head.appendChild(style);
+
+  dedupeHeaderButtons();
+  adapt();
+  window.addEventListener('resize', adapt);
+  window.addEventListener('orientationchange', adapt);
+})();
 </script>
 
 </body></html>
