@@ -3,7 +3,6 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Кабинет — Litcash</title>
 <style>
 :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
@@ -99,7 +98,6 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
 .video{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;aspect-ratio:16/9;background:#0b0e13}
 .section-title{margin:10px 0 12px;font-size:20px}
 </style>
-
 <style>
 /* ideal-mobile */
 html,body{overflow-x:hidden}
@@ -125,7 +123,6 @@ img,video{max-width:100%;height:auto}
 .lc-drawer__panel a{display:block;padding:12px;border-radius:10px;color:#cfe9ff;text-decoration:none;border:1px solid rgba(255,255,255,.08);margin:6px 0}
 </style>
 <style>/* toast */.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}/* skeleton */.skel{position:relative;overflow:hidden;background:rgba(255,255,255,.06);border-radius:10px}.skel:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:sh 1.2s infinite}@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}</style>
-
 <style>
 /* --- Mobile-friendly base fixes --- */
 * { box-sizing: border-box; }
@@ -161,8 +158,6 @@ button, .btn { touch-action: manipulation; }
   .container, .wrap, main { padding-left:12px; padding-right:12px; }
 }
 </style>
-
-
 <style>
 /* Header flexible wrap */
 header nav, header .menu, .header-buttons {
@@ -190,8 +185,6 @@ table { width:100%; border-collapse:collapse; }
   .card, .dashboard-card { width:100% !important; min-width:0 !important; }
 }
 </style>
-
-
 <style>
 /* --- MOBILE OVERFLOW & GLOW FIXES --- */
 html, body { overflow-x:hidden; }
@@ -236,8 +229,6 @@ table { width:100%; border-collapse: collapse; table-layout: auto; }
   text-overflow: ellipsis;
 }
 </style>
-
-
 <style>
 /* ==== COMPACT SPACING PRESET ==== */
 /* Reduce global paddings/margins and grid gaps */
@@ -272,8 +263,6 @@ button, .btn, .chip, .badge { padding:6px 10px !important; line-height:1.15 !imp
 ul, ol { margin:6px 0 !important; }
 ul li, ol li { margin:4px 0 !important; }
 </style>
-
-
 <style>
 /* === Conservative mobile wrap for tables inside cards (no layout surprises) === */
 @media (max-width: 768px){
@@ -296,20 +285,97 @@ ul li, ol li { margin:4px 0 !important; }
   .card, .dashboard-card, .panel, .widget { overflow: hidden !important; }
 }
 </style>
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" name="viewport"/><style>/* ===== Litcash Mobile & Sticky Header Fixes (injected) ===== */
+:root {
+  --app-header: 64px;
+}
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--app-header);
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  min-height: 100dvh;
+  margin: 0;
+  overscroll-behavior-y: none;
+  touch-action: manipulation;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
 
-</head>
+/* Make header sticky across common header classnames */
+header, .header, .navbar, .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--bg-2, rgba(15,17,21,0.88));
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
+  backdrop-filter: saturate(180%) blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Prevent layout jumps below sticky header */
+main, .main, .page, .content, .container, .app {
+  padding-top: max(0px, calc(env(safe-area-inset-top) * 1));
+}
+
+/* Tables & horizontal overflow on small screens */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-wrap, .table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Buttons and inputs sane sizes to prevent iOS zoom */
+@media (max-width: 480px) {
+  :root{ --radius: 14px; }
+  h1 { font-size: clamp(20px, 5vw, 24px); }
+  h2 { font-size: clamp(18px, 4.5vw, 20px); }
+  h3 { font-size: clamp(16px, 4vw, 18px); }
+  p, li, span, label, a { font-size: 16px; line-height: 1.35; }
+  input, select, textarea, button { font-size: 16px; min-height: 44px; }
+  .container, .wrap, .page { padding-left: 12px; padding-right: 12px; }
+  .grid, .cards, .rows { gap: 8px !important; }
+  .card, .panel, .box { padding: 12px !important; border-radius: var(--radius); }
+  .hide-on-mobile { display: none !important; }
+  .metric, .stat { min-width: 0; }
+  .metric .value, .stat .value { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+  .nowrap { white-space: nowrap; }
+}
+
+/* Prevent glow/box-shadows from spilling off-screen */
+.card, .panel, .box {
+  overflow: clip;
+}
+
+/* Ensure any nav drawer overlays above content */
+.drawer, .mobile-menu, .nav-overlay {
+  z-index: 1100;
+}
+
+/* Kill any accidental double margins around the header */
+header * { max-width: 100%; }
+
+/* Utility to hide any orphan "Ваша реферальная ссылка" block if present */
+.ref-link-section, [data-ref-link] { display: none !important; }
+/* ===== End of Mobile & Sticky Header Fixes ===== */</style></head>
 <body><header class="header noscript-header">
 <div class="container nav">
 <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
 <nav class="nav-links">
-<a href="index.html" data-i18n="home_nav" data-i18n="nav_home">Главная</a>
-<a href="dashboard_single.html" data-i18n="dashboard_nav" data-i18n="nav_dashboard">Личный кабинет</a>
-<a href="deposit_single.html" data-i18n="deposit_nav" data-i18n="deposit_title">Пополнение</a>
-<a href="withdraw_single.html" data-i18n="withdraw_nav" data-i18n="withdraw_title">Вывод</a>
-<a href="faq_single.html" data-i18n="faq_nav" data-i18n="faq_title">FAQ</a>
-<a href="settings_single.html" data-i18n="settings_nav" data-i18n="settings_title">Настройки</a>
+<a data-i18n="nav_home" href="index.html">Главная</a>
+<a data-i18n="nav_dashboard" href="dashboard_single.html">Личный кабинет</a>
+<a data-i18n="deposit_title" href="deposit_single.html">Пополнение</a>
+<a data-i18n="withdraw_title" href="withdraw_single.html">Вывод</a>
+<a data-i18n="faq_title" href="faq_single.html">FAQ</a>
+<a data-i18n="settings_title" href="settings_single.html">Настройки</a>
 </nav>
-<div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
+<div aria-label="Menu" class="burger" id="lc-burger"><span></span></div>
 <div class="lang"><div class="lc-lang">
 <button aria-expanded="false" aria-haspopup="listbox" class="lc-lang__btn">
 <svg aria-hidden="true" class="lc-lang__icon" viewbox="0 0 24 24">
@@ -322,9 +388,9 @@ ul li, ol li { margin:4px 0 !important; }
 <li data-lang="en" role="option">GB English</li>
 </ul>
 </div></div><div class="nav-cta">
-        <!-- Login/Register buttons support i18n -->
-        <a class="btn ghost" href="login_single.html" data-i18n="nav_login" data-i18n="login_title">Вход</a>
-        <a class="btn primary" href="register_single.html" data-i18n="nav_register" data-i18n="register_title">Регистрация</a>
+<!-- Login/Register buttons support i18n -->
+<a class="btn ghost" data-i18n="login_title" href="login_single.html">Вход</a>
+<a class="btn primary" data-i18n="register_title" href="register_single.html">Регистрация</a>
 </div>
 </div>
 </header>
@@ -344,7 +410,7 @@ ul li, ol li { margin:4px 0 !important; }
 <div class="card">
 <h2>Просмотр видео</h2>
 <div class="video">
-<video controls="" id="promoVid" class="video" preload="none" style="width:100%;height:100%">
+<video class="video" controls="" id="promoVid" preload="none" style="width:100%;height:100%">
 <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"/>
         Ваш браузер не поддерживает видео тег.
       </video>
@@ -361,7 +427,7 @@ ul li, ol li { margin:4px 0 !important; }
 <div class="flex" style="gap:10px;flex-wrap:wrap">
 <input class="input" id="refLink" readonly="" style="flex:1;min-width:240px;height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text)" value=""/>
 <button class="btn" id="copyRef">Скопировать</button>
-<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today" data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b id="viewsLeftToday" data-views-left>5</b></div>
+<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b data-views-left="" id="viewsLeftToday">5</b></div>
 </div>
 <div class="grid grid-3" style="margin-top:12px">
 <div class="card"><div class="muted" data-i18n="gen1"> 1 поколение</div><div id="gen1Count" style="font-size:22px;font-weight:700">0</div></div>
@@ -381,50 +447,44 @@ ul li, ol li { margin:4px 0 !important; }
 <table class="table">
 <thead><tr><th data-i18n="indicator">Показатель</th><th data-i18n="value">Значение</th><th data-i18n="comment">Комментарий</th></tr></thead>
 <tbody id="infoRows">
-  <tr>
-    <td>Уровень</td>
-    <td><span data-level-name>—</span></td>
-    <td>Starter / Advanced / Pro Elite / Titanium</td>
-  </tr>
-
-  <tr>
-    <td>Процент</td>
-    <td><span data-rate="">—</span></td>
-    <td>Начисляется от базового капитала уровня</td>
-  </tr>
-
-  <tr>
-    <td>База уровня</td>
-    <td><span id="baseCapCell">—</span></td>
-    <td>min(капитал, потолок уровня)</td>
-  </tr>
-
-  <tr>
-    <td>За 1 просмотр</td>
-    <td>
-      <span id="perViewCell">
-        <span data-reward-per-view>$0.00</span>
-      </span>
-    </td>
-    <td>5 просмотров = полный дневной %</td>
-  </tr>
-
-  <tr>
-    <td>За 5 просмотров (сегодня)</td>
-    <td><span data-daily-reward>$0.00</span></td>
-    <td>Сумма за сутки по уровню</td>
-  </tr>
-
-  <tr>
-    <td>Просмотров осталось сегодня</td>
-    <td><span data-views-left>0</span></td>
-    <td>Макс. 5 в день</td>
-  </tr>
-
-  <tr>
-    <td>Цель следующего уровня</td>
-    <td colspan="2"><span id="nextTargetCell">—</span></td>
-  </tr>
+<tr>
+<td>Уровень</td>
+<td><span data-level-name="">—</span></td>
+<td>Starter / Advanced / Pro Elite / Titanium</td>
+</tr>
+<tr>
+<td>Процент</td>
+<td><span data-rate="">—</span></td>
+<td>Начисляется от базового капитала уровня</td>
+</tr>
+<tr>
+<td>База уровня</td>
+<td><span id="baseCapCell">—</span></td>
+<td>min(капитал, потолок уровня)</td>
+</tr>
+<tr>
+<td>За 1 просмотр</td>
+<td>
+<span id="perViewCell">
+<span data-reward-per-view="">$0.00</span>
+</span>
+</td>
+<td>5 просмотров = полный дневной %</td>
+</tr>
+<tr>
+<td>За 5 просмотров (сегодня)</td>
+<td><span data-daily-reward="">$0.00</span></td>
+<td>Сумма за сутки по уровню</td>
+</tr>
+<tr>
+<td>Просмотров осталось сегодня</td>
+<td><span data-views-left="">0</span></td>
+<td>Макс. 5 в день</td>
+</tr>
+<tr>
+<td>Цель следующего уровня</td>
+<td colspan="2"><span id="nextTargetCell">—</span></td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -453,11 +513,11 @@ ul li, ol li { margin:4px 0 !important; }
 <footer class="footer">
 <div class="container">© 2025 Litcash. Все права защищены.</div>
 </footer>
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="supabaseConfig.js"></script>
-<script defer src="assets/js/i18n.js"></script>
-<script defer src="app_supabase.js"></script>
-<script defer src="assets/js/lang-switcher.js"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer="" src="supabaseConfig.js"></script>
+<script defer="" src="assets/js/i18n.js"></script>
+<script defer="" src="app_supabase.js"></script>
+<script defer="" src="assets/js/lang-switcher.js"></script>
 <script id="lc-lang-script-inline" type="text/plain">
 (function(){
   if (!window.LC_I18N) {
@@ -558,13 +618,11 @@ document.addEventListener('DOMContentLoaded', async function(){
   }catch(_){}
 });
 </script>
-
-
-<div class="lc-drawer" id="lc-drawer" aria-hidden="true">
-  <div class="lc-drawer__panel">
-    <nav id="lc-drawer-links"></nav>
-    <div style="margin-top:12px" id="lc-drawer-cta"></div>
-  </div>
+<div aria-hidden="true" class="lc-drawer" id="lc-drawer">
+<div class="lc-drawer__panel">
+<nav id="lc-drawer-links"></nav>
+<div id="lc-drawer-cta" style="margin-top:12px"></div>
+</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
@@ -584,7 +642,6 @@ document.addEventListener('DOMContentLoaded', function(){
   if(cta && dc){ dc.innerHTML = cta.outerHTML; }
 });
 </script>
-
 <script>window.LC_TOAST=(function(){let box;function ensure(){if(!box){box=document.createElement('div');box.className='lc-toast';document.body.appendChild(box);}}function show(msg){ensure();const item=document.createElement('div');item.className='lc-toast__item';item.textContent=msg;box.appendChild(item);setTimeout(()=>{item.remove();},1700);}return{ok:show,err:show};})();</script>
 <div id="refLinkWrap" style="display:none;margin:1rem 0;">
 </div>
@@ -597,76 +654,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll(selector).forEach(el => { el.textContent = text; });
   }
 
-  window.LC.loadLevelInfo = async function () {
-    try {
-      const { data: { session } } = await window.sb.auth.getSession();
-      if (!session) return;
-
-      const { data, error } = await window.sb.rpc('get_level_info_v2');
-      if (error) { console.error(error); return; }
-      const info = Array.isArray(data) ? data[0] : data;
-      if (!info) return;
-
-      const usd = (c) => (Number(c || 0) / 100).toFixed(2) + ' USDT';
-
-      // 1) Уровень (обновляем все места)
-      const lvlName = info.level_name || info.lvl_name || info.level_key || '—';
-      setTextAll('[data-level],[data-level-name]', lvlName);
-
-      // 2) Процент (bps -> %) — обновляем все [data-rate]
-      const bp = Number(
-        info.reward_percent_bp ?? info.pct_bp ?? info.percent_bp ?? 0
-      );
-      const percent = (bp / 100).toFixed(2) + ' %';
-      setTextAll('[data-rate]', percent);
-
-      // 3) За 1 просмотр
-      const perViewCents = Number(info.reward_per_view_cents ?? info.per_view_cents ?? 0);
-      const pvText = usd(perViewCents);
-      const pvSpan = document.querySelector('[data-reward-per-view]');
-      if (pvSpan) pvSpan.textContent = pvText;
-      const pvBadge = document.getElementById('perViewBadge');
-      if (pvBadge) pvBadge.textContent = `+${pvText} за просмотр`;
-
-      // 4) За 5 просмотров (в день)
-      setTextAll('[data-daily-reward]', usd(info.daily_reward_cents ?? info.daily_reward ?? 0));
-
-      // 5) Осталось просмотров сегодня — обновляем все места
-      const left = Number(
-        info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0
-      );
-      setTextAll('[data-views-left]', Math.max(left, 0));
-
-      // 6) База уровня
-      const baseCents = Number(info.base_amount_cents ?? info.base_cap_cents ?? 0);
-      const bcEl = document.getElementById('baseCapCell');
-      if (bcEl) bcEl.textContent = usd(baseCents);
-
-      // 7) Капитал (расч.) карточка
-      const capEl = document.querySelector('[data-cap]');
-      if (capEl) capEl.textContent = usd(baseCents);
-
-      // 8) Рефералы
-      const refsEl = document.querySelector('[data-refs]');
-      if (refsEl) refsEl.textContent = Number(info.refs_total ?? info.active_refs ?? 0);
-
-      // 9) Индикация активности
-      const warn = document.getElementById('notActiveWarn');
-      if (warn) warn.style.display = (info.is_active === false) ? '' : 'none';
-
-      // 10) Цель следующего уровня (если есть)
-      const ntEl = document.getElementById('nextTargetCell');
-      if (ntEl && info.next_target) ntEl.textContent = String(info.next_target);
-    } catch (e) { console.error(e); }
-  };
+  window.
 
   window.LC.loadLevelInfo();
 });
 </script>
-
-<script defer src="assets/js/guard.js"></script>
-
-<script defer>
+<script defer="" src="assets/js/guard.js"></script>
+<script defer="">
 document.addEventListener('DOMContentLoaded', () => {
   try{
     const sb = window.sb;
@@ -706,8 +700,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }catch(e){ console.error(e); }
 });
 </script>
-
-
 <!-- === Litcash minimal fixes pack (start) === -->
 <script>
 // ===== Video playlist config =====
@@ -866,7 +858,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
-
 <script>
 // 2) "Copy" button: fill referral link and copy to clipboard with toast
 document.addEventListener('DOMContentLoaded', async () => {
@@ -910,7 +901,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   copyBtn && copyBtn.addEventListener('click', (e) => { e.preventDefault(); doCopy(); });
 });
 </script>
-
 <script>
 // 3) Mobile nav: ensure burger shows links + 4) Home goes to dashboard after login
 document.addEventListener('DOMContentLoaded', async () => {
@@ -954,8 +944,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 <!-- === Litcash minimal fixes pack (end) === -->
-
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // 1) Гарантируем объекты и единый alias для Supabase
@@ -964,23 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!sb) return;
 
   // 2) Создаём/переопределяем функцию загрузки и прорисовки данных уровня/баланса
-  window.LC.loadLevelInfo = async function () {
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) return;
-
-      const { data, error } = await sb.rpc('get_level_info_v2');
-      if (error) { console.error(error); return; }
-      const info = Array.isArray(data) ? data[0] : data;
-      if (!info) return;
-
-      // Хелпер для USDT-формата: поддержка "в центах" и "в целых"
-      const toUsdText = (v) => {
-        const n = Number(v || 0);
-        const asCents = Math.abs(n) >= 100 && Number.isInteger(n);
-        const usd = asCents ? n / 100 : n;
-        return '$' + usd.toFixed(2);
-      };
+  window.
 
       // === Баланс ===
       const balanceSrc =
@@ -1048,7 +1020,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.LC.loadLevelInfo();
 });
 </script>
-
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase;
@@ -1092,7 +1063,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 </script>
-
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase;
@@ -1138,4 +1108,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(e){ console.warn('burger init error', e); }
 });
 </script>
-</body></html>
+<script>// ===== Litcash Mobile Header Height Helper (injected) =====
+(function(){
+  function setHeaderHeightVar(){
+    try {
+      var header = document.querySelector('header, .header, .navbar, .topbar');
+      var h = header ? header.getBoundingClientRect().height : 64;
+      document.documentElement.style.setProperty('--app-header', (h||64) + 'px');
+    } catch(e){ /* no-op */ }
+  }
+  window.addEventListener('load', setHeaderHeightVar);
+  window.addEventListener('resize', setHeaderHeightVar);
+  // On orientation changes
+  window.addEventListener('orientationchange', setHeaderHeightVar);
+})();
+// ===== End Mobile Header Helper =====</script><script>LC.loadLevelInfo = async function () {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await sb.rpc('get_level_info_v2');
+      if (error) { console.error(error); return; }
+      const info = Array.isArray(data) ? data[0] : data;
+      if (!info) return;
+
+      // Хелпер для USDT-формата: поддержка "в центах" и "в целых"
+      const toUsdText = (v) => {
+        const n = Number(v || 0);
+        const asCents = Math.abs(n) >= 100 && Number.isInteger(n);
+        const usd = asCents ? n / 100 : n;
+        return '$' + usd.toFixed(2);
+      };</script></body></html>
