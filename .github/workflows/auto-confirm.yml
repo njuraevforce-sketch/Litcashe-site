@@ -2,8 +2,8 @@ name: auto-confirm-deposits
 
 on:
   schedule:
-    - cron: "* * * * *"   # запуск каждую минуту
-  workflow_dispatch:       # возможность запуска вручную из Actions
+    - cron: "* * * * *"   # каждый 1 мин
+  workflow_dispatch:       # ручной запуск
 
 concurrency:
   group: auto-confirm-deposits
@@ -13,29 +13,50 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     timeout-minutes: 3
-
     env:
-      FUNC_URL: https://einpfuegfsilnoiareco.functions.supabase.co/auto-confirm-deposits
-      AUTH: ${{ secrets.CRON_KEY }}
+      # добавь эти секреты в GitHub → Settings → Secrets → Actions
+      FUNC_URL: ${{ secrets.SUPABASE_FUNC_URL }}   # напр.: https://einpfuegfsilnoiareco.functions.supabase.co/auto-confirm-deposits
+      CRON_KEY: ${{ secrets.CRON_KEY }}            # тот же, что CRON_KEY в Secrets функции Supabase
 
     steps:
-      - name: Call edge function
+      - name: Call edge function (with retry)
         shell: bash
         run: |
           set -euo pipefail
-          echo "🔄 Calling $FUNC_URL"
-          http_code=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
-            -H "Authorization: Bearer $AUTH" \
-            -H "Accept: application/json" \
-            "$FUNC_URL")
 
-          echo "HTTP $http_code"
-          echo "Response:"
-          cat /tmp/resp.json || true
-
-          if [[ "$http_code" -ge 400 ]]; then
-            echo "❌ Function returned error"
-            exit 1
+          if [[ -z "${FUNC_URL:-}" || -z "${CRON_KEY:-}" ]]; then
+            echo "FUNC_URL or CRON_KEY is not set"; exit 1
           fi
 
-          echo "✅ Done"
+          # окно сканирования: последние 90 минут
+          FROM=$(( $(date -u +%s%3N) - 90*60*1000 ))
+
+          ATTEMPTS=3
+          SLEEP=6
+          CODE=0
+          BODY=""
+
+          for i in $(seq 1 $ATTEMPTS); do
+            echo "🔄 Attempt $i: ${FUNC_URL}?key=***&from=${FROM}"
+            RESP="$(curl -sS -w '\nHTTP:%{http_code}\n' \
+              "${FUNC_URL}?key=${CRON_KEY}&from=${FROM}")" || true
+
+            echo "$RESP"
+            CODE="$(echo "$RESP" | tail -n1 | sed 's/HTTP://')"
+            BODY="$(echo "$RESP" | sed '$d')"
+
+            if [[ "$CODE" == "200" ]]; then
+              echo "✅ OK (HTTP 200)"; break
+            fi
+            if [[ $i -lt $ATTEMPTS ]]; then
+              echo "⏳ Retry in ${SLEEP}s…"; sleep "$SLEEP"
+            fi
+          done
+
+          if [[ "$CODE" != "200" ]]; then
+            echo "❌ Function returned HTTP $CODE"; exit 1
+          fi
+
+          # Не критично, но покажем полезные поля
+          echo "Response body:"
+          echo "$BODY"
