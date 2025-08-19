@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data: { session } } = await window.sb.auth.getSession();
       if (!session) return;
 
-      const { data, error } = await window.sb.rpc('get_level_info');
+      const { data, error } = await window.sb.rpc('get_level_info_v2');
       if (error) { console.error(error); return; }
       const info = Array.isArray(data) ? data[0] : data;
       if (!info) return;
@@ -797,7 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) return;
 
-      const { data, error } = await sb.rpc('get_level_info');
+      const { data, error } = await sb.rpc('get_level_info_v2');
       if (error) { console.error(error); return; }
       const info = Array.isArray(data) ? data[0] : data;
       if (!info) return;
@@ -877,4 +877,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </body></html>
-
