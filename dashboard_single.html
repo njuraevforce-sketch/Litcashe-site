@@ -1375,6 +1375,22 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 
+
+<script>
+// ensure drawerLinks container exists to avoid null error in mobile-nav script
+(function(){
+  try{
+    var d = document;
+    var drawer = d.querySelector('#lc-drawer');
+    if(!drawer) return;
+    if(!drawer.querySelector('.drawer-links')){
+      var div = d.createElement('div');
+      div.className = 'drawer-links';
+      drawer.appendChild(div);
+    }
+  }catch(e){}
+})();
+</script>
 <script id="mobile-nav-dedupe">
 (function(){
   const qs = s => document.querySelector(s);
