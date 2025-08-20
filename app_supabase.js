@@ -1,4 +1,4 @@
-// app_supabase.js (autowired, cleaned)
+// app_supabase.js (autowired, cleaned, syntax-fixed only)
 ;(function () {
   // 0) Проверка конфига и наличие supabase-js
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
@@ -21,7 +21,7 @@
 
   // --- утилиты
   const $ = (sel) => document.querySelector(sel);
-  const fmtMoney = (v) => `${Number(v || 0).toFixed(2)}`.replace(/^/, '$'); // "$xx.xx"
+  const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
   const fmtDate = (iso) => {
     try { return new Date(iso).toLocaleString(); } catch { return iso || ''; }
   };
@@ -32,7 +32,17 @@
     return data?.user || null;
   }
 
-  // 3) Глобальный LC (оставил вашу структуру)
+  // Список твоих роликов в репозитории (вне объекта, чтобы не ломать синтаксис)
+  const LC_VIDEO_LIST = [
+    '/assets/videos/ad1.mp4',
+    '/assets/videos/ad2.mp4',
+    '/assets/videos/ad3.mp4'
+  ];
+
+  // Минимум секунд просмотра для зачёта
+  const LC_MIN_SECONDS = 10; // если в БД стоит 30с — поменяй здесь на 30
+
+  // 3) Глобальный LC (оставил твою структуру; починил только синтаксис)
   window.LC = {
     async afterAuth() {
       await this.ensureProfile();      // мягко, с try/catch
@@ -40,7 +50,7 @@
       await this.refreshBalance();
       await this.refreshLevelInfo?.();
       await this.mountReferral();      // показать ссылку-приглашение
-      await this.loadReferralWidgets(); // <- оживляем таблицы рефералок
+      await this.loadReferralWidgets(); // оживляем таблицы рефералок
     },
 
     async ensureProfile() {
@@ -82,131 +92,108 @@
       } catch (e) { console.warn('[LC] applyReferral error', e?.message || e); }
     },
 
-    // ===== ВИДЕО =====
-    // Список ваших роликов в репозитории
-    // (оставляю как есть)
-  };
+    // ====== Просмотр видео (инициализация)
+    initVideoWatch() {
+      const video = document.getElementById('promoVid');
+      const startBtn = document.getElementById('startBtn');
+      const bar = document.getElementById('progressFill');
+      const txt = document.getElementById('progressText');
+      if (!video || !startBtn) return;
 
-  // Список роликов
-  const LC_VIDEO_LIST = [
-    '/assets/videos/ad1.mp4',
-    '/assets/videos/ad2.mp4',
-    '/assets/videos/ad3.mp4'
-  ];
+      let allowed = false;     // можно ли сегодня смотреть (аккаунт активен + есть лимит)
+      let credited = false;    // уже начислили за текущий сеанс
+      let acc = 0;             // накопленные секунды «честного» просмотра
+      let lastT = 0;           // последняя зафиксированная позиция
 
-  // Минимум секунд просмотра для зачёта
-  const LC_MIN_SECONDS = 10;
+      function ui(msg) { if (txt) txt.textContent = msg; }
+      function setBar(pct) { if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+      function pickVideo() {
+        return LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)];
+      }
+      function resetProgress() {
+        credited = false;
+        acc = 0;
+        lastT = 0;
+        setBar(0);
+        ui('Прогресс…');
+      }
 
-  window.LC = window.LC || {};
+      const refreshState = async () => {
+        try {
+          const { data, error } = await window.sb.rpc('get_level_info');
+          if (error) throw error;
+          const info = Array.isArray(data) ? data[0] : data;
+          const left = Number(info?.views_left_today ?? 0);
+          const isActive = (info?.level_key && info.level_key !== 'guest');
 
-  // Инициализация логики просмотра
-  window.LC.initVideoWatch = function () {
-    const video = document.getElementById('promoVid');
-    const startBtn = document.getElementById('startBtn');
-    const bar = document.getElementById('progressFill');
-    const txt = document.getElementById('progressText');
+          allowed = isActive && left > 0;
+          startBtn.disabled = !allowed;
 
-    if (!video || !startBtn) return;
-
-    let allowed = false; // можно ли сегодня смотреть (аккаунт активен + есть лимит)
-    let credited = false; // уже начислили за текущий сеанс
-    let acc = 0; // накопленные секунды «честного» просмотра
-    let lastT = 0; // последняя зафиксированная позиция
-
-    function ui(msg) { if (txt) txt.textContent = msg; }
-    function setBar(pct) { if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
-    function pickVideo() { return LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)]; }
-    function resetProgress() { credited = false; acc = 0; lastT = 0; setBar(0); ui('Прогресс…'); }
-
-    async function refreshState() {
-      try {
-        const { data, error } = await window.sb.rpc('get_level_info');
-        if (error) throw error;
-        const info = Array.isArray(data) ? data[0] : data;
-        const left = Number(info?.views_left_today ?? 0);
-        const isActive = (info?.level_key && info.level_key !== 'guest');
-
-        allowed = isActive && left > 0;
-        startBtn.disabled = !allowed;
-
-        if (!isActive) {
-          ui('Аккаунт не активен. Пополните баланс и/или пригласите рефералов.');
-        } else if (left <= 0) {
-          ui('Лимит на сегодня исчерпан.');
-        } else {
-          ui(`Доступно просмотров сегодня: ${left}`);
+          if (!isActive) {
+            ui('Аккаунт не активен. Пополните баланс и/или пригласите рефералов.');
+          } else if (left <= 0) {
+            ui('Лимит на сегодня исчерпан.');
+          } else {
+            ui(`Доступно просмотров сегодня: ${left}`);
+          }
+        } catch (e) {
+          console.error(e);
+          startBtn.disabled = true;
+          ui('Не удалось получить лимит. Повторите позже.');
         }
-      } catch (e) {
-        console.error(e);
-        startBtn.disabled = true;
-        ui('Не удалось получить лимит. Повторите позже.');
-      }
-    }
+      };
 
-    async function credit() {
-      try {
-        credited = true;
-        startBtn.disabled = true;
-        const vidId = (video.currentSrc || '').split('/').pop() || 'video';
+      const credit = async () => {
+        try {
+          credited = true;
+          startBtn.disabled = true;
+          const vidId = (video.currentSrc || '').split('/').pop() || 'video';
 
-        // Начисляем (использует ваш RPC credit_view через LC.creditView)
-        await window.LC.creditView(vidId, Math.round(acc));
+          // Начисляем (использует твой RPC credit_view)
+          await window.LC.creditView(vidId, Math.round(acc));
 
-        // Обновим баланс и виджеты уровней/лимитов
-        await window.LC.refreshBalance();
-        await window.LC.refreshLevelInfo();
+          // Обновим баланс и виджеты уровней/лимитов
+          await window.LC.refreshBalance();
+          await window.LC.refreshLevelInfo();
 
-        await refreshState(); // чтобы кнопка корректно отобразила остаток
-      } catch (e) {
-        console.error(e);
-        ui('Ошибка начисления. Попробуйте ещё раз.');
-      } finally {
-        startBtn.disabled = false;
-      }
-    }
+          await refreshState(); // чтобы кнопка корректно отобразила остаток
+        } catch (e) {
+          console.error(e);
+          ui('Ошибка начисления. Попробуйте ещё раз.');
+        } finally {
+          startBtn.disabled = false;
+        }
+      };
 
-    // Считаем только «честное» время (вперёд). На seeking назад — не добавляем.
-    video.addEventListener('timeupdate', () => {
-      const t = Math.max(0, video.currentTime || 0);
-      if (t > lastT) {
-        acc += (t - lastT);
-        lastT = t;
-        setBar(Math.round((acc / LC_MIN_SECONDS) * 100));
-      } else {
-        // перемотали назад — просто зафиксируем
-        lastT = t;
-      }
-      if (!credited && acc >= LC_MIN_SECONDS) credit();
-    });
-
-    // На всякий — если досмотрели до конца/пауза
-    video.addEventListener('ended', () => { if (!credited && acc >= LC_MIN_SECONDS) credit(); });
-
-    startBtn.addEventListener('click', async () => {
-      await refreshState();
-      if (!allowed) return;
-      resetProgress();
-
-      video.src = pickVideo(); // подставляем один из роликов
-      // чтобы iOS/Android не блокировали — запускаем после клика:
-      video.muted = true;
-      video.play().catch(() => {
-        // если не завелось — пользователь нажмёт «play» на контролах
+      // Считаем только «честное» время (вперёд)
+      video.addEventListener('timeupdate', () => {
+        const t = Math.max(0, video.currentTime || 0);
+        if (t > lastT) {
+          acc += (t - lastT);
+          lastT = t;
+          setBar(Math.round((acc / LC_MIN_SECONDS) * 100));
+        } else {
+          lastT = t; // перемотали назад — просто зафиксируем
+        }
+        if (!credited && acc >= LC_MIN_SECONDS) credit();
       });
-    });
 
-    // первичная проверка состояния
-    refreshState();
-  };
+      video.addEventListener('ended', () => { if (!credited && acc >= LC_MIN_SECONDS) credit(); });
 
-  // --- ИНИЦИАЛИЗАЦИЯ НА СТРАНИЦЕ ---
-  document.addEventListener('DOMContentLoaded', () => {
-    // вместо старого setupVideoTracking():
-    window.LC.initVideoWatch?.();
-  });
+      startBtn.addEventListener('click', async () => {
+        await refreshState();
+        if (!allowed) return;
+        resetProgress();
 
-  // ==== Остальные методы LC ====
-  Object.assign(window.LC, {
+        video.src = pickVideo(); // подставляем один из твоих роликов
+        video.muted = true;      // чтобы iOS/Android не блокировали автозапуск после клика
+        video.play().catch(() => { /* пользователь нажмёт play сам */ });
+      });
+
+      // первичная проверка состояния
+      refreshState();
+    },
+
     async refreshBalance() {
       try {
         const user = await getUser(); if (!user) return;
@@ -319,19 +306,20 @@
         const levelTop = document.querySelector('[data-level]');
         if (levelTop) levelTop.textContent = info.level_name || '—';
 
-        // (опционально) верхняя карточка "Рефералы", если добавите атрибут data-refs-total
+        // (опционально) верхняя карточка "Рефералы", если добавишь атрибут data-refs-total
         const refsTop = document.querySelector('[data-refs-total]');
         if (refsTop != null && info.refs_total != null) refsTop.textContent = info.refs_total;
 
         const daily = (info.daily_reward_cents ?? 0) / 100;
-        setTxt('[data-reward-per-view]', perView.toFixed(2) + ' USDT');
-        setTxt('[data-daily-reward]', daily.toFixed(2) + ' USDT');
+        setTxt('[data-reward-per-view]', `${perView.toFixed(2)} USDT`);
+        setTxt('[data-daily-reward]', `${daily.toFixed(2)} USDT`);
       } catch (e) { console.error(e); }
     },
 
     async loadReferralWidgets() {
       try {
         const user = await getUser(); if (!user) return;
+
         // Суммы по уровням
         const { data: sumsRows, error: eS } = await window.sb
           .from('referral_payouts').select('level,reward_usdt').eq('referrer_user_id', user.id);
@@ -341,12 +329,13 @@
             const lvl = Number(r.level); const v = Number(r.reward_usdt || 0);
             if (lvl >= 1 && lvl <= 3) sums[lvl] += v;
           }
-          $('#ref-sum-l1') && ($('#ref-sum-l1').textContent = `$${sums[1].toFixed(2)}`);
-          $('#ref-sum-l2') && ($('#ref-sum-l2').textContent = `$${sums[2].toFixed(2)}`);
-          $('#ref-sum-l3') && ($('#ref-sum-l3').textContent = `$${sums[3].toFixed(2)}`);
+          if ($('#ref-sum-l1')) $('#ref-sum-l1').textContent = fmtMoney(sums[1]);
+          if ($('#ref-sum-l2')) $('#ref-sum-l2').textContent = fmtMoney(sums[2]);
+          if ($('#ref-sum-l3')) $('#ref-sum-l3').textContent = fmtMoney(sums[3]);
           const total = sums[1] + sums[2] + sums[3];
-          $('#ref-sum-total') && ($('#ref-sum-total').textContent = `$${total.toFixed(2)}`);
+          if ($('#ref-sum-total')) $('#ref-sum-total').textContent = fmtMoney(total);
         }
+
         // Последние начисления
         const tbody = $('#ref-last-tbody');
         if (tbody) {
@@ -356,12 +345,13 @@
             .eq('referrer_user_id', user.id)
             .order('created_at', { ascending: false })
             .limit(10);
+
           if (!eL && Array.isArray(lastRows) && lastRows.length) {
             tbody.innerHTML = lastRows.map(r => `
               <tr>
                 <td>${fmtDate(r.created_at)}</td>
                 <td>${r.level ?? ''}</td>
-                <td>$${Number(r.reward_usdt || 0).toFixed(2)}</td>
+                <td>${fmtMoney(r.reward_usdt)}</td>
                 <td>${r.source_type || 'доход'}</td>
               </tr>
             `).join('');
@@ -369,6 +359,7 @@
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px 0;">Нет данных</td></tr>`;
           }
         }
+
         // Счётчики L1/L2/L3 (если есть RPC ref_counts)
         const c1 = $('#ref-cnt-l1'), c2 = $('#ref-cnt-l2'), c3 = $('#ref-cnt-l3');
         if (c1 || c2 || c3) {
@@ -382,13 +373,13 @@
               if (c2) c2.textContent = v2;
               if (c3) c3.textContent = v3;
             }
-          } catch (e) { console.debug('[LC] ref_counts RPC missing or denied'); }
+          } catch (_) { /* ok */ }
         }
       } catch (e) { console.error('[LC] loadReferralWidgets error', e?.message || e); }
     },
 
     async logout() { try { await window.sb.auth.signOut(); } finally { location.href = '/'; } }
-  });
+  };
 
   // ----- Auth UI (nav)
   function renderAuthUI(session) {
@@ -398,11 +389,13 @@
     if (session) {
       cta.innerHTML = `
         <a class="btn ghost" href="dashboard_single.html" id="nav-dashboard">Кабинет</a>
-        <a class="btn" href="#" id="nav-logout">Выход</a>`;
+        <a class="btn" href="#" id="nav-logout">Выход</a>
+      `;
     } else {
       cta.innerHTML = `
         <a class="btn ghost" href="login_single.html">Вход</a>
-        <a class="btn primary" href="register_single.html">Регистрация</a>`;
+        <a class="btn primary" href="register_single.html">Регистрация</a>
+      `;
     }
     if (drawerCta) {
       drawerCta.innerHTML = cta.innerHTML.replace('id="nav-logout"', 'id="drawerLogout"');
@@ -419,7 +412,8 @@
 
   // 4) Автоподключение кнопок/форм и первичное наполнение
   document.addEventListener('DOMContentLoaded', async () => {
-    window.LC.setupVideoTracking?.(); // оставляю, как было у вас
+    // старый трекер (если остался где-то) — безопасно
+    window.LC.setupVideoTracking?.();
 
     try {
       const { data: { session } } = await window.sb.auth.getSession();
@@ -480,6 +474,9 @@
     await window.LC.refreshLevelInfo?.();
     await window.LC.mountReferral();
     await window.LC.loadReferralWidgets();
+
+    // Инициализация видео после готовности DOM
+    window.LC.initVideoWatch?.();
   });
 })();
 
