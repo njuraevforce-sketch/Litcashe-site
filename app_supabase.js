@@ -360,6 +360,86 @@
         await window.LC.attachTxToDeposit(depId, tx);
       });
     }
+// === РЕФЕРАЛЬНЫЕ ВИДЖЕТЫ (счётчики + суммы + последние начисления)
+window.LC.loadReferralWidgets = async function () {
+  const $ = (sel) => document.querySelector(sel);
+  const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
+
+  try {
+    const { data: { user } } = await window.sb.auth.getUser();
+    if (!user) return;
+
+    // 1) Кол-во рефералов L1/L2/L3 (RPC ref_counts)
+    try {
+      const { data, error } = await window.sb.rpc('ref_counts', { p_user: user.id });
+      if (!error) {
+        const row = Array.isArray(data) ? data[0] : data;
+        const vals = Object.values(row || {}).map(n => Number(n) || 0);
+        const [c1 = 0, c2 = 0, c3 = 0] = vals;
+
+        $('#gen1Count') && ($('#gen1Count').textContent = c1);
+        $('#gen2Count') && ($('#gen2Count').textContent = c2);
+        $('#gen3Count') && ($('#gen3Count').textContent = c3);
+        // если в верхнем блоке сделаешь <div id="refsTotal">0</div>,
+        // то получишь общий итог:
+        $('#refsTotal') && ($('#refsTotal').textContent = c1 + c2 + c3);
+      }
+    } catch (e) { console.debug('ref_counts:', e?.message || e); }
+
+    // 2) Суммы по уровням (по таблице referral_payouts)
+    try {
+      const { data, error } = await window.sb
+        .from('referral_payouts')
+        .select('level,reward_usdt')
+        .eq('referrer_user_id', user.id);
+
+      if (!error) {
+        const sums = { 1: 0, 2: 0, 3: 0 };
+        (data || []).forEach(r => {
+          const lvl = Number(r.level);
+          const val = Number(r.reward_usdt) || 0;
+          if (lvl >= 1 && lvl <= 3) sums[lvl] += val;
+        });
+        $('#ref-sum-l1') && ($('#ref-sum-l1').textContent = fmtMoney(sums[1]));
+        $('#ref-sum-l2') && ($('#ref-sum-l2').textContent = fmtMoney(sums[2]));
+        $('#ref-sum-l3') && ($('#ref-sum-l3').textContent = fmtMoney(sums[3]));
+        const total = sums[1] + sums[2] + sums[3];
+        $('#ref-sum-total') && ($('#ref-sum-total').textContent = fmtMoney(total));
+      }
+    } catch (e) { console.debug('ref sums:', e?.message || e); }
+
+    // 3) Последние начисления (для правой таблицы)
+    try {
+      const { data, error } = await window.sb
+        .from('v_referral_payouts')
+        .select('created_at, level, reward_usdt, source_type')
+        .eq('referrer_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const tbody = document.getElementById('ref-last-tbody');
+      if (tbody) {
+        if (error || !data || !data.length) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px 0;">Нет данных</td></tr>`;
+        } else {
+          const fmtDate = (iso) => {
+            try { return new Date(iso).toLocaleString(); } catch { return iso || ''; }
+          };
+          tbody.innerHTML = data.map(r => `
+            <tr>
+              <td>${fmtDate(r.created_at)}</td>
+              <td>${r.level ?? ''}</td>
+              <td>${fmtMoney(r.reward_usdt)}</td>
+              <td>${r.source_type || 'доход'}</td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch (e) { console.debug('ref last:', e?.message || e); }
+  } catch (e) {
+    console.error('loadReferralWidgets:', e);
+  }
+};
 
     // первичное наполнение UI
     await window.LC.refreshBalance();
