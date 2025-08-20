@@ -3,6 +3,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Кабинет — Litcash</title>
 <style>
@@ -156,7 +157,6 @@ button, .btn { touch-action: manipulation; }
   .container, .wrap, main { padding-left:12px; padding-right:12px; }
 }</style>
 
-
 <style>
 /* Header flexible wrap */
 header nav, header .menu, .header-buttons {
@@ -183,7 +183,6 @@ table { width:100%; border-collapse:collapse; }
 @media(max-width:768px){
   .card, .dashboard-card { width:100% !important; min-width:0 !important; }
 }</style>
-
 
 <style>
 /* --- MOBILE OVERFLOW & GLOW FIXES --- */
@@ -229,7 +228,6 @@ table { width:100%; border-collapse: collapse; table-layout: auto; }
   text-overflow: ellipsis;
 }</style>
 
-
 <style>
 /* ==== COMPACT SPACING PRESET ==== */
 /* Reduce global paddings/margins and grid gaps */
@@ -264,7 +262,6 @@ button, .btn, .chip, .badge { padding:6px 10px !important; line-height:1.15 !imp
 ul, ol { margin:6px 0 !important; }
 ul li, ol li { margin:4px 0 !important; }</style>
 
-
 <style>
 /* === Conservative mobile wrap for tables inside cards (no layout surprises) === */
 @media (max-width: 768px){
@@ -287,46 +284,13 @@ ul li, ol li { margin:4px 0 !important; }</style>
   .card, .dashboard-card, .panel, .widget { overflow: hidden !important; }
 }</style>
 
-
 <style>
 @media (max-width: 768px){
-  #lcJoy {
-    position: fixed;
-    right: 14px;
-    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-    width: 68px; height: 68px;
-    z-index: 9999;
-    touch-action: none;
-    user-select: none;
-  }
-  #lcJoy .base {
-    width: 100%; height: 100%;
-    border-radius: 9999px;
-    background: radial-gradient(120% 120% at 30% 30%, rgba(255,255,255,.15), rgba(0,0,0,.4));
-    box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
-    backdrop-filter: blur(6px);
-    position: relative;
-    overflow: hidden;
-  }
-  #lcJoy .knob {
-    position: absolute;
-    left: 50%; top: 50%;
-    width: 36px; height: 36px;
-    margin-left: -18px; margin-top: -18px;
-    border-radius: 9999px;
-    background: radial-gradient(120% 120% at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.2));
-    box-shadow: 0 6px 16px rgba(0,0,0,.25);
-    transition: transform 120ms ease;
-  }
-  #lcJoy.hint .base::after{
-    content:''; position:absolute; inset:0;
-    background: conic-gradient(from 0deg, rgba(255,255,255,.12), transparent 25%);
-    pointer-events:none;
-  }
+  
+  
+  
+  
 }</style>
-
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
-
 <style id="hard-mobile-fixes">
 /* === HARD MOBILE ADAPTATION PACK === */
 html, body { width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior-y:none; -webkit-text-size-adjust:100%; }
@@ -649,7 +613,6 @@ document.addEventListener('DOMContentLoaded', async function(){
 });
 </script>
 
-
 <div class="lc-drawer" id="lc-drawer" aria-hidden="true">
   <div class="lc-drawer__panel">
     <nav id="lc-drawer-links"></nav>
@@ -796,7 +759,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }catch(e){ console.error(e); }
 });
 </script>
-
 
 <!-- === Litcash minimal fixes pack (start) === -->
 <script>
@@ -1044,7 +1006,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 <!-- === Litcash minimal fixes pack (end) === -->
-
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -1387,8 +1348,6 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 
-
-
 <script>
 // ensure drawerLinks container exists to avoid null error in mobile-nav script
 (function(){
@@ -1484,7 +1443,6 @@ document.addEventListener('DOMContentLoaded', function(){
   window.addEventListener('orientationchange', adapt);
 })();
 </script>
-
 
 <script>
 // Referrals widgets: fill left "Реферальный доход" and right "Последние реферальные начисления"
