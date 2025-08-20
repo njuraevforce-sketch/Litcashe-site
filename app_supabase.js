@@ -208,6 +208,17 @@
         setTxt('[data-level-name]', info.level_name ?? '');
         setTxt('[data-views-left]', info.views_left_today ?? 0);
         const perView = (info.reward_per_view_cents ?? 0) / 100;
+    // === ВЕРХНЯЯ КАРТОЧКА "Уровень" ===
+    const badgeEl = document.getElementById('perViewBadge');
+    if (badgeEl) badgeEl.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
+
+    const levelTop = document.querySelector('[data-level]');
+    if (levelTop) levelTop.textContent = info.level_name || '—';
+
+    // (опционально) верхняя карточка "Рефералы", если добавишь атрибут data-refs-total
+    const refsTop = document.querySelector('[data-refs-total]');
+    if (refsTop != null && info.refs_total != null) refsTop.textContent = info.refs_total;
+
         const daily   = (info.daily_reward_cents ?? 0) / 100;
         setTxt('[data-reward-per-view]', perView.toFixed(2) + ' USDT');
         setTxt('[data-daily-reward]', daily.toFixed(2) + ' USDT');
