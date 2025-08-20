@@ -32,19 +32,18 @@
     return data?.user || null;
   }
 
-  // 3) Глобальный LC (оставил твою структуру и методы, добавил/поправил только нужноe)
+  // 3) Глобальный LC
   window.LC = {
     async afterAuth() {
-      await this.ensureProfile();      // мягко, с try/catch
-      await this.applyReferral();      // теперь пишет в user_referrals
+      await this.ensureProfile();
+      await this.applyReferral();
       await this.refreshBalance();
       await this.refreshLevelInfo?.();
-      await this.mountReferral();      // показать ссылку-приглашение
-      await this.loadReferralWidgets(); // <- оживляем таблицы рефералок
+      await this.mountReferral();
+      await this.loadReferralWidgets();
     },
 
     async ensureProfile() {
-      // Мягкая проверка наличия профиля (если схема не та — просто логируем)
       try {
         const user = await getUser(); if (!user) return;
         const { data, error } = await window.sb
@@ -56,7 +55,6 @@
     },
 
     async applyReferral() {
-      // Привязка реферала по ref-коду в URL/LS -> таблица user_referrals
       try {
         const params = new URLSearchParams(location.search);
         const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
@@ -65,25 +63,22 @@
 
         const user = await getUser(); if (!user) return;
 
-        // Уже привязан?
         const { data: cur, error: e0 } = await window.sb
           .from('user_referrals').select('referrer_user_id')
           .eq('user_id', user.id).maybeSingle();
         if (!e0 && cur?.referrer_user_id) return;
 
-        // Находим владельца кода
         const { data: refOwner, error: e1 } = await window.sb
           .from('profiles').select('id').eq('ref_code', refParam).maybeSingle();
         if (e1 || !refOwner || refOwner.id === user.id) return;
 
-        // Пишем связь (upsert)
         const { error: e2 } = await window.sb
           .from('user_referrals')
           .upsert({ user_id: user.id, referrer_user_id: refOwner.id }, { onConflict: 'user_id' });
         if (e2) console.warn('[LC] user_referrals upsert error', e2.message || e2);
       } catch (e) { console.warn('[LC] applyReferral error', e?.message || e); }
     },
-    
+
     async refreshBalance() {
       try {
         const user = await getUser(); if (!user) return;
@@ -99,6 +94,7 @@
         }
       } catch (e) { console.error(e); }
     },
+
     // ====== Просмотры
     async creditView(videoId, watchedSeconds) {
       const user = await getUser(); if (!user) { alert('Войдите в аккаунт'); return; }
@@ -187,18 +183,16 @@
         setTxt('[data-level-name]', info.level_name ?? '');
         setTxt('[data-views-left]', info.views_left_today ?? 0);
         const perView = (info.reward_per_view_cents ?? 0) / 100;
-    // === ВЕРХНЯЯ КАРТОЧКА "Уровень" ===
-    const badgeEl = document.getElementById('perViewBadge');
-    if (badgeEl) badgeEl.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
 
-    const levelTop = document.querySelector('[data-level]');
-    if (levelTop) levelTop.textContent = info.level_name || '—';
+        // Верхняя карточка
+        const badgeEl = document.getElementById('perViewBadge');
+        if (badgeEl) badgeEl.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
+        const levelTop = document.querySelector('[data-level]');
+        if (levelTop) levelTop.textContent = info.level_name || '—';
+        const refsTop = document.querySelector('[data-refs-total]');
+        if (refsTop != null && info.refs_total != null) refsTop.textContent = info.refs_total;
 
-    // (опционально) верхняя карточка "Рефералы", если добавишь атрибут data-refs-total
-    const refsTop = document.querySelector('[data-refs-total]');
-    if (refsTop != null && info.refs_total != null) refsTop.textContent = info.refs_total;
-
-        const daily   = (info.daily_reward_cents ?? 0) / 100;
+        const daily = (info.daily_reward_cents ?? 0) / 100;
         setTxt('[data-reward-per-view]', perView.toFixed(2) + ' USDT');
         setTxt('[data-daily-reward]', daily.toFixed(2) + ' USDT');
       } catch (e) { console.error(e); }
@@ -265,134 +259,96 @@
 
     async logout() { try { await window.sb.auth.signOut(); } finally { location.href = '/'; } }
   };
-// Список твоих роликов в репозитории
-const LC_VIDEO_LIST = [
-  '/assets/videos/ad1.mp4',
-  '/assets/videos/ad2.mp4',
-  '/assets/videos/ad3.mp4'
-];
 
-// Минимум секунд просмотра для зачёта
-const LC_MIN_SECONDS = 30;
+  // === ВИДЕО: конфиг + логика просмотра ======================================
+  const LC_VIDEO_LIST = [
+    '/assets/videos/ad1.mp4',
+    '/assets/videos/ad2.mp4',
+    '/assets/videos/ad3.mp4'
+  ];
+  const LC_MIN_SECONDS = 30;
 
-window.LC = window.LC || {};
+  window.LC.initVideoWatch = function () {
+    const video    = document.getElementById('promoVid');
+    const startBtn = document.getElementById('startBtn');
+    const bar      = document.getElementById('progressFill');
+    const txt      = document.getElementById('progressText');
 
-// Инициализация логики просмотра
-window.LC.initVideoWatch = function () {
-  const video = document.getElementById('promoVid');
-  const startBtn = document.getElementById('startBtn');
-  const bar = document.getElementById('progressFill');
-  const txt = document.getElementById('progressText');
+    if (!video || !startBtn) return;
 
-  if (!video || !startBtn) return;
+    let allowed = false;
+    let credited = false;
+    let acc = 0;
+    let lastT = 0;
 
-  let allowed = false;     // можно ли сегодня смотреть (аккаунт активен + есть лимит)
-  let credited = false;    // уже начислили за текущий сеанс
-  let acc = 0;             // накопленные секунды «честного» просмотра
-  let lastT = 0;           // последняя зафиксированная позиция
-
-  function ui(msg) { if (txt) txt.textContent = msg; }
-  function setBar(pct) { if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
-
-  function pickVideo() {
-    return LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)];
-  }
-
-  function resetProgress() {
-    credited = false;
-    acc = 0;
-    lastT = 0;
-    setBar(0);
-    ui('Прогресс…');
-  }
-
-  async function refreshState() {
-    // тянем условия уровня + лимит на сегодня
-    try {
-      const { data, error } = await window.sb.rpc('get_level_info');
-      if (error) throw error;
-      const info = Array.isArray(data) ? data[0] : data;
-      const left = Number(info?.views_left_today ?? 0);
-      const isActive = (info?.level_key && info.level_key !== 'guest');
-
-      allowed = isActive && left > 0;
-      startBtn.disabled = !allowed;
-
-      if (!isActive) {
-        ui('Аккаунт не активен. Пополните баланс и/или пригласите рефералов.');
-      } else if (left <= 0) {
-        ui('Лимит на сегодня исчерпан.');
-      } else {
-        ui(`Доступно просмотров сегодня: ${left}`);
+    function ui(msg) { if (txt) txt.textContent = msg; }
+    function setBar(pct) { if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+    function pickVideo() {
+      return LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)];
+    }
+    function resetProgress() {
+      credited = false; acc = 0; lastT = 0;
+      setBar(0); ui('Прогресс…');
+    }
+    async function refreshState() {
+      try {
+        const { data, error } = await window.sb.rpc('get_level_info');
+        if (error) throw error;
+        const info = Array.isArray(data) ? data[0] : data;
+        const left = Number(info?.views_left_today ?? 0);
+        const isActive = (info?.level_key && info.level_key !== 'guest');
+        allowed = isActive && left > 0;
+        startBtn.disabled = !allowed;
+        if (!isActive) ui('Аккаунт не активен. Пополните баланс и/или пригласите рефералов.');
+        else if (left <= 0) ui('Лимит на сегодня исчерпан.');
+        else ui(`Доступно просмотров сегодня: ${left}`);
+      } catch (e) {
+        console.error(e); startBtn.disabled = true; ui('Не удалось получить лимит. Повторите позже.');
       }
-    } catch (e) {
-      console.error(e);
-      startBtn.disabled = true;
-      ui('Не удалось получить лимит. Повторите позже.');
     }
-  }
-
-  async function credit() {
-    try {
-      credited = true;
-      startBtn.disabled = true;
-      const vidId = (video.currentSrc || '').split('/').pop() || 'video';
-
-      // Начисляем (использует твой RPC credit_view через LC.creditView)
-      await window.LC.creditView(vidId, Math.round(acc));
-
-      // Обновим баланс и виджеты уровней/лимитов
-      await window.LC.refreshBalance();
-      await window.LC.refreshLevelInfo();
-
-      await refreshState(); // чтобы кнопка корректно отобразила остаток
-    } catch (e) {
-      console.error(e);
-      ui('Ошибка начисления. Попробуйте ещё раз.');
-    } finally {
-      startBtn.disabled = false;
+    async function credit() {
+      try {
+        credited = true; startBtn.disabled = true;
+        const vidId = (video.currentSrc || '').split('/').pop() || 'video';
+        await window.LC.creditView(vidId, Math.round(acc));
+        await window.LC.refreshBalance();
+        await window.LC.refreshLevelInfo();
+        await refreshState();
+      } catch (e) {
+        console.error(e); ui('Ошибка начисления. Попробуйте ещё раз.');
+      } finally {
+        startBtn.disabled = false;
+      }
     }
-  }
 
-  // Считаем только «честное» время (вперёд). На seeking назад — не добавляем.
-  video.addEventListener('timeupdate', () => {
-    const t = Math.max(0, video.currentTime || 0);
-    if (t > lastT) {
-      acc += (t - lastT);
-      lastT = t;
-      setBar(Math.round((acc / LC_MIN_SECONDS) * 100));
-    } else {
-      // перемотали назад — просто зафиксируем
-      lastT = t;
-    }
-    if (!credited && acc >= LC_MIN_SECONDS) credit();
-  });
-
-  // На всякий — если досмотрели до конца/пауза после 30с
-  video.addEventListener('ended', () => { if (!credited && acc >= LC_MIN_SECONDS) credit(); });
-
-  startBtn.addEventListener('click', async () => {
-    await refreshState();
-    if (!allowed) return;
-    resetProgress();
-
-    video.src = pickVideo(); // подставляем один из твоих роликов
-    // чтобы iOS/Android не блокировали — запускаем после клика:
-    video.muted = true;
-    video.play().catch(() => {
-      // если не завелось — пользователь нажмёт «play» на контролах
+    video.addEventListener('timeupdate', () => {
+      const t = Math.max(0, video.currentTime || 0);
+      if (t > lastT) {
+        acc += (t - lastT);
+        lastT = t;
+        setBar(Math.round((acc / LC_MIN_SECONDS) * 100));
+      } else {
+        lastT = t;
+      }
+      if (!credited && acc >= LC_MIN_SECONDS) credit();
     });
-  });
 
-  // первичная проверка состояния
-  refreshState();
-};
+    video.addEventListener('ended', () => { if (!credited && acc >= LC_MIN_SECONDS) credit(); });
 
-// --- ИНИЦИАЛИЗАЦИЯ НА СТРАНИЦЕ ---
-document.addEventListener('DOMContentLoaded', () => {
-  // вместо старого setupVideoTracking():
-  window.LC.initVideoWatch?.();
-});
+    startBtn.addEventListener('click', async () => {
+      await refreshState();
+      if (!allowed) return;
+      resetProgress();
+      video.src = pickVideo();
+      video.muted = true;
+      video.play().catch(() => {});
+    });
+
+    // первичная проверка
+    refreshState();
+  };
+  // ===========================================================================
+
   // ----- Auth UI (nav)
   function renderAuthUI(session) {
     const cta = document.querySelector('.nav-cta');
@@ -422,7 +378,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 4) Автоподключение кнопок/форм и первичное наполнение
   document.addEventListener('DOMContentLoaded', async () => {
-    window.LC.setupVideoTracking?.();
+    // запускаем логику просмотрщика
+    window.LC.initVideoWatch?.();
 
     try {
       const { data: { session } } = await window.sb.auth.getSession();
@@ -477,86 +434,81 @@ document.addEventListener('DOMContentLoaded', () => {
         await window.LC.attachTxToDeposit(depId, tx);
       });
     }
-// === РЕФЕРАЛЬНЫЕ ВИДЖЕТЫ (счётчики + суммы + последние начисления)
-window.LC.loadReferralWidgets = async function () {
-  const $ = (sel) => document.querySelector(sel);
-  const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
 
-  try {
-    const { data: { user } } = await window.sb.auth.getUser();
-    if (!user) return;
+    // === РЕФЕРАЛЬНЫЕ ВИДЖЕТЫ (счётчики + суммы + последние начисления) ===
+    window.LC.loadReferralWidgets = async function () {
+      const $ = (sel) => document.querySelector(sel);
+      const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
 
-    // 1) Кол-во рефералов L1/L2/L3 (RPC ref_counts)
-    try {
-      const { data, error } = await window.sb.rpc('ref_counts', { p_user: user.id });
-      if (!error) {
-        const row = Array.isArray(data) ? data[0] : data;
-        const vals = Object.values(row || {}).map(n => Number(n) || 0);
-        const [c1 = 0, c2 = 0, c3 = 0] = vals;
+      try {
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) return;
 
-        $('#gen1Count') && ($('#gen1Count').textContent = c1);
-        $('#gen2Count') && ($('#gen2Count').textContent = c2);
-        $('#gen3Count') && ($('#gen3Count').textContent = c3);
-        // если в верхнем блоке сделаешь <div id="refsTotal">0</div>,
-        // то получишь общий итог:
-        $('#refsTotal') && ($('#refsTotal').textContent = c1 + c2 + c3);
+        try {
+          const { data, error } = await window.sb.rpc('ref_counts', { p_user: user.id });
+          if (!error) {
+            const row = Array.isArray(data) ? data[0] : data;
+            const vals = Object.values(row || {}).map(n => Number(n) || 0);
+            const [c1 = 0, c2 = 0, c3 = 0] = vals;
+            $('#gen1Count') && ($('#gen1Count').textContent = c1);
+            $('#gen2Count') && ($('#gen2Count').textContent = c2);
+            $('#gen3Count') && ($('#gen3Count').textContent = c3);
+            $('#refsTotal') && ($('#refsTotal').textContent = c1 + c2 + c3);
+          }
+        } catch (e) { console.debug('ref_counts:', e?.message || e); }
+
+        try {
+          const { data, error } = await window.sb
+            .from('referral_payouts')
+            .select('level,reward_usdt')
+            .eq('referrer_user_id', user.id);
+
+          if (!error) {
+            const sums = { 1: 0, 2: 0, 3: 0 };
+            (data || []).forEach(r => {
+              const lvl = Number(r.level);
+              const val = Number(r.reward_usdt) || 0;
+              if (lvl >= 1 && lvl <= 3) sums[lvl] += val;
+            });
+            $('#ref-sum-l1') && ($('#ref-sum-l1').textContent = fmtMoney(sums[1]));
+            $('#ref-sum-l2') && ($('#ref-sum-l2').textContent = fmtMoney(sums[2]));
+            $('#ref-sum-l3') && ($('#ref-sum-l3').textContent = fmtMoney(sums[3]));
+            const total = sums[1] + sums[2] + sums[3];
+            $('#ref-sum-total') && ($('#ref-sum-total').textContent = fmtMoney(total));
+          }
+        } catch (e) { console.debug('ref sums:', e?.message || e); }
+
+        try {
+          const { data, error } = await window.sb
+            .from('v_referral_payouts')
+            .select('created_at, level, reward_usdt, source_type')
+            .eq('referrer_user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          const tbody = document.getElementById('ref-last-tbody');
+          if (tbody) {
+            if (error || !data || !data.length) {
+              tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px 0;">Нет данных</td></tr>`;
+            } else {
+              const fmtDate = (iso) => {
+                try { return new Date(iso).toLocaleString(); } catch { return iso || ''; }
+              };
+              tbody.innerHTML = data.map(r => `
+                <tr>
+                  <td>${fmtDate(r.created_at)}</td>
+                  <td>${r.level ?? ''}</td>
+                  <td>${fmtMoney(r.reward_usdt)}</td>
+                  <td>${r.source_type || 'доход'}</td>
+                </tr>
+              `).join('');
+            }
+          }
+        } catch (e) { console.debug('ref last:', e?.message || e); }
+      } catch (e) {
+        console.error('loadReferralWidgets:', e);
       }
-    } catch (e) { console.debug('ref_counts:', e?.message || e); }
-
-    // 2) Суммы по уровням (по таблице referral_payouts)
-    try {
-      const { data, error } = await window.sb
-        .from('referral_payouts')
-        .select('level,reward_usdt')
-        .eq('referrer_user_id', user.id);
-
-      if (!error) {
-        const sums = { 1: 0, 2: 0, 3: 0 };
-        (data || []).forEach(r => {
-          const lvl = Number(r.level);
-          const val = Number(r.reward_usdt) || 0;
-          if (lvl >= 1 && lvl <= 3) sums[lvl] += val;
-        });
-        $('#ref-sum-l1') && ($('#ref-sum-l1').textContent = fmtMoney(sums[1]));
-        $('#ref-sum-l2') && ($('#ref-sum-l2').textContent = fmtMoney(sums[2]));
-        $('#ref-sum-l3') && ($('#ref-sum-l3').textContent = fmtMoney(sums[3]));
-        const total = sums[1] + sums[2] + sums[3];
-        $('#ref-sum-total') && ($('#ref-sum-total').textContent = fmtMoney(total));
-      }
-    } catch (e) { console.debug('ref sums:', e?.message || e); }
-
-    // 3) Последние начисления (для правой таблицы)
-    try {
-      const { data, error } = await window.sb
-        .from('v_referral_payouts')
-        .select('created_at, level, reward_usdt, source_type')
-        .eq('referrer_user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      const tbody = document.getElementById('ref-last-tbody');
-      if (tbody) {
-        if (error || !data || !data.length) {
-          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px 0;">Нет данных</td></tr>`;
-        } else {
-          const fmtDate = (iso) => {
-            try { return new Date(iso).toLocaleString(); } catch { return iso || ''; }
-          };
-          tbody.innerHTML = data.map(r => `
-            <tr>
-              <td>${fmtDate(r.created_at)}</td>
-              <td>${r.level ?? ''}</td>
-              <td>${fmtMoney(r.reward_usdt)}</td>
-              <td>${r.source_type || 'доход'}</td>
-            </tr>
-          `).join('');
-        }
-      }
-    } catch (e) { console.debug('ref last:', e?.message || e); }
-  } catch (e) {
-    console.error('loadReferralWidgets:', e);
-  }
-};
+    };
 
     // первичное наполнение UI
     await window.LC.refreshBalance();
