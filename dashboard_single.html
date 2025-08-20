@@ -420,18 +420,31 @@ header { overflow: visible; }
 <section class="grid grid-2">
 <div class="card">
 <h2>Просмотр видео</h2>
+
 <div class="video">
-<video controls="" id="promoVid" class="video" preload="none" style="width:100%;height:100%">
-<source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"/>
-        Ваш браузер не поддерживает видео тег.
-      </video>
+  <video id="promoVid"
+         class="video"
+         preload="metadata"
+         playsinline
+         webkit-playsinline
+         controls
+         style="width:100%;height:auto">
+    <!-- Стартовый src можно оставить любым, JS будет подменять -->
+    <source id="promoSource" src="/assets/videos/ad1.mp4" type="video/mp4">
+    Ваш браузер не поддерживает видео тег.
+  </video>
 </div>
-<div class="progress" style="margin:14px 0 8px"><div id="progressFill" style="width:0%"></div></div>
+
+<div class="progress" style="margin:14px 0 8px">
+  <div id="progressFill" style="width:0%"></div>
+</div>
 <div class="muted" id="progressText">Прогресс…</div>
+
 <div class="flex" style="margin-top:14px">
-<button class="btn start" id="startBtn">Заработать за просмотр</button>
-<a class="btn" href="deposit_single.html">Пополнить</a>
+  <button class="btn" id="startBtn">Заработать за просмотр</button>
+  <a class="btn" href="deposit_single.html">Пополнить</a>
 </div>
+
 </div>
 <div class="card">
 <h2>Реферальная панель</h2>
