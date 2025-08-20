@@ -3,10 +3,9 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Кабинет — Litcash</title>
-<link rel="icon" href="favicon.ico">
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="%2300eaff"/><text x="50%" y="54%" font-size="28" text-anchor="middle" fill="%230b0e13" font-family="Arial" font-weight="700">L</text></svg>">
 <style>
 :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
 *{box-sizing:border-box}
@@ -158,6 +157,7 @@ button, .btn { touch-action: manipulation; }
   .container, .wrap, main { padding-left:12px; padding-right:12px; }
 }</style>
 
+
 <style>
 /* Header flexible wrap */
 header nav, header .menu, .header-buttons {
@@ -184,6 +184,7 @@ table { width:100%; border-collapse:collapse; }
 @media(max-width:768px){
   .card, .dashboard-card { width:100% !important; min-width:0 !important; }
 }</style>
+
 
 <style>
 /* --- MOBILE OVERFLOW & GLOW FIXES --- */
@@ -229,6 +230,7 @@ table { width:100%; border-collapse: collapse; table-layout: auto; }
   text-overflow: ellipsis;
 }</style>
 
+
 <style>
 /* ==== COMPACT SPACING PRESET ==== */
 /* Reduce global paddings/margins and grid gaps */
@@ -263,6 +265,7 @@ button, .btn, .chip, .badge { padding:6px 10px !important; line-height:1.15 !imp
 ul, ol { margin:6px 0 !important; }
 ul li, ol li { margin:4px 0 !important; }</style>
 
+
 <style>
 /* === Conservative mobile wrap for tables inside cards (no layout surprises) === */
 @media (max-width: 768px){
@@ -285,13 +288,46 @@ ul li, ol li { margin:4px 0 !important; }</style>
   .card, .dashboard-card, .panel, .widget { overflow: hidden !important; }
 }</style>
 
+
 <style>
 @media (max-width: 768px){
-  
-  
-  
-  
+  #lcJoy {
+    position: fixed;
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    width: 68px; height: 68px;
+    z-index: 9999;
+    touch-action: none;
+    user-select: none;
+  }
+  #lcJoy .base {
+    width: 100%; height: 100%;
+    border-radius: 9999px;
+    background: radial-gradient(120% 120% at 30% 30%, rgba(255,255,255,.15), rgba(0,0,0,.4));
+    box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
+    backdrop-filter: blur(6px);
+    position: relative;
+    overflow: hidden;
+  }
+  #lcJoy .knob {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 36px; height: 36px;
+    margin-left: -18px; margin-top: -18px;
+    border-radius: 9999px;
+    background: radial-gradient(120% 120% at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.2));
+    box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    transition: transform 120ms ease;
+  }
+  #lcJoy.hint .base::after{
+    content:''; position:absolute; inset:0;
+    background: conic-gradient(from 0deg, rgba(255,255,255,.12), transparent 25%);
+    pointer-events:none;
+  }
 }</style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+
 <style id="hard-mobile-fixes">
 /* === HARD MOBILE ADAPTATION PACK === */
 html, body { width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior-y:none; -webkit-text-size-adjust:100%; }
@@ -339,11 +375,6 @@ body { padding-bottom: calc(var(--safe-bottom) + 8px); }
 header { overflow: visible; }
 .mobile-nav-only{ display:flex; align-items:center; gap:8px; }</style>
 
-<style id="lc-joystick-hide">
-#lcJoy, .lc-joy, [data-joy], .joystick, .nipple, .nipplejs, .draggable-ball, .floating-joy, .joy-wrapper {
-  display:none !important; visibility:hidden !important;
-}
-</style>
 </head>
 <body><header class="header noscript-header">
 <div class="container nav">
@@ -619,6 +650,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 });
 </script>
 
+
 <div class="lc-drawer" id="lc-drawer" aria-hidden="true">
   <div class="lc-drawer__panel">
     <nav id="lc-drawer-links"></nav>
@@ -765,6 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }catch(e){ console.error(e); }
 });
 </script>
+
 
 <!-- === Litcash minimal fixes pack (start) === -->
 <script>
@@ -1012,6 +1045,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 <!-- === Litcash minimal fixes pack (end) === -->
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -1354,6 +1388,8 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 
+
+
 <script>
 // ensure drawerLinks container exists to avoid null error in mobile-nav script
 (function(){
@@ -1450,6 +1486,7 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+
 <script>
 // Referrals widgets: fill left "Реферальный доход" and right "Последние реферальные начисления"
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1509,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabaseConfig.js"></script>
-<script src="js/app_supabase.js"></script>
+<script src="supabaseConfig.js"></script>
+<script src="app_supabase.js"></script>
 
 </body></html>
