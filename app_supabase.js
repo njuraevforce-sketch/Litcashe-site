@@ -92,7 +92,7 @@ const LC_VIDEO_LIST = [
 ];
 
 // Минимум секунд просмотра для зачёта
-const LC_MIN_SECONDS = 30;
+const LC_MIN_SECONDS = 10;
 
 window.LC = window.LC || {};
 
