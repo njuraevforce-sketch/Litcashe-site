@@ -34,9 +34,9 @@
 
   // Список твоих роликов в репозитории (вне объекта, чтобы не ломать синтаксис)
   const LC_VIDEO_LIST = [
-    '/assets/videos/ad1.mp4',
-    '/assets/videos/ad2.mp4',
-    '/assets/videos/ad3.mp4'
+  'assets/videos/ad1.mp4',
+  'assets/videos/ad2.mp4',
+  'assets/videos/ad3.mp4'
   ];
 
   // Минимум секунд просмотра для зачёта
