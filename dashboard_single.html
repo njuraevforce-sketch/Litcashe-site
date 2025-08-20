@@ -422,13 +422,13 @@ header { overflow: visible; }
 <div class="card">
 <h2>Просмотр видео</h2>
 
-<div class="video">
+<div class="video" style="position:relative">
+  <div id="videoGuard" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);cursor:not-allowed;"></div>
   <video id="promoVid"
          class="video"
          preload="metadata"
          playsinline
          webkit-playsinline
-         controls
          style="width:100%;height:auto">
     <!-- Стартовый src можно оставить любым, JS будет подменять -->
     <source id="promoSource" src="/assets/videos/ad1.mp4" type="video/mp4">
@@ -956,6 +956,104 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+<script>
+// 1.1) Guarded playback: only via "Заработать за просмотр", block manual play
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  const video = document.getElementById('promoVid');
+  const guard = document.getElementById('videoGuard');
+  const startBtn = document.getElementById('startBtn');
+  const warn = document.getElementById('notActiveWarn');
+  let armed = false;
+
+  function lockVideoUI(on){
+    if (!video) return;
+    if (on){
+      video.removeAttribute('controls');
+      if (guard) { guard.style.display = 'flex'; guard.style.cursor = 'not-allowed'; }
+    } else {
+      video.setAttribute('controls', '');
+      if (guard) { guard.style.display = 'none'; }
+    }
+  }
+  lockVideoUI(true);
+
+  // Block manual play/seeking unless armed
+  if (video){
+    video.addEventListener('play', (e) => { if (!armed) { e.preventDefault?.(); video.pause(); } }, true);
+    video.addEventListener('seeking', () => { if (!armed) video.currentTime = 0; }, true);
+    video.addEventListener('ratechange', () => { if (!armed) video.playbackRate = 1; }, true);
+  }
+  if (guard){
+    guard.addEventListener('click', () => { 
+      (window.LC_TOAST && LC_TOAST.err) ? LC_TOAST.err('Нажми «Заработать за просмотр»') : alert('Нажми «Заработать за просмотр»'); 
+    });
+  }
+
+  async function enforceAccess(){
+    try{
+      if (!sb) throw new Error('Нет подключения');
+      const { data, error } = await sb.rpc('get_level_info_v2');
+      if (error) throw error;
+      const info = Array.isArray(data) ? data[0] : (data||{});
+      const isActive = info.is_active !== false;
+      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+      document.querySelectorAll('[data-views-left]').forEach(n => n.textContent = String(Math.max(left,0)));
+      if (!isActive){
+        startBtn && (startBtn.disabled = true, startBtn.textContent = 'Недоступно');
+        warn && (warn.style.display = '');
+        return { ok:false, reason:'inactive' };
+      }
+      if (left <= 0){
+        startBtn && (startBtn.disabled = true, startBtn.textContent = 'Лимит на сегодня');
+        return { ok:false, reason:'limit' };
+      }
+      startBtn && (startBtn.disabled = false, startBtn.textContent = 'Заработать за просмотр');
+      warn && (warn.style.display = 'none');
+      return { ok:true };
+    }catch(e){
+      console.error(e);
+      startBtn && (startBtn.disabled = true, startBtn.textContent = 'Недоступно');
+      return { ok:false, reason:'error' };
+    }
+  }
+
+  async function armAndUnlock(){
+    const access = await enforceAccess();
+    if (!access.ok) return false;
+    armed = true;
+    lockVideoUI(false);
+    try { video && (video.currentTime = 0); } catch(_){}
+    return true;
+  }
+
+  // Hook start button to require access and unlock controls
+  if (startBtn){
+    const _oldHandler = startBtn.onclick;
+    startBtn.addEventListener('click', async (e) => {
+      // allow our guard to run first
+      if (e) e.preventDefault();
+      const ok = await armAndUnlock();
+      if (!ok) return;
+      // let existing code proceed (startWatching will call play())
+      // Re-dispatch a custom event to not double-attach
+      const ev = new Event('lc:start-watch');
+      startBtn.dispatchEvent(ev);
+      // Also call the original handler if present
+      if (typeof _oldHandler === 'function') _oldHandler.call(startBtn, e);
+    }, { capture: true });
+  }
+
+  // When ended, relock until next click
+  if (video){
+    video.addEventListener('ended', () => { armed = false; lockVideoUI(true); });
+  }
+
+  // Initial access check on load
+  await enforceAccess();
+});
+</script>
 </script>
 
 <script>
