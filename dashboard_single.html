@@ -3,9 +3,10 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Кабинет — Litcash</title>
+<link rel="icon" href="favicon.ico">
 <style>
 :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
 *{box-sizing:border-box}
@@ -338,6 +339,11 @@ body { padding-bottom: calc(var(--safe-bottom) + 8px); }
 header { overflow: visible; }
 .mobile-nav-only{ display:flex; align-items:center; gap:8px; }</style>
 
+<style id="lc-joystick-hide">
+#lcJoy, .lc-joy, [data-joy], .joystick, .nipple, .nipplejs, .draggable-ball, .floating-joy, .joy-wrapper {
+  display:none !important; visibility:hidden !important;
+}
+</style>
 </head>
 <body><header class="header noscript-header">
 <div class="container nav">
