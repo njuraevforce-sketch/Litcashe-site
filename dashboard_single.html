@@ -811,6 +811,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
   if (!sb || !video || !source || !startBtn) return;
 
+  // hide native controls until user gets a ticket
+  try { video.controls = false; } catch(e){}
+
   let allowPlay = false;
   let frame = 0;
 
@@ -856,6 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2) Load and play
     source.src = vtData.signed_url;
+    try { video.controls = true; } catch(e){}
     video.dataset.ticket = vtData.ticket_id;
     try{ video.currentTime = 0; }catch(_){}
     video.load();
