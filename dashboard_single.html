@@ -1282,52 +1282,60 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function award(){
-    if (awarding) return;
+if (awarding) return;
     awarding = true;
 
     if (ticking) { clearInterval(ticking); ticking = null; }
-    try{
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { console.warn('award: no session'); return; }
-      if (playedSec < MIN_SEC) { console.warn('award: too short'); return; }
 
-      // вызываем RPC в БД
-      const { data, error } = await sb.rpc('award_view', { duration_sec: playedSec });
-      if (error) { console.error('award_view error', error); return; }
+    (async () => {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) { console.warn('award: no session'); return; }
+        if (playedSec < MIN_SEC) { console.warn('award: too short'); return; }
 
-      if (data && data.ok){
-        if (leftEl){
-          if (typeof data.left === 'number') {
-            leftEl.textContent = String(Math.max(0, data.left));
+        // Try award_view(duration_sec), fallback to award_view() if signature differs
+        let res = await sb.rpc('award_view', { duration_sec: playedSec });
+        if (res && res.error && (/(does not exist|record|argument)/i.test(res.error.message || ''))) {
+          res = await sb.rpc('award_view');
+        }
+        if (res && res.error) { console.error('award_view error', res.error); return; }
+
+        const payload = Array.isArray(res?.data) ? res.data[0] : (res?.data || {});
+
+        // Update "views left" if backend returned it; otherwise decrement optimistically
+        if (leftEl) {
+          const left =
+            (typeof payload.left === 'number') ? payload.left :
+            (typeof payload.views_left_today === 'number') ? payload.views_left_today :
+            null;
+          if (left !== null) {
+            leftEl.textContent = String(Math.max(0, left));
           } else {
             const cur = parseInt(leftEl.textContent || '0', 10);
             leftEl.textContent = String(Math.max(0, (Number.isFinite(cur) ? cur - 1 : 0)));
           }
         }
-        paintLeftText();
 
-        // обновим карточки (баланс/уровень и т.д.)
-        if (window.LC && typeof window.LC.loadLevelInfo === 'function'){
-          try { await window.LC.loadLevelInfo(); } catch(_){}
+        // Refresh full UI (balance, level, per-view reward, etc.)
+        if (window.LC && typeof window.LC.loadLevelInfo === 'function') {
+          window.LC.loadLevelInfo();
         }
-      } else {
-        console.warn('award failed:', data);
+      } catch (e) {
+        console.error('award error', e);
+      } finally {
+        try{
+          video.pause();
+          video.removeAttribute('src');
+          const s = video.querySelector('source'); if (s) s.removeAttribute('src');
+          video.load();
+        }catch(_){}
+        setProgress(0);
+        playedSec = 0;
+        awarding = false;
       }
-    } catch(e){
-      console.error('award error', e);
-    } finally {
-      // мягкий сброс плеера
-      try{
-        video.pause();
-        video.removeAttribute('src');
-        const s = video.querySelector('source'); if (s) s.removeAttribute('src');
-        video.load();
-      }catch(_){}
-      setProgress(0);
-      playedSec = 0;
-      awarding = false;
-    }
-  }
+    })();
+}
+
 
   startBtn.addEventListener('click', startVideo);
   video.addEventListener('ended', award);
