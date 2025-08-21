@@ -690,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   
 
-  window.LC.loadLevelInfo();
+
 });
 </script>
 
@@ -714,14 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fill){
       fill.style.transition = 'width .4s ease';
     }
-
-    // твоя функция начисления (оставь как есть у тебя)
-    function award(){ /* ... */ }
-
-    if (btn)   btn.addEventListener('click', award);
-    if (video) video.addEventListener('ended', award);
-
-  } catch (e) {
+} catch (e) {
     console.error(e);
   }
 });
