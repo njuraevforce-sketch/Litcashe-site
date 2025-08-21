@@ -405,6 +405,34 @@ header { overflow: visible; }
         <a class="btn primary" href="register_single.html" data-i18n="nav_register" data-i18n="register_title">Регистрация</a>
 </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const video = document.getElementById('promoVid');
+  let armed = false; window.__LC_ARM_VIDEO__ && window.__LC_ARM_VIDEO__(false);
+  // expose flag so other scripts can check
+  window.__LC_VIDEO_ARMED__ = () => armed;
+  function setArmed(v){ armed = !!v; window.__LC_SET_ARMED_TS__ = Date.now(); }
+  window.__LC_ARM_VIDEO__ = setArmed;
+
+  if (!video) return;
+  // hard pause on any load event before we attach other listeners
+  ['loadedmetadata','loadeddata','canplay','canplaythrough','playing'].forEach(ev=>{
+    video.addEventListener(ev, () => { if (!armed) try{ video.pause(); }catch(_){} }, true);
+  });
+  // monkeypatch play to block programmatic calls
+  const _play = video.play ? video.play.bind(video) : null;
+  if (_play){
+    video.play = function(){
+      if (!armed) {
+        try{ this.pause(); }catch(_){}
+        return Promise.reject(new DOMException('blocked', 'NotAllowedError'));
+      }
+      return _play();
+    };
+  }
+});
+</script>
 </header>
 <main class="container">
 <section class="grid grid-3">
@@ -422,13 +450,13 @@ header { overflow: visible; }
 <div class="card">
 <h2>Просмотр видео</h2>
 
-<div class="video">
+<div class="video" style="position:relative">
+  <div id="videoGuard" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);cursor:not-allowed;"></div>
   <video id="promoVid"
          class="video"
          preload="metadata"
          playsinline
          webkit-playsinline
-         controls
          style="width:100%;height:auto">
     <!-- Стартовый src можно оставить любым, JS будет подменять -->
     <source id="promoSource" src="/assets/videos/ad1.mp4" type="video/mp4">
@@ -760,7 +788,27 @@ document.addEventListener('DOMContentLoaded', () => {
 <script defer>
 document.addEventListener('DOMContentLoaded', () => {
   try{
-   
+    const sb = window.sb;
+    const reload = window.LC && window.LC.loadLevelInfo ? window.LC.loadLevelInfo : null;
+    const btn = document.getElementById('startBtn');
+    if (!sb || !btn) return;
+
+    async function award(){
+    // prevent multiple calls
+
+      const video = document.querySelector('video');
+      const videoId = (video && (video.currentSrc || video.dataset.id)) || 'video-1';
+      const { data, error } = await sb.rpc('award_view', { p_video_id: videoId });
+      if (error){ alert(error.message || 'Ошибка начисления'); return; }
+      if (!data || !data.ok){
+        alert(data && data.reason === 'limit' ? 'Лимит 5 просмотров на сегодня' : 'Не удалось зачесть просмотр');
+        return;
+      }
+      if (reload) await reload();
+      // Обновим прогресс-бар, если он есть
+      const leftEl = document.querySelector('[data-views-left]');
+      const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
+      const fill = document.getElementById('progressFill');
       if (leftEl && progressText){
         const left = parseInt(leftEl.textContent || '0', 10);
         progressText.textContent = `Просмотров осталось сегодня: ${left}`;
@@ -771,85 +819,99 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    btn.addEventListener('click', award);
     const video = document.querySelector('video');
-    
+    if (video) video.addEventListener('ended', award);
   }catch(e){ console.error(e); }
 });
 </script>
 
 
-
-<!-- === Video watch via Edge Functions (video-ticket / award-view) === -->
+<!-- === Litcash minimal fixes pack (start) === -->
 <script>
+// ===== Video playlist config =====
+window.LC_VIDEO_CFG = {
+  basePath: '/assets/videos',
+  prefix: 'ad',
+  ext: '.mp4',
+  total: 20
+};
+</script>
+<script>
+// Inject initial <source> for the video if missing and rotate files ad1..ad20
+document.addEventListener('DOMContentLoaded', () => {
+  const cfg = window.LC_VIDEO_CFG || {basePath:'/assets/videos', prefix:'ad', ext:'.mp4', total:20};
+  const video = document.getElementById('promoVid') || document.querySelector('video');
+  if (!video) return;
+  let source = video.querySelector('source');
+  if (!source){
+    source = document.createElement('source');
+    source.type = 'video/mp4';
+    video.appendChild(source);
+  }
+  let current = Number(localStorage.getItem('lc_vid_idx') || '1');
+  if (!current || current<1) current = 1;
+  if (current>cfg.total) current = 1;
+
+  function setSrc(idx){
+    const url = `${cfg.basePath}/${cfg.prefix}${idx}${cfg.ext}`;
+    source.src = url;
+    video.load();
+    localStorage.setItem('lc_vid_idx', String(idx));
+    // store the video "id" for backend
+    video.dataset.id = `${cfg.prefix}${idx}`;
+  }
+
+  setSrc(current);
+
+  // After finish prepare next
+  video.addEventListener('ended', () => {
+    current += 1;
+    if (current > cfg.total) current = 1;
+    setSrc(current);
+  });
+
+  // Also if the user switches quickly near the end
+  video.addEventListener('timeupdate', () => {
+    if (video.duration && video.currentTime / video.duration >= 0.995){
+      // will be handled by the award() in the other script
+    }
+  });
+});
+</script>
+<script>
+// 1) Make "Earn for watching" actually play video and award only after full watch
 document.addEventListener('DOMContentLoaded', () => {
   const sb = window.sb || window._supabase;
   const video = document.getElementById('promoVid') || document.querySelector('video');
-  const source = document.getElementById('promoSource') || (video && video.querySelector('source'));
   const startBtn = document.getElementById('startBtn');
   const fill = document.getElementById('progressFill');
   const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-  if (!sb || !video || !source || !startBtn) return;
-
-  let allowPlay = false;
-  let frame = 0;
+  let ticking = null;
+  let awarded = false;
 
   function setProgress(p){
-    if (fill) fill.style.width = Math.max(0, Math.min(100, p)) + '%';
+    if(!fill) return;
+    fill.style.width = Math.max(0, Math.min(100, p)) + '%';
   }
 
-  // Allow/lock play programmatically
-  function arm(lock){
-    allowPlay = !lock;
-  }
-  window.__LC_ARM_VIDEO__ = arm;
-
-  // Block native play until armed
-  function stopIfLocked(e){
-    if (!allowPlay){
-      try{ e && e.preventDefault && e.preventDefault(); }catch(_){}
-      try{ video.pause(); }catch(_){}
-      if (progressText) progressText.textContent = 'Нажмите «Заработать за просмотр»';
-    }
-  }
-  video.addEventListener('play', stopIfLocked, true);
-  video.addEventListener('seeking', stopIfLocked, true);
-
-  async function startWatching(){
+  function startWatching(){
+    if (!video) return;
+    awarded = false;
     setProgress(0);
-    if (startBtn){ startBtn.disabled = true; startBtn.textContent = 'Проверяем...'; }
-
-    // 1) Get ticket + signed URL
-    const vt = await sb.functions.invoke('video-ticket');
-    const vtData = vt && vt.data;
-    let reason = null;
-    if (vt.error){
-      try{ const dbg = await vt.error.context.json(); reason = dbg && dbg.reason; }catch(_){}
-    } else if (!vtData || vtData.ok !== true){
-      reason = (vtData && vtData.reason) || null;
+    if (startBtn){
+      startBtn.disabled = true;
+      startBtn.textContent = 'Смотрим...';
     }
-    if (reason){
-      alert(reason === 'inactive' ? 'Аккаунт не активен' : reason === 'limit' ? 'Лимит просмотров на сегодня' : ('Ошибка: ' + reason));
-      if (startBtn){ startBtn.disabled = false; startBtn.textContent = 'Заработать за просмотр'; }
-      return;
+    try { video.currentTime = 0; } catch(_){}
+    const playPromise = video.play && video.play();
+    if (playPromise && typeof playPromise.then === 'function'){
+      playPromise.catch(() => { /* autoplay blocked, user will press play manually */ });
     }
 
-    // 2) Load and play
-    source.src = vtData.signed_url;
-    video.dataset.ticket = vtData.ticket_id;
-    try{ video.currentTime = 0; }catch(_){}
-    video.load();
-
-    arm(false); // allow user agent to start playing now
-
-    if (startBtn) startBtn.textContent = 'Смотрим...';
-    const pp = video.play && video.play();
-    if (pp && typeof pp.then === 'function'){
-      pp.catch(() => { /* autoplay blocked - user will press Play manually */ });
-    }
-
-    // 3) Track progress
+    // track progress
     function tick(){
-      if (!video || !video.duration){ setProgress(0); frame = requestAnimationFrame(tick); return; }
+      if (!video || !video.duration) { setProgress(0); return; }
       const p = (video.currentTime / video.duration) * 100;
       setProgress(p);
       if (progressText){
@@ -857,178 +919,261 @@ document.addEventListener('DOMContentLoaded', () => {
         const left = leftEl ? parseInt(leftEl.textContent || '0', 10) : null;
         progressText.textContent = (p >= 100 ? 'Готово' : `Прогресс: ${Math.floor(p)}%`) + (left!==null ? ` · осталось: ${left}` : '');
       }
-      frame = requestAnimationFrame(tick);
+      if (p >= 99 && !awarded){ // safety for odd "ended" not firing on some mobiles
+        award();
+      }
+      ticking = requestAnimationFrame(tick);
     }
-    if (!frame) frame = requestAnimationFrame(tick);
+    if (!ticking) ticking = requestAnimationFrame(tick);
   }
 
   async function award(){
-    // Avoid duplicate awards
-    if (!video || !video.dataset || !video.dataset.ticket) return;
-    const ticket = video.dataset.ticket;
-    // freeze further manual plays until next start
-    arm(true);
+    // prevent multiple calls
+
+    if (awarded) return;
+    awarded = true;
     try{
-      const aw = await sb.functions.invoke('award-view', { body: { ticket_id: ticket, duration_sec: Math.round(video.duration || 0) } });
-      let ok = false, reason = null;
-      if (aw.error){
-        try{ const dbg = await aw.error.context.json(); reason = dbg && dbg.reason; }catch(_){}
-      } else {
-        ok = !!(aw.data && aw.data.ok);
-        reason = aw.data && aw.data.reason;
-      }
-      if (!ok){
-        alert(reason || 'Не удалось зачесть просмотр');
-      } else {
+      if (!sb){ throw new Error('Нет подключения к бэкенду'); }
+      const vid = (video && (video.currentSrc || video.dataset.id)) || 'video-1';
+      const { data, error } = await sb.rpc('award_view', { p_video_id: vid });
+      if (error) throw error;
+      if (!data || data.ok !== true){
+        const reason = data && data.reason;
+        window.LC_TOAST ? LC_TOAST.err(reason==='limit' ? 'Лимит 5 просмотров на сегодня' : 'Не удалось зачесть просмотр') : alert('Не удалось зачесть просмотр');
+      }else{
+        // Update counters if backend returned them
+        if (data.left !== undefined){
+          const leftEl = document.querySelector('[data-views-left]');
+          if (leftEl) leftEl.textContent = String(data.left);
+        }
+        if (data.balance !== undefined){
+          const balEl = document.querySelector('[data-balance]');
+          if (balEl) balEl.textContent = String(data.balance);
+        }
+        if (data.income_last !== undefined){
+          const incEl = document.querySelector('[data-income-last]');
+          if (incEl) incEl.textContent = String(data.income_last);
+        }
+
         if (window.LC && typeof window.LC.loadLevelInfo === 'function'){
           await window.LC.loadLevelInfo();
         }
+        window.LC_TOAST && LC_TOAST.ok('Зачтено!');
       }
-    } catch(e){
+    }catch(e){
       console.error(e);
-      alert(e.message || 'Ошибка начисления');
-    } finally {
-      if (frame){ cancelAnimationFrame(frame); frame = 0; }
+      window.LC_TOAST ? LC_TOAST.err(e.message || 'Ошибка начисления') : alert(e.message || 'Ошибка начисления');
+    }finally{
+      if (ticking){ cancelAnimationFrame(ticking); ticking = null; }
       setProgress(100);
-      if (startBtn){ startBtn.disabled = false; startBtn.textContent = 'Заработать за просмотр'; }
-      // clear ticket until next "start"
-      try{ delete video.dataset.ticket; }catch(_){}
+      if (startBtn){
+        startBtn.disabled = false;
+        startBtn.textContent = 'Заработать за просмотр';
+      }
     }
   }
-  <script>
-document.addEventListener('DOMContentLoaded', () => {
+
+  if (startBtn){
+    startBtn.addEventListener('click', (e) => { e.preventDefault(); startWatching(); });
+  }
+  if (video){
+    video.addEventListener('ended', award);
+    // On manual seeking near end, still award once
+    video.addEventListener('timeupdate', () => {
+      if (video.duration && video.currentTime / video.duration >= 0.99) award();
+    });
+  }
+});
+
+<script>
+// 1.1) Guarded playback: only via "Заработать за просмотр", block manual play
+document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase;
-  const video = document.getElementById('promoVid') || document.querySelector('video');
-  const source = document.getElementById('promoSource') || (video && video.querySelector('source'));
+  const video = document.getElementById('promoVid');
+  const guard = document.getElementById('videoGuard');
   const startBtn = document.getElementById('startBtn');
-  const fill = document.getElementById('progressFill');
-  const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-  if (!sb || !video || !source || !startBtn) return;
+  const warn = document.getElementById('notActiveWarn');
+  let armed = false; window.__LC_ARM_VIDEO__ && window.__LC_ARM_VIDEO__(false);
 
-  let allowPlay = false;
-  let raf = 0;
-
-  function setProgress(pct){
-    if (fill) fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
-  }
-
-  // Блокируем нативный play/seek до старта
-  function lockPlay(e){
-    if (!allowPlay){
-      try { e?.preventDefault?.(); } catch(_){}
-      try { video.pause(); } catch(_){}
-      if (progressText) progressText.textContent = 'Нажмите «Заработать за просмотр»';
+  function lockVideoUI(on){
+    if (!video) return;
+    if (on){
+      video.removeAttribute('controls');
+      if (guard) { guard.style.display = 'flex'; guard.style.cursor = 'not-allowed'; }
+    } else {
+      video.setAttribute('controls', '');
+      if (guard) { guard.style.display = 'none'; }
     }
   }
-  video.addEventListener('play', lockPlay, true);
-  video.addEventListener('seeking', lockPlay, true);
+  lockVideoUI(true);
 
-  async function startWatching(){
-    setProgress(0);
-    startBtn.disabled = true;
-    startBtn.textContent = 'Проверяем…';
-
-    // 1) Получаем билет и подписанный URL у Edge Function
-    const vt = await sb.functions.invoke('video-ticket');
-    const data = vt?.data;
-    let reason = null;
-
-    if (vt.error){
-      try { reason = (await vt.error.context.json())?.reason || null; } catch(_){}
-    } else if (!data?.ok){
-      reason = data?.reason || 'unknown';
-    }
-
-    if (reason){
-      alert(
-        reason === 'inactive' ? 'Аккаунт не активен (< $29 USDT)' :
-        reason === 'limit'    ? 'Лимит 5 просмотров на сегодня' :
-        'Ошибка доступа к видео'
-      );
-      startBtn.disabled = false;
-      startBtn.textContent = 'Заработать за просмотр';
-      return;
-    }
-
-    // 2) Подменяем источник и запускаем
-    source.src = data.signed_url;
-    video.dataset.ticket = data.ticket_id;
-    try { video.currentTime = 0; } catch(_){}
-    video.load();
-
-    allowPlay = true; // теперь можно играть
-    startBtn.textContent = 'Смотрим…';
-
-    const p = video.play?.();
-    if (p && typeof p.then === 'function'){
-      p.catch(() => { /* браузер может потребовать явное действие — ок */ });
-    }
-
-    // 3) Рисуем прогресс
-    function tick(){
-      if (!video?.duration){
-        setProgress(0);
-        raf = requestAnimationFrame(tick);
-        return;
-      }
-      const pct = (video.currentTime / video.duration) * 100;
-      setProgress(pct);
-      if (progressText){
-        const leftEl = document.querySelector('[data-views-left]');
-        const left = leftEl ? parseInt(leftEl.textContent || '0', 10) : null;
-        progressText.textContent =
-          (pct >= 100 ? 'Готово' : `Прогресс: ${Math.floor(pct)}%`) +
-          (left !== null ? ` · осталось: ${left}` : '');
-      }
-      raf = requestAnimationFrame(tick);
-    }
-    if (!raf) raf = requestAnimationFrame(tick);
+  // Block manual play/seeking unless armed
+  if (video){
+    video.addEventListener('play', (e) => { if (!armed) { e.preventDefault?.(); video.pause(); } }, true);
+    video.addEventListener('seeking', () => { if (!armed) video.currentTime = 0; }, true);
+    video.addEventListener('ratechange', () => { if (!armed) video.playbackRate = 1; }, true);
+  }
+  if (guard){
+    guard.addEventListener('click', () => { 
+      (window.LC_TOAST && LC_TOAST.err) ? LC_TOAST.err('Нажми «Заработать за просмотр»') : alert('Нажми «Заработать за просмотр»'); 
+    });
   }
 
-  async function award(){
-    const ticket = video?.dataset?.ticket;
-    if (!ticket) return;
-
-    allowPlay = false;
+  async function enforceAccess(){
     try{
-      const res = await sb.functions.invoke('award-view', {
-        body: { ticket_id: ticket, duration_sec: Math.round(video.duration || 0) }
-      });
-
-      let ok = !!res?.data?.ok;
-      let reason = res?.data?.reason;
-
-      if (res.error){
-        try { reason = (await res.error.context.json())?.reason || reason; } catch(_){}
-        ok = false;
+      if (!sb) throw new Error('Нет подключения');
+      const { data, error } = await sb.rpc('get_level_info_v2');
+      if (error) throw error;
+      const info = Array.isArray(data) ? data[0] : (data||{});
+      const isActive = info.is_active !== false;
+      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+      document.querySelectorAll('[data-views-left]').forEach(n => n.textContent = String(Math.max(left,0)));
+      if (!isActive){
+        startBtn && (startBtn.disabled = true, startBtn.textContent = 'Недоступно');
+        warn && (warn.style.display = '');
+        return { ok:false, reason:'inactive' };
       }
-
-      if (!ok){
-        alert(
-          reason === 'limit'    ? 'Лимит 5 просмотров на сегодня' :
-          reason === 'inactive' ? 'Аккаунт не активен (< $29 USDT)' :
-          'Не удалось зачесть просмотр'
-        );
-      } else {
-        if (window.LC?.loadLevelInfo) await window.LC.loadLevelInfo();
+      if (left <= 0){
+        startBtn && (startBtn.disabled = true, startBtn.textContent = 'Лимит на сегодня');
+        return { ok:false, reason:'limit' };
       }
-    } catch(e){
+      startBtn && (startBtn.disabled = false, startBtn.textContent = 'Заработать за просмотр');
+      warn && (warn.style.display = 'none');
+      return { ok:true };
+    }catch(e){
       console.error(e);
-      alert('Ошибка начисления: ' + (e.message || 'unknown'));
-    } finally {
-      if (raf){ cancelAnimationFrame(raf); raf = 0; }
-      setProgress(100);
-      startBtn.disabled = false;
-      startBtn.textContent = 'Заработать за просмотр';
-      try { delete video.dataset.ticket; } catch(_){}
+      startBtn && (startBtn.disabled = true, startBtn.textContent = 'Недоступно');
+      return { ok:false, reason:'error' };
     }
   }
 
-  // Кнопка запуска и начисление по окончании
-  startBtn.addEventListener('click', (e) => { e.preventDefault(); startWatching(); });
-  video.addEventListener('ended', award);
+  async function armAndUnlock(){
+    const access = await enforceAccess();
+    if (!access.ok) return false;
+    armed = true; window.__LC_ARM_VIDEO__ && window.__LC_ARM_VIDEO__(true);
+    lockVideoUI(false);
+    try { video && (video.currentTime = 0); } catch(_){}
+    return true;
+  }
+
+  // Hook start button to require access and unlock controls
+  if (startBtn){
+    const _oldHandler = startBtn.onclick;
+    startBtn.addEventListener('click', async (e) => {
+      // allow our guard to run first
+      if (e) e.preventDefault();
+      const ok = await armAndUnlock();
+      if (!ok) return;
+      // let existing code proceed (startWatching will call play())
+      // Re-dispatch a custom event to not double-attach
+      const ev = new Event('lc:start-watch');
+      startBtn.dispatchEvent(ev);
+      // Also call the original handler if present
+      if (typeof _oldHandler === 'function') _oldHandler.call(startBtn, e);
+    }, { capture: true });
+  }
+
+  // When ended, relock until next click
+  if (video){
+    video.addEventListener('ended', () => { armed = false; window.__LC_ARM_VIDEO__ && window.__LC_ARM_VIDEO__(false); lockVideoUI(true); });
+  }
+
+  // Initial access check on load
+  await enforceAccess();
 });
 </script>
+</script>
+
+<script>
+// 2) "Copy" button: fill referral link and copy to clipboard with toast
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  const input = document.getElementById('refLink');
+  const copyBtn = document.getElementById('copyRef');
+
+  async function resolveRefCode(){
+    try{
+      if (!sb) return null;
+      const { data } = await sb.auth.getUser();
+      const user = data && data.user;
+      const meta = user && user.user_metadata || {};
+      // Prefer explicit ref code if present; else use user id
+      return (meta.ref_code || meta.ref || user?.id || '').toString();
+    }catch(_){ return null; }
+  }
+
+  async function putLink(){
+    if (!input) return;
+    const ref = await resolveRefCode();
+    const base = window.location.origin || (window.location.protocol + '//' + window.location.host);
+    input.value = `${base}/register_single.html?ref=${encodeURIComponent(ref || 'user')}`;
+  }
+
+  async function doCopy(){
+    if (!input) return;
+    try{
+      if (!input.value) await putLink();
+      await navigator.clipboard.writeText(input.value);
+      window.LC_TOAST ? LC_TOAST.ok('Скопировано') : alert('Скопировано');
+    }catch(e){
+      // Fallback
+      input.select();
+      document.execCommand && document.execCommand('copy');
+      window.LC_TOAST ? LC_TOAST.ok('Скопировано') : alert('Скопировано');
+    }
+  }
+
+  await putLink();
+  copyBtn && copyBtn.addEventListener('click', (e) => { e.preventDefault(); doCopy(); });
+});
+</script>
+
+<script>
+// 3) Mobile nav: ensure burger shows links + 4) Home goes to dashboard after login
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  let isAuth = false;
+  try{
+    if (sb){
+      const { data } = await sb.auth.getUser();
+      isAuth = !!(data && data.user);
+    }
+  }catch(_){}
+
+  function swapHomeToDashboard(root=document){
+    const home = root.querySelector('a[href="index.html"]');
+    if (home) home.setAttribute('href','dashboard_single.html');
+    const brand = document.querySelector('.brand[href="index.html"]');
+    if (brand) brand.setAttribute('href','dashboard_single.html');
+  }
+
+  // Ensure burger is visible on narrow screens (in case of CSS conflicts)
+  const burger = document.getElementById('lc-burger');
+  if (burger){
+    burger.style.display = (window.innerWidth <= 900 ? 'inline-flex' : burger.style.display || '');
+    window.addEventListener('resize', () => {
+      burger.style.display = (window.innerWidth <= 900 ? 'inline-flex' : '');
+    });
+  }
+
+  if (isAuth){
+    swapHomeToDashboard(document);
+    // Also fix in drawer contents if already cloned
+    const dl = document.getElementById('lc-drawer-links');
+    if (dl) swapHomeToDashboard(dl);
+  }
+
+  // If drawer hasn't been populated yet, patch after it's filled
+  setTimeout(() => {
+    const dl = document.getElementById('lc-drawer-links');
+    if (dl && isAuth) swapHomeToDashboard(dl);
+  }, 400);
+});
+</script>
+<!-- === Litcash minimal fixes pack (end) === -->
+
+
+<script>
 document.addEventListener('DOMContentLoaded', () => {
   // 1) Гарантируем объекты и единый alias для Supabase
   window.LC = window.LC || {};
