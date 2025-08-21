@@ -895,18 +895,49 @@ document.addEventListener('DOMContentLoaded', () => {
     fill.style.width = Math.max(0, Math.min(100, p)) + '%';
   }
 
-  function startWatching(){
-    if (!video) return;
-    awarded = false;
-    setProgress(0);
-    if (startBtn){
-      startBtn.disabled = true;
-      startBtn.textContent = 'Смотрим...';
-    }
-    try { video.currentTime = 0; } catch(_){}
-    const playPromise = video.play && video.play();
-    if (playPromise && typeof playPromise.then === 'function'){
-      playPromise.catch(() => { /* autoplay blocked, user will press play manually */ });
+async function startWatching() {
+  const btn = document.getElementById('startBtn');
+  const video = document.getElementById('promoVid');
+  const source = document.getElementById('promoSource');
+
+  btn.disabled = true; btn.textContent = 'Проверяем...';
+
+  const { data, error } = await sb.functions.invoke('video-ticket'); // токен подставится сам
+  if (error || !data?.ok) {
+    alert(data?.reason || error?.message || 'Ошибка доступа');
+    btn.disabled = false; btn.textContent = 'Заработать за просмотр';
+    return;
+  }
+
+  source.src = data.signed_url;
+  video.dataset.ticket = data.ticket_id;
+  video.load();
+
+  window.__LC_ARM_VIDEO__?.(true); // снимаем наш замок
+  try { await video.play(); } catch {}
+  btn.textContent = 'Смотрим...';
+}
+
+document.getElementById('startBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  startWatching();
+});
+
+document.getElementById('promoVid')?.addEventListener('ended', async (e) => {
+  const video = e.currentTarget;
+  const ticket = video.dataset.ticket;
+  if (!ticket) return;
+
+  const { data, error } = await sb.functions.invoke('award-view', {
+    body: { ticket_id: ticket, duration_sec: Math.round(video.duration || 0) }
+  });
+
+  if (error || !data?.ok) {
+    alert(data?.reason || error?.message || 'Не удалось зачесть просмотр');
+  }
+  window.__LC_ARM_VIDEO__?.(false);
+  document.querySelector('[data-views-left]')?.dispatchEvent(new Event('refresh')); // если есть перерисовка
+});
     }
 
     // track progress
