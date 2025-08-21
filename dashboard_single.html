@@ -756,29 +756,37 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script defer src="assets/js/guard.js"></script>
-
 <script defer>
 document.addEventListener('DOMContentLoaded', () => {
-  try{
-   
-      if (leftEl && progressText){
-        const left = parseInt(leftEl.textContent || '0', 10);
-        progressText.textContent = `Просмотров осталось сегодня: ${left}`;
-      }
-      if (fill && reload){
-        // reload уже обновит цифры; здесь можно плавно подсветить
-        fill.style.transition = 'width .4s ease';
-      }
+  try {
+    const btn = document.getElementById('startBtn');
+    const video = document.getElementById('promoVid') || document.querySelector('video');
+    const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
+    const leftEl = document.querySelector('[data-views-left]');
+    const fill = document.getElementById('progressFill');
+
+    // текст «Просмотров осталось сегодня: …»
+    if (leftEl && progressText){
+      const left = parseInt(leftEl.textContent || '0', 10);
+      progressText.textContent = `Просмотров осталось сегодня: ${left}`;
     }
 
-    btn.addEventListener('click', award);
-    const video = document.querySelector('video');
-    
-  }catch(e){ console.error(e); }
+    // плавная подсветка прогресса
+    if (fill){
+      fill.style.transition = 'width .4s ease';
+    }
+
+    // твоя функция начисления (оставь как есть у тебя)
+    function award(){ /* ... */ }
+
+    if (btn)   btn.addEventListener('click', award);
+    if (video) video.addEventListener('ended', award);
+
+  } catch (e) {
+    console.error(e);
+  }
 });
 </script>
-
-
 
 <!-- === Video watch via Edge Functions (video-ticket / award-view) === -->
 <script>
