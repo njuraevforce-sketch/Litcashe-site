@@ -833,43 +833,49 @@ document.addEventListener('DOMContentLoaded', () => {
       return { Authorization: `Bearer ${session.access_token}` };
     }
 
+    
     async function loadStats(){
       try{
-        // Balance
         const { data: { user } } = await sb.auth.getUser();
         if (!user) return;
 
-        
+        // Try to get balance (optional)
         try {
-          const { data: prof2, error: profErr } = await sb
-            .from('profiles')
-            .select('balance')
-            .single();
-          if (!profErr && prof2 && balanceEl) {
-            balanceEl.textContent = String(Number(prof2.balance || 0).toFixed(3));
+          const r1 = await sb.from('profiles').select('balance').eq('id', user.id).single();
+          if (!r1.error && r1.data && typeof r1.data.balance !== 'undefined') {
+            if (balanceEl) balanceEl.textContent = String(Number(r1.data.balance || 0).toFixed(3));
           }
         } catch(_) {}
-    // Today's views count to compute "left"
-        const start = new Date(); start.setHours(0,0,0,0);
-        const end = new Date(); end.setHours(23,59,59,999);
-        
+
+        // Today's views count (optional)
+        let limit = 50; // default
+        try {
+          const r2 = await sb.from('profiles').select('plan_views_per_day').eq('id', user.id).single();
+          if (!r2.error && r2.data && typeof r2.data.plan_views_per_day !== 'undefined') {
+            limit = Number(r2.data.plan_views_per_day) || limit;
+          }
+        } catch(_) {}
+
         let count = 0;
         try {
-          const r = await sb
+          const start = new Date(); start.setHours(0,0,0,0);
+          const end = new Date(); end.setHours(23,59,59,999);
+          const r3 = await sb
             .from('views_log')
             .select('id', { count: 'exact', head: true })
             .gte('created_at', start.toISOString())
             .lte('created_at', end.toISOString());
-          count = r.count || 0;
+          count = r3.count || 0;
         } catch(_) {}
-    const limit = (prof && prof.plan_views_per_day) || 50;
-        const left = Math.max(0, limit - (count || 0));
+
+        const left = Math.max(0, limit - count);
         if (leftText) leftText.textContent = String(left);
         startBtn.disabled = left <= 0;
       }catch(e){
         console.warn('stats error', e);
       }
     }
+
 
     async function startWatching() {
       startBtn.disabled = true;
