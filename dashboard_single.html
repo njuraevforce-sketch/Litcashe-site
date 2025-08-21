@@ -839,24 +839,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const { data: { user } } = await sb.auth.getUser();
         if (!user) return;
 
-        const { data: prof } = await sb
-          .from('profiles')
-          .select('balance, plan_views_per_day')
-          .eq('id', user.id)
-          .single();
-
-        if (balanceEl && prof) balanceEl.textContent = String(Number(prof.balance || 0).toFixed(3));
-
-        // Today's views count to compute "left"
+        
+        try {
+          const { data: prof2, error: profErr } = await sb
+            .from('profiles')
+            .select('balance')
+            .single();
+          if (!profErr && prof2 && balanceEl) {
+            balanceEl.textContent = String(Number(prof2.balance || 0).toFixed(3));
+          }
+        } catch(_) {}
+    // Today's views count to compute "left"
         const start = new Date(); start.setHours(0,0,0,0);
         const end = new Date(); end.setHours(23,59,59,999);
-        const { count } = await sb
-          .from('views_log')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', start.toISOString())
-          .lte('created_at', end.toISOString());
-
-        const limit = (prof && prof.plan_views_per_day) || 50;
+        
+        let count = 0;
+        try {
+          const r = await sb
+            .from('views_log')
+            .select('id', { count: 'exact', head: true })
+            .gte('created_at', start.toISOString())
+            .lte('created_at', end.toISOString());
+          count = r.count || 0;
+        } catch(_) {}
+    const limit = (prof && prof.plan_views_per_day) || 50;
         const left = Math.max(0, limit - (count || 0));
         if (leftText) leftText.textContent = String(left);
         startBtn.disabled = left <= 0;
