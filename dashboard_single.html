@@ -770,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const video = document.querySelector('video');
       const videoId = (video && (video.currentSrc || video.dataset.id)) || 'video-1';
-      const { data, error } = await sb.rpc('award_view', { p_video_id: videoId });
+      const { data, error } = await /* rpc award_view removed */
       if (error){ alert(error.message || 'Ошибка начисления'); return; }
       if (!data || !data.ok){
         alert(data && data.reason === 'limit' ? 'Лимит 5 просмотров на сегодня' : 'Не удалось зачесть просмотр');
@@ -800,135 +800,113 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-<!-- === Video watch via Edge Functions (video-ticket / award-view) — REPLACED FULL === -->
+<!-- === Video watch via Edge Functions (video-ticket / award-view) — CLEAN === -->
 <script>
 (function(){
   document.addEventListener('DOMContentLoaded', () => {
     const sb = window.sb || window._supabase;
-    const video = document.getElementById('promoVid') || document.querySelector('video');
+    const v0 = document.getElementById('promoVid') || document.querySelector('video');
     const startBtn0 = document.getElementById('startBtn') || document.querySelector('[data-start]');
     const leftText = document.querySelector('[data-views-left]');
-    const balanceEl = document.querySelector('[data-balance]');
-    if (!sb || !video || !startBtn0) return;
+    if (!sb || !v0 || !startBtn0) return;
 
-    // Reset listeners by cloning nodes
-    const startBtn = startBtn0.cloneNode(true);
-    if (startBtn0.parentNode) startBtn0.parentNode.replaceChild(startBtn, startBtn0);
-    const videoClone = video.cloneNode(true);
-    if (video.parentNode) video.parentNode.replaceChild(videoClone, video);
-    const v = videoClone;
+    // Сносим старые слушатели
+    const v = v0.cloneNode(true); v0.parentNode.replaceChild(v, v0);
+    const startBtn = startBtn0.cloneNode(true); startBtn0.parentNode.replaceChild(startBtn, startBtn0);
 
     const MIN_SEC = 10;
     let currentTicketId = null;
     let watchedSec = 0;
 
-    function baseFunctionsUrl(){
-      const u = (window.SUPABASE_URL || (sb && sb.supabaseUrl) || '').replace(/\/+$/,'');
-      return u + '/functions/v1';
+    function fxUrl(){ 
+      const u = (window.SUPABASE_URL || sb.supabaseUrl || '').replace(/\/+$/,''); 
+      return u + '/functions/v1'; 
     }
 
-    async function getSessionHeader() {
+    async function getAuthHeader(){
       const { data: { session } } = await sb.auth.getSession();
       if (!session) throw new Error('NO_SESSION');
       return { Authorization: `Bearer ${session.access_token}` };
     }
 
-    
-    
-    async function loadStats(){ /* disabled: no remote stats */ }
-      }catch(e){
-        console.warn('stats error', e);
-      }
-    }
-
-
-
-    async function startWatching() {
+    async function startWatching(){
       startBtn.disabled = true;
       try {
-        const headers = await getSessionHeader();
-
-        const r = await fetch(`${baseFunctionsUrl()}/video-ticket`, { method: 'POST', headers });
+        const headers = await getAuthHeader();
+        const r = await fetch(`${fxUrl()}/video-ticket`, { method: 'POST', headers });
         const vt = await r.json();
 
         if (!r.ok || !vt.ok) {
           const reason = vt.reason || `HTTP ${r.status}`;
-          if (reason === 'inactive') alert('Аккаунт не активен. Пополните баланс.');
+          if (reason === 'inactive') alert('Аккаунт не активен.');
           else if (reason === 'limit') alert('На сегодня лимит просмотров исчерпан.');
           else alert('Не удалось получить видео: ' + reason);
-          await return;
+          return;
         }
 
         currentTicketId = vt.ticket_id;
         watchedSec = 0;
+
         try { v.pause(); v.currentTime = 0; } catch(_) {}
-        v.removeAttribute('src');
         const srcEl = v.querySelector('source');
         if (srcEl) { srcEl.src = vt.signed_url; v.load(); } else { v.src = vt.signed_url; }
         v.controls = true;
 
-        const pp = v.play && v.play();
-        if (pp && typeof pp.then === 'function') {
-          pp.catch(()=>{});
-        }
+        const p = v.play && v.play();
+        if (p && typeof p.then === 'function') p.catch(()=>{});
 
         if (leftText && Number.isFinite(vt.left)) leftText.textContent = String(vt.left);
-      } catch (e) {
-        console.error(e);
+      } catch(e){
+        console.error('startWatching error', e);
         alert('Ошибка запуска просмотра.');
       } finally {
         startBtn.disabled = false;
       }
     }
 
-    // Prevent skip-cheat: award only once and only if stayed >= MIN_SEC
     v.addEventListener('timeupdate', () => {
       const t = Math.floor(v.currentTime || 0);
       if (t > watchedSec) watchedSec = t;
     });
 
-    async function tryAward() {
+    async function tryAward(){
       if (!currentTicketId) return;
       if (watchedSec < MIN_SEC) return;
+
       try {
-        const headers = await getSessionHeader();
-        const r = await fetch(`${baseFunctionsUrl()}/award-view`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ ticket_id: currentTicketId, duration_sec: watchedSec })
-        });
+        const headers = await getAuthHeader();
+        const body = JSON.stringify({ ticket_id: currentTicketId, duration_sec: watchedSec });
+        const r = await fetch(`${fxUrl()}/award-view`, { method: 'POST', headers, body });
         const aw = await r.json();
         if (!r.ok || !aw.ok) {
           console.warn('award-view failed:', aw.reason || r.status);
           return;
         }
-
-        // Success: decrement left and update balance from DB
-        const leftNow = Number((leftText && leftText.textContent) || '0') - 1;
-        if (leftText) leftText.textContent = String(Math.max(0, leftNow));
-        await } catch (e) {
-        console.error('award error', e);
+        // успех — уменьшаем "осталось"
+        if (leftText) {
+          const leftNow = Math.max(0, Number(leftText.textContent || '0') - 1);
+          leftText.textContent = String(leftNow);
+        }
+      } catch(e){
+        console.error('award-view error', e);
       } finally {
         currentTicketId = null;
         watchedSec = 0;
         try {
           v.pause();
           v.removeAttribute('src');
-          const srcEl = v.querySelector('source');
-          if (srcEl) srcEl.removeAttribute('src');
+          const s = v.querySelector('source'); if (s) s.removeAttribute('src');
           v.load();
-        } catch(_){}
+        } catch(_) {}
       }
     }
 
     startBtn.addEventListener('click', startWatching);
     v.addEventListener('ended', tryAward);
-
-    // Update stats on load
-    });
+  });
 })();
 </script>
-<!-- === /Video watch via Edge Functions — REPLACED FULL === -->
+<!-- === /Video watch via Edge Functions — CLEAN === -->
 
 
 
