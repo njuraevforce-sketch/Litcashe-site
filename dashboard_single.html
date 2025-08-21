@@ -1470,149 +1470,149 @@ document.addEventListener('DOMContentLoaded', () => {
   btn.addEventListener('click', startVideo);
 });
 <script>
-(function(){
-  // ===== НАСТРОЙКИ =====
-  const REQUIRED_SEC = 10;                  // нужно 10 секунд
-  const VIDEO_SRC    = 'assets/videos/ad1.mp4'; // локальный файл (любой)
-
-  // ===== ХЕЛПЕРЫ =====
-  const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-  async function waitSupabase(timeoutMs=8000){
-    const t0 = Date.now();
-    while (Date.now()-t0 < timeoutMs){
-      const sb = window.sb || window._supabase || window.supabase;
-      if (sb && sb.auth) return sb;
-      await sleep(100);
-    }
-    throw new Error('SB_NOT_READY');
-  }
-  function qs(sel){ return document.querySelector(sel); }
-  function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
-  function setSrc(video, url){
-    const s = video.querySelector('source');
-    if (s){ s.src = url; video.load(); } else { video.src = url; }
-  }
-  function resetPlayer(video, progressFill){
-    try{
-      video.pause();
-      video.removeAttribute('src');
-      const s = video.querySelector('source'); if (s) s.removeAttribute('src');
-      video.load();
-    }catch(_){}
-    if (progressFill) progressFill.style.width = '0%';
-  }
-  async function refreshInfoUI(sb){
-    try{
-      const { data, error } = await sb.rpc('get_level_info_v2');
-      if (error || !data) return;
-      const info = Array.isArray(data) ? data[0] : data;
-      const left = Number(info?.views_left_today ?? ((info?.daily_limit ?? 5) - (info?.views_used_today ?? 0)) ?? 0);
-      qsa('[data-views-left]').forEach(n => n.textContent = String(Math.max(left,0)));
-      if (window.LC && typeof LC.loadLevelInfo === 'function') LC.loadLevelInfo();
-    }catch(e){ console.warn('refreshInfoUI error', e); }
-  }
-
+(function () {
   document.addEventListener('DOMContentLoaded', async () => {
-    const video     = document.getElementById('promoVid') || qs('video');
-    const startBtn  = document.getElementById('startBtn') || qs('[data-start]');
-    const fill      = document.getElementById('progressFill');
-    if (!video || !startBtn){ console.warn('[watch] no video or startBtn'); return; }
+    // --- Базовые элементы
+    const sb = window.sb || window._supabase || window.supabase;
+    const video = document.getElementById('promoVid') || document.querySelector('video');
+    const startBtn = document.getElementById('startBtn') || document.querySelector('[data-start]');
+    const leftEl = document.querySelector('[data-views-left]');
+    const fill = document.getElementById('progressFill');
 
-    let awarding = false;
+    if (!sb || !video || !startBtn) {
+      console.warn('[watch] missing deps', { sb: !!sb, video: !!video, startBtn: !!startBtn });
+      return;
+    }
 
-    async function startWatching(){
-      const sb = await waitSupabase().catch(e => { alert('Supabase не инициализировался'); throw e; });
+    const MIN_SEC = 10;               // Жёстко 10 секунд
+    let playedSec = 0;                // сколько реально проиграно
+    let ticking = null;               // id setInterval
+    let awarding = false;             // защита от повторов
+
+    // Обновление прогресс-бара
+    function setProgress(sec) {
+      if (!fill) return;
+      const pct = Math.max(0, Math.min(100, (sec / MIN_SEC) * 100));
+      fill.style.width = pct + '%';
+    }
+
+    // Без сессии не работаем
+    async function requireSession() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) throw new Error('NO_SESSION');
+      return session;
+    }
+
+    // Вызов начисления
+    async function awardNow() {
+      if (awarding) return;
+      awarding = true;
+      try {
+        const res = await sb.rpc('award_view', { duration_sec: 10 });
+        const data = res?.data || res; // на всякий случай
+
+        console.log('[watch] award_view response:', data);
+
+        if (data && data.ok) {
+          // Обновим "осталось"
+          if (leftEl) {
+            if (Number.isFinite(data.left)) {
+              leftEl.textContent = String(data.left);
+            } else {
+              // если бэкенд не прислал left — уменьшим локально на 1
+              const cur = parseInt(leftEl.textContent || '0', 10);
+              leftEl.textContent = String(Math.max(0, cur - 1));
+            }
+          }
+          // Обновим карточки/баланс
+          if (window.LC && typeof LC.loadLevelInfo === 'function') {
+            LC.loadLevelInfo();
+          }
+        } else {
+          const reason = (data && data.reason) || 'unknown';
+          alert(reason === 'limit'
+            ? 'Лимит 5 просмотров на сегодня'
+            : reason === 'inactive'
+            ? 'Аккаунт не активен'
+            : 'Не удалось зачесть просмотр');
+        }
+      } catch (e) {
+        console.error('[watch] award error', e);
+        alert('Ошибка начисления');
+      } finally {
+        awarding = false;
+      }
+    }
+
+    // Жёсткий 10-секундный трекер проигрыша
+    function startTicker() {
+      stopTicker();
+      playedSec = 0;
+      setProgress(0);
+
+      ticking = setInterval(() => {
+        try {
+          const t = Math.floor(video.currentTime || 0);
+          if (t > playedSec) {
+            playedSec = t;
+            setProgress(playedSec);
+            // Как только добили до 10 — вызываем начисление и стоп
+            if (playedSec >= MIN_SEC) {
+              stopTicker();
+              awardNow();
+            }
+          }
+        } catch (_) {}
+      }, 300);
+    }
+
+    function stopTicker() {
+      if (ticking) {
+        clearInterval(ticking);
+        ticking = null;
+      }
+    }
+
+    // Старт — запускаем локальное видео и тикер
+    async function handleStart() {
       startBtn.disabled = true;
-      console.log('[watch] start');
+      try {
+        await requireSession();
 
-      try{
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session) { alert('Войдите в аккаунт'); return; }
-
-        // подготовка
-        resetPlayer(video, fill);
-        setSrc(video, VIDEO_SRC);
+        // Сброс видео и старт (если короче 10с — пусть крутится в цикле)
+        try { video.pause(); video.currentTime = 0; } catch(_) {}
+        video.loop = true;
         video.controls = true;
 
-        // реальный счётчик 10 сек (устойчивый к коротким роликам и редким timeupdate)
-        let acc = 0;           // накопленные сек
-        let last = 0;
-        let stopTicker = false;
+        // оставляем твой локальный файл/путь
+        const srcEl = video.querySelector('source');
+        if (srcEl) { srcEl.src = srcEl.src || video.src || '/assets/videos/ad1.mp4'; video.load(); }
+        if (!video.src) video.src = '/assets/videos/ad1.mp4';
 
-        function onTimeupdate(){
-          const cur = video.currentTime || 0;
-          const d = Math.max(0, Math.floor(cur) - Math.floor(last));
-          if (d>0){
-            acc = Math.min(REQUIRED_SEC, acc + d);
-            if (fill) fill.style.width = (acc/REQUIRED_SEC*100)+'%';
-          }
-          last = cur;
-          if (acc >= REQUIRED_SEC && !awarding){
-            awardNow().catch(console.error);
-          }
-        }
+        const p = video.play && video.play();
+        if (p && typeof p.then === 'function') p.catch(()=>{});
 
-        // подстраховка, если timeupdate редкий
-        const interval = setInterval(onTimeupdate, 300);
-
-        async function awardNow(){
-          awarding = true;
-          console.log('[watch] awarding', acc);
-          stopTicker = true;
-          video.removeEventListener('timeupdate', onTimeupdate);
-          clearInterval(interval);
-
-          try{
-            const { data, error } = await sb.rpc('award_view', { duration_sec: REQUIRED_SEC });
-            console.log('[watch] award_view resp', {data, error});
-            if (error) throw error;
-
-            if (data && data.ok){
-              if (typeof data.left === 'number'){
-                qsa('[data-views-left]').forEach(n => n.textContent = String(Math.max(0,data.left)));
-              } else {
-                await refreshInfoUI(sb);
-              }
-            } else {
-              const r = data && data.reason;
-              alert(
-                r==='limit'      ? 'Лимит 5 просмотров на сегодня' :
-                r==='inactive'   ? 'Аккаунт не активен' :
-                r==='low_balance'? 'Пополните баланс ≥ 29 USDT' :
-                r==='too_short'  ? 'Досмотрите 10 секунд' :
-                                   'Не удалось зачесть просмотр'
-              );
-            }
-          } finally {
-            resetPlayer(video, fill);
-            awarding = false;
-            await refreshInfoUI(sb);
-          }
-        }
-
-        video.addEventListener('timeupdate', onTimeupdate);
-        video.addEventListener('ended', () => {
-          if (awarding) return;
-          if (acc < REQUIRED_SEC){
-            // ролик короткий — запускаем повтор
-            try { video.currentTime = 0; } catch(_){}
-            video.play().catch(()=>{});
-            last = 0;
-          }
-        });
-
-        video.play().catch(err => { console.error(err); alert('Не удалось запустить видео'); });
-      } catch (e){
+        startTicker();
+      } catch (e) {
         console.error('[watch] start error', e);
+        alert(e && e.message === 'NO_SESSION' ? 'Войдите в аккаунт' : 'Ошибка запуска просмотра');
       } finally {
         startBtn.disabled = false;
       }
     }
 
-    startBtn.addEventListener('click', startWatching);
+    // На всякий — дублируем начисление по ended (если видео длиннее 10с)
+    video.addEventListener('ended', () => {
+      // Если тикер не успел добить 10с, тут уже точно пора
+      if (playedSec >= MIN_SEC) awardNow();
+      stopTicker();
+    });
+
+    startBtn.addEventListener('click', handleStart);
+
+    console.log('[watch] ready');
   });
 })();
 </script>
-
 </body>
 </html>
