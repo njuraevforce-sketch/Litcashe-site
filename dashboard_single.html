@@ -1472,100 +1472,144 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
 (function(){
   document.addEventListener('DOMContentLoaded', () => {
-    const sb = window.sb || window._supabase;
-    const v  = document.getElementById('promoVid') || document.querySelector('video');
-    const btn = document.getElementById('startBtn') || document.querySelector('[data-start]');
-    const leftText = document.querySelector('[data-views-left]');
-    if (!sb || !v || !btn) return;
+    const sb = window.sb || window._supabase || window.supabase;
+    const video = document.getElementById('promoVid') || document.querySelector('video');
+    const startBtn = document.getElementById('startBtn') || document.querySelector('[data-start]');
+    const leftNodes = () => Array.from(document.querySelectorAll('[data-views-left]'));
+    const progressFill = document.getElementById('progressFill');
 
-    const MIN_SEC = 10;        // ролик 10с → требуем 10с
-    let awarded = false;
+    if (!sb || !video || !startBtn) return;
 
-    async function ensureSession(){
+    const REQUIRED = 10;           // нужно ровно 10 секунд
+    const SRC = 'assets/videos/ad1.mp4';
+
+    let acc = 0;                   // накопленные секунды
+    let lastT = 0;
+    let ticking = false;
+    let awarding = false;
+
+    async function ensureAuth(){
       const { data: { session } } = await sb.auth.getSession();
       if (!session) throw new Error('NO_SESSION');
       return session;
     }
 
-    async function start(){
-      try{
-        await ensureSession();
-        awarded = false;
+    function setSrc(url){
+      const s = video.querySelector('source');
+      if (s) { s.src = url; video.load(); } else { video.src = url; }
+    }
 
-        // подставляем локальный ролик (как вы просили — без Edge Functions)
-        const src = v.querySelector('source');
-        if (src) { src.src = 'assets/videos/ad1.mp4'; v.load(); } else { v.src = 'assets/videos/ad1.mp4'; }
-        v.currentTime = 0;
-        v.controls = true;
-        await v.play().catch(()=>{});
-      }catch(e){
-        alert('Войдите в аккаунт'); 
+    function resetPlayer(){
+      try{
+        video.pause();
+        video.removeAttribute('src');
+        const s = video.querySelector('source'); if (s) s.removeAttribute('src');
+        video.load();
+      }catch(_){}
+      ticking = false;
+      lastT = 0;
+      acc = 0;
+      if (progressFill) progressFill.style.width = '0%';
+    }
+
+    async function refreshInfoUI(){
+      try{
+        const { data, error } = await sb.rpc('get_level_info_v2');
+        if (error || !data) return;
+        const info = Array.isArray(data) ? data[0] : data;
+        const left = Number(info?.views_left_today ?? ((info?.daily_limit ?? 5) - (info?.views_used_today ?? 0)) ?? 0);
+        leftNodes().forEach(n => n.textContent = String(Math.max(left, 0)));
+        if (window.LC && typeof LC.loadLevelInfo === 'function') LC.loadLevelInfo();
+      }catch(_){}
+    }
+
+    function onTimeUpdate(){
+      const t = video.currentTime || 0;
+      // считаем натурально ИСКЛЮЧИТЕЛЬНО при движении вперёд
+      const delta = Math.max(0, Math.floor(t) - Math.floor(lastT));
+      if (delta > 0){
+        acc = Math.min(REQUIRED, acc + delta);
+        if (progressFill) progressFill.style.width = (acc / REQUIRED * 100) + '%';
+      }
+      lastT = t;
+      if (acc >= REQUIRED && !awarding){
+        // не ждём конца ролика — как только набрали 10с, кредитуем
+        tryAward();
       }
     }
 
-    async function awardNow(){
-      if (awarded) return;
-      // Надёжно считаем секунды: берём максимум из currentTime и duration
-      const sec = Math.max(
-        Math.floor(v.currentTime || 0),
-        Math.floor(v.duration || 0)
-      );
+    async function tryAward(){
+      awarding = true;
+      // защитим от дальнейших инкрементов
+      video.removeEventListener('timeupdate', onTimeUpdate);
 
-      if (sec < MIN_SEC) return; // ещё не досмотрели
-
-      awarded = true;
       try{
-        const { data, error } = await sb.rpc('award_view', { duration_sec: sec });
+        await ensureAuth();
+        const { data, error } = await sb.rpc('award_view', { duration_sec: REQUIRED });
         if (error) throw error;
 
         if (data && data.ok){
-          // уменьшить «осталось» из ответа БД, если дано,
-          // иначе просто -1 от текущего DOM
-          if (leftText){
-            if (Number.isFinite(data.left)) {
-              leftText.textContent = String(data.left);
-            } else {
-              const leftNow = Math.max(0, Number(leftText.textContent || '0') - 1);
-              leftText.textContent = String(leftNow);
-            }
-          }
-          // перерисовать карточки/баланс/ставку и т.д.
-          if (window.LC && typeof LC.loadLevelInfo === 'function'){
-            LC.loadLevelInfo();
+          // сервер вернул left? — обновим; иначе просто перерисуем из v2
+          if (typeof data.left === 'number'){
+            leftNodes().forEach(n => n.textContent = String(Math.max(0, data.left)));
+          } else {
+            await refreshInfoUI();
           }
         } else {
-          const reason = data && data.reason;
-          if (reason === 'limit') alert('Лимит 5 просмотров на сегодня');
-          else if (reason === 'inactive') alert('Аккаунт не активен');
-          else if (reason === 'low_balance') alert('Пополните баланс ≥ 29 USDT');
-          else if (reason === 'too_short') alert('Досмотрите видео до конца (10 сек)');
-          else alert('Не удалось зачесть просмотр');
+          const r = data && data.reason;
+          alert(
+            r==='limit' ? 'Лимит 5 просмотров на сегодня' :
+            r==='inactive' ? 'Аккаунт не активен' :
+            r==='low_balance' ? 'Пополните баланс ≥ 29 USDT' :
+            r==='too_short' ? 'Досмотрите 10 секунд' :
+            'Не удалось зачесть просмотр'
+          );
         }
       }catch(e){
-        console.error('award_view rpc error', e);
-        alert('Ошибка начисления');
+        console.error('award_view error', e);
+        alert('Ошибка начисления. Проверьте авторизацию и сеть.');
       }finally{
-        // сбрасываем плеер, чтобы нельзя было повторно отправить тот же ролик
-        try {
-          v.pause();
-          v.removeAttribute('src');
-          const s = v.querySelector('source'); if (s) s.removeAttribute('src');
-          v.load();
-        } catch(_) {}
+        resetPlayer();
+        awarding = false;
+        // финально подтянем цифры (баланс/ставка/осталось)
+        refreshInfoUI();
       }
     }
 
-    btn.addEventListener('click', start);
+    async function startWatching(){
+      startBtn.disabled = true;
+      try{
+        await ensureAuth();
 
-    // когда ролик «закончился», сразу отправляем RPC
-    v.addEventListener('ended', () => {
-      // на некоторых браузерах конечное timeupdate не приходит —
-      // ставим микро-таймер, чтобы успела обновиться duration/currentTime
-      setTimeout(awardNow, 50);
-    });
+        // подготовка
+        resetPlayer();
+        setSrc(SRC);
+        video.controls = true;
+
+        // слушатели
+        video.addEventListener('timeupdate', onTimeUpdate, { passive:true });
+        video.addEventListener('ended', () => {
+          if (acc < REQUIRED){
+            // ролик короче 10с → запускаем следующий цикл
+            try { video.currentTime = 0; } catch(_){}
+            video.play().catch(()=>{});
+            lastT = 0;
+          }
+        }, { once:false });
+
+        ticking = true;
+        video.play().catch(()=>{});
+      }catch(e){
+        console.error(e);
+        alert(e.message === 'NO_SESSION' ? 'Войдите в аккаунт' : 'Не удалось запустить видео');
+      }finally{
+        startBtn.disabled = false;
+      }
+    }
+
+    startBtn.addEventListener('click', startWatching);
   });
 })();
 </script>
-
 </body>
 </html>
