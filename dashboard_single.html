@@ -1412,5 +1412,119 @@ document.addEventListener('DOMContentLoaded', async () => {
 <script src="supabaseConfig.js"></script>
 <script src="app_supabase.js"></script>
 
+
+<!-- === Video watch via Edge Functions (video-ticket / award-view) — CLEAN v2 === -->
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', () => {
+    const sb = window.sb || window._supabase;
+    const v0 = document.getElementById('promoVid') || document.querySelector('video');
+    const startBtn0 = document.getElementById('startBtn') || document.querySelector('[data-start]');
+    const leftText = document.querySelector('[data-views-left]');
+    if (!sb || !v0 || !startBtn0) return;
+
+    // Сносим старые слушатели
+    const v = v0.cloneNode(true); v0.parentNode.replaceChild(v, v0);
+    const startBtn = startBtn0.cloneNode(true); startBtn0.parentNode.replaceChild(startBtn, startBtn0);
+
+    const MIN_SEC = 10;
+    let currentTicketId = null;
+    let watchedSec = 0;
+
+    function fxUrl(){ 
+      const u = (window.SUPABASE_URL || sb.supabaseUrl || '').replace(/\/+$/,''); 
+      return u + '/functions/v1'; 
+    }
+
+    async function getAuthHeader(){
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) throw new Error('NO_SESSION');
+      return { Authorization: `Bearer ${session.access_token}` };
+    }
+
+    async function startWatching(){
+      startBtn.disabled = true;
+      try {
+        const headers = await getAuthHeader();
+        const r = await fetch(`${fxUrl()}/video-ticket`, { method: 'POST', headers });
+        const vt = await r.json().catch(()=>({}));
+
+        if (!r.ok || !vt || vt.ok !== true) {
+          const reason = (vt && vt.reason) || (`HTTP ${r.status}`);
+          if (reason === 'inactive') alert('Аккаунт не активен.');
+          else if (reason === 'limit') alert('На сегодня лимит просмотров исчерпан.');
+          else alert('Не удалось получить видео: ' + reason);
+          return;
+        }
+
+        currentTicketId = vt.ticket_id;
+        watchedSec = 0;
+
+        try { v.pause(); v.currentTime = 0; } catch(_) {}
+        const srcEl = v.querySelector('source');
+        if (srcEl) { srcEl.src = vt.signed_url; v.load(); } else { v.src = vt.signed_url; }
+        v.controls = true;
+
+        const p = v.play && v.play();
+        if (p && typeof p.then === 'function') p.catch(()=>{});
+
+        if (leftText && Number.isFinite(vt.left)) leftText.textContent = String(vt.left);
+      } catch(e){
+        console.error('startWatching error', e);
+        alert('Ошибка запуска просмотра.');
+      } finally {
+        startBtn.disabled = false;
+      }
+    }
+
+    v.addEventListener('timeupdate', () => {
+      const t = Math.floor(v.currentTime || 0);
+      if (t > watchedSec) watchedSec = t;
+    });
+
+    async function tryAward(){
+      if (!currentTicketId) return;
+      if (watchedSec < MIN_SEC) return;
+
+      try {
+        const headers = await getAuthHeader();
+        const body = JSON.stringify({ ticket_id: currentTicketId, duration_sec: watchedSec });
+        const r = await fetch(`${fxUrl()}/award-view`, { method: 'POST', headers, body });
+        const aw = await r.json().catch(()=>({}));
+
+        if (r.ok && aw && aw.ok) {
+          // успех — уменьшаем "осталось"
+          if (leftText) {
+            const leftNow = Math.max(0, Number(leftText.textContent || '0') - 1);
+            leftText.textContent = String(leftNow);
+          }
+        } else if (r.status === 409) {
+          // Идемпотентность: уже засчитано/конфликт логирования — считаем зачтённым и просто сбрасываем плеер
+          console.warn('award-view already credited (409):', (aw && aw.reason) || 'conflict');
+        } else {
+          console.warn('award-view failed:', (aw && aw.reason) || r.status);
+          return;
+        }
+      } catch(e){
+        console.error('award-view error', e);
+      } finally {
+        currentTicketId = null;
+        watchedSec = 0;
+        try {
+          v.pause();
+          v.removeAttribute('src');
+          const s = v.querySelector('source'); if (s) s.removeAttribute('src');
+          v.load();
+        } catch(_) {}
+      }
+    }
+
+    startBtn.addEventListener('click', startWatching);
+    v.addEventListener('ended', tryAward);
+  });
+})();
+</script>
+<!-- === /Video watch via Edge Functions — CLEAN v2 === -->
+
 </body>
 </html>
