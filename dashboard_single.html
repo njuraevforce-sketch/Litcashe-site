@@ -380,12 +380,12 @@ header { overflow: visible; }
 <div class="container nav">
 <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
 <nav class="nav-links">
-<a href="index.html" data-i18n="home_nav" data-i18n="nav_home">Главная</a>
-<a href="dashboard_single.html" data-i18n="dashboard_nav" data-i18n="nav_dashboard">Личный кабинет</a>
-<a href="deposit_single.html" data-i18n="deposit_nav" data-i18n="deposit_title">Пополнение</a>
-<a href="withdraw_single.html" data-i18n="withdraw_nav" data-i18n="withdraw_title">Вывод</a>
-<a href="faq_single.html" data-i18n="faq_nav" data-i18n="faq_title">FAQ</a>
-<a href="settings_single.html" data-i18n="settings_nav" data-i18n="settings_title">Настройки</a>
+<a data-i18n="nav_home" href="index.html">Главная</a>
+<a data-i18n="nav_dashboard" href="dashboard_single.html">Личный кабинет</a>
+<a data-i18n="deposit_title" href="deposit_single.html">Пополнение</a>
+<a data-i18n="withdraw_title" href="withdraw_single.html">Вывод</a>
+<a data-i18n="faq_title" href="faq_single.html">FAQ</a>
+<a data-i18n="settings_title" href="settings_single.html">Настройки</a>
 </nav>
 <div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
 <div class="lang"><div class="lc-lang">
@@ -401,8 +401,8 @@ header { overflow: visible; }
 </ul>
 </div></div><div class="nav-cta">
         <!-- Login/Register buttons support i18n -->
-        <a class="btn ghost" href="login_single.html" data-i18n="nav_login" data-i18n="login_title">Вход</a>
-        <a class="btn primary" href="register_single.html" data-i18n="nav_register" data-i18n="register_title">Регистрация</a>
+        <a data-i18n="login_title" class="btn ghost" href="login_single.html">Вход</a>
+        <a data-i18n="register_title" class="btn primary" href="register_single.html">Регистрация</a>
 </div>
 </div>
 </header>
@@ -452,7 +452,7 @@ header { overflow: visible; }
 <div class="flex" style="gap:10px;flex-wrap:wrap">
 <input class="input" id="refLink" readonly="" style="flex:1;min-width:240px;height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text)" value=""/>
 <button class="btn" id="copyRef">Скопировать</button>
-<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today" data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b id="viewsLeftToday" data-views-left>5</b></div>
+<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b id="viewsLeftToday" data-views-left>5</b></div>
 </div>
 <div class="grid grid-3" style="margin-top:12px">
 <div class="card"><div class="muted" data-i18n="gen1"> 1 поколение</div><div id="gen1Count" style="font-size:22px;font-weight:700">0</div></div>
@@ -587,7 +587,7 @@ header { overflow: visible; }
     menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
   });
 })();
-</script><script id="lc-lang-inline" type="text/plain">(function(){
+</script><script id="lc-lang-inline-script" type="text/plain">(function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
   function getLang(){ try{return localStorage.getItem('litcash_lang')||'en'}catch(e){return 'en'} }
   function setLang(l){ try{localStorage.setItem('litcash_lang',l)}catch(e){} }
@@ -688,68 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll(selector).forEach(el => { el.textContent = text; });
   }
 
-  window.LC.loadLevelInfo = async function () {
-    try {
-      const { data: { session } } = await window.sb.auth.getSession();
-      if (!session) return;
-
-      const { data, error } = await window.sb.rpc('get_level_info_v2');
-      if (error) { console.error(error); return; }
-      const info = Array.isArray(data) ? data[0] : data;
-      if (!info) return;
-
-      const usd = (c) => (Number(c || 0) / 100).toFixed(2) + ' USDT';
-
-      // 1) Уровень (обновляем все места)
-      const lvlName = info.level_name || info.lvl_name || info.level_key || '—';
-      setTextAll('[data-level],[data-level-name]', lvlName);
-
-      // 2) Процент (bps -> %) — обновляем все [data-rate]
-      const bp = Number(
-        info.reward_percent_bp ?? info.pct_bp ?? info.percent_bp ?? 0
-      );
-      const percent = (bp / 100).toFixed(2) + ' %';
-      setTextAll('[data-rate]', percent);
-
-      // 3) За 1 просмотр
-      const perViewCents = Number(info.reward_per_view_cents ?? info.per_view_cents ?? 0);
-      const pvText = usd(perViewCents);
-      const pvSpan = document.querySelector('[data-reward-per-view]');
-      if (pvSpan) pvSpan.textContent = pvText;
-      const pvBadge = document.getElementById('perViewBadge');
-      if (pvBadge) pvBadge.textContent = `+${pvText} за просмотр`;
-
-      // 4) За 5 просмотров (в день)
-      setTextAll('[data-daily-reward]', usd(info.daily_reward_cents ?? info.daily_reward ?? 0));
-
-      // 5) Осталось просмотров сегодня — обновляем все места
-      const left = Number(
-        info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0
-      );
-      setTextAll('[data-views-left]', Math.max(left, 0));
-
-      // 6) База уровня
-      const baseCents = Number(info.base_amount_cents ?? info.base_cap_cents ?? 0);
-      const bcEl = document.getElementById('baseCapCell');
-      if (bcEl) bcEl.textContent = usd(baseCents);
-
-      // 7) Капитал (расч.) карточка
-      const capEl = document.querySelector('[data-cap]');
-      if (capEl) capEl.textContent = usd(baseCents);
-
-      // 8) Рефералы
-      const refsEl = document.querySelector('[data-refs]');
-      if (refsEl) refsEl.textContent = Number(info.refs_total ?? info.active_refs ?? 0);
-
-      // 9) Индикация активности
-      const warn = document.getElementById('notActiveWarn');
-      if (warn) warn.style.display = (info.is_active === false) ? '' : 'none';
-
-      // 10) Цель следующего уровня (если есть)
-      const ntEl = document.getElementById('nextTargetCell');
-      if (ntEl && info.next_target) ntEl.textContent = String(info.next_target);
-    } catch (e) { console.error(e); }
-  };
+  
 
   window.LC.loadLevelInfo();
 });
@@ -788,128 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<!-- === Video watch via Edge Functions (video-ticket / award-view) === -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const sb = window.sb || window._supabase;
-  const video = document.getElementById('promoVid') || document.querySelector('video');
-  const source = document.getElementById('promoSource') || (video && video.querySelector('source'));
-  const startBtn = document.getElementById('startBtn');
-  const fill = document.getElementById('progressFill');
-  const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-  if (!sb || !video || !source || !startBtn) return;
 
-  let allowPlay = false;
-  let frame = 0;
-
-  function setProgress(p){
-    if (fill) fill.style.width = Math.max(0, Math.min(100, p)) + '%';
-  }
-
-  // Allow/lock play programmatically
-  function arm(lock){
-    allowPlay = !lock;
-  }
-  window.__LC_ARM_VIDEO__ = arm;
-
-  // Block native play until armed
-  function stopIfLocked(e){
-    if (!allowPlay){
-      try{ e && e.preventDefault && e.preventDefault(); }catch(_){}
-      try{ video.pause(); }catch(_){}
-      if (progressText) progressText.textContent = 'Нажмите «Заработать за просмотр»';
-    }
-  }
-  video.addEventListener('play', stopIfLocked, true);
-  video.addEventListener('seeking', stopIfLocked, true);
-
-  async function startWatching(){
-    setProgress(0);
-    if (startBtn){ startBtn.disabled = true; startBtn.textContent = 'Проверяем...'; }
-
-    // 1) Get ticket + signed URL
-    const vt = await sb.functions.invoke('video-ticket');
-    const vtData = vt && vt.data;
-    let reason = null;
-    if (vt.error){
-      try{ const dbg = await vt.error.context.json(); reason = dbg && dbg.reason; }catch(_){}
-    } else if (!vtData || vtData.ok !== true){
-      reason = (vtData && vtData.reason) || null;
-    }
-    if (reason){
-      alert(reason === 'inactive' ? 'Аккаунт не активен' : reason === 'limit' ? 'Лимит просмотров на сегодня' : ('Ошибка: ' + reason));
-      if (startBtn){ startBtn.disabled = false; startBtn.textContent = 'Заработать за просмотр'; }
-      return;
-    }
-
-    // 2) Load and play
-    source.src = vtData.signed_url;
-    video.dataset.ticket = vtData.ticket_id;
-    try{ video.currentTime = 0; }catch(_){}
-    video.load();
-
-    arm(false); // allow user agent to start playing now
-
-    if (startBtn) startBtn.textContent = 'Смотрим...';
-    const pp = video.play && video.play();
-    if (pp && typeof pp.then === 'function'){
-      pp.catch(() => { /* autoplay blocked - user will press Play manually */ });
-    }
-
-    // 3) Track progress
-    function tick(){
-      if (!video || !video.duration){ setProgress(0); frame = requestAnimationFrame(tick); return; }
-      const p = (video.currentTime / video.duration) * 100;
-      setProgress(p);
-      if (progressText){
-        const leftEl = document.querySelector('[data-views-left]');
-        const left = leftEl ? parseInt(leftEl.textContent || '0', 10) : null;
-        progressText.textContent = (p >= 100 ? 'Готово' : `Прогресс: ${Math.floor(p)}%`) + (left!==null ? ` · осталось: ${left}` : '');
-      }
-      frame = requestAnimationFrame(tick);
-    }
-    if (!frame) frame = requestAnimationFrame(tick);
-  }
-
-  async function award(){
-    // Avoid duplicate awards
-    if (!video || !video.dataset || !video.dataset.ticket) return;
-    const ticket = video.dataset.ticket;
-    // freeze further manual plays until next start
-    arm(true);
-    try{
-      const aw = await sb.functions.invoke('award-view', { body: { ticket_id: ticket, duration_sec: Math.round(video.duration || 0) } });
-      let ok = false, reason = null;
-      if (aw.error){
-        try{ const dbg = await aw.error.context.json(); reason = dbg && dbg.reason; }catch(_){}
-      } else {
-        ok = !!(aw.data && aw.data.ok);
-        reason = aw.data && aw.data.reason;
-      }
-      if (!ok){
-        alert(reason || 'Не удалось зачесть просмотр');
-      } else {
-        if (window.LC && typeof window.LC.loadLevelInfo === 'function'){
-          await window.LC.loadLevelInfo();
-        }
-      }
-    } catch(e){
-      console.error(e);
-      alert(e.message || 'Ошибка начисления');
-    } finally {
-      if (frame){ cancelAnimationFrame(frame); frame = 0; }
-      setProgress(100);
-      if (startBtn){ startBtn.disabled = false; startBtn.textContent = 'Заработать за просмотр'; }
-      // clear ticket until next "start"
-      try{ delete video.dataset.ticket; }catch(_){}
-    }
-  }
-
-  startBtn.addEventListener('click', (e) => { e.preventDefault(); startWatching(); });
-  
-});
-</script>
-<!-- === /Video watch via Edge Functions === -->
 
 
 
@@ -1415,68 +1233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 <script src="supabaseConfig.js"></script>
 <script src="app_supabase.js"></script>
 
-<script>
-// === Minimal local video + RPC award_view (no Edge Functions) ===
-document.addEventListener('DOMContentLoaded', () => {
-  const sb = window.sb || window._supabase;
-  const v = document.getElementById('promoVid');
-  const btn = document.getElementById('startBtn');
-  const fill = document.getElementById('progressFill');
-  const leftEl = document.querySelector('[data-views-left]');
-  const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-  const MIN_SEC = 10;
 
-  if (!sb || !v || !btn) return;
-
-  async function startVideo() {
-    try{
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) return alert('Войдите в аккаунт');
-
-      // Получаем уровень/лимиты/баланс
-      const { data, error } = await sb.rpc('get_level_info_v2');
-      if (error || !data) return alert('Ошибка загрузки данных');
-      const info = Array.isArray(data) ? data[0] : data;
-
-      // Активный = баланс >= 29 USDT
-      if ((info.balance_cents ?? 0) < 2900) return alert('Пополните баланс ≥ 29 USDT');
-      // Лимит 5 просмотров в сутки
-      if ((info.views_used_today ?? 0) >= (info.daily_limit ?? 5)) return alert('Лимит 5 просмотров');
-
-      // Запуск локального файла из assets/videos
-      const src = 'assets/videos/ad1.mp4';
-      const srcEl = v.querySelector('source');
-      if (srcEl) { srcEl.src = src; v.load(); } else { v.src = src; }
-      v.currentTime = 0;
-      v.controls = true;
-      const p = v.play && v.play();
-      if (p && typeof p.then === 'function') p.catch(()=>{});
-
-      // Прогресс + начисление после 10 сек
-      let sec = 0, awarded = false;
-      v.ontimeupdate = async () => {
-        if (sec < v.currentTime) sec = Math.floor(v.currentTime);
-        if (fill) fill.style.width = Math.min(100, (sec / MIN_SEC) * 100) + '%';
-        if (progressText) progressText.textContent = 'Прогресс: ' + Math.min(100, Math.round((sec / MIN_SEC) * 100)) + '%';
-
-        if (!awarded && sec >= MIN_SEC) {
-          awarded = true;
-          try {
-            const res = await sb.rpc('award_view', { duration_sec: sec });
-            if (res?.data?.ok) {
-              if (leftEl && Number.isFinite(res.data.left)) leftEl.textContent = String(res.data.left);
-              if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo(); // обновит баланс/пер-вью/дневную сумму
-            } else {
-              alert(res?.data?.reason === 'limit' ? 'Лимит 5 просмотров' : 'Не удалось зачесть просмотр');
-            }
-          } catch(e){ console.error(e); alert('Ошибка начисления'); }
-        }
-      };
-    }catch(e){ console.error(e); alert('Ошибка запуска просмотра'); }
-  }
-
-  btn.addEventListener('click', startVideo);
-});
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const sb = window.sb || window._supabase || window.supabase;
