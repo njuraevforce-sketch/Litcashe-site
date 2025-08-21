@@ -757,33 +757,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <script defer src="assets/js/guard.js"></script>
 
-<!-- Removed legacy award_view block to prevent duplicate payouts -->
-<script>
-/* LEGACY BLOCK DISABLED
 <script defer>
 document.addEventListener('DOMContentLoaded', () => {
   try{
-    const sb = window.sb;
-    const reload = window.LC && window.LC.loadLevelInfo ? window.LC.loadLevelInfo : null;
-    const btn = document.getElementById('startBtn');
-    if (!sb || !btn) return;
-
-    async function award(){
-    // prevent multiple calls
-
-      const video = document.querySelector('video');
-      const videoId = (video && (video.currentSrc || video.dataset.id)) || 'video-1';
-      const { data, error } = await sb.rpc('award_view', { p_video_id: videoId });
-      if (error){ alert(error.message || 'Ошибка начисления'); return; }
-      if (!data || !data.ok){
-        alert(data && data.reason === 'limit' ? 'Лимит 5 просмотров на сегодня' : 'Не удалось зачесть просмотр');
-        return;
-      }
-      if (reload) await reload();
-      // Обновим прогресс-бар, если он есть
-      const leftEl = document.querySelector('[data-views-left]');
-      const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-      const fill = document.getElementById('progressFill');
+   
       if (leftEl && progressText){
         const left = parseInt(leftEl.textContent || '0', 10);
         progressText.textContent = `Просмотров осталось сегодня: ${left}`;
@@ -794,13 +771,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    btn.addEventListener('click', award);
     const video = document.querySelector('video');
-    if (video) video.addEventListener('ended', award);
+    
   }catch(e){ console.error(e); }
 });
-
-*/
 </script>
 
 
@@ -921,16 +895,140 @@ document.addEventListener('DOMContentLoaded', () => {
       try{ delete video.dataset.ticket; }catch(_){}
     }
   }
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const sb = window.sb || window._supabase;
+  const video = document.getElementById('promoVid') || document.querySelector('video');
+  const source = document.getElementById('promoSource') || (video && video.querySelector('source'));
+  const startBtn = document.getElementById('startBtn');
+  const fill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
+  if (!sb || !video || !source || !startBtn) return;
 
+  let allowPlay = false;
+  let raf = 0;
+
+  function setProgress(pct){
+    if (fill) fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
+
+  // Блокируем нативный play/seek до старта
+  function lockPlay(e){
+    if (!allowPlay){
+      try { e?.preventDefault?.(); } catch(_){}
+      try { video.pause(); } catch(_){}
+      if (progressText) progressText.textContent = 'Нажмите «Заработать за просмотр»';
+    }
+  }
+  video.addEventListener('play', lockPlay, true);
+  video.addEventListener('seeking', lockPlay, true);
+
+  async function startWatching(){
+    setProgress(0);
+    startBtn.disabled = true;
+    startBtn.textContent = 'Проверяем…';
+
+    // 1) Получаем билет и подписанный URL у Edge Function
+    const vt = await sb.functions.invoke('video-ticket');
+    const data = vt?.data;
+    let reason = null;
+
+    if (vt.error){
+      try { reason = (await vt.error.context.json())?.reason || null; } catch(_){}
+    } else if (!data?.ok){
+      reason = data?.reason || 'unknown';
+    }
+
+    if (reason){
+      alert(
+        reason === 'inactive' ? 'Аккаунт не активен (< $29 USDT)' :
+        reason === 'limit'    ? 'Лимит 5 просмотров на сегодня' :
+        'Ошибка доступа к видео'
+      );
+      startBtn.disabled = false;
+      startBtn.textContent = 'Заработать за просмотр';
+      return;
+    }
+
+    // 2) Подменяем источник и запускаем
+    source.src = data.signed_url;
+    video.dataset.ticket = data.ticket_id;
+    try { video.currentTime = 0; } catch(_){}
+    video.load();
+
+    allowPlay = true; // теперь можно играть
+    startBtn.textContent = 'Смотрим…';
+
+    const p = video.play?.();
+    if (p && typeof p.then === 'function'){
+      p.catch(() => { /* браузер может потребовать явное действие — ок */ });
+    }
+
+    // 3) Рисуем прогресс
+    function tick(){
+      if (!video?.duration){
+        setProgress(0);
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      const pct = (video.currentTime / video.duration) * 100;
+      setProgress(pct);
+      if (progressText){
+        const leftEl = document.querySelector('[data-views-left]');
+        const left = leftEl ? parseInt(leftEl.textContent || '0', 10) : null;
+        progressText.textContent =
+          (pct >= 100 ? 'Готово' : `Прогресс: ${Math.floor(pct)}%`) +
+          (left !== null ? ` · осталось: ${left}` : '');
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+
+  async function award(){
+    const ticket = video?.dataset?.ticket;
+    if (!ticket) return;
+
+    allowPlay = false;
+    try{
+      const res = await sb.functions.invoke('award-view', {
+        body: { ticket_id: ticket, duration_sec: Math.round(video.duration || 0) }
+      });
+
+      let ok = !!res?.data?.ok;
+      let reason = res?.data?.reason;
+
+      if (res.error){
+        try { reason = (await res.error.context.json())?.reason || reason; } catch(_){}
+        ok = false;
+      }
+
+      if (!ok){
+        alert(
+          reason === 'limit'    ? 'Лимит 5 просмотров на сегодня' :
+          reason === 'inactive' ? 'Аккаунт не активен (< $29 USDT)' :
+          'Не удалось зачесть просмотр'
+        );
+      } else {
+        if (window.LC?.loadLevelInfo) await window.LC.loadLevelInfo();
+      }
+    } catch(e){
+      console.error(e);
+      alert('Ошибка начисления: ' + (e.message || 'unknown'));
+    } finally {
+      if (raf){ cancelAnimationFrame(raf); raf = 0; }
+      setProgress(100);
+      startBtn.disabled = false;
+      startBtn.textContent = 'Заработать за просмотр';
+      try { delete video.dataset.ticket; } catch(_){}
+    }
+  }
+
+  // Кнопка запуска и начисление по окончании
   startBtn.addEventListener('click', (e) => { e.preventDefault(); startWatching(); });
   video.addEventListener('ended', award);
 });
 </script>
-<!-- === /Video watch via Edge Functions === -->
-
-
-
-<script>
 document.addEventListener('DOMContentLoaded', () => {
   // 1) Гарантируем объекты и единый alias для Supabase
   window.LC = window.LC || {};
@@ -1432,123 +1530,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 <script src="supabaseConfig.js"></script>
 <script src="app_supabase.js"></script>
 
-<script>
-(function(){
-  if (window.__watch_earn_patched__) return; window.__watch_earn_patched__ = true;
-
-  const sb = window.sb || window._supabase;
-  const video = document.getElementById('promoVid');
-  const source = document.getElementById('promoSource');
-  const startBtn = document.getElementById('startBtn');
-  const fill = document.getElementById('progressFill');
-  const progressText = document.getElementById('progressText');
-
-  function usd(c){ return '$' + (Number(c||0)/100).toFixed(2); }
-  function setProgress(p){ if (fill) { fill.style.width = Math.max(0,Math.min(100,p)) + '%'; fill.style.background = 'linear-gradient(90deg,#00eaff,#1e88e5)'; } }
-
-  async function loadLevel(){
-    if (!sb) return;
-    try{
-      const { data } = await sb.rpc('get_level_info_v2');
-      const info = Array.isArray(data)? data[0]: data;
-      if (!info) return;
-      const perViewC = Number(info.reward_per_view_cents ?? info.per_view_cents ?? 0);
-      const dailyC = Number(info.daily_reward_cents ?? 0);
-      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
-      const balC = Number(info.balance_cents ?? info.balance_usd_cents ?? (info.balance_usd!=null? Math.round(info.balance_usd*100): 0));
-
-      const pv = document.querySelector('[data-reward-per-view]'); if (pv) pv.textContent = usd(perViewC);
-      const dr = document.querySelector('[data-daily-reward]'); if (dr) dr.textContent = usd(dailyC);
-      document.querySelectorAll('[data-views-left]').forEach(n=> n.textContent = String(Math.max(0,left)));
-      const balEl = document.querySelector('[data-balance]'); if (balEl) balEl.textContent = usd(balC);
-    }catch(e){ console.error(e); }
-  }
-  window.LC = window.LC || {}; window.LC.loadLevelInfo = loadLevel;
-
-  let allowPlay = false, raf=0;
-  function blockIfLocked(e){
-    if (!allowPlay){
-      try{ e.preventDefault(); }catch(_){}
-      try{ video.pause(); }catch(_){}
-      if (progressText) progressText.textContent = 'Нажмите «Заработать за просмотр»';
-    }
-  }
-  if (video){
-    video.addEventListener('play', blockIfLocked, true);
-    video.addEventListener('seeking', blockIfLocked, true);
-  }
-
-  async function startWatching(){
-    if (!sb) { alert('Нет клиента Supabase'); return; }
-    setProgress(0);
-    if (startBtn){ startBtn.disabled = TrueFalse(true); startBtn.textContent = 'Проверяем...'; }
-
-    const vt = await sb.functions.invoke('video-ticket');
-    let vtData = vt && vt.data;
-    let reason = null;
-    if (vt.error){
-      try{ const dbg = await vt.error.context.json(); reason = dbg && dbg.reason; }catch(_){}
-    } else if (!vtData || vtData.ok !== true){
-      reason = vtData && vtData.reason;
-    }
-    if (reason){
-      alert(
-        reason === 'inactive' ? 'Аккаунт не активен (баланс < 29 USDT).' :
-        reason === 'limit' ? 'Лимит 5 просмотров на сегодня.' :
-        'Ошибка: ' + reason
-      );
-      if (startBtn){ startBtn.disabled = FalseTrue(false); startBtn.textContent = 'Заработать за просмотр'; }
-      return;
-    }
-
-    if (source) source.src = vtData.signed_url || '';
-    if (video){ video.dataset.ticket = vtData.ticket_id || ''; try{ video.currentTime=0; video.load(); }catch(_){} }
-    allowPlay = true;
-    if (startBtn) startBtn.textContent = 'Смотрим...';
-    try{ await video.play(); }catch(_){ /* user gesture may be needed */ }
-
-    const tick = ()=>{
-      if (!video || !video.duration){ raf = requestAnimationFrame(tick); return; }
-      const p = (video.currentTime / video.duration) * 100;
-      setProgress(p);
-      if (progressText) progressText.textContent = p >= 100 ? 'Готово' : `Прогресс: ${Math.floor(p)}%`;
-      raf = requestAnimationFrame(tick);
-    };
-    if (!raf) raf = requestAnimationFrame(tick);
-  }
-
-  async function award(){
-    if (!sb || !video || !video.dataset || !video.dataset.ticket) return;
-    const ticket = video.dataset.ticket;
-    allowPlay = false;
-    try{
-      const res = await sb.functions.invoke('award-view', { body: { ticket_id: ticket, duration_sec: Math.round(video.duration || 0) } });
-      let ok=false, reason=null;
-      if (res.error){
-        try{ const dbg = await res.error.context.json(); reason = dbg && dbg.reason; }catch(_){}
-      } else {
-        ok = !!(res.data && res.data.ok);
-        reason = res.data && res.data.reason;
-      }
-      if (!ok){ alert(reason || 'Не удалось зачесть просмотр'); }
-      await loadLevel();
-    }catch(e){ console.error(e); alert(e.message || 'Ошибка начисления'); }
-    finally{
-      if (raf){ cancelAnimationFrame(raf); raf = 0; }
-      setProgress(100);
-      if (startBtn){ startBtn.disabled = FalseTrue(false); startBtn.textContent = 'Заработать за просмотр'; }
-      try{ delete video.dataset.ticket; }catch(_){}
-    }
-  }
-
-  function TrueFalse(v){ return !!v; } function FalseTrue(v){ return !!v; } // small guard for minifiers
-
-  if (startBtn) startBtn.addEventListener('click', (e)=>{ e.preventDefault(); startWatching(); });
-  if (video) video.addEventListener('ended', award);
-
-  // initial refresh
-  loadLevel();
-})();
-</script>
 </body>
 </html>
