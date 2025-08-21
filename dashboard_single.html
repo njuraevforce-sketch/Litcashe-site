@@ -835,24 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     
-    async function loadStats(){
-      try{
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session) return;
-        const r = await fetch(`${baseFunctionsUrl()}/user-stats`, {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${session.access_token}` }
-        });
-        const js = await r.json().catch(()=>({}));
-        if (js && js.ok) {
-          if (balanceEl && typeof js.balance !== 'undefined') {
-            balanceEl.textContent = String(Number(js.balance || 0).toFixed(3));
-          }
-          if (leftText && typeof js.left !== 'undefined') {
-            leftText.textContent = String(js.left);
-            startBtn.disabled = Number(js.left) <= 0;
-          }
-        }
+    async function loadStats(){ /* disabled: no remote stats */ }
       }catch(e){
         console.warn('stats error', e);
       }
@@ -873,8 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (reason === 'inactive') alert('Аккаунт не активен. Пополните баланс.');
           else if (reason === 'limit') alert('На сегодня лимит просмотров исчерпан.');
           else alert('Не удалось получить видео: ' + reason);
-          await loadStats();
-          return;
+          await return;
         }
 
         currentTicketId = vt.ticket_id;
@@ -924,8 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Success: decrement left and update balance from DB
         const leftNow = Number((leftText && leftText.textContent) || '0') - 1;
         if (leftText) leftText.textContent = String(Math.max(0, leftNow));
-        await loadStats();
-      } catch (e) {
+        await } catch (e) {
         console.error('award error', e);
       } finally {
         currentTicketId = null;
@@ -944,8 +925,7 @@ document.addEventListener('DOMContentLoaded', () => {
     v.addEventListener('ended', tryAward);
 
     // Update stats on load
-    loadStats();
-  });
+    });
 })();
 </script>
 <!-- === /Video watch via Edge Functions — REPLACED FULL === -->
