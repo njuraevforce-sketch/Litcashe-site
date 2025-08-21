@@ -1470,5 +1470,101 @@ document.addEventListener('DOMContentLoaded', () => {
   btn.addEventListener('click', startVideo);
 });
 </script>
+(function(){
+  document.addEventListener('DOMContentLoaded', () => {
+    const sb = window.sb || window._supabase;
+    const v  = document.getElementById('promoVid') || document.querySelector('video');
+    const btn = document.getElementById('startBtn') || document.querySelector('[data-start]');
+    const leftText = document.querySelector('[data-views-left]');
+    if (!sb || !v || !btn) return;
+
+    const MIN_SEC = 10;        // ролик 10с → требуем 10с
+    let awarded = false;
+
+    async function ensureSession(){
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) throw new Error('NO_SESSION');
+      return session;
+    }
+
+    async function start(){
+      try{
+        await ensureSession();
+        awarded = false;
+
+        // подставляем локальный ролик (как вы просили — без Edge Functions)
+        const src = v.querySelector('source');
+        if (src) { src.src = 'assets/videos/ad1.mp4'; v.load(); } else { v.src = 'assets/videos/ad1.mp4'; }
+        v.currentTime = 0;
+        v.controls = true;
+        await v.play().catch(()=>{});
+      }catch(e){
+        alert('Войдите в аккаунт'); 
+      }
+    }
+
+    async function awardNow(){
+      if (awarded) return;
+      // Надёжно считаем секунды: берём максимум из currentTime и duration
+      const sec = Math.max(
+        Math.floor(v.currentTime || 0),
+        Math.floor(v.duration || 0)
+      );
+
+      if (sec < MIN_SEC) return; // ещё не досмотрели
+
+      awarded = true;
+      try{
+        const { data, error } = await sb.rpc('award_view', { duration_sec: sec });
+        if (error) throw error;
+
+        if (data && data.ok){
+          // уменьшить «осталось» из ответа БД, если дано,
+          // иначе просто -1 от текущего DOM
+          if (leftText){
+            if (Number.isFinite(data.left)) {
+              leftText.textContent = String(data.left);
+            } else {
+              const leftNow = Math.max(0, Number(leftText.textContent || '0') - 1);
+              leftText.textContent = String(leftNow);
+            }
+          }
+          // перерисовать карточки/баланс/ставку и т.д.
+          if (window.LC && typeof LC.loadLevelInfo === 'function'){
+            LC.loadLevelInfo();
+          }
+        } else {
+          const reason = data && data.reason;
+          if (reason === 'limit') alert('Лимит 5 просмотров на сегодня');
+          else if (reason === 'inactive') alert('Аккаунт не активен');
+          else if (reason === 'low_balance') alert('Пополните баланс ≥ 29 USDT');
+          else if (reason === 'too_short') alert('Досмотрите видео до конца (10 сек)');
+          else alert('Не удалось зачесть просмотр');
+        }
+      }catch(e){
+        console.error('award_view rpc error', e);
+        alert('Ошибка начисления');
+      }finally{
+        // сбрасываем плеер, чтобы нельзя было повторно отправить тот же ролик
+        try {
+          v.pause();
+          v.removeAttribute('src');
+          const s = v.querySelector('source'); if (s) s.removeAttribute('src');
+          v.load();
+        } catch(_) {}
+      }
+    }
+
+    btn.addEventListener('click', start);
+
+    // когда ролик «закончился», сразу отправляем RPC
+    v.addEventListener('ended', () => {
+      // на некоторых браузерах конечное timeupdate не приходит —
+      // ставим микро-таймер, чтобы успела обновиться duration/currentTime
+      setTimeout(awardNow, 50);
+    });
+  });
+})();
+</script>
 </body>
 </html>
