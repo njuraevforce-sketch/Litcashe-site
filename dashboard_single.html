@@ -679,7 +679,81 @@ document.addEventListener('DOMContentLoaded', function(){
 <script>window.LC_TOAST=(function(){let box;function ensure(){if(!box){box=document.createElement('div');box.className='lc-toast';document.body.appendChild(box);}}function show(msg){ensure();const item=document.createElement('div');item.className='lc-toast__item';item.textContent=msg;box.appendChild(item);setTimeout(()=>{item.remove();},1700);}return{ok:show,err:show};})();</script>
 <div id="refLinkWrap" style="display:none;margin:1rem 0;">
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.LC || !window.sb) return;
 
+  // маленький хелпер чтобы ставить текст сразу во все совпадения
+  function setTextAll(selector, text) {
+    document.querySelectorAll(selector).forEach(el => { el.textContent = text; });
+  }
+
+  window.LC.loadLevelInfo = async function () {
+    try {
+      const { data: { session } } = await window.sb.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await window.sb.rpc('get_level_info_v2');
+      if (error) { console.error(error); return; }
+      const info = Array.isArray(data) ? data[0] : data;
+      if (!info) return;
+
+      const usd = (c) => (Number(c || 0) / 100).toFixed(2) + ' USDT';
+
+      // 1) Уровень (обновляем все места)
+      const lvlName = info.level_name || info.lvl_name || info.level_key || '—';
+      setTextAll('[data-level],[data-level-name]', lvlName);
+
+      // 2) Процент (bps -> %) — обновляем все [data-rate]
+      const bp = Number(
+        info.reward_percent_bp ?? info.pct_bp ?? info.percent_bp ?? 0
+      );
+      const percent = (bp / 100).toFixed(2) + ' %';
+      setTextAll('[data-rate]', percent);
+
+      // 3) За 1 просмотр
+      const perViewCents = Number(info.reward_per_view_cents ?? info.per_view_cents ?? 0);
+      const pvText = usd(perViewCents);
+      const pvSpan = document.querySelector('[data-reward-per-view]');
+      if (pvSpan) pvSpan.textContent = pvText;
+      const pvBadge = document.getElementById('perViewBadge');
+      if (pvBadge) pvBadge.textContent = `+${pvText} за просмотр`;
+
+      // 4) За 5 просмотров (в день)
+      setTextAll('[data-daily-reward]', usd(info.daily_reward_cents ?? info.daily_reward ?? 0));
+
+      // 5) Осталось просмотров сегодня — обновляем все места
+      const left = Number(
+        info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0
+      );
+      setTextAll('[data-views-left]', Math.max(left, 0));
+
+      // 6) База уровня
+      const baseCents = Number(info.base_amount_cents ?? info.base_cap_cents ?? 0);
+      const bcEl = document.getElementById('baseCapCell');
+      if (bcEl) bcEl.textContent = usd(baseCents);
+
+      // 7) Капитал (расч.) карточка
+      const capEl = document.querySelector('[data-cap]');
+      if (capEl) capEl.textContent = usd(baseCents);
+
+      // 8) Рефералы
+      const refsEl = document.querySelector('[data-refs]');
+      if (refsEl) refsEl.textContent = Number(info.refs_total ?? info.active_refs ?? 0);
+
+      // 9) Индикация активности
+      const warn = document.getElementById('notActiveWarn');
+      if (warn) warn.style.display = (info.is_active === false) ? '' : 'none';
+
+      // 10) Цель следующего уровня (если есть)
+      const ntEl = document.getElementById('nextTargetCell');
+      if (ntEl && info.next_target) ntEl.textContent = String(info.next_target);
+    } catch (e) { console.error(e); }
+  };
+
+  window.LC.loadLevelInfo();
+});
+</script>
 
 <script defer src="assets/js/guard.js"></script>
 
