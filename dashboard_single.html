@@ -1239,101 +1239,143 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!sb || !video || !startBtn) { console.warn('watch: missing elements'); return; }
 
-  // Жёстко 10 секунд
-  const MIN_SEC = 10;
+// Жёстко 10 секунд
+const MIN_SEC = 10;
 
-  let playedSec = 0;
-  let ticking   = null;
-  let awarding  = false;
+let playedSec = 0;
+let ticking   = null;
+let awarding  = false;
 
-  // Прогресс-бар
-  function setProgress(sec){
-    if (!fill) return;
-    const pct = Math.max(0, Math.min(100, (sec / MIN_SEC) * 100));
-    fill.style.width = pct + '%';
-    fill.style.transition = 'width .4s ease';
+// Прогресс-бар
+function setProgress(sec){
+  if (!fill) return;
+  const pct = Math.max(0, Math.min(100, (sec / MIN_SEC) * 100));
+  fill.style.width = pct + '%';
+  fill.style.transition = 'width .4s ease';
+}
+
+// Блок/разблок по лимиту + отображение "осталось"
+function setLimitState(left){
+  const n = Number(left || 0);
+  const blocked = n <= 0;
+
+  if (leftEl) leftEl.textContent = String(Math.max(0, n));
+  if (progressText) progressText.textContent = `Просмотров осталось сегодня: ${Math.max(0, n)}`;
+
+  if (startBtn) {
+    startBtn.disabled = blocked;
+    startBtn.classList.toggle('opacity-50', blocked);
+    startBtn.classList.toggle('pointer-events-none', blocked);
+    startBtn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
   }
 
-  // Текст "Просмотров осталось сегодня"
-  function paintLeftText(){
-    if (!leftEl || !progressText) return;
-    const left = parseInt(leftEl.textContent || '0', 10);
-    progressText.textContent = `Просмотров осталось сегодня: ${Number.isFinite(left) ? left : 0}`;
+  // лёгкий оверлей на видео
+  let overlay = document.getElementById('limitOverlay');
+  if (!overlay && video?.parentElement) {
+    overlay = document.createElement('div');
+    overlay.id = 'limitOverlay';
+    Object.assign(overlay.style, {
+      position:'absolute', inset:'0', display:'none',
+      alignItems:'center', justifyContent:'center',
+      background:'rgba(0,0,0,0.35)', color:'#fff',
+      fontWeight:'600', fontSize:'14px', backdropFilter:'blur(2px)'
+    });
+    overlay.textContent = 'Дневной лимит просмотров исчерпан';
+    const wrap = video.parentElement;
+    if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+    wrap.appendChild(overlay);
   }
-  paintLeftText();
+  if (overlay) overlay.style.display = blocked ? 'flex' : 'none';
 
-  function startVideo(){
+  window.__LC_LIMIT_BLOCKED__ = blocked;
+}
+
+// Инициализируем текст/лимит из текущего DOM
+(function initLeftFromDOM(){
+  const initLeft = parseInt(leftEl?.textContent || '0', 10);
+  setLimitState(Number.isFinite(initLeft) ? initLeft : 0);
+})();
+
+function startVideo(){
+  try{
+    // Жёсткая блокировка на фронте
+    if (window.__LC_LIMIT_BLOCKED__) {
+      alert('Дневной лимит просмотров исчерпан.');
+      return;
+    }
+
+    awarding  = false;
+    playedSec = 0;
+    setProgress(0);
+
+    try { video.pause(); } catch(_){}
+    try { video.currentTime = 0; } catch(_){}
+    const p = video.play?.(); if (p && typeof p.then==='function') p.catch(()=>{});
+
+    if (ticking) clearInterval(ticking);
+    ticking = setInterval(() => {
+      playedSec = Math.floor(video.currentTime || 0);
+      setProgress(playedSec);
+    }, 250);
+  }catch(e){ console.error('startVideo error', e); }
+}
+
+async function award(){
+  if (awarding) return;
+  awarding = true;
+
+  if (ticking) { clearInterval(ticking); ticking = null; }
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { console.warn('award: no session'); return; }
+    if (playedSec < MIN_SEC) { console.warn('award: too short'); return; }
+
+    // Пытаемся с duration_sec, если сигнатура иная — фолбэк без аргумента
+    let res = await sb.rpc('award_view', { duration_sec: playedSec });
+    if (res && res.error && (/(does not exist|record|argument)/i.test(res.error.message || ''))) {
+      res = await sb.rpc('award_view');
+    }
+    if (res && res.error) { console.error('award_view error', res.error); return; }
+
+    const payload = Array.isArray(res?.data) ? res.data[0] : (res?.data || {});
+
+    // Если backend вернул "limit_reached" — сразу блокируем
+    if (payload?.reason === 'limit_reached') {
+      setLimitState(0);
+      alert('Дневной лимит просмотров исчерпан.');
+      return;
+    }
+
+    // Обновляем "осталось" по ответу (или оптимистично -1)
+    let left =
+      (typeof payload.left === 'number') ? payload.left :
+      (typeof payload.views_left_today === 'number') ? payload.views_left_today :
+      null;
+
+    if (left === null) {
+      const cur = parseInt(leftEl?.textContent || '0', 10);
+      left = Number.isFinite(cur) ? Math.max(0, cur - 1) : null;
+    }
+    if (left !== null) setLimitState(left);
+
+    // Подтянуть баланс/уровень/ставку
+    if (window.LC && typeof window.LC.loadLevelInfo === 'function') {
+      window.LC.loadLevelInfo();
+    }
+  } catch (e) {
+    console.error('award error', e);
+  } finally {
     try{
-      awarding = false;
-      playedSec = 0;
-      setProgress(0);
-
-      // сброс и пуск
-      try { video.pause(); } catch(_){}
-      try { video.currentTime = 0; } catch(_){}
-      video.play().catch(()=>{});
-
-      if (ticking) clearInterval(ticking);
-      ticking = setInterval(() => {
-        playedSec = Math.floor(video.currentTime || 0);
-        setProgress(playedSec);
-      }, 250);
-    }catch(e){ console.error('startVideo error', e); }
+      video.pause();
+      video.removeAttribute('src');
+      const s = video.querySelector('source'); if (s) s.removeAttribute('src');
+      video.load();
+    }catch(_){}
+    setProgress(0);
+    playedSec = 0;
+    awarding = false;
   }
-
-  async function award(){
-if (awarding) return;
-    awarding = true;
-
-    if (ticking) { clearInterval(ticking); ticking = null; }
-
-    (async () => {
-      try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session) { console.warn('award: no session'); return; }
-        if (playedSec < MIN_SEC) { console.warn('award: too short'); return; }
-
-        // Try award_view(duration_sec), fallback to award_view() if signature differs
-        let res = await sb.rpc('award_view', { duration_sec: playedSec });
-        if (res && res.error && (/(does not exist|record|argument)/i.test(res.error.message || ''))) {
-          res = await sb.rpc('award_view');
-        }
-        if (res && res.error) { console.error('award_view error', res.error); return; }
-
-        const payload = Array.isArray(res?.data) ? res.data[0] : (res?.data || {});
-
-        // Update "views left" if backend returned it; otherwise decrement optimistically
-        if (leftEl) {
-          const left =
-            (typeof payload.left === 'number') ? payload.left :
-            (typeof payload.views_left_today === 'number') ? payload.views_left_today :
-            null;
-          if (left !== null) {
-            leftEl.textContent = String(Math.max(0, left));
-          } else {
-            const cur = parseInt(leftEl.textContent || '0', 10);
-            leftEl.textContent = String(Math.max(0, (Number.isFinite(cur) ? cur - 1 : 0)));
-          }
-        }
-
-        // Refresh full UI (balance, level, per-view reward, etc.)
-        if (window.LC && typeof window.LC.loadLevelInfo === 'function') {
-          window.LC.loadLevelInfo();
-        }
-      } catch (e) {
-        console.error('award error', e);
-      } finally {
-        try{
-          video.pause();
-          video.removeAttribute('src');
-          const s = video.querySelector('source'); if (s) s.removeAttribute('src');
-          video.load();
-        }catch(_){}
-        setProgress(0);
-        playedSec = 0;
-        awarding = false;
-      }
-    })();
 }
 
 
