@@ -1459,6 +1459,142 @@ document.addEventListener('DOMContentLoaded', async () => {
   video.addEventListener('ended', award);
   */
 });
+</script><script>
+document.addEventListener('DOMContentLoaded', () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  let video   = document.getElementById('promoVid') || document.querySelector('video');
+  let srcEl   = document.getElementById('promoSource');
+  const wrap  = (video && video.parentElement) || document.body;
+  const startBtn= document.getElementById('startBtn') || document.querySelector('[data-start]');
+  const leftEl  = document.querySelector('[data-views-left]');
+  const overlay = document.getElementById('limitOverlay');
+  if (!video || !leftEl || !overlay) return;
+
+  const VIDEO_SRC = '/media/ad1.mp4'; // <-- твой путь
+  const LOCK_KEY = 'lc_lock_date';
+  const todayKey = () => new Date().toISOString().slice(0,10);
+
+  // вспомогалки
+  const getLeft = () => Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0);
+  const setLeft = (n) => leftEl.textContent = String(Math.max(0, n|0));
+  const isLocallyLocked = () => localStorage.getItem(LOCK_KEY) === todayKey();
+
+  // клонирование видео (фикс iOS/Android)
+  function recreateVideo() {
+    const newVideo = document.createElement('video');
+    // переносим нужные атрибуты
+    newVideo.id = video.id || 'promoVid';
+    newVideo.setAttribute('playsinline','');
+    newVideo.setAttribute('preload','metadata');
+    newVideo.className = video.className || '';
+    newVideo.style.cssText = video.style.cssText || '';
+    // создаём новый <source> без src
+    const newSrc = document.createElement('source');
+    newSrc.id = srcEl ? srcEl.id : 'promoSource';
+    newSrc.type = 'video/mp4';
+    newVideo.appendChild(newSrc);
+
+    // слушатели для стопа
+    const stopIfLocked = (e) => {
+      if (isLocallyLocked() || getLeft() <= 0) {
+        try { newVideo.pause(); } catch(_) {}
+        e?.preventDefault?.();
+        showOverlay(true);
+      }
+    };
+    newVideo.addEventListener('play', stopIfLocked, true);
+    newVideo.addEventListener('loadeddata', stopIfLocked, true);
+    newVideo.addEventListener('canplay', stopIfLocked, true);
+    newVideo.addEventListener('timeupdate', stopIfLocked, true);
+
+    // iOS: если почему-то зашёл в фуллскрин — выходим сразу
+    newVideo.addEventListener('webkitbeginfullscreen', () => {
+      try { newVideo.pause(); } catch(_){}
+      if (typeof newVideo.webkitExitFullscreen === 'function') newVideo.webkitExitFullscreen();
+    }, true);
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement === newVideo && (isLocallyLocked() || getLeft()<=0)) {
+        try { document.exitFullscreen(); } catch(_){}
+      }
+    });
+
+    // замена узла
+    video.replaceWith(newVideo);
+    video = newVideo;
+    srcEl = newSrc;
+  }
+
+  function showOverlay(on) { overlay.style.display = on ? 'flex' : 'none'; }
+
+  function lockPlayback(blocked) {
+    if (startBtn) { startBtn.disabled = !!blocked; startBtn.setAttribute('aria-disabled', blocked?'true':'false'); }
+    if (blocked) {
+      // гасим текущее видео максимально жёстко
+      try { video.pause(); } catch(_){}
+      video.removeAttribute('poster');
+      video.removeAttribute('controls');
+      video.style.pointerEvents = 'none';
+      if (srcEl && srcEl.getAttribute('src')) {
+        srcEl.removeAttribute('src');
+        try { video.load(); } catch(_){}
+      }
+      // пересоздать <video> — главный фикс для iOS/Android
+      recreateVideo();
+
+      localStorage.setItem(LOCK_KEY, todayKey());
+      document.documentElement.classList.add('lc-locked');
+      showOverlay(true);
+    } else {
+      video.style.pointerEvents = '';
+      video.setAttribute('controls','');
+      if (srcEl && !srcEl.getAttribute('src')) {
+        srcEl.setAttribute('src', VIDEO_SRC);
+        try { video.load(); } catch(_){}
+      }
+      localStorage.removeItem(LOCK_KEY);
+      document.documentElement.classList.remove('lc-locked');
+      showOverlay(false);
+    }
+  }
+
+  // блокируем тапы по контейнеру
+  const swallow = (e) => {
+    if (isLocallyLocked() || getLeft() <= 0) {
+      e.preventDefault(); e.stopPropagation();
+      showOverlay(true);
+    }
+  };
+  ['click','touchstart','touchend'].forEach(ev => {
+    (wrap || document).addEventListener(ev, swallow, true);
+    video.addEventListener(ev, swallow, true);
+  });
+
+  // начальное состояние (тянем с БД, но без подвесов)
+  (async () => {
+    let left = 0;
+    try {
+      if (sb && typeof sb.rpc === 'function') {
+        const { data, error } = await sb.rpc('get_views_left_today');
+        left = (!error && typeof data === 'number') ? data : 0;
+      }
+    } catch { left = 0; }
+    setLeft(left);
+    lockPlayback(isLocallyLocked() || left <= 0);
+  })();
+
+  // публичный хук для твоего RPC начисления
+  window.LC = window.LC || {};
+  window.LC.afterAwardUpdateLeft = function(serverLeft) {
+    setLeft(serverLeft);
+    lockPlayback(serverLeft <= 0);
+  };
+
+  // авто-снятие замка на новый день
+  setInterval(() => {
+    const k = localStorage.getItem(LOCK_KEY);
+    if (k && k !== todayKey()) { localStorage.removeItem(LOCK_KEY); lockPlayback(getLeft()<=0); }
+  }, 120000);
+});
 </script>
 </body>
 </html>
