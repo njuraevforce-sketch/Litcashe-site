@@ -1383,6 +1383,7 @@ async function award(){
   video.addEventListener('ended', award);
 });
 </script><!-- === LC: жесткая блокировка воспроизведения при исчерпании лимита === -->
+<!-- === LC: жесткая блокировка воспроизведения при исчерпании лимита (стабильная) === -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const sb = window.sb || window._supabase || window.supabase;
@@ -1392,10 +1393,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const leftEl  = document.querySelector('[data-views-left]');
   if (!video || !leftEl) return;
 
-  // запомним исходный src, чтобы вернуть после разблокировки
+  // Исходные параметры
   const origSrc = (srcEl && srcEl.getAttribute('src')) || video.getAttribute('src') || video.currentSrc || '';
+  const todayKey = () => new Date().toISOString().slice(0,10); // YYYY-MM-DD
+  const LOCK_KEY = 'lc_lock_date';
   let overlay;
 
+  // Визуальный оверлей
   function ensureOverlay(){
     if (overlay) return overlay;
     overlay = document.getElementById('limitOverlay');
@@ -1417,65 +1421,96 @@ document.addEventListener('DOMContentLoaded', () => {
     return overlay;
   }
 
+  // Жёсткая блокировка/разблокировка источника
   function lockPlayback(blocked){
     const ov = ensureOverlay();
     if (startBtn) {
       startBtn.disabled = !!blocked;
       startBtn.setAttribute('aria-disabled', blocked ? 'true':'false');
     }
+    video.controls = !blocked; // если хочешь, можно оставить controls выключенными при блоке
     if (blocked){
       try { video.pause(); } catch(_){}
-      // убираем источник, чтобы даже автоплей/ручной запуск не стартовали
+      video.removeAttribute('poster');
       if (srcEl) srcEl.removeAttribute('src'); else video.removeAttribute('src');
-      video.load();
+      video.setAttribute('preload','none');
+      video.load(); // сброс буфера — не даст проиграть "пару секунд"
       ov.style.display = 'flex';
     } else {
       ov.style.display = 'none';
-      if (!video.getAttribute('src') && !(srcEl && srcEl.getAttribute('src'))) {
+      // вернём источник только если он реально отсутствует
+      const hasSrc = (srcEl && srcEl.getAttribute('src')) || video.getAttribute('src');
+      if (!hasSrc && origSrc) {
         if (srcEl) srcEl.setAttribute('src', origSrc); else video.setAttribute('src', origSrc);
+        video.removeAttribute('preload');
         video.load();
       }
     }
   }
 
+  // Чтение DOM-остатка
   function getLeft(){ return Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0); }
+  function setLeft(n){ leftEl.textContent = String(Math.max(0, n|0)); }
 
-  function enforce(){
-    const left = getLeft();
-    lockPlayback(left <= 0);
+  // Локальный предохранитель (переживёт 404/оффлайн)
+  function isLocallyLocked(){ return localStorage.getItem(LOCK_KEY) === todayKey(); }
+  function updateLocalLockByLeft(left){
+    if (left <= 0) localStorage.setItem(LOCK_KEY, todayKey());
+    else if (isLocallyLocked()) localStorage.removeItem(LOCK_KEY);
   }
 
-  // блокируем ручной запуск, если лимит 0
-  video.addEventListener('play', (e) => {
-    if (getLeft() <= 0) {
-      e.preventDefault?.(); 
-      try { video.pause(); } catch(_){}
-      ensureOverlay().style.display = 'flex';
-    }
-  });
+  // Единая точка применения правил
+  function enforce(){
+    const left = getLeft();
+    const hardLocked = isLocallyLocked() || left <= 0;
+    lockPlayback(hardLocked);
+    updateLocalLockByLeft(left);
+  }
 
-  // следим за изменением цифры «осталось» — когда твой код обновляет DOM, мы мгновенно переключаем состояние
+  // Многократные перехваты для «пары секунд» при любых событиях
+  const stopIfLocked = (e) => {
+    if (isLocallyLocked() || getLeft() <= 0) {
+      try { video.pause(); } catch(_){}
+      e?.preventDefault?.();
+      ensureOverlay().style.display = 'flex';
+      lockPlayback(true);
+    }
+  };
+  video.addEventListener('play', stopIfLocked, true);
+  video.addEventListener('loadeddata', stopIfLocked, true);
+  video.addEventListener('canplay', stopIfLocked, true);
+  video.addEventListener('timeupdate', stopIfLocked, true);
+
+  // Следим за изменением DOM «осталось» (твой код его обновляет после RPC)
   const mo = new MutationObserver(enforce);
   mo.observe(leftEl, { childList:true, characterData:true, subtree:true });
 
-  // один прогон при загрузке
+  // Первичное применение
   enforce();
 
-  // опционально: подтянуть актуальный остаток с сервера при старте
+  // Мягко подтянем актуальный остаток (если RPC доступен). Любые ошибки игнорируем.
   (async () => {
     try {
       if (!sb || typeof sb.rpc !== 'function') return;
       const { data, error } = await sb.rpc('get_views_left_today');
-      if (!error && typeof data === 'number') {
-        leftEl.textContent = String(Math.max(0, data));
-      }
-    } catch(_){}
+      if (!error && typeof data === 'number') setLeft(data);
+    } catch(_) { /* игнор */ }
+    finally { enforce(); }
   })();
 
-  // публичный хук: если где-то в твоём коде известен остаток — можно вызвать вручную
+  // Авто-сброс замка на следующий день (проверка раз в минуту)
+  setInterval(() => {
+    const k = localStorage.getItem(LOCK_KEY);
+    if (k && k !== todayKey()) { // новый день — снимаем локальный замок
+      localStorage.removeItem(LOCK_KEY);
+      enforce();
+    }
+  }, 60_000);
+
+  // Публичный хук для твоего кода: LC.enforcePlaybackLock(left)
   window.LC = window.LC || {};
   window.LC.enforcePlaybackLock = (left) => {
-    if (typeof left === 'number') leftEl.textContent = String(Math.max(0, left));
+    if (typeof left === 'number') setLeft(left);
     enforce();
   };
 });
