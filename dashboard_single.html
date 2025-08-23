@@ -1480,7 +1480,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!video || !leftEl || !overlay) return;
 
   const VIDEO_SRC = '/media/ad1.mp4'; // <-- твой путь
-  const LOCK_KEY  = 'lc_lock_date';
+  // получаем user_id из supabase и делаем ключ персональным
+const { data: _userData } = await sb.auth.getUser?.() ?? {};
+const _uid = _userData?.user?.id || 'anon';
+const LOCK_KEY = `lc_lock_date:${_uid}`;
+
   const todayKey  = () => new Date().toISOString().slice(0,10);
 
   // 🔒 Проверка активности пользователя
