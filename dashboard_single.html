@@ -1382,9 +1382,7 @@ async function award(){
   startBtn.addEventListener('click', startVideo);
   video.addEventListener('ended', award);
 });
-</script><!-- === LC: жесткая блокировка воспроизведения при исчерпании лимита === -->
-<!-- === LC: жесткая блокировка воспроизведения при исчерпании лимита (стабильная) === -->
-<!-- === LC: жесткая блокировка воспроизведения при исчерпании лимита (стабильная v2) === -->
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const sb = window.sb || window._supabase || window.supabase;
@@ -1448,20 +1446,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function getLeft(){ return Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0); }
-  function setLeft(n){ leftEl.textContent = String(Math.max(0, n|0)); }
+  const getLeft = () => Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0);
+  const setLeft = (n) => leftEl.textContent = String(Math.max(0, n|0));
+  const isLocallyLocked = () => localStorage.getItem(LOCK_KEY) === todayKey();
 
-  function isLocallyLocked(){ return localStorage.getItem(LOCK_KEY) === todayKey(); }
   function enforce(){
     const hardLocked = isLocallyLocked();
     if (hardLocked) setLeft(0);
     lockPlayback(hardLocked || getLeft() <= 0);
   }
 
-  // если из раннего скрипта пришёл флаг — сразу показать «0»
-  if (window.__LC_FORCE_LEFT_ZERO__) setLeft(0);
-
-  // Любые попытки проигрывания гасим
   const stopIfLocked = (e) => {
     if (document.documentElement.classList.contains('lc-locked') || isLocallyLocked() || getLeft() <= 0) {
       try { video.pause(); } catch(_){}
@@ -1473,16 +1467,16 @@ document.addEventListener('DOMContentLoaded', () => {
   video.addEventListener('play', stopIfLocked, true);
   video.addEventListener('loadeddata', stopIfLocked, true);
   video.addEventListener('canplay', stopIfLocked, true);
-  video.addEventListener('timeupdate', stopIfLocked, true);
 
-  // Следим за DOM-изменениями «осталось» и пере-применяем замок
-  new MutationObserver(enforce).observe(leftEl, { childList:true, characterData:true, subtree:true });
+  new MutationObserver(() => enforce())
+    .observe(leftEl, { childList:true, characterData:true, subtree:true });
 
-  // Первичное применение
+  if (window.__LC_FORCE_LEFT_ZERO__) setLeft(0);
   enforce();
 
-  // Пробуем подтянуть актуальный остаток (ошибки игнорируем), но не снимаем локальный замок
-  (async () => {
+  // аккуратно подтягиваем остаток с сервера, не блокируя загрузку страницы
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 350));
+  idle(async () => {
     try {
       if (sb && typeof sb.rpc === 'function') {
         const { data, error } = await sb.rpc('get_views_left_today');
@@ -1490,24 +1484,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch(_) {}
     finally { enforce(); }
-  })();
+  });
 
-  // Снятие замка на следующий день
+  // авто-сброс замка на новый день (редкая проверка)
   setInterval(() => {
     const k = localStorage.getItem(LOCK_KEY);
-    if (k && k !== todayKey()) { // новый день
+    if (k && k !== todayKey()) {
       localStorage.removeItem(LOCK_KEY);
       document.documentElement.classList.remove('lc-locked');
       enforce();
     }
-  }, 60_000);
-
-  // Публичный хук для твоего кода
-  window.LC = window.LC || {};
-  window.LC.enforcePlaybackLock = (left) => {
-    if (typeof left === 'number') setLeft(left);
-    enforce();
-  };
+  }, 120000);
 });
 </script>
 <!-- === /LC block === -->
