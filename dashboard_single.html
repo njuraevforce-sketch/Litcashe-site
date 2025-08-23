@@ -1469,6 +1469,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const leftEl  = document.querySelector('[data-views-left]');
   const overlay = document.getElementById('limitOverlay');
   if (!video || !leftEl || !overlay) return;
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  let video   = document.getElementById('promoVid') || document.querySelector('video');
+  let srcEl   = document.getElementById('promoSource');
+  const wrap  = (video && video.parentElement) || document.body;
+  const startBtn = document.getElementById('startBtn') || document.querySelector('[data-start]');
+  const leftEl   = document.querySelector('[data-views-left]');
+  const overlay  = document.getElementById('limitOverlay');
+  if (!video || !leftEl || !overlay) return;
+
+  const VIDEO_SRC = '/media/ad1.mp4'; // <-- твой путь
+  const LOCK_KEY  = 'lc_lock_date';
+  const todayKey  = () => new Date().toISOString().slice(0,10);
+
+  // 🔒 Проверка активности пользователя
+  const { data, error } = await sb.rpc('get_video_access_state');
+  const active = !error && (Array.isArray(data) ? data[0].get_video_access_state : data);
+
+  if (!active) {
+    // Блокируем сразу
+    window.LC?.afterAwardUpdateLeft?.(0);
+    overlay.textContent = 'Аккаунт не активен. Пополните баланс на 29 USDT для доступа к видео.';
+    return; // выходим, не продолжаем запускать плеер
+  }
+
+  // если active = true, то идём дальше по твоей логике (плейер запускается)
+  // ...
+});
 
   const VIDEO_SRC = '/media/ad1.mp4'; // <-- твой путь
   const LOCK_KEY = 'lc_lock_date';
