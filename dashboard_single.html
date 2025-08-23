@@ -1382,6 +1382,104 @@ async function award(){
   startBtn.addEventListener('click', startVideo);
   video.addEventListener('ended', award);
 });
+</script><!-- === LC: жесткая блокировка воспроизведения при исчерпании лимита === -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  const video   = document.getElementById('promoVid') || document.querySelector('video');
+  const srcEl   = document.getElementById('promoSource');
+  const startBtn= document.getElementById('startBtn') || document.querySelector('[data-start]');
+  const leftEl  = document.querySelector('[data-views-left]');
+  if (!video || !leftEl) return;
+
+  // запомним исходный src, чтобы вернуть после разблокировки
+  const origSrc = (srcEl && srcEl.getAttribute('src')) || video.getAttribute('src') || video.currentSrc || '';
+  let overlay;
+
+  function ensureOverlay(){
+    if (overlay) return overlay;
+    overlay = document.getElementById('limitOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'limitOverlay';
+      Object.assign(overlay.style, {
+        position:'absolute', inset:'0', display:'none',
+        alignItems:'center', justifyContent:'center',
+        background:'rgba(0,0,0,.55)', color:'#fff',
+        fontWeight:'700', fontSize:'15px', textAlign:'center',
+        backdropFilter:'blur(2px)', zIndex:'5', padding:'12px'
+      });
+      overlay.textContent = 'Лимит просмотров на сегодня исчерпан. Видео будет доступно завтра.';
+      const wrap = video.parentElement;
+      if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+      (wrap || document.body).appendChild(overlay);
+    }
+    return overlay;
+  }
+
+  function lockPlayback(blocked){
+    const ov = ensureOverlay();
+    if (startBtn) {
+      startBtn.disabled = !!blocked;
+      startBtn.setAttribute('aria-disabled', blocked ? 'true':'false');
+    }
+    if (blocked){
+      try { video.pause(); } catch(_){}
+      // убираем источник, чтобы даже автоплей/ручной запуск не стартовали
+      if (srcEl) srcEl.removeAttribute('src'); else video.removeAttribute('src');
+      video.load();
+      ov.style.display = 'flex';
+    } else {
+      ov.style.display = 'none';
+      if (!video.getAttribute('src') && !(srcEl && srcEl.getAttribute('src'))) {
+        if (srcEl) srcEl.setAttribute('src', origSrc); else video.setAttribute('src', origSrc);
+        video.load();
+      }
+    }
+  }
+
+  function getLeft(){ return Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0); }
+
+  function enforce(){
+    const left = getLeft();
+    lockPlayback(left <= 0);
+  }
+
+  // блокируем ручной запуск, если лимит 0
+  video.addEventListener('play', (e) => {
+    if (getLeft() <= 0) {
+      e.preventDefault?.(); 
+      try { video.pause(); } catch(_){}
+      ensureOverlay().style.display = 'flex';
+    }
+  });
+
+  // следим за изменением цифры «осталось» — когда твой код обновляет DOM, мы мгновенно переключаем состояние
+  const mo = new MutationObserver(enforce);
+  mo.observe(leftEl, { childList:true, characterData:true, subtree:true });
+
+  // один прогон при загрузке
+  enforce();
+
+  // опционально: подтянуть актуальный остаток с сервера при старте
+  (async () => {
+    try {
+      if (!sb || typeof sb.rpc !== 'function') return;
+      const { data, error } = await sb.rpc('get_views_left_today');
+      if (!error && typeof data === 'number') {
+        leftEl.textContent = String(Math.max(0, data));
+      }
+    } catch(_){}
+  })();
+
+  // публичный хук: если где-то в твоём коде известен остаток — можно вызвать вручную
+  window.LC = window.LC || {};
+  window.LC.enforcePlaybackLock = (left) => {
+    if (typeof left === 'number') leftEl.textContent = String(Math.max(0, left));
+    enforce();
+  };
+});
 </script>
+<!-- === /LC block === -->
 </body>
 </html>
