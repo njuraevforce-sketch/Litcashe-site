@@ -1383,120 +1383,82 @@ async function award(){
   video.addEventListener('ended', award);
 });
 </script>
+
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase || window.supabase;
-  const video   = document.getElementById('promoVid') || document.querySelector('video');
+  const video   = document.getElementById('promoVid');
   const srcEl   = document.getElementById('promoSource');
   const startBtn= document.getElementById('startBtn') || document.querySelector('[data-start]');
   const leftEl  = document.querySelector('[data-views-left]');
-  if (!video || !leftEl) return;
+  const overlay = document.getElementById('limitOverlay');
 
-  const origSrc = (srcEl && srcEl.getAttribute('src')) || video.getAttribute('src') || video.currentSrc || '';
-  const todayKey = () => new Date().toISOString().slice(0,10);
-  const LOCK_KEY = 'lc_lock_date';
-  let overlay;
+  // УКАЖИ свой верный путь к ролику:
+  const VIDEO_SRC = '/media/ad1.mp4';
 
-  function ensureOverlay(){
-    if (overlay) return overlay;
-    overlay = document.getElementById('limitOverlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'limitOverlay';
-      Object.assign(overlay.style, {
-        position:'absolute', inset:'0', display:'none',
-        alignItems:'center', justifyContent:'center',
-        background:'rgba(0,0,0,.55)', color:'#fff',
-        fontWeight:'700', fontSize:'15px', textAlign:'center',
-        backdropFilter:'blur(2px)', zIndex:'5', padding:'12px'
-      });
-      overlay.textContent = 'Дневной лимит просмотров исчерпан. Видео будет доступно завтра.';
-      const wrap = video.parentElement;
-      if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
-      (wrap || document.body).appendChild(overlay);
-    }
-    return overlay;
-  }
+  if (!video || !srcEl || !leftEl) return;
 
-  function lockPlayback(blocked){
-    const ov = ensureOverlay();
-    if (startBtn) {
-      startBtn.disabled = !!blocked;
-      startBtn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
-    }
-    if (blocked){
-      try { video.pause(); } catch(_){}
-      if (srcEl) srcEl.removeAttribute('src'); else video.removeAttribute('src');
-      video.setAttribute('preload','none');
-      video.removeAttribute('poster');
-      video.load();
-      ov.style.display = 'flex';
-      document.documentElement.classList.add('lc-locked');
-      localStorage.setItem(LOCK_KEY, todayKey());
+  function apply(left) {
+    left = Math.max(0, left|0);
+    leftEl.textContent = String(left);
+
+    if (left <= 0) {
+      // блокируем
+      try { video.pause(); } catch {}
+      if (srcEl.getAttribute('src')) {
+        srcEl.removeAttribute('src');
+        video.load(); // сброс буфера — ничего не проиграет
+      }
+      overlay.style.display = 'flex';
+      if (startBtn) { startBtn.disabled = true; startBtn.setAttribute('aria-disabled','true'); }
     } else {
-      ov.style.display = 'none';
-      document.documentElement.classList.remove('lc-locked');
-      localStorage.removeItem(LOCK_KEY);
-      const hasSrc = (srcEl && srcEl.getAttribute('src')) || video.getAttribute('src');
-      if (!hasSrc && origSrc) {
-        if (srcEl) srcEl.setAttribute('src', origSrc); else video.setAttribute('src', origSrc);
-        video.removeAttribute('preload');
+      // разблокируем
+      if (!srcEl.getAttribute('src')) {
+        srcEl.setAttribute('src', VIDEO_SRC);
         video.load();
       }
+      overlay.style.display = 'none';
+      if (startBtn) { startBtn.disabled = false; startBtn.setAttribute('aria-disabled','false'); }
     }
   }
 
-  const getLeft = () => Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0);
-  const setLeft = (n) => leftEl.textContent = String(Math.max(0, n|0));
-  const isLocallyLocked = () => localStorage.getItem(LOCK_KEY) === todayKey();
+  // Защита: даже если кто-то нажмёт play при нуле — мгновенно гаcим
+  video.addEventListener('play', (e) => {
+    const left = parseInt(leftEl.textContent || '0', 10) || 0;
+    if (left <= 0) { e.preventDefault?.(); try { video.pause(); } catch {} overlay.style.display='flex'; }
+  }, true);
 
-  function enforce(){
-    const hardLocked = isLocallyLocked();
-    if (hardLocked) setLeft(0);
-    lockPlayback(hardLocked || getLeft() <= 0);
-  }
-
-  const stopIfLocked = (e) => {
-    if (document.documentElement.classList.contains('lc-locked') || isLocallyLocked() || getLeft() <= 0) {
-      try { video.pause(); } catch(_){}
-      e?.preventDefault?.();
-      ensureOverlay().style.display = 'flex';
-      lockPlayback(true);
+  // 1) Первичная инициализация по серверу
+  let left = 0;
+  try {
+    if (sb && typeof sb.rpc === 'function') {
+      const { data, error } = await sb.rpc('get_views_left_today');
+      left = (!error && typeof data === 'number') ? data : 0;
     }
+  } catch { left = 0; }
+  apply(left);
+
+  // 2) Хук для твоей функции начисления:
+  //    вызови это после успешного RPC начисления, передавая остаток из ответа БД
+  window.LC = window.LC || {};
+  window.LC.afterAwardUpdateLeft = function(serverLeft) {
+    apply(serverLeft);
   };
-  video.addEventListener('play', stopIfLocked, true);
-  video.addEventListener('loadeddata', stopIfLocked, true);
-  video.addEventListener('canplay', stopIfLocked, true);
 
-  new MutationObserver(() => enforce())
-    .observe(leftEl, { childList:true, characterData:true, subtree:true });
-
-  if (window.__LC_FORCE_LEFT_ZERO__) setLeft(0);
-  enforce();
-
-  // аккуратно подтягиваем остаток с сервера, не блокируя загрузку страницы
-  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 350));
-  idle(async () => {
-    try {
-      if (sb && typeof sb.rpc === 'function') {
-        const { data, error } = await sb.rpc('get_views_left_today');
-        if (!error && typeof data === 'number') setLeft(data);
-      }
-    } catch(_) {}
-    finally { enforce(); }
-  });
-
-  // авто-сброс замка на новый день (редкая проверка)
-  setInterval(() => {
-    const k = localStorage.getItem(LOCK_KEY);
-    if (k && k !== todayKey()) {
-      localStorage.removeItem(LOCK_KEY);
-      document.documentElement.classList.remove('lc-locked');
-      enforce();
+  // (не обязательно) Пример: если у тебя колбэк award() уже есть:
+  /*
+  async function award() {
+    const { data, error } = await sb.rpc('award_view', { duration_sec: 10 });
+    if (!error && data && data.length) {
+      // сервер вернёт left — применяем
+      window.LC.afterAwardUpdateLeft(data[0].left);
+    } else if (error && /limit/i.test(error.message)) {
+      window.LC.afterAwardUpdateLeft(0);
     }
-  }, 120000);
+  }
+  video.addEventListener('ended', award);
+  */
 });
 </script>
-<!-- === /LC block === -->
 </body>
 </html>
