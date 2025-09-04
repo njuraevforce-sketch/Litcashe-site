@@ -509,6 +509,122 @@
         console.error('loadReferralWidgets:', e);
       }
     };
+<script>
+(() => {
+  const sb = window.sb;
+  const $ = (sel) => document.querySelector(sel);
+
+  const els = {
+    btn: $('#startBtn'),           // кнопка "Заработать за просмотр"
+    vid: $('#promoVid'),           // <video id="promoVid">
+    balance: document.querySelector('[data-balance]'),
+    rate: document.querySelector('[data-rate]'),
+    viewsLeft: document.querySelector('[data-views-left]'),
+    perView: $('#perViewBadge'),   // бейджик с оплатой за 1 просмотр
+    log: $('#viewsLog')            // блок отчёта (по желанию)
+  };
+
+  const fmtUSDT = (c) => (c/100).toFixed(2) + ' USDT';
+
+  async function refreshUI() {
+    const { data, error } = await sb.rpc('get_level_info_v2');
+    if (error) { console.warn(error); return; }
+    const v = data[0];
+
+    if (els.balance)  els.balance.textContent = fmtUSDT(v.balance_cents || 0);
+    if (els.rate)     els.rate.textContent    = (v.reward_percent_bp/100).toFixed(2) + '% / день';
+    if (els.perView)  els.perView.textContent = fmtUSDT(v.reward_per_view_cents || 0);
+    if (els.viewsLeft) els.viewsLeft.textContent = v.views_left_today ?? 0;
+
+    // блокировать кнопку, если не активен
+    els.btn.disabled = !v.is_active || (v.views_left_today ?? 0) <= 0;
+  }
+
+  // Realtime: мгновенное обновление баланса
+  function subscribeWalletRealtime() {
+    const uidChannel = sb.channel('wallets-balance')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'wallets' },
+        () => refreshUI()
+      )
+      .subscribe();
+  }
+
+  // ожидание реальных 10 секунд воспроизведения
+  function waitForSeconds(video, seconds) {
+    return new Promise((resolve, reject) => {
+      const start = video.currentTime;
+      function onTime() {
+        if (video.currentTime - start >= seconds) {
+          cleanup(); resolve();
+        }
+      }
+      function onEnded() { cleanup(); resolve(); }
+      function onError(e) { cleanup(); reject(e); }
+      function cleanup() {
+        video.removeEventListener('timeupdate', onTime);
+        video.removeEventListener('ended', onEnded);
+        video.removeEventListener('error', onError);
+      }
+      video.addEventListener('timeupdate', onTime);
+      video.addEventListener('ended', onEnded);
+      video.addEventListener('error', onError);
+    });
+  }
+
+  async function startEarn() {
+    els.btn.disabled = true;
+
+    // проверяем доступность
+    const { data: access } = await sb.rpc('get_video_access_state');
+    if (!access) {
+      alert('Пополните баланс до 29 USDT, чтобы смотреть и зарабатывать.');
+      await refreshUI();
+      return;
+    }
+
+    try {
+      // воспроизводим 10 сек
+      els.vid.currentTime = 0;
+      await els.vid.play();
+      await waitForSeconds(els.vid, 10);
+      els.vid.pause();
+
+      // начисляем
+      const { data, error } = await sb.rpc('award_view', { duration_sec: 10 });
+      if (error) throw error;
+
+      if (data?.ok) {
+        // сразу обновим UI
+        await refreshUI();
+      } else if (data?.reason === 'limit_reached') {
+        alert('Лимит 5 просмотров за 24 часа исчерпан.');
+      } else if (data?.reason === 'too_short') {
+        alert('Видео нужно смотреть не меньше 10 секунд.');
+      } else if (data?.reason === 'not_active') {
+        alert('Баланс ниже 29 USDT — просмотр недоступен.');
+      } else {
+        alert('Не удалось начислить награду. Попробуйте позже.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Ошибка воспроизведения или начисления.');
+    } finally {
+      els.btn.disabled = false;
+    }
+  }
+
+  async function init() {
+    // на всякий случай — единичная инициализация
+    if (!sb) { console.error('Supabase client not found'); return; }
+    subscribeWalletRealtime();
+    els.btn?.addEventListener('click', startEarn);
+    await refreshUI();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
 
     // первичное наполнение UI
     await window.LC.refreshBalance();
