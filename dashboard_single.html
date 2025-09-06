@@ -1214,7 +1214,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const MIN_SEC = 10;
   let played = 0, awarding = false;
 
-  // toast
   const toast = (msg, ok=false) => {
     let t = document.getElementById('watchToast');
     if (!t) { t = document.createElement('div'); t.id='watchToast';
@@ -1224,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     t.textContent = String(msg || '');
     t.style.background = ok ? '#135d2d' : '#5d1313';
     t.style.display = 'block';
-    clearTimeout(t._to); t._to = setTimeout(()=>{ t.style.display='none'; }, 3500);
+    clearTimeout(t._to); t._to = setTimeout(()=>{ t.style.display='none'; }, 3000);
   };
 
   // overlay
@@ -1244,47 +1243,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ if (on && video) video.pause(); }catch(_){}
   };
 
-  // ---- Level helpers ----
-  const num = v => { const n = Number(v); return isFinite(n) ? n : 0; };
-
-  async function fetchLevelInfo() {
-    const { data } = await sb.rpc('get_level_info_v2');
-    const info = Array.isArray(data) ? (data[0] || {}) : (data || {});
-
-    // try to read per-view from common field names
-    const cands = [
-      info.per_view, info.per_watch, info.reward_per_view, info.per_view_reward,
-      info.per_watch_reward, info.view_reward, info.watch_reward, info.per_view_usdt,
-      info.per_view_amount, info.reward_view
-    ].map(num).filter(x => x > 0);
-
-    let perView = cands.length ? cands[0] : 0;
-
-    if (!perView) {
-      const daily = num(info.daily_reward ?? info.daily_income ?? info.daily_payout ?? info.earning_daily);
-      const limit = num(info.daily_limit ?? info.views_per_day ?? info.max_views ?? 5) || 5;
-      if (daily > 0) perView = daily / limit;
-    }
-
-    if (!perView) {
-      const rate = num(info.rate ?? info.level_rate ?? info.percent); // % per day
-      const capital = num(info.capital ?? info.user_capital ?? info.capital_calc ?? info.balance);
-      const limit = num(info.daily_limit ?? 5) || 5;
-      if (rate > 0 && capital > 0) perView = (rate/100) * capital / limit;
-    }
-
-    const left = num(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)));
-    return { info, perView, left };
+  async function getLeftToday() {
+    try {
+      const { data } = await sb.rpc('get_level_info_v2');
+      const info = Array.isArray(data) ? data[0] : (data || {});
+      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+      if (progressText) progressText.textContent = labelLeft(left);
+      if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
+      return left;
+    } catch (e) { console.error(e); return 0; }
   }
 
   async function ensureSession() {
-    const { data: { session } } = await sb.auth.getSession();
-    return session || null;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      return session || null;
+    } catch(e) { console.error(e); return null; }
   }
 
   async function checkAccessAndInit() {
     try {
-      const session = await ensureSession(); if (!session) { toast('Нужно войти', false); return 0; }
+      const session = await ensureSession(); if (!session) { toast('Нужно войти'); return 0; }
       const { data, error } = await sb.rpc('get_video_access_state');
       const active = !error && (Array.isArray(data) ? data[0]?.get_video_access_state : data);
       if (!active) {
@@ -1293,9 +1272,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (progressText) progressText.textContent = 'Доступ закрыт';
         return 0;
       }
-    } catch(_) {}
-    const { left } = await fetchLevelInfo();
-    if (progressText) progressText.textContent = labelLeft(left);
+    } catch(err) { console.error(err); }
+    const left = await getLeftToday();
     setBlocked(left <= 0);
     return left;
   }
@@ -1306,20 +1284,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       const session = await ensureSession(); if (!session) { awarding=false; return; }
       if (played < MIN_SEC) { awarding=false; return; }
 
-      const { perView } = await fetchLevelInfo();
-      if (!perView) { toast('Пер-вью ставка = 0. Проверьте уровень/баланс.', false); awarding=false; return; }
+      const { data, error } = await sb.rpc('award_view_v2', { duration_sec: played });
+      if (error) { toast('Ошибка начисления: ' + (error.message || 'unknown')); return; }
 
-      let res = await sb.rpc('award_view', { duration_sec: played, reward: perView, per_view: perView, amount: perView });
-      if (res?.error) res = await sb.rpc('award_view', { amount: perView });
-      if (res?.error) res = await sb.rpc('award_view'); // final fallback
-      if (res?.error) { console.error(res.error); toast('Начисление не прошло: ' + (res.error.message || 'ошибка'), false); return; }
+      const res = Array.isArray(data) ? data[0] : (data || {});
+      const left = Number(res?.views_left_today ?? 0);
+      const credited = Number(res?.credited ?? 0);
 
-      const payload = Array.isArray(res?.data) ? res.data[0] : (res?.data || {});
-      const left = num(payload?.views_left_today ?? payload?.views_left ?? payload?.left);
-
-      if (progressText) progressText.textContent = labelLeft(left);
+      if (progressText) progressText.textContent = `Доступно просмотров сегодня: ${left}`;
       setBlocked(left <= 0);
-      toast(`Зачислено ✅ +${perView.toFixed(2)}`, true);
+      toast(`Зачислено ✅ +${credited.toFixed(2)}`, true);
 
       if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
     } finally {
