@@ -1169,7 +1169,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Загрузим выплаты (RLS: только для своего referrer_id)
     const { data: rows, error } = await sb
       .from('v_referral_payouts').select('*')
-      .order('created_at', { ascending: false })
       .limit(50);
 
     if (error) { console.warn('v_referral_payouts error', error); return; }
@@ -1273,10 +1272,7 @@ function setLimitState(left){
 }
 
 // Инициализируем текст/лимит из текущего DOM
-(function initLeftFromDOM(){
-  const initLeft = parseInt(leftEl?.textContent || '0', 10);
-  setLimitState(Number.isFinite(initLeft) ? initLeft : 0);
-})();
+(function initLeftFromDOM(){ const el = document.querySelector('[data-views-left]'); const initLeft = parseInt((el && el.textContent ? el.textContent : '0'),10); setLimitState(Number.isFinite(initLeft) ? initLeft : 0); })();
 
 function startVideo(){
   try{
@@ -1336,7 +1332,7 @@ async function award(){
       null;
 
     if (left === null) {
-      const cur = parseInt(leftEl?.textContent || '0', 10);
+      const __el = document.querySelector('[data-views-left]'); const cur = parseInt((__el && __el.textContent ? __el.textContent : '0'),10);
       left = Number.isFinite(cur) ? Math.max(0, cur - 1) : null;
     }
     if (left !== null) setLimitState(left);
