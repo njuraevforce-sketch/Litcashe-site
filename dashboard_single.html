@@ -813,7 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
+(async () => {
   const sb = window.sb || window._supabase;
   if (!sb) return;
 
@@ -857,7 +857,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
+(async () => {
   const sb = window.sb || window._supabase;
   // --- 3.1 Redirect authenticated users from index to dashboard ---
   try {
@@ -1161,7 +1161,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <script>
 // Referrals widgets: fill left "Реферальный доход" and right "Последние реферальные начисления"
-document.addEventListener('DOMContentLoaded', async () => {
+(async () => {
   try {
     const sb = window.sb || window._supabase || window.supabase;
     if (!sb) return;
@@ -1359,31 +1359,14 @@ async function award(){
 
   startBtn.addEventListener('click', startVideo);
   video.addEventListener('ended', award);
-});
+})();
 </script>
 
 
 <!-- removed broken duplicate script block (patched) -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const sb = window.sb || window._supabase || window.supabase;
-  let video   = document.getElementById('promoVid') || document.querySelector('video');
-  let srcEl   = document.getElementById('promoSource');
-  const wrap  = (video && video.parentElement) || document.body;
-  const startBtn= document.getElementById('startBtn') || document.querySelector('[data-start]');
-  const el = document.querySelector('[data-views-left]');
-  const overlay = document.getElementById('limitOverlay');
-  if (!video) return;
-document.addEventListener('DOMContentLoaded', async () => {
-  const sb = window.sb || window._supabase || window.supabase;
-  let video   = document.getElementById('promoVid') || document.querySelector('video');
-  let srcEl   = document.getElementById('promoSource');
-  const wrap  = (video && video.parentElement) || document.body;
-  const startBtn = document.getElementById('startBtn') || document.querySelector('[data-start]');
-  const el = document.querySelector('[data-views-left]');
-  const overlay  = document.getElementById('limitOverlay');
-  if (!video) return;
-
+(async () => {
   const VIDEO_SRC = '/media/ad1.mp4'; // <-- твой путь
   // получаем user_id из supabase и делаем ключ персональным
 const { data: _userData } = await sb.auth.getUser?.() ?? {};
