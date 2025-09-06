@@ -376,11 +376,24 @@ header { overflow: visible; }
 .mobile-nav-only{ display:flex; align-items:center; gap:8px; }</style>
 
 </head>
-<body><header class="header noscript-header">
+<body>
+<script>
+// hard redirect: this page is deprecated — use dashboard_single.html
+(function(){
+  try {
+    var p = (location.pathname||'').toLowerCase();
+    if (p.includes('dashboard_index') || /(^|\/)index(\.html)?(\?|#|$)/.test(p)) {
+      // relative redirect keeps subfolder paths intact
+      window.location.replace('dashboard_single.html');
+    }
+  } catch(e) { console.warn('redirect failed', e); }
+})();
+</script>
+<header class="header noscript-header">
 <div class="container nav">
-<a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
+<a class="brand" href="dashboard_single.html"><span class="logo"></span><span>Litcash</span></a>
 <nav class="nav-links">
-<a data-i18n="nav_home" href="index.html">Главная</a>
+<a data-i18n="nav_home" href="dashboard_single.html">Главная</a>
 <a data-i18n="nav_dashboard" href="dashboard_single.html">Личный кабинет</a>
 <a data-i18n="deposit_title" href="deposit_single.html">Пополнение</a>
 <a data-i18n="withdraw_title" href="withdraw_single.html">Вывод</a>
@@ -700,8 +713,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const leftEl = null;
     const fill = document.getElementById('progressFill');
 
-    // безлимит: не отображаем остаток
-    if (false && leftEl && progressText){
+    // текст «Просмотров осталось сегодня: …»
+    if (leftEl && progressText){
       const left = parseInt(leftEl.textContent || '0', 10);
       progressText.textContent = `Просмотров осталось сегодня: ${left}`;
     }
@@ -860,24 +873,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase;
-  // --- 3.1 Redirect authenticated users from index to dashboard ---
-  try {
-    if (sb) {
-      const { data: { session } } = await sb.auth.getSession();
-      const onIndex = /(^|\/)index(\.html)?(\?|#|$)/i.test(location.pathname) || location.pathname === '/';
-      if (session && onIndex) {
-        // change to your dashboard route if different
-        window.location.replace('/dashboard_single.html');
-        return;
-      }
-      // --- 3.2 Update "Главная" link to dashboard when logged in ---
-      if (session) {
-        const homeLinks = Array.from(document.querySelectorAll('a')).filter(a => /главн|home|index/i.test(a.textContent) || /index(\.html)?$/i.test(a.getAttribute('href')||''));
-        homeLinks.forEach(a => a.setAttribute('href', '/dashboard_single.html'));
-      }
-    }
-  } catch(e){ console.warn('redirect/home patch error', e); }
-
   // --- 3.3 Burger enhancer ---
   try {
     let burger = document.querySelector('.burger-btn');
@@ -1267,12 +1262,17 @@ if (!overlay && video?.parentElement) {
   wrap.appendChild(overlay);
 }
 
-function setLimitState(){
+function setLimitState(left){
   try{ const t = document.getElementById('progressText'); if (t) t.textContent = 'Просмотры без ограничений'; }catch(e){}
   try{ const txt = document.querySelector('[data-progress-text]'); if (txt) txt.textContent = 'Просмотры без ограничений'; }catch(e){}
-  try{ const ov = document.getElementById('limitOverlay'); if (ov) ov.style.display = 'none'; }catch(e){}
-  try{ const btn = document.getElementById('startBtn') || document.querySelector('[data-start]'); if (btn){ btn.disabled = false; btn.setAttribute('aria-disabled','false'); } }catch(e){}
+  try{ if (typeof overlay !== 'undefined' && overlay) overlay.style.display = 'none'; }catch(e){}
+  try{ if (typeof startBtn !== 'undefined' && startBtn) { startBtn.disabled = false; startBtn.setAttribute('aria-disabled','false'); } }catch(e){}
   window.__LC_LIMIT_BLOCKED__ = false;
+}catch(e){}
+  const blocked = n <= 0;
+  window.__LC_LIMIT_BLOCKED__ = blocked;
+  if (overlay) overlay.style.display = 'none';
+  if (startBtn) { startBtn.disabled = false; startBtn.setAttribute('aria-disabled','false'); }
 }
 
 // Инициализируем текст/лимит из текущего DOM
@@ -1327,7 +1327,7 @@ async function award(){
 
     // Если backend вернул "limit_reached" — сразу блокируем
     if (payload?.reason === 'limit_reached') {
-      setLimitState();
+      setLimitState(0);
       alert('Дневной лимит просмотров исчерпан.');
       return;
     }
@@ -1342,7 +1342,7 @@ async function award(){
       const cur = parseInt(leftEl?.textContent || '0', 10);
       left = Number.isFinite(cur) ? Math.max(0, cur - 1) : null;
     }
-    if (left !== null) setLimitState();
+    if (left !== null) setLimitState(left);
 
     // Подтянуть баланс/уровень/ставку
     if (window.LC && typeof window.LC.loadLevelInfo === 'function') {
@@ -1518,10 +1518,10 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
     let left = 0;
     try {
       if (sb && typeof sb.rpc === 'function') {
-        const { data, error } = /* removed noop_disabled_views */ null;
+        const { data, error } = await sb.rpc('noop_disabled_views');
         left = (!error && typeof data === 'number') ? data : 0;
       }
-    } catch (e) { left = 0; }
+    } catch { left = 0; }
     setLeft(left);
     lockPlayback(isLocallyLocked() || left <= 0);
   })();
