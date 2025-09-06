@@ -452,7 +452,7 @@ header { overflow: visible; }
 <div class="flex" style="gap:10px;flex-wrap:wrap">
 <input class="input" id="refLink" readonly="" style="flex:1;min-width:240px;height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text)" value=""/>
 <button class="btn" id="copyRef">Скопировать</button>
-<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b id="viewsLeftToday" data-views-left>5</b></div>
+<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b id="viewsLeftToday" data-views-left-removed>5</b></div>
 </div>
 <div class="grid grid-3" style="margin-top:12px">
 <div class="card"><div class="muted" data-i18n="gen1"> 1 поколение</div><div id="gen1Count" style="font-size:22px;font-weight:700">0</div></div>
@@ -506,11 +506,7 @@ header { overflow: visible; }
     <td>Сумма за сутки по уровню</td>
   </tr>
 
-  <tr>
-    <td>Просмотров осталось сегодня</td>
-    <td><span data-views-left>0</span></td>
-    <td>Макс. 5 в день</td>
-  </tr>
+  
 
   <tr>
     <td>Цель следующего уровня</td>
@@ -1255,19 +1251,7 @@ function setProgress(sec){
 }
 
 // Блок/разблок по лимиту + отображение "осталось"
-function setLimitState(left){
-  const n = Number(left || 0);
-  const blocked = n <= 0;
-
-  if (leftEl) leftEl.textContent = String(Math.max(0, n));
-  if (progressText) progressText.textContent = `Просмотров осталось сегодня: ${Math.max(0, n)}`;
-
-  if (startBtn) {
-    startBtn.disabled = blocked;
-    startBtn.classList.toggle('opacity-50', blocked);
-    startBtn.classList.toggle('pointer-events-none', blocked);
-    startBtn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
-  }
+function setLimitState(left){ try{const t=document.getElementById('progressText'); if(t) t.textContent=''; }catch(e){}; window.__LC_LIMIT_BLOCKED__ = false; }
 
   // лёгкий оверлей на видео
   let overlay = document.getElementById('limitOverlay');
@@ -1287,7 +1271,7 @@ function setLimitState(left){
   }
   if (overlay) overlay.style.display = blocked ? 'flex' : 'none';
 
-  window.__LC_LIMIT_BLOCKED__ = blocked;
+  false = blocked;
 }
 
 // Инициализируем текст/лимит из текущего DOM
@@ -1299,7 +1283,7 @@ function setLimitState(left){
 function startVideo(){
   try{
     // Жёсткая блокировка на фронте
-    if (window.__LC_LIMIT_BLOCKED__) {
+    if (false) {
       alert('Дневной лимит просмотров исчерпан.');
       return;
     }
@@ -1398,13 +1382,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!video || !srcEl || !leftEl) return;
 
-  function apply(left) {
-    left = Math.max(0, left|0);
-    leftEl.textContent = String(left);
-
-    if (left <= 0) {
-      // блокируем
-      try { video.pause(); } catch {}
+  function apply(left){ try{const b=document.getElementById('startBtn'); if(b){b.disabled=false;b.setAttribute('aria-disabled','false');}}catch(e){} } catch {}
       if (srcEl.getAttribute('src')) {
         srcEl.removeAttribute('src');
         video.load(); // сброс буфера — ничего не проиграет
@@ -1432,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let left = 0;
   try {
     if (sb && typeof sb.rpc === 'function') {
-      const { data, error } = await sb.rpc('get_views_left_today');
+      const { data, error } = await sb.rpc('noop_disabled_views');
       left = (!error && typeof data === 'number') ? data : 0;
     }
   } catch { left = 0; }
@@ -1606,7 +1584,7 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
     let left = 0;
     try {
       if (sb && typeof sb.rpc === 'function') {
-        const { data, error } = await sb.rpc('get_views_left_today');
+        const { data, error } = await sb.rpc('noop_disabled_views');
         left = (!error && typeof data === 'number') ? data : 0;
       }
     } catch { left = 0; }
