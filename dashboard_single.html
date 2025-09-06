@@ -697,12 +697,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('startBtn');
     const video = document.getElementById('promoVid') || document.querySelector('video');
     const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-    const leftEl = null;
+    const el = null;
     const fill = document.getElementById('progressFill');
 
     // текст «Просмотров осталось сегодня: …»
     if (leftEl && progressText){
-      const left = parseInt(leftEl.textContent || '0', 10);
+      const left = parseInt(el.textContent || '0', 10);
       progressText.textContent = `Просмотров осталось сегодня: ${left}`;
     }
 
@@ -1169,8 +1169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Загрузим выплаты (RLS: только для своего referrer_id)
     const { data: rows, error } = await sb
-      .from('v_referral_payouts')
-      .select('created_at, level, reward_usdt')
+      .from('v_referral_payouts').select('*')
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -1418,16 +1417,16 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
   const todayKey = () => new Date().toISOString().slice(0,10);
 
   // вспомогалки
-  const getLeft = () => Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0);
-  const leftEl = document.querySelector('[data-views-left]');
+  const getLeft = () => Math.max(0, parseInt((el.textContent||'0').trim(), 10) || 0);
+  const leftElRef = document.querySelector('[data-views-left]');
 const getLeft = () => {
-  const src = leftEl ? (leftEl.textContent || '0') : (localStorage.getItem('lc_views_left') || '0');
+  const src = leftElRef ? (leftElRef.textContent || '0') : (localStorage.getItem('lc_views_left') || '0');
   const n = parseInt(String(src).trim(), 10);
   return Number.isFinite(n) ? Math.max(0, n) : 0;
 };
 const setLeft = (n) => {
   const v = Math.max(0, n|0);
-  if (leftEl) leftEl.textContent = String(v);
+  if (leftElRef) leftElRef.textContent = String(v);
   const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
   if (progressText) progressText.textContent = `Просмотров осталось сегодня: ${v}`;
   try { localStorage.setItem('lc_views_left', String(v)); } catch(_) {}
