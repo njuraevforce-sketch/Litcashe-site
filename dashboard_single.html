@@ -1264,7 +1264,8 @@ if (!overlay && video?.parentElement) {
   wrap.appendChild(overlay);
 }
 
-function setLimitState(){ /* limits disabled */ }catch(e){}
+function setLimitState(left){
+  try{ const t=document.getElementById('progressText')||document.querySelector('[data-progress-text]'); if(t) t.textContent='Просмотры без ограничений'; }catch(e){}
   try{ const ov=document.getElementById('limitOverlay'); if(ov) ov.style.display='none'; }catch(e){}
   try{ const btn=document.getElementById('startBtn')||document.querySelector('[data-start]'); if(btn){ btn.disabled=false; btn.setAttribute('aria-disabled','false'); } }catch(e){}
   window.__LC_LIMIT_BLOCKED__ = false;
@@ -1277,7 +1278,7 @@ function startVideo(){
   try{
     // Жёсткая блокировка на фронте
     if (false) {
-      // alert removed
+      alert('Дневной лимит просмотров исчерпан.');
       return;
     }
 
@@ -1320,7 +1321,7 @@ async function award(){
     // Если backend вернул "limit_reached" — сразу блокируем
     if (payload?.reason === 'limit_reached') {
       setLimitState(0);
-      // alert removed
+      alert('Дневной лимит просмотров исчерпан.');
       return;
     }
 
@@ -1389,7 +1390,7 @@ const { data: _userData } = await sb.auth.getUser?.() ?? {};
 const _uid = _userData?.user?.id || 'anon';
 const LOCK_KEY = `lc_lock_date:${_uid}`;
 
-  const todayKey = ()=>'1970-01-01'; // static for disabled limits
+  const todayKey  = () => new Date().toISOString().slice(0,10);
 
   // 🔒 Проверка активности пользователя
   const { data, error } = await sb.rpc('get_video_access_state');
@@ -1407,23 +1408,25 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
 });
 
   const VIDEO_SRC = '/media/ad1.mp4'; // <-- твой путь
-  const LOCK_KEY = 'lc_lock_date'; // (unused now)
-  const todayKey = ()=>'1970-01-01'; // static for disabled limits
+  const LOCK_KEY = 'lc_lock_date';
+  const todayKey = () => new Date().toISOString().slice(0,10);
 
   // вспомогалки
-  window.getLeft = () => 999999;
+  window.getLeft = window.getLeft || function(){
+  const el = document.querySelector('[data-views-left]');
   const src = el ? (el.textContent || '0') : (localStorage.getItem('lc_views_left') || '0');
   const n = parseInt(String(src).trim(), 10);
   return Number.isFinite(n) ? Math.max(0, n) : 0;
 };
-  window.setLeft = ()=>{};
+  window.setLeft = window.setLeft || function(n){
+  const v = Math.max(0, n|0);
   const el = document.querySelector('[data-views-left]');
   if (el) el.textContent = String(v);
   const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
   if (progressText) progressText.textContent = `Просмотров осталось сегодня: ${v}`;
   try { localStorage.setItem('lc_views_left', String(v)); } catch(_) {}
 };
-  const isLocallyLocked = () => false;
+  const isLocallyLocked = () => localStorage.getItem(LOCK_KEY) === todayKey();
 
   // клонирование видео (фикс iOS/Android)
   function recreateVideo() {
@@ -1441,10 +1444,10 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
     newVideo.appendChild(newSrc);
 
     // слушатели для стопа
-    const stopIfLocked = ()=>{};
-    newVideo// removed stopIfLocked listener ;
-    newVideo// removed stopIfLocked listener ;
-    newVideo// removed stopIfLocked listener ;
+    const stopIfLocked = () => {};
+    newVideo// removed limit listener;
+    newVideo// removed limit listener;
+    newVideo// removed limit listener;
     newVideo.addEventListener('timeupdate', stopIfLocked, true);
 
     // iOS: если почему-то зашёл в фуллскрин — выходим сразу
@@ -1483,7 +1486,7 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
 
       localStorage.setItem(LOCK_KEY, todayKey());
       document.documentElement.classList.add('lc-locked');
-      // overlay suppressed
+      /* overlay disabled */
     } else {
       video.style.pointerEvents = '';
       video.setAttribute('controls','');
@@ -1499,7 +1502,10 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
 
   // блокируем тапы по контейнеру
   const swallow = (e) => {
-    // limit check removed
+    if (isLocallyLocked() || getLeft() <= 0) {
+      e.preventDefault(); e.stopPropagation();
+      /* overlay disabled */
+    }
   };
   ['click','touchstart','touchend'].forEach(ev => {
     (wrap || document).addEventListener(ev, swallow, true);
@@ -1551,14 +1557,16 @@ document.addEventListener('DOMContentLoaded', function(){
 // Safe helpers (idempotent)
 (function(){
   if (!window.getLeft) {
-    window.getLeft = () => 999999;
+    window.getLeft = () => {
+      const el = document.querySelector('[data-views-left]');
       const src = el ? (el.textContent || '0') : (localStorage.getItem('lc_views_left') || '0');
       const n = parseInt(String(src).trim(), 10);
       return Number.isFinite(n) ? Math.max(0, n) : 0;
     };
   }
   if (!window.setLeft) {
-    window.setLeft = ()=>{};
+    window.setLeft = (n) => {
+      const v = Math.max(0, Number(n)||0);
       const el = document.querySelector('[data-views-left]');
       if (el) el.textContent = String(v);
       const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
@@ -1571,17 +1579,18 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 <script>
-// Force-hide any limit overlay and expose unlimited views
+// Override limits: unlimited views on front-end
 (function(){
-  try{
-    var ov = document.getElementById('limitOverlay');
-    if (ov) ov.style.display = 'none';
-  }catch(_){}
   window.getLeft = () => 999999;
   window.setLeft = () => {};
-  window.isLocallyLocked = () => false;
   if (!window.LC) window.LC = {};
   if (!window.LC.afterAwardUpdateLeft) window.LC.afterAwardUpdateLeft = function(){};
+  try {
+    var ov = document.getElementById('limitOverlay');
+    if (ov) ov.style.display = 'none';
+    var t = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
+    if (t) t.textContent = 'Просмотры без ограничений';
+  } catch (_) {}
 })();
 </script>
 
