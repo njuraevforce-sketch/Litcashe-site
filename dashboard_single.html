@@ -452,7 +452,7 @@ header { overflow: visible; }
 <div class="flex" style="gap:10px;flex-wrap:wrap">
 <input class="input" id="refLink" readonly="" style="flex:1;min-width:240px;height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text)" value=""/>
 <button class="btn" id="copyRef">Скопировать</button>
-<div class="muted" style="margin-top:8px"><span data-i18n="views_left_today">Просмотров осталось сегодня</span>: <b id="viewsLeftToday" data-views-left-removed>5</b></div>
+<!-- removed daily views limit line -->
 </div>
 <div class="grid grid-3" style="margin-top:12px">
 <div class="card"><div class="muted" data-i18n="gen1"> 1 поколение</div><div id="gen1Count" style="font-size:22px;font-weight:700">0</div></div>
@@ -697,7 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('startBtn');
     const video = document.getElementById('promoVid') || document.querySelector('video');
     const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-    const leftEl = document.querySelector('[data-views-left]');
+    const leftEl = null;
     const fill = document.getElementById('progressFill');
 
     // текст «Просмотров осталось сегодня: …»
@@ -1229,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const video       = document.getElementById('promoVid') || document.querySelector('video');
   const startBtn    = document.getElementById('startBtn') || document.querySelector('[data-start]');
-  const leftEl      = document.querySelector('[data-views-left]');
+  const leftEl      = null;
   const progressText= document.getElementById('progressText') || document.querySelector('[data-progress-text]');
   const fill        = document.getElementById('progressFill');
 
@@ -1268,15 +1268,16 @@ if (!overlay && video?.parentElement) {
 }
 
 function setLimitState(left){
-  const n = Number(left)||0;
-  try{
-    const t = document.getElementById('progressText');
-    if (t) t.textContent = 'Просмотров осталось сегодня: ' + n;
-  }catch(e){}
+  try{ const t = document.getElementById('progressText'); if (t) t.textContent = 'Просмотры без ограничений'; }catch(e){}
+  try{ const txt = document.querySelector('[data-progress-text]'); if (txt) txt.textContent = 'Просмотры без ограничений'; }catch(e){}
+  try{ if (typeof overlay !== 'undefined' && overlay) overlay.style.display = 'none'; }catch(e){}
+  try{ if (typeof startBtn !== 'undefined' && startBtn) { startBtn.disabled = false; startBtn.setAttribute('aria-disabled','false'); } }catch(e){}
+  window.__LC_LIMIT_BLOCKED__ = false;
+}catch(e){}
   const blocked = n <= 0;
   window.__LC_LIMIT_BLOCKED__ = blocked;
-  if (overlay) overlay.style.display = blocked ? 'flex' : 'none';
-  if (startBtn) { startBtn.disabled = blocked; startBtn.setAttribute('aria-disabled', blocked ? 'true' : 'false'); }
+  if (overlay) overlay.style.display = 'none';
+  if (startBtn) { startBtn.disabled = false; startBtn.setAttribute('aria-disabled','false'); }
 }
 
 // Инициализируем текст/лимит из текущего DOM
@@ -1382,18 +1383,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let srcEl   = document.getElementById('promoSource');
   const wrap  = (video && video.parentElement) || document.body;
   const startBtn= document.getElementById('startBtn') || document.querySelector('[data-start]');
-  const leftEl  = document.querySelector('[data-views-left]');
+  const leftEl  = null;
   const overlay = document.getElementById('limitOverlay');
-  if (!video || !leftEl || !overlay) return;
+  if (!video) return;
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase || window.supabase;
   let video   = document.getElementById('promoVid') || document.querySelector('video');
   let srcEl   = document.getElementById('promoSource');
   const wrap  = (video && video.parentElement) || document.body;
   const startBtn = document.getElementById('startBtn') || document.querySelector('[data-start]');
-  const leftEl   = document.querySelector('[data-views-left]');
+  const leftEl   = null;
   const overlay  = document.getElementById('limitOverlay');
-  if (!video || !leftEl || !overlay) return;
+  if (!video) return;
 
   const VIDEO_SRC = '/media/ad1.mp4'; // <-- твой путь
   // получаем user_id из supabase и делаем ключ персональным
@@ -1472,10 +1473,10 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
     srcEl = newSrc;
   }
 
-  function showOverlay(on) { overlay.style.display = on ? 'flex' : 'none'; }
+  function showOverlay(on) { overlay.style.display = 'none'; }
 
   function lockPlayback(blocked) {
-    if (startBtn) { startBtn.disabled = !!blocked; startBtn.setAttribute('aria-disabled', blocked?'true':'false'); }
+    if (startBtn) { startBtn.disabled = false; startBtn.setAttribute('aria-disabled','false'); }
     if (blocked) {
       // гасим текущее видео максимально жёстко
       try { video.pause(); } catch(_){}
