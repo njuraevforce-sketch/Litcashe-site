@@ -697,12 +697,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('startBtn');
     const video = document.getElementById('promoVid') || document.querySelector('video');
     const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-    const el = null;
+    const el = document.querySelector('[data-views-left]');
     const fill = document.getElementById('progressFill');
 
     // текст «Просмотров осталось сегодня: …»
-    if (leftEl && progressText){
-      const left = parseInt(el.textContent || '0', 10);
+    if (el && progressText) {
+      const left = parseInt((el.textContent || '0').trim(), 10) || 0;
       progressText.textContent = `Просмотров осталось сегодня: ${left}`;
     }
 
@@ -1417,7 +1417,6 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
   const todayKey = () => new Date().toISOString().slice(0,10);
 
   // вспомогалки
-  const getLeft = () => Math.max(0, parseInt((el.textContent||'0').trim(), 10) || 0);
   const leftElRef = document.querySelector('[data-views-left]');
 const getLeft = () => {
   const src = leftElRef ? (leftElRef.textContent || '0') : (localStorage.getItem('lc_views_left') || '0');
