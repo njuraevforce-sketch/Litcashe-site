@@ -697,12 +697,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('startBtn');
     const video = document.getElementById('promoVid') || document.querySelector('video');
     const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-    const leftEl = null;
+    const el = document.querySelector('[data-views-left]');
     const fill = document.getElementById('progressFill');
 
     // текст «Просмотров осталось сегодня: …»
     if (el && progressText){
-      const left = parseInt((el?.textContent || '0').trim(), 10) || 0;progressText.textContent = `Просмотров осталось сегодня: ${left}`;
+      const left = parseInt((el && el.textContent || '0').trim(), 10) || 0;progressText.textContent = `Просмотров осталось сегодня: ${left}`;
     }
 
     // плавная подсветка прогресса
@@ -1227,7 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const video       = document.getElementById('promoVid') || document.querySelector('video');
   const startBtn    = document.getElementById('startBtn') || document.querySelector('[data-start]');
-  const leftEl      = null;
+  const el = document.querySelector('[data-views-left]');
   const progressText= document.getElementById('progressText') || document.querySelector('[data-progress-text]');
   const fill        = document.getElementById('progressFill');
 
@@ -1375,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let srcEl   = document.getElementById('promoSource');
   const wrap  = (video && video.parentElement) || document.body;
   const startBtn= document.getElementById('startBtn') || document.querySelector('[data-start]');
-  const leftEl  = null;
+  const el = document.querySelector('[data-views-left]');
   const overlay = document.getElementById('limitOverlay');
   if (!video) return;
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1384,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let srcEl   = document.getElementById('promoSource');
   const wrap  = (video && video.parentElement) || document.body;
   const startBtn = document.getElementById('startBtn') || document.querySelector('[data-start]');
-  const leftEl   = null;
+  const el = document.querySelector('[data-views-left]');
   const overlay  = document.getElementById('limitOverlay');
   if (!video) return;
 
@@ -1416,8 +1416,20 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
   const todayKey = () => new Date().toISOString().slice(0,10);
 
   // вспомогалки
-  window.getLeft = window.getLeft || () => Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0);
-  window.setLeft = window.setLeft || (n) => leftEl.textContent = String(Math.max(0, n|0));
+  window.getLeft = window.getLeft || function(){
+  const el = document.querySelector('[data-views-left]');
+  const src = el ? (el.textContent || '0') : (localStorage.getItem('lc_views_left') || '0');
+  const n = parseInt(String(src).trim(), 10);
+  return Number.isFinite(n) ? Math.max(0, n) : 0;
+};
+  window.setLeft = window.setLeft || function(n){
+  const v = Math.max(0, n|0);
+  const el = document.querySelector('[data-views-left]');
+  if (el) el.textContent = String(v);
+  const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
+  if (progressText) progressText.textContent = `Просмотров осталось сегодня: ${v}`;
+  try { localStorage.setItem('lc_views_left', String(v)); } catch(_) {}
+};
   const isLocallyLocked = () => localStorage.getItem(LOCK_KEY) === todayKey();
 
   // клонирование видео (фикс iOS/Android)
