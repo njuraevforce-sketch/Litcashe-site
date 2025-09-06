@@ -700,8 +700,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const leftEl = null;
     const fill = document.getElementById('progressFill');
 
-    // текст «Просмотров осталось сегодня: …»
-    if (leftEl && progressText){
+    // безлимит: не отображаем остаток
+    if (false && leftEl && progressText){
       const left = parseInt(leftEl.textContent || '0', 10);
       progressText.textContent = `Просмотров осталось сегодня: ${left}`;
     }
@@ -1267,17 +1267,12 @@ if (!overlay && video?.parentElement) {
   wrap.appendChild(overlay);
 }
 
-function setLimitState(left){
+function setLimitState(){
   try{ const t = document.getElementById('progressText'); if (t) t.textContent = 'Просмотры без ограничений'; }catch(e){}
   try{ const txt = document.querySelector('[data-progress-text]'); if (txt) txt.textContent = 'Просмотры без ограничений'; }catch(e){}
-  try{ if (typeof overlay !== 'undefined' && overlay) overlay.style.display = 'none'; }catch(e){}
-  try{ if (typeof startBtn !== 'undefined' && startBtn) { startBtn.disabled = false; startBtn.setAttribute('aria-disabled','false'); } }catch(e){}
+  try{ const ov = document.getElementById('limitOverlay'); if (ov) ov.style.display = 'none'; }catch(e){}
+  try{ const btn = document.getElementById('startBtn') || document.querySelector('[data-start]'); if (btn){ btn.disabled = false; btn.setAttribute('aria-disabled','false'); } }catch(e){}
   window.__LC_LIMIT_BLOCKED__ = false;
-}catch(e){}
-  const blocked = n <= 0;
-  window.__LC_LIMIT_BLOCKED__ = blocked;
-  if (overlay) overlay.style.display = 'none';
-  if (startBtn) { startBtn.disabled = false; startBtn.setAttribute('aria-disabled','false'); }
 }
 
 // Инициализируем текст/лимит из текущего DOM
@@ -1332,7 +1327,7 @@ async function award(){
 
     // Если backend вернул "limit_reached" — сразу блокируем
     if (payload?.reason === 'limit_reached') {
-      setLimitState(0);
+      setLimitState();
       alert('Дневной лимит просмотров исчерпан.');
       return;
     }
@@ -1347,7 +1342,7 @@ async function award(){
       const cur = parseInt(leftEl?.textContent || '0', 10);
       left = Number.isFinite(cur) ? Math.max(0, cur - 1) : null;
     }
-    if (left !== null) setLimitState(left);
+    if (left !== null) setLimitState();
 
     // Подтянуть баланс/уровень/ставку
     if (window.LC && typeof window.LC.loadLevelInfo === 'function') {
@@ -1523,10 +1518,10 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
     let left = 0;
     try {
       if (sb && typeof sb.rpc === 'function') {
-        const { data, error } = await sb.rpc('noop_disabled_views');
+        const { data, error } = /* removed noop_disabled_views */ null;
         left = (!error && typeof data === 'number') ? data : 0;
       }
-    } catch { left = 0; }
+    } catch (e) { left = 0; }
     setLeft(left);
     lockPlayback(isLocallyLocked() || left <= 0);
   })();
