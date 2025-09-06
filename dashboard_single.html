@@ -1212,13 +1212,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!sb || !startBtn) return;
 
   const MIN_SEC = 10;
-  let played = 0, awarding = false, endedOnce = false;
+  let played = 0, awarding = false;
 
-  // mini-toast
+  // toast
   const toast = (msg, ok=false) => {
     let t = document.getElementById('watchToast');
-    if (!t) {
-      t = document.createElement('div'); t.id='watchToast';
+    if (!t) { t = document.createElement('div'); t.id='watchToast';
       Object.assign(t.style, {position:'fixed', right:'16px', bottom:'16px', zIndex:9999, padding:'10px 14px', borderRadius:'10px', background:'#222', color:'#fff', boxShadow:'0 6px 20px rgba(0,0,0,.3)', fontSize:'14px'});
       document.body.appendChild(t);
     }
@@ -1228,19 +1227,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearTimeout(t._to); t._to = setTimeout(()=>{ t.style.display='none'; }, 3500);
   };
 
-  // overlay (limit or blocked)
+  // overlay
   let overlay = document.getElementById('limitOverlay');
   if (!overlay && video && video.parentElement){
-    overlay = document.createElement('div');
-    overlay.id = 'limitOverlay';
-    Object.assign(overlay.style, {
-      position:'absolute', inset:'0', display:'none',
-      alignItems:'center', justifyContent:'center',
-      background:'rgba(0,0,0,.35)', color:'#fff', fontWeight:'600'
-    });
-    const wrap = video.parentElement;
-    if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
-    wrap.appendChild(overlay);
+    overlay = document.createElement('div'); overlay.id = 'limitOverlay';
+    Object.assign(overlay.style, {position:'absolute', inset:'0', display:'none', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.35)', color:'#fff', fontWeight:'600'});
+    const wrap = video.parentElement; if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative'; wrap.appendChild(overlay);
   }
 
   const pct = s => Math.min(100, Math.max(0, (s / MIN_SEC) * 100));
@@ -1252,28 +1244,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ if (on && video) video.pause(); }catch(_){}
   };
 
-  async function getLeftToday() {
-    try {
-      const { data } = await sb.rpc('get_level_info_v2');
-      const info = Array.isArray(data) ? data[0] : (data || {});
-      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
-      if (progressText) progressText.textContent = labelLeft(left);
-      if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
-      return left;
-    } catch (e) { console.error(e); return 0; }
+  // ---- Level helpers ----
+  const num = v => { const n = Number(v); return isFinite(n) ? n : 0; };
+
+  async function fetchLevelInfo() {
+    const { data } = await sb.rpc('get_level_info_v2');
+    const info = Array.isArray(data) ? (data[0] || {}) : (data || {});
+
+    // try to read per-view from common field names
+    const cands = [
+      info.per_view, info.per_watch, info.reward_per_view, info.per_view_reward,
+      info.per_watch_reward, info.view_reward, info.watch_reward, info.per_view_usdt,
+      info.per_view_amount, info.reward_view
+    ].map(num).filter(x => x > 0);
+
+    let perView = cands.length ? cands[0] : 0;
+
+    if (!perView) {
+      const daily = num(info.daily_reward ?? info.daily_income ?? info.daily_payout ?? info.earning_daily);
+      const limit = num(info.daily_limit ?? info.views_per_day ?? info.max_views ?? 5) || 5;
+      if (daily > 0) perView = daily / limit;
+    }
+
+    if (!perView) {
+      const rate = num(info.rate ?? info.level_rate ?? info.percent); // % per day
+      const capital = num(info.capital ?? info.user_capital ?? info.capital_calc ?? info.balance);
+      const limit = num(info.daily_limit ?? 5) || 5;
+      if (rate > 0 && capital > 0) perView = (rate/100) * capital / limit;
+    }
+
+    const left = num(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)));
+    return { info, perView, left };
   }
 
   async function ensureSession() {
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { toast('Нужно войти в аккаунт', false); return null; }
-      return session;
-    } catch (e) { console.error(e); toast('Ошибка авторизации', false); return null; }
+    const { data: { session } } = await sb.auth.getSession();
+    return session || null;
   }
 
   async function checkAccessAndInit() {
     try {
-      const session = await ensureSession(); if (!session) return 0;
+      const session = await ensureSession(); if (!session) { toast('Нужно войти', false); return 0; }
       const { data, error } = await sb.rpc('get_video_access_state');
       const active = !error && (Array.isArray(data) ? data[0]?.get_video_access_state : data);
       if (!active) {
@@ -1282,8 +1293,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (progressText) progressText.textContent = 'Доступ закрыт';
         return 0;
       }
-    } catch(err) { console.error(err); }
-    const left = await getLeftToday();
+    } catch(_) {}
+    const { left } = await fetchLevelInfo();
+    if (progressText) progressText.textContent = labelLeft(left);
     setBlocked(left <= 0);
     return left;
   }
@@ -1291,27 +1303,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function award() {
     if (awarding) return; awarding = true;
     try {
-      const session = await ensureSession(); if (!session) return;
-      if (played < MIN_SEC) return;
+      const session = await ensureSession(); if (!session) { awarding=false; return; }
+      if (played < MIN_SEC) { awarding=false; return; }
 
-      let res = await sb.rpc('award_view', { duration_sec: played });
-      if (res?.error) {
-        // try without args
-        res = await sb.rpc('award_view');
-      }
+      const { perView } = await fetchLevelInfo();
+      if (!perView) { toast('Пер-вью ставка = 0. Проверьте уровень/баланс.', false); awarding=false; return; }
+
+      let res = await sb.rpc('award_view', { duration_sec: played, reward: perView, per_view: perView, amount: perView });
+      if (res?.error) res = await sb.rpc('award_view', { amount: perView });
+      if (res?.error) res = await sb.rpc('award_view'); // final fallback
       if (res?.error) { console.error(res.error); toast('Начисление не прошло: ' + (res.error.message || 'ошибка'), false); return; }
 
       const payload = Array.isArray(res?.data) ? res.data[0] : (res?.data || {});
-      const left = Number(payload?.views_left_today ?? payload?.views_left ?? payload?.left ?? 0);
+      const left = num(payload?.views_left_today ?? payload?.views_left ?? payload?.left);
 
       if (progressText) progressText.textContent = labelLeft(left);
       setBlocked(left <= 0);
-      toast('Зачислено ✅', true);
+      toast(`Зачислено ✅ +${perView.toFixed(2)}`, true);
 
       if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
     } finally {
       try { if (video) { video.pause(); video.currentTime = 0; } } catch(_){}
-      setProgress(0); played = 0; awarding = false; endedOnce = false;
+      setProgress(0); played = 0; awarding = false;
     }
   }
 
@@ -1322,20 +1335,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       setProgress(played);
       if (played >= MIN_SEC && !awarding) award();
     });
-    video.addEventListener('ended', async () => {
-      endedOnce = true;
-      if (played >= MIN_SEC) await award();
-    });
-    // iOS fullscreen hijack
+    video.addEventListener('ended', award);
     video.addEventListener('webkitbeginfullscreen', () => {
       try{ video.pause(); video.webkitExitFullscreen && video.webkitExitFullscreen(); }catch(_){}
     }, true);
   }
 
-  async function start() {
-    const left = await checkAccessAndInit();
-    if (left <= 0) return;
-    played = 0; awarding = false; setProgress(0);
+  function start() {
+    if (startBtn.disabled) return;
+    played = 0; setProgress(0);
     try { video && (video.currentTime = 0, video.play()); } catch(_){}
   }
 
