@@ -1212,8 +1212,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!sb || !startBtn) return;
 
   const MIN_SEC = 10;
-  let played = 0, awarding = false;
+  let played = 0, awarding = false, endedOnce = false;
 
+  // mini-toast
+  const toast = (msg, ok=false) => {
+    let t = document.getElementById('watchToast');
+    if (!t) {
+      t = document.createElement('div'); t.id='watchToast';
+      Object.assign(t.style, {position:'fixed', right:'16px', bottom:'16px', zIndex:9999, padding:'10px 14px', borderRadius:'10px', background:'#222', color:'#fff', boxShadow:'0 6px 20px rgba(0,0,0,.3)', fontSize:'14px'});
+      document.body.appendChild(t);
+    }
+    t.textContent = String(msg || '');
+    t.style.background = ok ? '#135d2d' : '#5d1313';
+    t.style.display = 'block';
+    clearTimeout(t._to); t._to = setTimeout(()=>{ t.style.display='none'; }, 3500);
+  };
+
+  // overlay (limit or blocked)
   let overlay = document.getElementById('limitOverlay');
   if (!overlay && video && video.parentElement){
     overlay = document.createElement('div');
@@ -1242,13 +1257,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { data } = await sb.rpc('get_level_info_v2');
       const info = Array.isArray(data) ? data[0] : (data || {});
       const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+      if (progressText) progressText.textContent = labelLeft(left);
       if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
       return left;
-    } catch (e) { return 0; }
+    } catch (e) { console.error(e); return 0; }
+  }
+
+  async function ensureSession() {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { toast('Нужно войти в аккаунт', false); return null; }
+      return session;
+    } catch (e) { console.error(e); toast('Ошибка авторизации', false); return null; }
   }
 
   async function checkAccessAndInit() {
     try {
+      const session = await ensureSession(); if (!session) return 0;
       const { data, error } = await sb.rpc('get_video_access_state');
       const active = !error && (Array.isArray(data) ? data[0]?.get_video_access_state : data);
       if (!active) {
@@ -1257,9 +1282,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (progressText) progressText.textContent = 'Доступ закрыт';
         return 0;
       }
-    } catch(_) {}
+    } catch(err) { console.error(err); }
     const left = await getLeftToday();
-    if (progressText) progressText.textContent = labelLeft(left);
     setBlocked(left <= 0);
     return left;
   }
@@ -1267,22 +1291,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function award() {
     if (awarding) return; awarding = true;
     try {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session || played < MIN_SEC) return;
+      const session = await ensureSession(); if (!session) return;
+      if (played < MIN_SEC) return;
+
       let res = await sb.rpc('award_view', { duration_sec: played });
-      if (res?.error) res = await sb.rpc('award_view');
-      if (res?.error) { console.error(res.error); return; }
+      if (res?.error) {
+        // try without args
+        res = await sb.rpc('award_view');
+      }
+      if (res?.error) { console.error(res.error); toast('Начисление не прошло: ' + (res.error.message || 'ошибка'), false); return; }
 
       const payload = Array.isArray(res?.data) ? res.data[0] : (res?.data || {});
       const left = Number(payload?.views_left_today ?? payload?.views_left ?? payload?.left ?? 0);
 
       if (progressText) progressText.textContent = labelLeft(left);
       setBlocked(left <= 0);
+      toast('Зачислено ✅', true);
 
       if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
     } finally {
       try { if (video) { video.pause(); video.currentTime = 0; } } catch(_){}
-      setProgress(0); played = 0; awarding = false;
+      setProgress(0); played = 0; awarding = false; endedOnce = false;
     }
   }
 
@@ -1293,14 +1322,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       setProgress(played);
       if (played >= MIN_SEC && !awarding) award();
     });
-    video.addEventListener('ended', award);
+    video.addEventListener('ended', async () => {
+      endedOnce = true;
+      if (played >= MIN_SEC) await award();
+    });
+    // iOS fullscreen hijack
     video.addEventListener('webkitbeginfullscreen', () => {
       try{ video.pause(); video.webkitExitFullscreen && video.webkitExitFullscreen(); }catch(_){}
     }, true);
   }
 
-  function start() {
-    if (startBtn.disabled) return;
+  async function start() {
+    const left = await checkAccessAndInit();
+    if (left <= 0) return;
     played = 0; awarding = false; setProgress(0);
     try { video && (video.currentTime = 0, video.play()); } catch(_){}
   }
