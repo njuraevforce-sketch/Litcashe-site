@@ -697,13 +697,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('startBtn');
     const video = document.getElementById('promoVid') || document.querySelector('video');
     const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-    const el = document.querySelector('[data-views-left]');
+    const leftEl = null;
     const fill = document.getElementById('progressFill');
 
     // текст «Просмотров осталось сегодня: …»
-    if (el && progressText) {
-      const left = parseInt((el.textContent || '0').trim(), 10) || 0;
-      progressText.textContent = `Просмотров осталось сегодня: ${left}`;
+    if (el && progressText){
+      const left = parseInt((el?.textContent || '0').trim(), 10) || 0;progressText.textContent = `Просмотров осталось сегодня: ${left}`;
     }
 
     // плавная подсветка прогресса
@@ -1417,19 +1416,8 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
   const todayKey = () => new Date().toISOString().slice(0,10);
 
   // вспомогалки
-  const leftElRef = document.querySelector('[data-views-left]');
-const getLeft = () => {
-  const src = leftElRef ? (leftElRef.textContent || '0') : (localStorage.getItem('lc_views_left') || '0');
-  const n = parseInt(String(src).trim(), 10);
-  return Number.isFinite(n) ? Math.max(0, n) : 0;
-};
-const setLeft = (n) => {
-  const v = Math.max(0, n|0);
-  if (leftElRef) leftElRef.textContent = String(v);
-  const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
-  if (progressText) progressText.textContent = `Просмотров осталось сегодня: ${v}`;
-  try { localStorage.setItem('lc_views_left', String(v)); } catch(_) {}
-};
+  window.getLeft = window.getLeft || () => Math.max(0, parseInt((leftEl.textContent||'0').trim(), 10) || 0);
+  window.setLeft = window.setLeft || (n) => leftEl.textContent = String(Math.max(0, n|0));
   const isLocallyLocked = () => localStorage.getItem(LOCK_KEY) === todayKey();
 
   // клонирование видео (фикс iOS/Android)
@@ -1562,5 +1550,30 @@ document.addEventListener('DOMContentLoaded', function(){
   }catch(e){}
 });
 </script>
+
+<script>
+// Safe helpers (idempotent)
+(function(){
+  if (!window.getLeft) {
+    window.getLeft = () => {
+      const el = document.querySelector('[data-views-left]');
+      const src = el ? (el.textContent || '0') : (localStorage.getItem('lc_views_left') || '0');
+      const n = parseInt(String(src).trim(), 10);
+      return Number.isFinite(n) ? Math.max(0, n) : 0;
+    };
+  }
+  if (!window.setLeft) {
+    window.setLeft = (n) => {
+      const v = Math.max(0, Number(n)||0);
+      const el = document.querySelector('[data-views-left]');
+      if (el) el.textContent = String(v);
+      const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
+      if (progressText) progressText.textContent = `Просмотров осталось сегодня: ${v}`;
+      try { localStorage.setItem('lc_views_left', String(v)); } catch(_) {}
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
