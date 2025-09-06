@@ -643,7 +643,7 @@ document.addEventListener('DOMContentLoaded', async function(){
       if(window.LC_I18N){ try{ LC_I18N.apply(); }catch(_){} }
     }
   }catch(_){}
-})();
+});
 </script>
 
 
@@ -669,15 +669,15 @@ document.addEventListener('DOMContentLoaded', function(){
   // Clone links/cta
   if(links && dl){ dl.innerHTML = links.outerHTML; }
   if(cta && dc){ dc.innerHTML = cta.outerHTML; }
-})();
+});
 </script>
 
 <script>window.LC_TOAST=(function(){let box;function ensure(){if(!box){box=document.createElement('div');box.className='lc-toast';document.body.appendChild(box);}}function show(msg){ensure();const item=document.createElement('div');item.className='lc-toast__item';item.textContent=msg;box.appendChild(item);setTimeout(()=>{item.remove();},1700);}return{ok:show,err:show};})();</script>
 <div id="refLinkWrap" style="display:none;margin:1rem 0;">
 </div>
 <script>
-(function(){
-if (!window.LC || !window.sb) return;
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.LC || !window.sb) return;
 
   // маленький хелпер чтобы ставить текст сразу во все совпадения
   function setTextAll(selector, text) {
@@ -687,13 +687,13 @@ if (!window.LC || !window.sb) return;
   
 
 
-})();
+});
 </script>
 
 <script defer src="assets/js/guard.js"></script>
 <script defer>
-(function(){
-try {
+document.addEventListener('DOMContentLoaded', () => {
+  try {
     const btn = document.getElementById('startBtn');
     const video = document.getElementById('promoVid') || document.querySelector('video');
     const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
@@ -712,7 +712,7 @@ try {
 } catch (e) {
     console.error(e);
   }
-})();
+});
 </script>
 
 
@@ -720,8 +720,8 @@ try {
 
 
 <script>
-(function(){
-// 1) Гарантируем объекты и единый alias для Supabase
+document.addEventListener('DOMContentLoaded', () => {
+  // 1) Гарантируем объекты и единый alias для Supabase
   window.LC = window.LC || {};
   const sb = window.sb || window._supabase;
   if (!sb) return;
@@ -809,11 +809,11 @@ try {
 
   // 3) Первый прогон
   window.LC.loadLevelInfo();
-})();
+});
 </script>
 
 <script>
-(async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase;
   if (!sb) return;
 
@@ -853,11 +853,11 @@ try {
   } catch (e) {
     console.error('wallet realtime error', e);
   }
-})();
+});
 </script>
 
 <script>
-(async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase;
   // --- 3.1 Redirect authenticated users from index to dashboard ---
   try {
@@ -899,7 +899,7 @@ try {
     }
     burger.addEventListener('click', () => menu.classList.toggle('open'));
   } catch(e){ console.warn('burger init error', e); }
-})();
+});
 </script>
 
 <script>
@@ -1057,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', function(){
       wrap.appendChild(tbl);
     }
   });
-})();
+});
 </script>
 
 
@@ -1161,7 +1161,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <script>
 // Referrals widgets: fill left "Реферальный доход" and right "Последние реферальные начисления"
-(async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   try {
     const sb = window.sb || window._supabase || window.supabase;
     if (!sb) return;
@@ -1213,7 +1213,7 @@ document.addEventListener('DOMContentLoaded', function(){
   } catch (e) {
     console.warn('ref tables init error', e);
   }
-})();
+});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabaseConfig.js"></script>
@@ -1221,8 +1221,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 <script>
-(function(){
-const sb = window.sb || window._supabase || window.supabase;
+document.addEventListener('DOMContentLoaded', () => {
+  const sb = window.sb || window._supabase || window.supabase;
 
   const video       = document.getElementById('promoVid') || document.querySelector('video');
   const startBtn    = document.getElementById('startBtn') || document.querySelector('[data-start]');
@@ -1359,14 +1359,31 @@ async function award(){
 
   startBtn.addEventListener('click', startVideo);
   video.addEventListener('ended', award);
-})();
+});
 </script>
 
 
 <!-- removed broken duplicate script block (patched) -->
 <script>
-(function(){
-(async () => {
+document.addEventListener('DOMContentLoaded', () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  let video   = document.getElementById('promoVid') || document.querySelector('video');
+  let srcEl   = document.getElementById('promoSource');
+  const wrap  = (video && video.parentElement) || document.body;
+  const startBtn= document.getElementById('startBtn') || document.querySelector('[data-start]');
+  const el = document.querySelector('[data-views-left]');
+  const overlay = document.getElementById('limitOverlay');
+  if (!video) return;
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  let video   = document.getElementById('promoVid') || document.querySelector('video');
+  let srcEl   = document.getElementById('promoSource');
+  const wrap  = (video && video.parentElement) || document.body;
+  const startBtn = document.getElementById('startBtn') || document.querySelector('[data-start]');
+  const el = document.querySelector('[data-views-left]');
+  const overlay  = document.getElementById('limitOverlay');
+  if (!video) return;
+
   const VIDEO_SRC = '/media/ad1.mp4'; // <-- твой путь
   // получаем user_id из supabase и делаем ключ персональным
 const { data: _userData } = await sb.auth.getUser?.() ?? {};
@@ -1491,7 +1508,7 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
     }
   };
   ['click','touchstart','touchend'].forEach(ev => {
-    rootEl.addEventListener(ev, swallow, true);
+    (wrap || document).addEventListener(ev, swallow, true);
     video.addEventListener(ev, swallow, true);
   });
 
@@ -1520,7 +1537,7 @@ const LOCK_KEY = `lc_lock_date:${_uid}`;
     const k = localStorage.getItem(LOCK_KEY);
     if (k && k !== todayKey()) { localStorage.removeItem(LOCK_KEY); lockPlayback(getLeft()<=0); }
   }, 120000);
-})();
+});
 </script>
 
 <script>
@@ -1533,7 +1550,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (btn){ btn.disabled = false; btn.setAttribute('aria-disabled','false'); }
     window.__LC_LIMIT_BLOCKED__ = false;
   }catch(e){}
-})();
+});
 </script>
 
 <script>
