@@ -1430,5 +1430,84 @@ document.addEventListener('DOMContentLoaded', async () => {
 })();
 </script>
 
+
+<!-- ==== REF COUNTS (1/2/3 generations) — DB-first (RPC), fallback to view ==== -->
+<script id="ref-counts-db-patch">
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb) return;
+
+    const $ = (sel) => document.querySelector(sel);
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val|0); };
+
+    function applyCounts(row) {
+      if (!row) return false;
+      const g1 = Number(row.gen1 ?? row.g1 ?? 0) | 0;
+      const g2 = Number(row.gen2 ?? row.g2 ?? 0) | 0;
+      const g3 = Number(row.gen3 ?? row.g3 ?? 0) | 0;
+      set('gen1Count', g1);
+      set('gen2Count', g2);
+      set('gen3Count', g3);
+      // If main "Рефералы" is empty/zero, fill it with total
+      const refsEl = document.querySelector('[data-refs]');
+      if (refsEl) {
+        const cur = parseInt((refsEl.textContent || '0').replace(/\D+/g,'')) || 0;
+        const total = g1 + g2 + g3;
+        if (cur === 0 && total > 0) refsEl.textContent = String(total);
+      }
+      return true;
+    }
+
+    // 1) Try RPC: get_ref_counts_me() (returns gen1, gen2, gen3 for auth.uid())
+    try {
+      const rpc = await sb.rpc('get_ref_counts_me');
+      if (!rpc.error && rpc.data) {
+        const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+        if (applyCounts(row)) return;
+      }
+    } catch(e) { console.warn('get_ref_counts_me RPC error', e); }
+
+    // 2) Fallback to view v_referral_counts (RLS-scoped to user_id)
+    try {
+      let q = sb.from('v_referral_counts').select('gen1,gen2,gen3');
+      let res;
+      if (typeof q.maybeSingle === 'function') {
+        res = await q.maybeSingle();
+      } else {
+        res = await q.limit(1);
+        res = { data: (res.data && res.data[0]) || null, error: res.error };
+      }
+      if (!res.error && res.data) {
+        if (applyCounts(res.data)) return;
+      }
+    } catch(e) { console.warn('v_referral_counts view error', e); }
+
+    // 3) As a last resort, read from the admin/all view if available (no RLS)
+    try {
+      const { data: me } = await sb.auth.getUser();
+      const uid = me && me.user && me.user.id;
+      if (uid) {
+        let q2 = sb.from('v_referral_counts_all').select('gen1,gen2,gen3').eq('user_id', uid);
+        let r2;
+        if (typeof q2.maybeSingle === 'function') {
+          r2 = await q2.maybeSingle();
+        } else {
+          r2 = await q2.limit(1);
+          r2 = { data: (r2.data && r2.data[0]) || null, error: r2.error };
+        }
+        if (!r2.error && r2.data) {
+          if (applyCounts(r2.data)) return;
+        }
+      }
+    } catch(e) { console.warn('v_referral_counts_all fallback error', e); }
+
+    // If nothing loaded, leave zeros silently
+  } catch(err) {
+    console.warn('ref-counts-db-patch init error', err);
+  }
+});
+</script>
+
 </body>
 </html>
