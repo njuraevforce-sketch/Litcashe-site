@@ -1373,25 +1373,59 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }catch(e){ console.warn('ref link patch error', e); }
 
-    // 2) Fill 3-gen counts from view v_referral_counts (user-scoped)
-    try{
-      const { data: { user } } = await sb.auth.getUser();
-      if(!user) return;
-      let req = sb.from('v_referral_counts').select('gen1, gen2, gen3').eq('user_id', user.id);
-      // prefer .maybeSingle() if available
-      let res = await req.maybeSingle ? req.maybeSingle() : req.single();
-      let row = res && res.data ? res.data : (Array.isArray(res) ? res[0] : null);
-      if(!row && res && res.error && res.error.code === 'PGRST116'){
-        // no rows: try without filter (RLS may already scope)
-        let res2 = await sb.from('v_referral_counts').select('gen1, gen2, gen3').maybeSingle();
-        row = res2 && res2.data ? res2.data : null;
+    <script id="ref-counts" defer>
+(() => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb) return;
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String((val ?? 0) | 0);
+    };
+
+    // ---- 1) основной путь: RPC (обходит RLS) ----
+    try {
+      if (typeof sb.rpc === 'function') {
+        const { data, error } = await sb.rpc('get_ref_counts_me');
+        if (!error && data) {
+          const row = Array.isArray(data) ? data[0] : data;
+          set('gen1Count', row?.gen1 ?? 0);
+          set('gen2Count', row?.gen2 ?? 0);
+          set('gen3Count', row?.gen3 ?? 0);
+          return; // успех, дальше не идём
+        }
+        console.warn('get_ref_counts_me RPC error:', error);
       }
-      const g1 = (row && (row.gen1 ?? row.g1)) || 0;
-      const g2 = (row && (row.gen2 ?? row.g2)) || 0;
-      const g3 = (row && (row.gen3 ?? row.g3)) || 0;
-      const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent = String(val|0); };
-      set('gen1Count', g1); set('gen2Count', g2); set('gen3Count', g3);
-    }catch(e){ console.warn('v_referral_counts patch error', e); }
+    } catch (e) {
+      console.warn('get_ref_counts_me RPC exception:', e);
+    }
+
+    // ---- 2) запасной путь: читаем вью напрямую (может упереться в RLS) ----
+    try {
+      if (!sb.auth?.getUser) return;
+      const { data: auth } = await sb.auth.getUser();
+      const user = auth?.user;
+      if (!user?.id) return;
+
+      let q = sb.from('v_referral_counts')
+                .select('gen1, gen2, gen3')
+                .eq('user_id', user.id);
+
+      let resp;
+      if (typeof q.maybeSingle === 'function') resp = await q.maybeSingle();
+      else resp = await q.single();
+
+      if (resp?.data) {
+        set('gen1Count', resp.data.gen1 ?? resp.data.g1 ?? 0);
+        set('gen2Count', resp.data.gen2 ?? resp.data.g2 ?? 0);
+        set('gen3Count', resp.data.gen3 ?? resp.data.g3 ?? 0);
+      } else {
+        console.warn('v_referral_counts fallback error:', resp?.error);
+      }
+    } catch (e) {
+      console.warn('v_referral_counts fallback exception:', e);
+    }
   });
 })();
 </script>
