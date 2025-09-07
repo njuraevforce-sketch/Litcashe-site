@@ -1326,5 +1326,75 @@ document.addEventListener('DOMContentLoaded', async () => {
   await checkAccessAndInit();
 });
 </script>
+
+<!-- Patch: referral link + 3-gen counters, safe & idempotent -->
+<script id="lc-referrals-patch">
+(function(){
+  if (window.__lcRefPatchApplied) return; window.__lcRefPatchApplied = true;
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  const fmtUSD = (n)=>'$'+(+n||0).toFixed(2);
+  function shortCodeFromUUID(id){
+    try{
+      // Make a short 8-char code from UUID (fallback)
+      const hex = String(id||'').replace(/-/g,'').slice(-8);
+      return parseInt(hex,16).toString(36).toUpperCase().padStart(6,'0').slice(0,8);
+    }catch(_){ return 'REF'; }
+  }
+  ready(async function(){
+    const sb = window.sb || window._supabase || window.supabase;
+    if(!sb) return;
+    // 1) Fill referral link
+    try{
+      const { data: { user } } = await sb.auth.getUser();
+      if(user){
+        let code = null;
+        try{
+          // try profiles_u.ref_code or profiles.ref_code
+          let q = await sb.from('profiles_u').select('ref_code').eq('user_id', user.id).maybeSingle();
+          if(q && q.data && q.data.ref_code) code = q.data.ref_code;
+        }catch(_){}
+        if(!code){
+          try{
+            let q2 = await sb.from('profiles').select('ref_code').eq('user_id', user.id).maybeSingle();
+            if(q2 && q2.data && q2.data.ref_code) code = q2.data.ref_code;
+          }catch(_){}
+        }
+        if(!code) code = shortCodeFromUUID(user.id);
+        const link = (location.origin||'') + '/register_single.html?ref=' + code;
+        const refInput = document.getElementById('refLink');
+        if(refInput && !refInput.value) refInput.value = link;
+        const copyBtn = document.getElementById('copyRef');
+        if(copyBtn){
+          copyBtn.addEventListener('click', async ()=>{
+            try{ await navigator.clipboard.writeText(refInput.value); }catch(_){}
+            if(window.LC_TOAST) LC_TOAST.ok('Ссылка скопирована');
+          });
+        }
+      }
+    }catch(e){ console.warn('ref link patch error', e); }
+
+    // 2) Fill 3-gen counts from view v_referral_counts (user-scoped)
+    try{
+      const { data: { user } } = await sb.auth.getUser();
+      if(!user) return;
+      let req = sb.from('v_referral_counts').select('gen1, gen2, gen3').eq('user_id', user.id);
+      // prefer .maybeSingle() if available
+      let res = await req.maybeSingle ? req.maybeSingle() : req.single();
+      let row = res && res.data ? res.data : (Array.isArray(res) ? res[0] : null);
+      if(!row && res && res.error && res.error.code === 'PGRST116'){
+        // no rows: try without filter (RLS may already scope)
+        let res2 = await sb.from('v_referral_counts').select('gen1, gen2, gen3').maybeSingle();
+        row = res2 && res2.data ? res2.data : null;
+      }
+      const g1 = (row && (row.gen1 ?? row.g1)) || 0;
+      const g2 = (row && (row.gen2 ?? row.g2)) || 0;
+      const g3 = (row && (row.gen3 ?? row.g3)) || 0;
+      const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent = String(val|0); };
+      set('gen1Count', g1); set('gen2Count', g2); set('gen3Count', g3);
+    }catch(e){ console.warn('v_referral_counts patch error', e); }
+  });
+})();
+</script>
+
 </body>
 </html>
