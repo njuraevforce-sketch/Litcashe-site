@@ -1537,72 +1537,95 @@ document.addEventListener('DOMContentLoaded', async () => {
       return (s1 + s2 + s3) > 0.0001;
     };
 
-    // ===== 1) Fallback for payouts list & sums (from table referral_payouts) =====
+// ===== 1) Load payouts list & sums (from table referral_payouts) =====
 if (!alreadyFilled()) {
   try {
-    // читаем из новой таблицы referral_payouts
     const { data: rows, error } = await sb
       .from('referral_payouts')
       .select('created_at, level, reward_usdt')
-      .eq('referrer_user_id', uid)   // выплаты, где этот юзер был РЕФЕРЕРОМ
+      .eq('referrer_user_id', uid)             // выплаты, где текущий юзер — реферер
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(100);
 
     if (!error && Array.isArray(rows)) {
-      const sums = {1:0,2:0,3:0};
+      const sums = { 1: 0, 2: 0, 3: 0 };
       if (refList) refList.innerHTML = '';
-      rows.forEach(r => {
-        const lvl = Number(r.level||0);
+      for (const r of rows) {
+        const lvl = Number(r.level || 0);
         const amt = Number(r.reward_usdt || 0);
-        if (lvl>=1 && lvl<=3) sums[lvl] += amt;
+        if (lvl >= 1 && lvl <= 3) sums[lvl] += amt;
+
         if (refList) {
           const tr = document.createElement('tr');
           const dt = new Date(r.created_at || Date.now());
-          const d = dt.toLocaleString();
-          tr.innerHTML = `<td>${d}</td><td>${lvl||''}</td><td>$${amt.toFixed(2)}</td><td>доход</td>`;
+          tr.innerHTML =
+            `<td>${dt.toLocaleString()}</td><td>${lvl || ''}</td><td>$${amt.toFixed(2)}</td><td>доход</td>`;
           refList.appendChild(tr);
         }
-      });
-      const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
+      }
+      const fmt = (n) => '$' + (Math.round(Number(n || 0) * 100) / 100).toFixed(2);
       if (g1Cell) g1Cell.textContent = fmt(sums[1]);
       if (g2Cell) g2Cell.textContent = fmt(sums[2]);
       if (g3Cell) g3Cell.textContent = fmt(sums[3]);
-      if (refTotalCell) refTotalCell.textContent = fmt(sums[1]+sums[2]+sums[3]);
+      if (refTotalCell) refTotalCell.textContent = fmt(sums[1] + sums[2] + sums[3]);
     }
-  } catch(e) { console.warn('raw referral_payouts fallback error', e); }
+  } catch (e) {
+    console.warn('referral_payouts load error', e);
+  }
 }
 
-// ===== 2) Fallback for referral counts via user_referrals chain =====
+// ===== 2) Referral counts (prefer RPC ref_counts; fallback to user_referrals chain) =====
 try {
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = String(v|0); };
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String((v || 0) | 0);
+  };
 
-  // поколение 1 — прямые дети
-  const { data: g1rows, error: e1 } = await sb.from('user_referrals')
-    .select('child_user_id')
-    .eq('parent_user_id', uid);
-  const gen1Ids = !e1 && Array.isArray(g1rows) ? g1rows.map(r => r.child_user_id) : [];
-  set('gen1Count', gen1Ids.length);
-
-  // поколение 2 — дети детей
-  let gen2Ids = [];
-  if (gen1Ids.length) {
-    const { data: g2rows, error: e2 } = await sb.from('user_referrals')
+  // --- попытка через RPC (один запрос)
+  let g1 = 0, g2 = 0, g3 = 0;
+  try {
+    const { data: rc, error: rcErr } = await sb.rpc('ref_counts'); // returns { gen1, gen2, gen3 }
+    if (!rcErr && rc && rc.length) {
+      g1 = rc[0].gen1 | 0;
+      g2 = rc[0].gen2 | 0;
+      g3 = rc[0].gen3 | 0;
+    } else {
+      throw rcErr || new Error('empty ref_counts');
+    }
+  } catch {
+    // --- fallback: считаем по цепочке user_referrals (3 запроса)
+    const { data: g1rows, error: e1 } = await sb
+      .from('user_referrals')
       .select('child_user_id')
-      .in('parent_user_id', gen1Ids);
-    gen2Ids = !e2 && Array.isArray(g2rows) ? g2rows.map(r => r.child_user_id) : [];
-  }
-  set('gen2Count', gen2Ids.length);
+      .eq('parent_user_id', uid);
+    const gen1Ids = !e1 && Array.isArray(g1rows) ? g1rows.map(r => r.child_user_id) : [];
+    g1 = gen1Ids.length;
 
-  // поколение 3 — дети внуков
-  let gen3Ids = [];
-  if (gen2Ids.length) {
-    const { data: g3rows, error: e3 } = await sb.from('user_referrals')
-      .select('child_user_id')
-      .in('parent_user_id', gen2Ids);
-    gen3Ids = !e3 && Array.isArray(g3rows) ? g3rows.map(r => r.child_user_id) : [];
+    let gen2Ids = [];
+    if (gen1Ids.length) {
+      const { data: g2rows, error: e2 } = await sb
+        .from('user_referrals')
+        .select('child_user_id')
+        .in('parent_user_id', gen1Ids);
+      gen2Ids = !e2 && Array.isArray(g2rows) ? g2rows.map(r => r.child_user_id) : [];
+      g2 = gen2Ids.length;
+    }
+
+    if (gen2Ids.length) {
+      const { data: g3rows, error: e3 } = await sb
+        .from('user_referrals')
+        .select('child_user_id')
+        .in('parent_user_id', gen2Ids);
+      g3 = (!e3 && Array.isArray(g3rows)) ? g3rows.length : 0;
+    }
   }
-  set('gen3Count', gen3Ids.length);
-} catch(e) { console.warn('user_referrals chain counts fallback error', e); }
+
+  set('gen1Count', g1);
+  set('gen2Count', g2);
+  set('gen3Count', g3);
+} catch (e) {
+  console.warn('referral counts error', e);
+}
 
 <script>
 <!-- ===== /PATCH ===== -->
