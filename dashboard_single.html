@@ -1537,63 +1537,40 @@ document.addEventListener('DOMContentLoaded', async () => {
       return (s1 + s2 + s3) > 0.0001;
     };
 
-    // ===== 1) Fallback for payouts list & sums (from table referral_rewards) =====
-    if (!alreadyFilled()) {
-      try {
-        // attempt to read from raw table if the view v_referral_payouts is missing
-        const q = sb.from('referral_rewards').select('*')
-          .eq('user_id', uid)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        const { data: rows, error } = await q;
-        if (!error && Array.isArray(rows)) {
-          const sums = {1:0,2:0,3:0};
-          const list = refList;
-          if (list) list.innerHTML = '';
-          rows.forEach(r => {
-            const lvl = Number(r.level||0);
-            const amt = Number((r.reward_usdt ?? r.amount) || 0);
-            if (lvl>=1 && lvl<=3) sums[lvl] += amt;
-            if (list) {
-              const tr = document.createElement('tr');
-              const dt = new Date(r.created_at || Date.now());
-              const d = dt.toLocaleString();
-              tr.innerHTML = `<td>${d}</td><td>${lvl||''}</td><td>$${amt.toFixed(2)}</td><td>доход</td>`;
-              list.appendChild(tr);
-            }
-          });
-          const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
-          if (g1Cell) g1Cell.textContent = fmt(sums[1]);
-          if (g2Cell) g2Cell.textContent = fmt(sums[2]);
-          if (g3Cell) g3Cell.textContent = fmt(sums[3]);
-          if (refTotalCell) refTotalCell.textContent = fmt(sums[1]+sums[2]+sums[3]);
-        }
-      } catch(e) { console.warn('raw referral_rewards fallback error', e); }
-    }
+ // === Primary load of referral payouts (use table directly, no view) ===
+try {
+  const { data: rows, error } = await sb
+    .from('referral_payouts')
+    .select('created_at, level, reward_usdt')
+    .eq('referrer_user_id', uid)
+    .order('created_at', { ascending: false })
+    .limit(100);
 
-    // ===== 2) Fallback for counts via profiles.referred_by chain =====
-    try {
-      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = String(v|0); };
-      const { data: g1rows, error: e1 } = await sb.from('profiles').select('user_id').eq('referred_by', uid).limit(1000);
-      const gen1Ids = !e1 && Array.isArray(g1rows) ? g1rows.map(r => r.user_id) : [];
-      set('gen1Count', gen1Ids.length);
-
-      let gen2Ids = [];
-      if (gen1Ids.length) {
-        const { data: g2rows, error: e2 } = await sb.from('profiles').select('user_id').in('referred_by', gen1Ids).limit(2000);
-        gen2Ids = !e2 && Array.isArray(g2rows) ? g2rows.map(r => r.user_id) : [];
+  if (!error && Array.isArray(rows)) {
+    const sums = {1:0,2:0,3:0};
+    if (refList) refList.innerHTML = '';
+    rows.forEach(r => {
+      const lvl = Number(r.level||0);
+      const amt = Number(r.reward_usdt || 0);
+      if (lvl>=1 && lvl<=3) sums[lvl] += amt;
+      if (refList) {
+        const tr = document.createElement('tr');
+        const dt = new Date(r.created_at || Date.now());
+        tr.innerHTML =
+          `<td>${dt.toLocaleString()}</td><td>${lvl||''}</td><td>$${amt.toFixed(2)}</td><td>доход</td>`;
+        refList.appendChild(tr);
       }
-      set('gen2Count', gen2Ids.length);
+    });
+    const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
+    if (g1Cell) g1Cell.textContent = fmt(sums[1]);
+    if (g2Cell) g2Cell.textContent = fmt(sums[2]);
+    if (g3Cell) g3Cell.textContent = fmt(sums[3]);
+    if (refTotalCell) refTotalCell.textContent = fmt(sums[1]+sums[2]+sums[3]);
+  }
+} catch(e) {
+  console.warn('referral_payouts load error', e);
+}
 
-      let gen3Ids = [];
-      if (gen2Ids.length) {
-        const { data: g3rows, error: e3 } = await sb.from('profiles').select('user_id').in('referred_by', gen2Ids).limit(4000);
-        gen3Ids = !e3 && Array.isArray(g3rows) ? g3rows.map(r => r.user_id) : [];
-      }
-      set('gen3Count', gen3Ids.length);
-    } catch(e) { console.warn('profiles chain counts fallback error', e); }
-  } catch(e){ console.warn('referral fallback patch error', e); }
-});
 <script>
 <!-- ===== /PATCH ===== -->
 
