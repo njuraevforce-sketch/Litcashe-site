@@ -1142,31 +1142,52 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 <script>
-// Referrals widgets: fill left "Реферальный доход" and right "Последние реферальные начисления"
+// Referrals widgets (no 400): read from base table with RLS; fallback to view/table if needed
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const sb = window.sb || window._supabase || window.supabase;
     if (!sb) return;
 
-    // Загрузим выплаты (RLS: только для своего referrer_id)
-    const { data: rows, error } = await sb
-      .from('v_referral_payouts')
-      .select('created_at, level, reward_usdt')
-      .order('created_at', { ascending: false })
-      .limit(50);
+    // get current user id for filtering
+    let uid = null;
+    try { const { data: au } = await sb.auth.getUser(); uid = au?.user?.id || null; } catch (_) {}
+    if (!uid) return;
 
-    if (error) { console.warn('v_referral_payouts error', error); return; }
+    // helper format
+    const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
 
-    // Агрегаты по поколениям
+    // attempt 1: base table with RLS filter (no 400)
+    let rows = null, error = null;
+    try {
+      const res = await sb.from('referral_payouts')
+        .select('created_at, level, reward_usdt')
+        .eq('referrer_user_id', uid)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      rows = res.data; error = res.error || null;
+    } catch (e) { error = e; }
+
+    // attempt 2: fallback to view only if first fails
+    if ((!rows || !Array.isArray(rows)) && !error) rows = [];
+    if ((error || !rows) && sb.from) {
+      try {
+        const res2 = await sb.from('v_referral_payouts')
+          .select('created_at, level, reward_usdt')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        rows = res2.data || []; error = res2.error || null;
+      } catch (e2) { /* swallow */ }
+    }
+
+    // aggregate
     const sum = {1:0,2:0,3:0};
     (rows||[]).forEach(r => {
       const lvl = Number(r.level||0);
       const amt = Number(r.reward_usdt||0);
       if (lvl>=1 && lvl<=3) sum[lvl] += amt;
     });
-    const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
 
-    // Левая таблица
+    // Left table
     const g1 = document.getElementById('gen1Cell');
     const g2 = document.getElementById('gen2Cell');
     const g3 = document.getElementById('gen3Cell');
@@ -1176,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (g3) g3.textContent = fmt(sum[3]);
     if (total) total.textContent = fmt(sum[1] + sum[2] + sum[3]);
 
-    // Правая таблица
+    // Right table
     const list = document.getElementById('refList');
     if (list) {
       list.innerHTML = '';
@@ -1597,5 +1618,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 <script>
 <!-- ===== /PATCH ===== -->
 
+<script>
+// RPC shim: redirect legacy 'ref_counts' to a client-side implementation to avoid 400
+document.addEventListener('DOMContentLoaded', () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  if (!sb || !sb.rpc) return;
+  const rpcOrig = sb.rpc.bind(sb);
+  sb.rpc = async function(name, params){
+    if (name === 'ref_counts' || name === 'get_ref_counts') {
+      try {
+        const { data: au } = await sb.auth.getUser();
+        const uid = au?.user?.id;
+        if (!uid) return { data: { gen1:0, gen2:0, gen3:0 }, error: null };
+
+        // gen1: direct referrals
+        const g1 = await sb.from('referrals').select('referred_user_id').eq('referrer_user_id', uid).limit(2000);
+        const gen1Ids = (g1.data||[]).map(r => r.referred_user_id);
+
+        // gen2
+        let gen2Ids = [];
+        if (gen1Ids.length){
+          const g2 = await sb.from('referrals').select('referred_user_id').in('referrer_user_id', gen1Ids).limit(4000);
+          gen2Ids = (g2.data||[]).map(r => r.referred_user_id);
+        }
+
+        // gen3
+        let gen3Ids = [];
+        if (gen2Ids.length){
+          const g3 = await sb.from('referrals').select('referred_user_id').in('referrer_user_id', gen2Ids).limit(8000);
+          gen3Ids = (g3.data||[]).map(r => r.referred_user_id);
+        }
+
+        return { data: { gen1: gen1Ids.length, gen2: gen2Ids.length, gen3: gen3Ids.length }, error: null };
+      } catch (e) {
+        console.warn('ref_counts shim error', e);
+        return { data: { gen1:0, gen2:0, gen3:0 }, error: e };
+      }
+    }
+    return rpcOrig(name, params);
+  };
+});
+</script>
 </body>
 </html>
