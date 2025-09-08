@@ -1150,9 +1150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Загрузим выплаты (RLS: только для своего referrer_id)
     const { data: rows, error } = await sb
-      const uid = window.__SB_UID || (window.__SB_UID = await __getUid(sb));
-      if(!uid) { console.warn('uid not defined'); return; }
-      .from('referral_payouts')
+      .from('v_referral_payouts')
       .select('created_at, level, reward_usdt')
       .order('created_at', { ascending: false })
       .limit(50);
@@ -1543,7 +1541,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!alreadyFilled()) {
       try {
         // attempt to read from raw table if the view v_referral_payouts is missing
-        const q = sb.from('referral_payouts').select('*')
+        const q = sb.from('referral_rewards').select('*')
           .eq('user_id', uid)
           .order('created_at', { ascending: false })
           .limit(50);
