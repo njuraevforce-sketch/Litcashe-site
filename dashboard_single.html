@@ -1540,8 +1540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!alreadyFilled()) {
       try {
         // attempt to read from raw table if the view v_referral_payouts is missing
-        const q = sb.from('referral_rewards')
-          .select('created_at, level, amount, reward_usdt, user_id, from_user_id')
+        const q = sb.from('referral_rewards').select('*')
           .eq('user_id', uid)
           .order('created_at', { ascending: false })
           .limit(50);
