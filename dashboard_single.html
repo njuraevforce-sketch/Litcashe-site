@@ -1573,6 +1573,39 @@ try {
 
 <script>
 <!-- ===== /PATCH ===== -->
+// === Primary load of referral payouts (use table directly, no view) ===
+try {
+  const { data: rows, error } = await sb
+    .from('referral_payouts')
+    .select('created_at, level, reward_usdt')
+    .eq('referrer_user_id', uid)
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (!error && Array.isArray(rows)) {
+    const sums = {1:0,2:0,3:0};
+    if (refList) refList.innerHTML = '';
+    rows.forEach(r => {
+      const lvl = Number(r.level||0);
+      const amt = Number(r.reward_usdt || 0);
+      if (lvl>=1 && lvl<=3) sums[lvl] += amt;
+      if (refList) {
+        const tr = document.createElement('tr');
+        const dt = new Date(r.created_at || Date.now());
+        tr.innerHTML =
+          `<td>${dt.toLocaleString()}</td><td>${lvl||''}</td><td>$${amt.toFixed(2)}</td><td>доход</td>`;
+        refList.appendChild(tr);
+      }
+    });
+    const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
+    if (g1Cell) g1Cell.textContent = fmt(sums[1]);
+    if (g2Cell) g2Cell.textContent = fmt(sums[2]);
+    if (g3Cell) g3Cell.textContent = fmt(sums[3]);
+    if (refTotalCell) refTotalCell.textContent = fmt(sums[1]+sums[2]+sums[3]);
+  }
+} catch(e) {
+  console.warn('referral_payouts load error', e);
+}
 
 </body>
 </html>
