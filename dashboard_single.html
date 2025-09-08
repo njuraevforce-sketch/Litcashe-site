@@ -767,7 +767,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // === (Опционально) Всего просмотров ===
       const viewsEl = document.querySelector('[data-views]');
-      if (viewsEl) viewsEl.textContent = Number(info.views_total ?? info.views_today ?? info.views ?? 0);
+      if (viewsEl) {
+        const used = Number(info.views_used_today ?? ((info.daily_limit ?? 5) - (info.views_left_today ?? 0)) ?? info.views_total ?? info.views_today ?? info.views ?? 0);
+        viewsEl.textContent = used;
+      }
 
       // === Рефералы ===
       const refsEl = document.querySelector('[data-refs]');
@@ -832,6 +835,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('wallet realtime error', e);
   }
 });
+</script>
 </script>
 
 <script>
@@ -1502,8 +1506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.warn('ref-counts-db-patch init error', err);
   }
 });
-<script>
-
+</script>
 <!-- ===== PATCH: Robust referral fallbacks (counts & payouts) ===== -->
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
