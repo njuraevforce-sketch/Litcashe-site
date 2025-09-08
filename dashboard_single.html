@@ -1150,9 +1150,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Загрузим выплаты (RLS: только для своего referrer_id)
     const { data: rows, error } = await sb
+      const uid = window.__SB_UID || (window.__SB_UID = await __getUid(sb));
+      if(!uid) { console.warn('uid not defined'); return; }
       .from('referral_payouts')
       .select('created_at, level, reward_usdt')
-      .eq('referrer_user_id', uid)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -1553,7 +1554,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (list) list.innerHTML = '';
           rows.forEach(r => {
             const lvl = Number(r.level||0);
-            const amt = Number((r.reward_usdt ?? r.reward_usdt) || 0);
+            const amt = Number((r.reward_usdt ?? r.amount) || 0);
             if (lvl>=1 && lvl<=3) sums[lvl] += amt;
             if (list) {
               const tr = document.createElement('tr');
