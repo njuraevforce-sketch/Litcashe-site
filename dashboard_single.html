@@ -542,6 +542,83 @@ header { overflow: visible; }
 </footer>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
+<script>
+/* ==== EARLY PATCH (runs before app_supabase.js) ==== */
+(function(){
+  // wait until supabase client object appears, then patch rpc and fetch
+  function onReady(cb){
+    if (document.readyState === 'complete' || document.readyState === 'interactive') cb();
+    else document.addEventListener('DOMContentLoaded', cb, {once:true});
+  }
+
+  // Patch ASAP (before DOMContentLoaded too)
+  (function patchSoon(){
+    let tries = 0, maxTries = 1000;
+    const t = setInterval(async function(){
+      tries++;
+      const sb = window.sb || window._supabase || window.supabase;
+      if (sb && sb.rpc && !sb.__lcRpcPatched){
+        clearInterval(t);
+        // --- RPC shim for legacy 'ref_counts' ---
+        const rpcOrig = sb.rpc.bind(sb);
+        sb.__lcRpcPatched = true;
+        sb.rpc = async function(name, params){
+          if (name === 'ref_counts' || name === 'get_ref_counts'){
+            try{
+              const { data: au } = await sb.auth.getUser();
+              const uid = au?.user?.id;
+              if (!uid) return { data: { gen1:0, gen2:0, gen3:0 }, error: null };
+
+              const g1 = await sb.from('referrals').select('referred_user_id').eq('referrer_user_id', uid).limit(2000);
+              const gen1Ids = (g1.data||[]).map(r=>r.referred_user_id);
+
+              let gen2Ids = [];
+              if (gen1Ids.length){
+                const g2 = await sb.from('referrals').select('referred_user_id').in('referrer_user_id', gen1Ids).limit(4000);
+                gen2Ids = (g2.data||[]).map(r=>r.referred_user_id);
+              }
+              let gen3Ids = [];
+              if (gen2Ids.length){
+                const g3 = await sb.from('referrals').select('referred_user_id').in('referrer_user_id', gen2Ids).limit(8000);
+                gen3Ids = (g3.data||[]).map(r=>r.referred_user_id);
+              }
+              return { data: { gen1: gen1Ids.length, gen2: gen2Ids.length, gen3: gen3Ids.length }, error: null };
+            }catch(e){
+              console.warn('ref_counts shim error', e);
+              return { data: { gen1:0, gen2:0, gen3:0 }, error: e };
+            }
+          }
+          return rpcOrig(name, params);
+        };
+
+        // --- Fetch rewrite for /rest/v1/v_referral_payouts -> referral_payouts ---
+        if (!window.__lcFetchPatched){
+          window.__lcFetchPatched = true;
+          const nativeFetch = window.fetch.bind(window);
+          const getUid = async () => {
+            try{ const { data: au } = await sb.auth.getUser(); return au?.user?.id || null; }catch(_){ return null; }
+          };
+          window.fetch = async function(input, init){
+            try{
+              let url = (typeof input === 'string') ? input : input.url;
+              if (url && url.indexOf('/rest/v1/v_referral_payouts') !== -1){
+                const uid = await getUid();
+                url = url.replace('/rest/v1/v_referral_payouts', '/rest/v1/referral_payouts');
+                const u = new URL(url, location.origin);
+                if (!u.searchParams.get('select')) u.searchParams.set('select','created_at,level,reward_usdt');
+                if (uid && !u.searchParams.get('referrer_user_id')) u.searchParams.append('referrer_user_id', 'eq.'+uid);
+                input = (typeof input === 'string') ? u.toString() : new Request(u.toString(), input);
+              }
+            }catch(e){ /* noop */ }
+            return nativeFetch(input, init);
+          };
+        }
+      }
+      if (tries >= maxTries) clearInterval(t);
+    }, 5);
+  })();
+})();
+</script>
 <script defer src="assets/js/i18n.js"></script>
 <script defer src="app_supabase.js"></script>
 <script defer src="assets/js/lang-switcher.js"></script>
@@ -1615,8 +1692,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch(e) { console.warn('profiles chain counts fallback error', e); }
   } catch(e){ console.warn('referral fallback patch error', e); }
 });
+<script>
 <!-- ===== /PATCH ===== -->
 
+<script>
 // RPC shim: redirect legacy 'ref_counts' to a client-side implementation to avoid 400
 document.addEventListener('DOMContentLoaded', () => {
   const sb = window.sb || window._supabase || window.supabase;
@@ -1656,6 +1735,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return rpcOrig(name, params);
   };
 });
-<script>
+</script>
 </body>
 </html>
