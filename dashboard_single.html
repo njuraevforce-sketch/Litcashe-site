@@ -1597,5 +1597,176 @@ document.addEventListener('DOMContentLoaded', async () => {
 <script>
 <!-- ===== /PATCH ===== -->
 
+
+<!-- ===== LITCASH PATCH: unify referrals + earnings (Supabase RPC bindings) ===== -->
+<script>
+(function(){
+  try{
+    const sb = window.sb || window._supabase || window.supabase;
+    if(!sb){ console.warn('[Patch] Supabase client not found'); return; }
+
+    // helpers
+    const $ = (sel)=>document.querySelector(sel);
+    const $$=(sel)=>Array.from(document.querySelectorAll(sel));
+    const toUsd=(c)=>'$'+(Number(c||0)/100).toFixed(2);
+
+    async function safeRpc(name, args){
+      try{
+        const { data, error } = await sb.rpc(name, args||{});
+        if(error){ console.warn('[Patch RPC]', name, error); return null; }
+        return data;
+      }catch(e){ console.warn('[Patch RPC EX]', name, e); return null; }
+    }
+
+    async function fillLevel(){
+      const data = await safeRpc('get_level_info_v2');
+      const info = Array.isArray(data) ? data[0] : data;
+      if(!info) return;
+
+      // balance
+      ($('[data-balance]')||{}).textContent = toUsd(info.balance_cents||0);
+      // level
+      $$('#perViewBadge,[data-level],[data-level-name]').forEach(n=>{
+        if(n && n.hasAttribute('data-level')) n.textContent = info.level_name || '—';
+        if(n && n.hasAttribute('data-level-name')) n.textContent = info.level_name || '—';
+      });
+      // percent
+      $$('#rate,[data-rate]').forEach(n=> n.textContent = ((info.reward_percent_bp||0)/100).toFixed(2) + ' %');
+      // per view / per day
+      const pv = toUsd(info.reward_per_view_cents||0);
+      const daily = toUsd(info.daily_reward_cents||0);
+      const pvBadge = $('#perViewBadge'); if(pvBadge) pvBadge.textContent = '+'+pv+' за просмотр';
+      const pvSpan = $('[data-reward-per-view]'); if(pvSpan) pvSpan.textContent = pv;
+      const dailySpan = $('[data-daily-reward]'); if(dailySpan) dailySpan.textContent = daily;
+
+      // base cap
+      (document.getElementById('baseCapCell')||{}).textContent = toUsd(info.base_amount_cents||0);
+      ($('[data-cap]')||{}).textContent = toUsd(info.base_amount_cents||0);
+
+      // views
+      const used = Number(info.views_used_today||0);
+      const left = Number(info.views_left_today||0);
+      ($('[data-views]')||{}).textContent = used;
+      (document.getElementById('progressText')||{}).textContent = 'Доступно просмотров сегодня: ' + left;
+
+      // refs (L1)
+      ($('[data-refs]')||{}).textContent = Number(info.refs_total||0);
+
+      // active / button
+      const startBtn = document.getElementById('startBtn');
+      const overlay = document.getElementById('limitOverlay');
+      const notActive = document.getElementById('notActiveWarn');
+      const blocked = (info.is_active === false) || left <= 0;
+      if(startBtn){ startBtn.disabled = blocked; startBtn.setAttribute('aria-disabled', blocked?'true':'false'); }
+      if(overlay){ overlay.style.display = blocked ? 'flex':'none'; }
+      if(notActive){ notActive.style.display = (info.is_active === false) ? '' : 'none'; }
+    }
+
+    async function fillRefCounts(){
+      const data = await safeRpc('get_my_ref_counts');
+      if(!data) return;
+      const g1 = document.getElementById('gen1Count'); if(g1) g1.textContent = data.gen1 ?? 0;
+      const g2 = document.getElementById('gen2Count'); if(g2) g2.textContent = data.gen2 ?? 0;
+      const g3 = document.getElementById('gen3Count'); if(g3) g3.textContent = data.gen3 ?? 0;
+    }
+
+    async function fillRefIncome(){
+      try{
+        const { data: rows, error } = await sb
+          .from('v_referral_payouts')
+          .select('created_at, level, reward_usdt')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if(error){ console.warn('[Patch] v_referral_payouts', error); return; }
+        const sum = {1:0,2:0,3:0};
+        (rows||[]).forEach(r => { const L=Number(r.level||0), A=Number(r.reward_usdt||0); if(L>=1 && L<=3) sum[L]+=A; });
+        const f = n=>'$'+(Math.round(n*100)/100).toFixed(2);
+        const g1 = document.getElementById('gen1Cell'); if(g1) g1.textContent = f(sum[1]);
+        const g2 = document.getElementById('gen2Cell'); if(g2) g2.textContent = f(sum[2]);
+        const g3 = document.getElementById('gen3Cell'); if(g3) g3.textContent = f(sum[3]);
+        const total = document.getElementById('refTotalCell'); if(total) total.textContent = f(sum[1]+sum[2]+sum[3]);
+        const list = document.getElementById('refList');
+        if(list){
+          list.innerHTML = '';
+          if(!rows || !rows.length){ list.innerHTML = '<tr><td class=\"muted\" colspan=\"4\">Нет данных</td></tr>'; }
+          else{
+            rows.slice(0,12).forEach(r => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = '<td>'+ new Date(r.created_at).toLocaleString() +'</td>' +
+                             '<td>'+ r.level +'</td>' +
+                             '<td style=\"text-align:right\">$'+ Number(r.reward_usdt||0).toFixed(2) +'</td>' +
+                             '<td>доход</td>';
+              list.appendChild(tr);
+            });
+          }
+        }
+      }catch(e){ console.warn('[Patch fillRefIncome]', e); }
+    }
+
+    function initWatch(){
+      const btn = document.getElementById('startBtn');
+      const fill = document.getElementById('progressFill');
+      const vid  = document.getElementById('promoVid');
+      if(!btn) return;
+      const MIN_SEC = 10;
+      let t=null, s=0, awarding=false;
+      const setProgress = v => { if(fill){ fill.style.transition='width .4s'; fill.style.width = Math.min(100, Math.max(0, v*100/MIN_SEC))+'%'; } };
+      async function award(){
+        if(awarding) return; awarding=true;
+        try{
+          const { data, error } = await sb.rpc('award_video_view');
+          if(error) throw error;
+          await fillLevel();
+          await fillRefCounts();
+          await fillRefIncome();
+          const row = Array.isArray(data) ? data[0] : data;
+          const pt = document.getElementById('progressText');
+          if(pt) pt.textContent = 'Доступно просмотров сегодня: ' + (row?.views_left_today ?? 0);
+        }catch(e){
+          const m = String(e?.message||'');
+          let human='Ошибка начисления';
+          if(/account_inactive/i.test(m)) human='Аккаунт не активен. Пополните баланс ≥ $29.';
+          else if(/limit_reached/i.test(m)) human='Лимит просмотров на сегодня исчерпан.';
+          else if(/not_authenticated|jwt|auth/i.test(m)) human='Требуется вход в аккаунт.';
+          alert(human);
+        }finally{
+          awarding=false; s=0; setProgress(0);
+          fillLevel();
+        }
+      }
+      btn.addEventListener('click', async () => {
+        s=0; setProgress(0);
+        if(t) clearInterval(t);
+        t=setInterval(()=>{ s++; setProgress(s); if(s>=MIN_SEC){ clearInterval(t); award(); } },1000);
+        try{ if(vid){ vid.currentTime=0; vid.play().catch(()=>{});} }catch(_){}
+      });
+    }
+
+    async function setupRefLink(){
+      try{
+        const inp = document.getElementById('refLink');
+        const btn = document.getElementById('copyRef');
+        const { data: { user } } = await sb.auth.getUser();
+        if(!inp || !btn || !user){ return; }
+        const url = new URL(location.origin + '/register_single.html');
+        url.searchParams.set('ref', user.id);
+        inp.value = url.toString();
+        btn.addEventListener('click', async () => {
+          try{ await navigator.clipboard.writeText(inp.value); btn.textContent='Скопировано'; setTimeout(()=>btn.textContent='Скопировать',1200);}catch(_){}
+        });
+      }catch(e){}
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fillLevel();
+      await fillRefCounts();
+      await fillRefIncome();
+      initWatch();
+      setupRefLink();
+    });
+  }catch(e){ console.warn('[Patch fatal]', e); }
+})();
+</script>
+<!-- ===== /LITCASH PATCH ===== -->
 </body>
 </html>
