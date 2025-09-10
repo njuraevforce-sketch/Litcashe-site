@@ -523,7 +523,6 @@ window.LC.refreshDashboardCards = async function () {
     const { data: { user } } = await window.sb.auth.getUser();
     if (!user) return;
 
-    // 1) read level info + wallet balance concurrently
     const [lvlResp, walResp] = await Promise.all([
       window.sb.rpc('get_level_info'),
       window.sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle()
@@ -533,35 +532,63 @@ window.LC.refreshDashboardCards = async function () {
     const info = Array.isArray(lvlResp.data) ? lvlResp.data[0] : (lvlResp.data || {});
     const balanceCents = walResp?.data?.balance_cents ?? 0;
 
-    // 2) base of level (calculated): prefer rpc value, fallback to min(balance, cap)
     const baseCents = info.level_base_cents ?? info.base_cents ??
       Math.min(Number(balanceCents || 0), Number(info.level_cap_cents || balanceCents || 0));
 
-    const perViewUSDT = Number(info.reward_per_view_cents || 0) / 100;   // reward per single view
-    const dailyUSDT   = Number(info.daily_reward_cents || 0) / 100;      // total reward per day
+    const perViewUSDT = Number(info.reward_per_view_cents || 0) / 100;
+    const dailyUSDT   = Number(info.daily_reward_cents || 0) / 100;
     const baseUSDT    = Number(baseCents || 0) / 100;
 
-    // 3) daily rate %
     const ratePct = Number(
       info.rate_percent ?? info.level_percent ??
       (baseUSDT > 0 ? (dailyUSDT / baseUSDT) * 100 : 0)
     );
 
-    // 4) views for today: done = total - left
     const totalPerDay = Number(info.views_total_per_day ?? 5);
     const left        = Number(info.views_left_today ?? totalPerDay);
     const done        = Math.max(0, totalPerDay - left);
 
-    // 5) Fill cards
+    // helpers
     const set = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; };
+    const tryByLabel = (label, value) => {
+      // find element that contains the label text and then set closest numeric value within same card
+      const nodes = Array.from(document.querySelectorAll('*')).filter(n => {
+        try {
+          return n.childElementCount === 0 && n.textContent.trim() === label;
+        } catch { return false; }
+      });
+      nodes.forEach(node => {
+        let card = node.closest('.card') || node.parentElement;
+        if (!card) return;
+        // find candidate value nodes inside the card (big numbers often last)
+        const cands = Array.from(card.querySelectorAll('b,strong,span,div,h1,h2,h3,p'));
+        let target = null;
+        for (const c of cands.reverse()) {
+          const t = (c.textContent || '').trim();
+          if (/^[\$\d].*%?$/.test(t)) { target = c; break; }
+        }
+        if (!target) target = card.querySelector('span,div,strong') || card;
+        target.textContent = value;
+      });
+    };
 
-    set('[data-card-rate]',     `${ratePct.toFixed(2)} %`);
-    set('[data-level-percent]', `${ratePct.toFixed(2)} %`); // duplicate in the details table if exists
-    set('[data-card-capital]',  `$${baseUSDT.toFixed(2)}`);
-    if (info.refs_total != null) set('[data-refs-total]', String(info.refs_total));
-    set('[data-card-views]',    String(done));
+    // fill with explicit selectors (preferred)
+    let usedSelectors = false;
+    if (document.querySelector('[data-card-rate]'))      { set('[data-card-rate]', `${ratePct.toFixed(2)} %`); usedSelectors = true; }
+    if (document.querySelector('[data-level-percent]'))  { set('[data-level-percent]', `${ratePct.toFixed(2)} %`); }
+    if (document.querySelector('[data-card-capital]'))   { set('[data-card-capital]', `$${baseUSDT.toFixed(2)}`); usedSelectors = true; }
+    if (document.querySelector('[data-refs-total]') && info.refs_total != null) { set('[data-refs-total]', String(info.refs_total)); usedSelectors = true; }
+    if (document.querySelector('[data-card-views]'))     { set('[data-card-views]', String(done)); usedSelectors = true; }
 
-    // 6) Details in the table
+    // fallback: fill by label texts (no HTML changes required)
+    if (!usedSelectors) {
+      tryByLabel('Ставка', `${ratePct.toFixed(2)} %`);
+      tryByLabel('Капитал (расч.)', `$${baseUSDT.toFixed(2)}`);
+      if (info.refs_total != null) tryByLabel('Рефералы', String(info.refs_total));
+      tryByLabel('Просмотры', String(done));
+    }
+
+    // details table, when present
     set('[data-level-name]',        info.level_name || '—');
     set('[data-reward-per-view]',   `${perViewUSDT.toFixed(2)} USDT`);
     set('[data-daily-reward]',      `${dailyUSDT.toFixed(2)} USDT`);
