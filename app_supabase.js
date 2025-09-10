@@ -201,7 +201,7 @@
 
   // ===== Виджет «Видео» ======================================================
   const LC_VIDEO_LIST = ['/assets/videos/ad1.mp4','/assets/videos/ad2.mp4','/assets/videos/ad3.mp4'];
-  const LC_MIN_SECONDS = 30;
+  const LC_MIN_SECONDS = 10;
 
   LC.initVideoWatch = function () {
     const video    = $('#promoVid');
