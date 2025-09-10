@@ -1,4 +1,4 @@
-// app_supabase.js (autowired, cleaned)
+// app_supabase.js (drop-in)
 ;(function () {
   // 0) Проверка конфига и наличие supabase-js
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
@@ -219,7 +219,7 @@
           put('#ref-sum-l2', sums[2]);
           put('#ref-sum-l3', sums[3]);
           const total = sums[1] + sums[2] + sums[3];
-          const elTotal = document.querySelector('#ref-sum-total'); if (elTotal) elTotal.textContent = fmtMoney(total);
+          const elTotal = document.querySelector('#ref-sum-total'); if (elTotal) elTotal.textContent = fmtMoney(total));
         }
 
         // --- последние начисления (по user_id; колонка source_user_id)
@@ -245,24 +245,40 @@
           }
         }
 
-        // --- счётчики L1/L2/L3 (RPC без аргументов). Поддержим оба набора id.
+        // --- счётчики L1/L2/L3 (RPC: старая и новая сигнатуры)
         const l1a = document.querySelector('#ref-cnt-l1'); const l1b = document.querySelector('#gen1Count');
         const l2a = document.querySelector('#ref-cnt-l2'); const l2b = document.querySelector('#gen2Count');
         const l3a = document.querySelector('#ref-cnt-l3'); const l3b = document.querySelector('#gen3Count');
         const totalEl = document.querySelector('#refsTotal');
 
+        async function putCountsFromRow(row) {
+          const vals = Object.values(row || {}).map(Number);
+          const [v1 = 0, v2 = 0, v3 = 0] = vals;
+          [l1a, l1b].forEach(el => el && (el.textContent = v1));
+          [l2a, l2b].forEach(el => el && (el.textContent = v2));
+          [l3a, l3b].forEach(el => el && (el.textContent = v3));
+          if (totalEl) totalEl.textContent = (v1 + v2 + v3);
+        }
+
+        let ok = false;
         try {
-          const { data, error } = await window.sb.rpc('ref_counts', {}); // без p_user
+          const { data, error } = await window.sb.rpc('ref_counts', {}); // без p_user (jsonb-обёртка)
           if (!error && data) {
             const row = Array.isArray(data) ? data[0] : data;
-            const vals = Object.values(row || {}).map(Number);
-            const [v1 = 0, v2 = 0, v3 = 0] = vals;
-            [l1a, l1b].forEach(el => el && (el.textContent = v1));
-            [l2a, l2b].forEach(el => el && (el.textContent = v2));
-            [l3a, l3b].forEach(el => el && (el.textContent = v3));
-            if (totalEl) totalEl.textContent = (v1 + v2 + v3);
+            await putCountsFromRow(row);
+            ok = true;
           }
         } catch (_) {}
+
+        if (!ok) {
+          try {
+            const { data, error } = await window.sb.rpc('ref_counts', { p_user: user.id }); // старая сигнатура
+            if (!error && data) {
+              const row = Array.isArray(data) ? data[0] : data;
+              await putCountsFromRow(row);
+            }
+          } catch (_) {}
+        }
       } catch (e) {
         console.error('[LC] loadReferralWidgets error', e?.message || e);
       }
@@ -273,7 +289,7 @@
 
   // === ВИДЕО: конфиг + логика просмотра ======================================
   const LC_VIDEO_LIST = ['/assets/videos/ad1.mp4','/assets/videos/ad2.mp4','/assets/videos/ad3.mp4'];
-  const LC_MIN_SECONDS = 30;
+  const LC_MIN_SECONDS = 10;
 
   window.LC.initVideoWatch = function () {
     const video = document.getElementById('promoVid');
