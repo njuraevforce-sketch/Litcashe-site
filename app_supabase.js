@@ -22,7 +22,9 @@
   // --- утилиты
   const $ = (sel) => document.querySelector(sel);
   const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
-  const fmtDate = (iso) => { try { return new Date(iso).toLocaleString(); } catch { return iso || ''; } };
+  const fmtDate = (iso) => {
+    try { return new Date(iso).toLocaleString(); } catch { return iso || ''; }
+  };
 
   async function getUser() {
     const { data, error } = await window.sb.auth.getUser();
@@ -196,98 +198,98 @@
       } catch (e) { console.error(e); }
     },
 
-    // -------- Реферальные виджеты (ОСНОВНАЯ версия)
     async loadReferralWidgets() {
       try {
         const user = await getUser(); if (!user) return;
-
-        // --- суммы по уровням (фильтр по user_id)
+        // Суммы по уровням
         const { data: sumsRows, error: eS } = await window.sb
-          .from('referral_payouts')
-          .select('level,reward_usdt,user_id')
-          .eq('user_id', user.id);
-
+          .from('referral_payouts').select('level,reward_usdt').eq('referrer_user_id', user.id);
         if (!eS && Array.isArray(sumsRows)) {
           const sums = { 1: 0, 2: 0, 3: 0 };
           for (const r of sumsRows) {
-            const lvl = Number(r.level);
-            const v = Number(r.reward_usdt || 0);
+            const lvl = Number(r.level); const v = Number(r.reward_usdt || 0);
             if (lvl >= 1 && lvl <= 3) sums[lvl] += v;
           }
-          const put = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = fmtMoney(val); };
-          put('#ref-sum-l1', sums[1]);
-          put('#ref-sum-l2', sums[2]);
-          put('#ref-sum-l3', sums[3]);
+          $('#ref-sum-l1') && ($('#ref-sum-l1').textContent = fmtMoney(sums[1]));
+          $('#ref-sum-l2') && ($('#ref-sum-l2').textContent = fmtMoney(sums[2]));
+          $('#ref-sum-l3') && ($('#ref-sum-l3').textContent = fmtMoney(sums[3]));
           const total = sums[1] + sums[2] + sums[3];
-          const elTotal = document.querySelector('#ref-sum-total'); if (elTotal) elTotal.textContent = fmtMoney(total);
+          $('#ref-sum-total') && ($('#ref-sum-total').textContent = fmtMoney(total));
         }
-
-        // --- последние начисления (по user_id; колонка source_user_id)
-        const tbody = document.querySelector('#ref-last-tbody');
+        // Последние начисления
+        const tbody = $('#ref-last-tbody');
         if (tbody) {
           const { data: lastRows, error: eL } = await window.sb
             .from('v_referral_payouts')
-            .select('created_at, level, reward_usdt, source_user_id, source_type, user_id')
-            .eq('user_id', user.id)
+            .select('created_at, level, reward_usdt, source_type')
+            .eq('referrer_user_id', user.id)
             .order('created_at', { ascending: false })
             .limit(10);
-
           if (!eL && Array.isArray(lastRows) && lastRows.length) {
             tbody.innerHTML = lastRows.map(r => `
               <tr>
                 <td>${fmtDate(r.created_at)}</td>
                 <td>${r.level ?? ''}</td>
                 <td>${fmtMoney(r.reward_usdt)}</td>
-                <td>${r.source_user_id ? 'доход от реферала' : (r.source_type || 'доход')}</td>
+                <td>${r.source_type || 'доход'}</td>
               </tr>`).join('');
           } else {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px 0;">Нет данных</td></tr>`;
           }
         }
-
-        // --- счётчики L1/L2/L3 (RPC без аргументов). Поддержим оба набора id.
-        const l1a = document.querySelector('#ref-cnt-l1'); const l1b = document.querySelector('#gen1Count');
-        const l2a = document.querySelector('#ref-cnt-l2'); const l2b = document.querySelector('#gen2Count');
-        const l3a = document.querySelector('#ref-cnt-l3'); const l3b = document.querySelector('#gen3Count');
-        const totalEl = document.querySelector('#refsTotal');
-
-        try {
-          const { data, error } = await window.sb.rpc('ref_counts', {}); // без p_user
-          if (!error && data) {
-            const row = Array.isArray(data) ? data[0] : data;
-            const vals = Object.values(row || {}).map(Number);
-            const [v1 = 0, v2 = 0, v3 = 0] = vals;
-            [l1a, l1b].forEach(el => el && (el.textContent = v1));
-            [l2a, l2b].forEach(el => el && (el.textContent = v2));
-            [l3a, l3b].forEach(el => el && (el.textContent = v3));
-            if (totalEl) totalEl.textContent = (v1 + v2 + v3);
+        // Счётчики L1/L2/L3 (если есть RPC ref_counts)
+        const c1 = $('#ref-cnt-l1'), c2 = $('#ref-cnt-l2'), c3 = $('#ref-cnt-l3');
+        if (c1 || c2 || c3) {
+          try {
+            const { data, error } = await window.sb.rpc('ref_counts', { p_user: user.id });
+            if (!error && data) {
+              const row = Array.isArray(data) ? data[0] : data;
+              const vals = Object.values(row || {});
+              const [v1 = 0, v2 = 0, v3 = 0] = vals.map(Number);
+              if (c1) c1.textContent = v1;
+              if (c2) c2.textContent = v2;
+              if (c3) c3.textContent = v3;
+            }
+          } catch (e) {
+            console.debug('[LC] ref_counts RPC missing or denied');
           }
-        } catch (_) {}
-      } catch (e) {
-        console.error('[LC] loadReferralWidgets error', e?.message || e);
-      }
+        }
+      } catch (e) { console.error('[LC] loadReferralWidgets error', e?.message || e); }
     },
 
     async logout() { try { await window.sb.auth.signOut(); } finally { location.href = '/'; } }
   };
 
   // === ВИДЕО: конфиг + логика просмотра ======================================
-  const LC_VIDEO_LIST = ['/assets/videos/ad1.mp4','/assets/videos/ad2.mp4','/assets/videos/ad3.mp4'];
+  const LC_VIDEO_LIST = [
+    '/assets/videos/ad1.mp4',
+    '/assets/videos/ad2.mp4',
+    '/assets/videos/ad3.mp4'
+  ];
   const LC_MIN_SECONDS = 30;
 
   window.LC.initVideoWatch = function () {
-    const video = document.getElementById('promoVid');
+    const video    = document.getElementById('promoVid');
     const startBtn = document.getElementById('startBtn');
-    const bar = document.getElementById('progressFill');
-    const txt = document.getElementById('progressText');
+    const bar      = document.getElementById('progressFill');
+    const txt      = document.getElementById('progressText');
+
     if (!video || !startBtn) return;
 
-    let allowed = false, credited = false, acc = 0, lastT = 0;
-    const ui = (m) => { if (txt) txt.textContent = m; };
-    const setBar = (pct) => { if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%'; };
-    const pickVideo = () => LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)];
-    const resetProgress = () => { credited = false; acc = 0; lastT = 0; setBar(0); ui('Прогресс…'); };
+    let allowed = false;
+    let credited = false;
+    let acc = 0;
+    let lastT = 0;
 
+    function ui(msg) { if (txt) txt.textContent = msg; }
+    function setBar(pct) { if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+    function pickVideo() {
+      return LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)];
+    }
+    function resetProgress() {
+      credited = false; acc = 0; lastT = 0;
+      setBar(0); ui('Прогресс…');
+    }
     async function refreshState() {
       try {
         const { data, error } = await window.sb.rpc('get_level_info');
@@ -304,7 +306,6 @@
         console.error(e); startBtn.disabled = true; ui('Не удалось получить лимит. Повторите позже.');
       }
     }
-
     async function credit() {
       try {
         credited = true; startBtn.disabled = true;
@@ -322,10 +323,16 @@
 
     video.addEventListener('timeupdate', () => {
       const t = Math.max(0, video.currentTime || 0);
-      if (t > lastT) { acc += (t - lastT); lastT = t; setBar(Math.round((acc / LC_MIN_SECONDS) * 100)); }
-      else { lastT = t; }
+      if (t > lastT) {
+        acc += (t - lastT);
+        lastT = t;
+        setBar(Math.round((acc / LC_MIN_SECONDS) * 100));
+      } else {
+        lastT = t;
+      }
       if (!credited && acc >= LC_MIN_SECONDS) credit();
     });
+
     video.addEventListener('ended', () => { if (!credited && acc >= LC_MIN_SECONDS) credit(); });
 
     startBtn.addEventListener('click', async () => {
@@ -337,6 +344,7 @@
       video.play().catch(() => {});
     });
 
+    // первичная проверка
     refreshState();
   };
   // ===========================================================================
@@ -355,7 +363,9 @@
         <a class="btn ghost" href="login_single.html">Вход</a>
         <a class="btn primary" href="register_single.html">Регистрация</a>`;
     }
-    if (drawerCta) drawerCta.innerHTML = cta.innerHTML.replace('id="nav-logout"', 'id="drawerLogout"');
+    if (drawerCta) {
+      drawerCta.innerHTML = cta.innerHTML.replace('id="nav-logout"', 'id="drawerLogout"');
+    }
     const logout1 = document.getElementById('nav-logout');
     const logout2 = document.getElementById('drawerLogout');
     [logout1, logout2].forEach(el => {
@@ -368,6 +378,7 @@
 
   // 4) Автоподключение кнопок/форм и первичное наполнение
   document.addEventListener('DOMContentLoaded', async () => {
+    // запускаем логику просмотрщика
     window.LC.initVideoWatch?.();
 
     try {
@@ -424,10 +435,143 @@
       });
     }
 
+    // === РЕФЕРАЛЬНЫЕ ВИДЖЕТЫ (счётчики + суммы + последние начисления) ===
+    window.LC.loadReferralWidgets = async function () {
+      const $ = (sel) => document.querySelector(sel);
+      const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
+
+      try {
+        const { data: { user } } = await window.sb.auth.getUser();
+        if (!user) return;
+
+        try {
+          const { data, error } = await window.sb.rpc('ref_counts', { p_user: user.id });
+          if (!error) {
+            const row = Array.isArray(data) ? data[0] : data;
+            const vals = Object.values(row || {}).map(n => Number(n) || 0);
+            const [c1 = 0, c2 = 0, c3 = 0] = vals;
+            $('#gen1Count') && ($('#gen1Count').textContent = c1);
+            $('#gen2Count') && ($('#gen2Count').textContent = c2);
+            $('#gen3Count') && ($('#gen3Count').textContent = c3);
+            $('#refsTotal') && ($('#refsTotal').textContent = c1 + c2 + c3);
+          }
+        } catch (e) { console.debug('ref_counts:', e?.message || e); }
+
+        try {
+          const { data, error } = await window.sb
+            .from('referral_payouts')
+            .select('level,reward_usdt')
+            .eq('referrer_user_id', user.id);
+
+          if (!error) {
+            const sums = { 1: 0, 2: 0, 3: 0 };
+            (data || []).forEach(r => {
+              const lvl = Number(r.level);
+              const val = Number(r.reward_usdt) || 0;
+              if (lvl >= 1 && lvl <= 3) sums[lvl] += val;
+            });
+            $('#ref-sum-l1') && ($('#ref-sum-l1').textContent = fmtMoney(sums[1]));
+            $('#ref-sum-l2') && ($('#ref-sum-l2').textContent = fmtMoney(sums[2]));
+            $('#ref-sum-l3') && ($('#ref-sum-l3').textContent = fmtMoney(sums[3]));
+            const total = sums[1] + sums[2] + sums[3];
+            $('#ref-sum-total') && ($('#ref-sum-total').textContent = fmtMoney(total));
+          }
+        } catch (e) { console.debug('ref sums:', e?.message || e); }
+
+        try {
+          const { data, error } = await window.sb
+            .from('v_referral_payouts')
+            .select('created_at, level, reward_usdt, source_type')
+            .eq('referrer_user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          const tbody = document.getElementById('ref-last-tbody');
+          if (tbody) {
+            if (error || !data || !data.length) {
+              tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px 0;">Нет данных</td></tr>`;
+            } else {
+              const fmtDate = (iso) => {
+                try { return new Date(iso).toLocaleString(); } catch { return iso || ''; }
+              };
+              tbody.innerHTML = data.map(r => `
+                <tr>
+                  <td>${fmtDate(r.created_at)}</td>
+                  <td>${r.level ?? ''}</td>
+                  <td>${fmtMoney(r.reward_usdt)}</td>
+                  <td>${r.source_type || 'доход'}</td>
+                </tr>
+              `).join('');
+            }
+          }
+        } catch (e) { console.debug('ref last:', e?.message || e); }
+      } catch (e) {
+        console.error('loadReferralWidgets:', e);
+      }
+    };
     // первичное наполнение UI
     await window.LC.refreshBalance();
     await window.LC.refreshLevelInfo?.();
     await window.LC.mountReferral();
     await window.LC.loadReferralWidgets();
+    await window.LC.refreshDashboardCards?.();
   });
-})(); 
+
+// === DASHBOARD CARDS (rate / capital / refs / views) =========================
+window.LC.refreshDashboardCards = async function () {
+  try {
+    const { data: { user } } = await window.sb.auth.getUser();
+    if (!user) return;
+
+    // 1) read level info + wallet balance concurrently
+    const [lvlResp, walResp] = await Promise.all([
+      window.sb.rpc('get_level_info'),
+      window.sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle()
+    ]);
+
+    if (lvlResp.error) throw lvlResp.error;
+    const info = Array.isArray(lvlResp.data) ? lvlResp.data[0] : (lvlResp.data || {});
+    const balanceCents = walResp?.data?.balance_cents ?? 0;
+
+    // 2) base of level (calculated): prefer rpc value, fallback to min(balance, cap)
+    const baseCents = info.level_base_cents ?? info.base_cents ??
+      Math.min(Number(balanceCents || 0), Number(info.level_cap_cents || balanceCents || 0));
+
+    const perViewUSDT = Number(info.reward_per_view_cents || 0) / 100;   // reward per single view
+    const dailyUSDT   = Number(info.daily_reward_cents || 0) / 100;      // total reward per day
+    const baseUSDT    = Number(baseCents || 0) / 100;
+
+    // 3) daily rate %
+    const ratePct = Number(
+      info.rate_percent ?? info.level_percent ??
+      (baseUSDT > 0 ? (dailyUSDT / baseUSDT) * 100 : 0)
+    );
+
+    // 4) views for today: done = total - left
+    const totalPerDay = Number(info.views_total_per_day ?? 5);
+    const left        = Number(info.views_left_today ?? totalPerDay);
+    const done        = Math.max(0, totalPerDay - left);
+
+    // 5) Fill cards
+    const set = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; };
+
+    set('[data-card-rate]',     `${ratePct.toFixed(2)} %`);
+    set('[data-level-percent]', `${ratePct.toFixed(2)} %`); // duplicate in the details table if exists
+    set('[data-card-capital]',  `$${baseUSDT.toFixed(2)}`);
+    if (info.refs_total != null) set('[data-refs-total]', String(info.refs_total));
+    set('[data-card-views]',    String(done));
+
+    // 6) Details in the table
+    set('[data-level-name]',        info.level_name || '—');
+    set('[data-reward-per-view]',   `${perViewUSDT.toFixed(2)} USDT`);
+    set('[data-daily-reward]',      `${dailyUSDT.toFixed(2)} USDT`);
+    set('[data-level-base]',        `$${baseUSDT.toFixed(2)}`);
+
+    const badgeEl = document.getElementById('perViewBadge');
+    if (badgeEl) badgeEl.textContent = `+${perViewUSDT.toFixed(2)} USDT за просмотр`;
+  } catch (e) {
+    console.error('[LC] refreshDashboardCards', e);
+  }
+};
+// ============================================================================
+})();
