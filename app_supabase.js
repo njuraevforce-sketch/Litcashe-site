@@ -1,8 +1,5 @@
 // app_supabase.full.js — единый файл для дашборда
-// Содержит: создание клиента, auth-обвязку, начисление за просмотр,
-// депозит/вывод, реф.панель, карточки и фолбэки для referral_*
-// Требования: window.SUPABASE_URL / window.SUPABASE_ANON_KEY, supabase-js v2
-
+// Требует: window.SUPABASE_URL / window.SUPABASE_ANON_KEY, supabase-js v2
 ;(function () {
   // 0) Конфиг + клиент
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
@@ -96,15 +93,15 @@
   };
 
   LC.getLevelInfo = async function() {
-    // v1
-    try {
-      const r1 = await sb.rpc('get_level_info');
-      if (!r1.error && r1.data) return Array.isArray(r1.data) ? r1.data[0] : r1.data;
-    } catch(_){}
-    // v2-обёртка (если подключена)
+    // v2 в приоритете (наш стабильный источник)
     try {
       const r2 = await sb.rpc('get_level_info_v2');
       if (!r2.error && r2.data) return Array.isArray(r2.data) ? r2.data[0] : r2.data;
+    } catch(_){}
+    // v1 fallback
+    try {
+      const r1 = await sb.rpc('get_level_info');
+      if (!r1.error && r1.data) return Array.isArray(r1.data) ? r1.data[0] : r1.data;
     } catch(_){}
     return null;
   };
@@ -147,15 +144,20 @@
 
   // ===== Начисление за просмотр ==============================================
   LC.creditView = async function(videoId, watchedSeconds) {
-    const user = await getUser(); if (!user) { alert('Войдите в аккаунт'); return; }
+    const user = await getUser(); if (!user) { alert('Войдите в аккаунт'); return null; }
     const { data, error } = await sb.rpc('credit_view', {
       p_video_id: String(videoId || 'video'),
       p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
     });
-    if (error) { console.error(error); alert(error.message || 'Ошибка начисления'); return; }
+    if (error) { console.error(error); alert(error.message || 'Ошибка начисления'); return null; }
     const row = Array.isArray(data) ? data[0] : data;
-    if (!row?.ok) { alert(row?.message || 'Начисление отклонено'); return; }
+    if (!row?.ok) { alert(row?.message || 'Начисление отклонено'); return null; }
     await LC.refreshBalance();
+    // Обновим лимиты из источника, но сразу проставим views_left, если бэк вернул
+    if (typeof row.views_left === 'number') {
+      const el = document.querySelector('[data-views-left]');
+      if (el) el.textContent = String(row.views_left);
+    }
     await LC.refreshLevelInfo();
     return row;
   };
@@ -229,19 +231,28 @@
         else ui(`Доступно просмотров сегодня: ${left}`);
       } catch(e) { startBtn.disabled = true; ui('Не удалось получить лимит.'); }
     }
+
     async function credit(){
       try {
         credited = true; startBtn.disabled = true;
         const vidId = (video.currentSrc||'').split('/').pop() || 'video';
-        await LC.creditView(vidId, Math.round(acc));
-        await LC.refreshBalance();
-        await LC.refreshLevelInfo();
-         // моментально обновим счетчик, если бэк его вернул
-        if (row && typeof row.views_left === 'number') {
-       const el = document.querySelector('[data-views-left]');
-       if (el) el.textContent = String(row.views_left);
+        const row = await LC.creditView(vidId, Math.round(acc));
+        // моментально покажем галочку и уменьшим счётчик
+        if (row) {
+          const per = Number(row.reward_per_view_cents||0)/100;
+          ui(`Зачислено +${per.toFixed(2)} USDT`);
+          setBar(100);
+          const el = document.querySelector('[data-views-left]');
+          if (el && typeof row.views_left === 'number') el.textContent = String(row.views_left);
+        }
+      } catch(e) {
+        console.error('[LC] credit()', e);
+        alert('Ошибка начисления');
+      } finally {
+        // через секунду разблокируем кнопку для следующего ролика
+        setTimeout(()=>{ startBtn.disabled = false; }, 900);
       }
-    return row;
+    }
 
     video.addEventListener('timeupdate', ()=>{
       const t = Math.max(0, video.currentTime || 0);
@@ -250,10 +261,12 @@
       if (!credited && acc >= LC_MIN_SECONDS) credit();
     });
     video.addEventListener('ended', ()=>{ if (!credited && acc >= LC_MIN_SECONDS) credit(); });
+
     startBtn.addEventListener('click', async ()=>{
       await refreshState(); if (!allowed) return;
       reset(); video.src = pickVideo(); video.muted = true; video.play().catch(()=>{});
     });
+
     refreshState();
   };
 
