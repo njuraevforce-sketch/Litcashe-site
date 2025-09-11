@@ -236,10 +236,12 @@
         await LC.creditView(vidId, Math.round(acc));
         await LC.refreshBalance();
         await LC.refreshLevelInfo();
-        await refreshState();
-      } catch(e) { console.error(e); ui('Ошибка начисления'); }
-      finally { startBtn.disabled = false; }
-    }
+         // моментально обновим счетчик, если бэк его вернул
+        if (row && typeof row.views_left === 'number') {
+       const el = document.querySelector('[data-views-left]');
+       if (el) el.textContent = String(row.views_left);
+      }
+    return row;
 
     video.addEventListener('timeupdate', ()=>{
       const t = Math.max(0, video.currentTime || 0);
