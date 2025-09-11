@@ -98,14 +98,16 @@
   LC.getLevelInfo = async function() {
     // v1
     try {
-const r2 = await sb.rpc('get_level_info_v2');
-if (!r2.error && r2?.data) return r2?.data?.[0] ?? r2?.data;
-
-const r1 = await sb.rpc('get_level_info');
-if (!r1.error && r1?.data) return r1?.data?.[0] ?? r1?.data;
-    return null; 
-   
-
+      const r1 = await sb.rpc('get_level_info');
+      if (!r1.error && r1.data) return Array.isArray(r1.data) ? r1.data[0] : r1.data;
+    } catch(_){}
+    // v2-обёртка (если подключена)
+    try {
+      const r2 = await sb.rpc('get_level_info_v2');
+      if (!r2.error && r2.data) return Array.isArray(r2.data) ? r2.data[0] : r2.data;
+    } catch(_){}
+    return null;
+  };
 
   LC.refreshLevelInfo = async function() {
     try {
@@ -444,3 +446,4 @@ if (!r1.error && r1?.data) return r1?.data?.[0] ?? r1?.data;
     await LC.refreshLevelInfo();
     await LC.refreshDashboardCards();
   });
+})();
