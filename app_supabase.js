@@ -105,7 +105,7 @@ const r1 = await sb.rpc('get_level_info');
 if (!r1.error && r1?.data) return r1?.data?.[0] ?? r1?.data;
     return null; 
    
- };
+
 
   LC.refreshLevelInfo = async function() {
     try {
