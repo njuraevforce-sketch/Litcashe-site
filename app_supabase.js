@@ -126,18 +126,20 @@
 
       const badge = $('#perViewBadge'); if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
 
-      // Цель следующего уровня (клиентская логика)
+      // Цель следующего уровня (из БД через RPC next_level_goal)
       const goalEl = document.querySelector('[data-next-target]');
       if (goalEl) {
-        let key = (info.level_key || info.level_name || '').toString().toLowerCase().replace(/\s+/g,'_');
-        const need = (b, r) => `Баланс ≥ $${b} и рефералы ≥ ${r}`;
-        let goal = '—';
-        if (key === 'guest' || key === '') goal = need(29, 0);
-        else if (key === 'starter')        goal = need(300, 5);
-        else if (key === 'advanced')       goal = need(1000, 15);
-        else if (key === 'pro_elite' || key === 'proelite') goal = need(2000, 30);
-        else if (key === 'titanium')       goal = 'Максимальный уровень';
-        goalEl.textContent = goal;
+        try {
+          const r = await sb.rpc('next_level_goal');
+          if (!r.error && r.data) {
+            const row = Array.isArray(r.data) ? r.data[0] : r.data;
+            goalEl.textContent = row?.goal_text || '—';
+          } else {
+            goalEl.textContent = '—';
+          }
+        } catch {
+          goalEl.textContent = '—';
+        }
       }
     } catch(e) { console.error('[LC] refreshLevelInfo', e); }
   };
