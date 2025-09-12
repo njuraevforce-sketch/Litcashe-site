@@ -24,7 +24,6 @@
   const pickNum = (v, d=0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
 
   function parseMoneyTextToNumber(txt) {
-    // "$123.45" -> 123.45 ; "123,45" -> 123.45
     if (!txt) return null;
     const normalized = String(txt).replace(/[^\d.,-]/g, '').replace(',', '.');
     const n = Number(normalized);
@@ -104,7 +103,6 @@
       const user = await getUser(); if (!user) return;
       const { data, error } = await sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle();
       if (error) return;
-      // НЕ перетирать баланс на 0: обновляем только при реальном значении
       if (data && typeof data.balance_cents === 'number') {
         const el = $('[data-balance]');
         if (el) {
@@ -114,24 +112,58 @@
           el.textContent = formatted;
         }
       }
-    } catch(e) {
-      console.warn('[LC] refreshBalance', e?.message||e);
-    }
+    } catch(e) { console.warn('[LC] refreshBalance', e?.message||e); }
   };
 
   LC.getLevelInfo = async function() {
-    // v2 в приоритете (наш стабильный источник)
     try {
       const r2 = await sb.rpc('get_level_info_v2');
       if (!r2.error && r2.data) return Array.isArray(r2.data) ? r2.data[0] : r2.data;
     } catch(_){}
-    // v1 fallback
     try {
       const r1 = await sb.rpc('get_level_info');
       if (!r1.error && r1.data) return Array.isArray(r1.data) ? r1.data[0] : r1.data;
     } catch(_){}
     return null;
   };
+
+  // --- помощник: проставить текст цели куда угодно, не меняя верстку
+  function renderNextLevelGoal(text) {
+    const safe = text || '—';
+
+    // 1) приоритет — явный placeholder
+    const el = document.querySelector('[data-next-target]');
+    if (el) { el.textContent = safe; return; }
+
+    // 2) fallback: найти узел с точной фразой и записать в соседнюю «ячейку»
+    const labels = Array.from(document.querySelectorAll('*')).filter(n=>{
+      try { return n.childElementCount===0 && /цель следующего уровня/i.test(n.textContent.trim()); }
+      catch { return false; }
+    });
+    if (!labels.length) return;
+
+    const label = labels[0];
+    // попытаемся взять «соседнюю» ячейку/колонку
+    let target = label.nextElementSibling;
+
+    // если это таблица
+    if (!target) {
+      const tr = label.closest('tr');
+      if (tr) target = tr.querySelector('td:last-child, th:last-child');
+    }
+    // если это флексовая строка «лейбл—значение»
+    if (!target) {
+      const row = label.parentElement;
+      if (row) {
+        const kids = Array.from(row.children);
+        if (kids.length >= 2) target = kids[kids.length - 1];
+      }
+    }
+    // ещё один шанс — поиск ближайшего «значения»
+    if (!target) target = label.parentElement?.querySelector('.value, .stat-value, .data-value, b, strong, span');
+
+    if (target) target.textContent = safe;
+  }
 
   LC.refreshLevelInfo = async function() {
     try {
@@ -154,20 +186,15 @@
       const badge = $('#perViewBadge'); if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
 
       // Цель следующего уровня — из RPC next_level_goal()
-      const goalEl = document.querySelector('[data-next-target]');
-      if (goalEl) {
-        try {
-          const r = await sb.rpc('next_level_goal');
-          if (!r.error && r.data) {
-            const row = Array.isArray(r.data) ? r.data[0] : r.data;
-            goalEl.textContent = row?.goal_text || '—';
-          } else {
-            goalEl.textContent = '—';
-          }
-        } catch {
-          goalEl.textContent = '—';
+      try {
+        const r = await sb.rpc('next_level_goal');
+        if (!r.error && r.data) {
+          const row = Array.isArray(r.data) ? r.data[0] : r.data;
+          if (row && row.goal_text) { renderNextLevelGoal(row.goal_text); return; }
         }
-      }
+      } catch(_) {}
+      // Fallback — если RPC не дал строки
+      renderNextLevelGoal('—');
     } catch(e) { console.error('[LC] refreshLevelInfo', e); }
   };
 
@@ -182,17 +209,15 @@
     const row = Array.isArray(data) ? data[0] : data;
     if (!row?.ok) { alert(row?.message || 'Начисление отклонено'); return null; }
 
-    // Моментально поднимем баланс локально, без перезагрузки
+    // моментально обновим баланс
     if (typeof row.reward_per_view_cents === 'number') {
       bumpBalanceByCents(row.reward_per_view_cents);
     }
-    // Если бэк вернул оставшиеся просмотры — отрисуем сразу
     if (typeof row.views_left === 'number') {
       const el = document.querySelector('[data-views-left]');
       if (el) el.textContent = String(row.views_left);
     }
 
-    // Фоновое подтверждение: подтянуть баланс и инфо из БД
     await LC.refreshBalance();
     await LC.refreshLevelInfo();
 
@@ -274,7 +299,6 @@
         credited = true; startBtn.disabled = true;
         const vidId = (video.currentSrc||'').split('/').pop() || 'video';
         const row = await LC.creditView(vidId, Math.round(acc));
-        // моментально покажем галочку и уменьшим счётчик
         if (row) {
           const per = Number(row.reward_per_view_cents||0)/100;
           ui(`Зачислено +${per.toFixed(2)} USDT`);
@@ -319,7 +343,6 @@
       const balanceCents = (wal && wal.data && typeof wal.data.balance_cents === 'number')
         ? wal.data.balance_cents : null;
 
-      // НЕ трогаем баланс, если из БД ничего не пришло
       if (balanceCents !== null) {
         const el = $('[data-balance]');
         if (el) {
@@ -471,7 +494,10 @@
 
   // ===== Инициализация DOM ====================================================
   document.addEventListener('DOMContentLoaded', async ()=>{
-    // Видео-виджет
+    // Чтобы «0» не мигал до загрузки — заменим на тире, потом обновим точным значением
+    const balEl = document.querySelector('[data-balance]');
+    if (balEl && /^\$?\s*0([.,]0+)?$/.test(balEl.textContent.trim())) balEl.textContent = '—';
+
     LC.initVideoWatch();
 
     try {
