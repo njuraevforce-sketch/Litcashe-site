@@ -22,6 +22,15 @@
   const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
   const fmtDate = (iso) => { try { return new Date(iso).toLocaleString(); } catch { return iso || ''; } };
   const pickNum = (v, d=0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+  const setBalanceText = (cents) => {
+    const el = $('[data-balance]');
+    if (!el) return;
+    if (cents == null || Number.isNaN(Number(cents))) { el.textContent = '—'; return; }
+    const formatted = ((Number(cents) || 0) / 100).toLocaleString('ru-RU', {
+      minimumFractionDigits: 0, maximumFractionDigits: 2
+    });
+    el.textContent = formatted;
+  };
 
   async function getUser() {
     const { data, error } = await sb.auth.getUser();
@@ -31,6 +40,7 @@
 
   // Глобальный объект
   const LC = window.LC = window.LC || {};
+  LC._walletChan = null;
 
   // ===== Профиль + Реф-код ====================================================
   LC.ensureProfile = async function() {
@@ -82,14 +92,34 @@
 
   // ===== Баланс / Уровни =====================================================
   LC.refreshBalance = async function() {
-    const user = await getUser(); if (!user) return;
-    const { data, error } = await sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle();
-    if (error) return;
-    const el = $('[data-balance]');
-    if (el) {
-      const formatted = ((data?.balance_cents ?? 0) / 100).toLocaleString('ru-RU', {minimumFractionDigits:0,maximumFractionDigits:2});
-      el.textContent = formatted;
-    }
+    try {
+      const user = await getUser(); if (!user) return;
+      // показываем «—», чтобы не мигало $0.00
+      setBalanceText(null);
+      const { data, error } = await sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle();
+      if (!error) setBalanceText(data?.balance_cents ?? 0);
+    } catch(e) { console.warn('[LC] refreshBalance', e?.message||e); }
+  };
+
+  LC.startWalletRealtime = async function () {
+    try {
+      const user = await getUser(); if (!user) return;
+      // Отписка от предыдущего канала, если вдруг есть
+      if (LC._walletChan) { try { await sb.removeChannel(LC._walletChan); } catch(_){} LC._walletChan = null; }
+
+      const filter = `user_id=eq.${user.id}`;
+      const chan = sb.channel(`wallets:${user.id}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wallets', filter }, (payload) => {
+          const cents = payload?.new?.balance_cents;
+          if (cents != null) setBalanceText(cents);
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'wallets', filter }, (payload) => {
+          const cents = payload?.new?.balance_cents;
+          if (cents != null) setBalanceText(cents);
+        });
+      await chan.subscribe();
+      LC._walletChan = chan;
+    } catch(e) { console.warn('[LC] startWalletRealtime', e?.message||e); }
   };
 
   LC.getLevelInfo = async function() {
@@ -276,9 +306,15 @@
   LC.refreshDashboardCards = async function() {
     try {
       const user = await getUser(); if (!user) return;
-      const [info, wal] = await Promise.all([LC.getLevelInfo(), sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle()]);
+      const [info, wal] = await Promise.all([
+        LC.getLevelInfo(),
+        sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle()
+      ]);
       if (!info) return;
       const balanceCents = wal?.data?.balance_cents ?? 0;
+
+      // гарантированно обновим баланс в карточке
+      setBalanceText(balanceCents);
 
       const baseCents = info.level_base_cents ?? info.base_cents ?? Math.min(Number(balanceCents||0), Number(info.level_cap_cents||balanceCents||0));
       const perViewUSDT = Number(info.reward_per_view_cents||0)/100;
@@ -415,52 +451,4 @@
     LC.initVideoWatch();
 
     try {
-      const { data: { session } } = await sb.auth.getSession();
-      renderAuthUI(session);
-      sb.auth.onAuthStateChange((_evt, sess)=>renderAuthUI(sess));
-    } catch(_){}
-
-    // Кнопка тестового начисления (если есть)
-    const btnCredit = document.getElementById('btnCreditView');
-    if (btnCredit) btnCredit.addEventListener('click', async ()=>{ const vid = btnCredit.getAttribute('data-video-id')||'video1'; await LC.creditView(vid, 35); });
-
-    // Форма вывода
-    const wForm = document.getElementById('withdrawForm');
-    if (wForm) wForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const amount  = parseFloat($('#amount')?.value || '0');
-      const method  = $('#method')?.value || 'TRC20';
-      const address = $('#address')?.value || '';
-      await LC.requestWithdrawal(Math.round(amount*100), method, address);
-    });
-
-    // Форма депозита
-    const dForm = document.getElementById('depositForm');
-    if (dForm) dForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const get=(id,def='')=>document.getElementById(id)?.value||def;
-      const amount=parseFloat(get('dAmount','0'));
-      const network=get('dNetwork','TRC20');
-      const currency=get('dCurrency','USDT');
-      const addr=get('dAddress','');
-      await LC.createDeposit(Math.round(amount*100), network, currency, addr);
-    });
-
-    // Привязка TX
-    const tForm = document.getElementById('attachTxForm');
-    if (tForm) tForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const depId=$('#depositId')?.value||'';
-      const tx=$('#txHash')?.value||'';
-      if(!depId||!tx){ alert('Укажите ID депозита и TX hash'); return; }
-      await LC.attachTxToDeposit(depId, tx);
-    });
-
-    await LC.ensureProfile();
-    await LC.applyReferral();
-    await LC.refreshBalance();
-    await LC.mountReferral();
-    await LC.refreshLevelInfo();
-    await LC.refreshDashboardCards();
-  });
-})();
+      const { data: {
