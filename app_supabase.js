@@ -143,15 +143,12 @@
     if (!labels.length) return;
 
     const label = labels[0];
-    // попытаемся взять «соседнюю» ячейку/колонку
     let target = label.nextElementSibling;
 
-    // если это таблица
     if (!target) {
       const tr = label.closest('tr');
       if (tr) target = tr.querySelector('td:last-child, th:last-child');
     }
-    // если это флексовая строка «лейбл—значение»
     if (!target) {
       const row = label.parentElement;
       if (row) {
@@ -159,7 +156,6 @@
         if (kids.length >= 2) target = kids[kids.length - 1];
       }
     }
-    // ещё один шанс — поиск ближайшего «значения»
     if (!target) target = label.parentElement?.querySelector('.value, .stat-value, .data-value, b, strong, span');
 
     if (target) target.textContent = safe;
@@ -193,7 +189,6 @@
           if (row && row.goal_text) { renderNextLevelGoal(row.goal_text); return; }
         }
       } catch(_) {}
-      // Fallback — если RPC не дал строки
       renderNextLevelGoal('—');
     } catch(e) { console.error('[LC] refreshLevelInfo', e); }
   };
@@ -209,7 +204,6 @@
     const row = Array.isArray(data) ? data[0] : data;
     if (!row?.ok) { alert(row?.message || 'Начисление отклонено'); return null; }
 
-    // моментально обновим баланс
     if (typeof row.reward_per_view_cents === 'number') {
       bumpBalanceByCents(row.reward_per_view_cents);
     }
@@ -419,17 +413,30 @@
       // Реф-панель: суммы
       let sumsRows=null, eS=null;
       try {
-        const resp = await sb.from('referral_payouts').select('level,reward_usdt').eq('referrer_user_id', user.id);
+        const resp = await sb.from('referral_payouts')
+          .select('level,reward_usdt')
+          .eq('referrer_user_id', user.id);
         sumsRows = resp.data; eS = resp.error;
       } catch(e){ eS=e; }
       if (eS || !Array.isArray(sumsRows)) {
         try {
-          const resp2 = await sb.from('referral_rewards').select('level,amount_cents').eq('referrer_user_id', user.id);
-          if (!resp2.error) sumsRows = (resp2.data||[]).map(r=>({level:r.level, reward_usdt: Number(r.amount_cents||0)/100}));
+          // ФОЛБЭК — правильные поля в твоей схеме: reward_usdt
+          const resp2 = await sb.from('referral_rewards')
+            .select('level,reward_usdt')
+            .eq('referrer_user_id', user.id);
+          if (!resp2.error) {
+            sumsRows = (resp2.data||[]).map(r=>({
+              level: r.level,
+              reward_usdt: Number(r.reward_usdt || 0)
+            }));
+          }
         } catch(_){}
       }
       const sumBy = {1:0,2:0,3:0};
-      (sumsRows||[]).forEach(r=>{ const lvl=Number(r.level); if (lvl===1||lvl===2||lvl===3) sumBy[lvl]+=Number(r.reward_usdt||0); });
+      (sumsRows||[]).forEach(r=>{
+        const lvl = Number(r.level);
+        if (lvl===1||lvl===2||lvl===3) sumBy[lvl] += Number(r.reward_usdt||0);
+      });
       $('#ref-sum-l1')&&($('#ref-sum-l1').textContent=fmtMoney(sumBy[1]));
       $('#ref-sum-l2')&&($('#ref-sum-l2').textContent=fmtMoney(sumBy[2]));
       $('#ref-sum-l3')&&($('#ref-sum-l3').textContent=fmtMoney(sumBy[3]));
@@ -442,18 +449,25 @@
         try {
           const resp = await sb.from('v_referral_payouts')
             .select('created_at, level, reward_usdt, source_type')
-            .eq('referrer_user_id', user.id).order('created_at',{ascending:false}).limit(10);
+            .eq('referrer_user_id', user.id)
+            .order('created_at',{ascending:false})
+            .limit(10);
           lastRows = resp.data; eL = resp.error;
         } catch(e){ eL=e; }
         if (eL || !Array.isArray(lastRows) || !lastRows.length) {
           try {
+            // ФОЛБЭК — правильные поля: reward_usdt (+ source в твоей схеме)
             const resp2 = await sb.from('referral_rewards')
-              .select('created_at, level, amount_cents, source')
-              .eq('referrer_user_id', user.id).order('created_at',{ascending:false}).limit(10);
+              .select('created_at, level, reward_usdt, source')
+              .eq('referrer_user_id', user.id)
+              .order('created_at',{ascending:false})
+              .limit(10);
             if (!resp2.error) {
               lastRows = (resp2.data||[]).map(r=>({
-                created_at: r.created_at, level: r.level,
-                reward_usdt: Number(r.amount_cents||0)/100, source_type: r.source || 'доход'
+                created_at: r.created_at,
+                level: r.level,
+                reward_usdt: Number(r.reward_usdt || 0),
+                source_type: r.source || 'доход'
               }));
             }
           } catch(_){}
