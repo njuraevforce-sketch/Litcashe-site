@@ -17,20 +17,29 @@
   );
   window.sb = sb; window.supabaseClient = sb;
 
-  // Утилиты
+  // ===== Утилиты =============================================================
   const $ = (sel) => document.querySelector(sel);
   const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
   const fmtDate = (iso) => { try { return new Date(iso).toLocaleString(); } catch { return iso || ''; } };
   const pickNum = (v, d=0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
-  const setBalanceText = (cents) => {
+
+  function parseMoneyTextToNumber(txt) {
+    // "$123.45" -> 123.45 ; "123,45" -> 123.45
+    if (!txt) return null;
+    const normalized = String(txt).replace(/[^\d.,-]/g, '').replace(',', '.');
+    const n = Number(normalized);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function bumpBalanceByCents(cents) {
+    if (!cents) return;
     const el = $('[data-balance]');
     if (!el) return;
-    if (cents == null || Number.isNaN(Number(cents))) { el.textContent = '—'; return; }
-    const formatted = ((Number(cents) || 0) / 100).toLocaleString('ru-RU', {
-      minimumFractionDigits: 0, maximumFractionDigits: 2
-    });
-    el.textContent = formatted;
-  };
+    const current = parseMoneyTextToNumber(el.textContent);
+    if (current === null) return;
+    const next = current + (Number(cents) / 100);
+    el.textContent = next.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
 
   async function getUser() {
     const { data, error } = await sb.auth.getUser();
@@ -40,7 +49,6 @@
 
   // Глобальный объект
   const LC = window.LC = window.LC || {};
-  LC._walletChan = null;
 
   // ===== Профиль + Реф-код ====================================================
   LC.ensureProfile = async function() {
@@ -94,32 +102,21 @@
   LC.refreshBalance = async function() {
     try {
       const user = await getUser(); if (!user) return;
-      // показываем «—», чтобы не мигало $0.00
-      setBalanceText(null);
       const { data, error } = await sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle();
-      if (!error) setBalanceText(data?.balance_cents ?? 0);
-    } catch(e) { console.warn('[LC] refreshBalance', e?.message||e); }
-  };
-
-  LC.startWalletRealtime = async function () {
-    try {
-      const user = await getUser(); if (!user) return;
-      // Отписка от предыдущего канала, если вдруг есть
-      if (LC._walletChan) { try { await sb.removeChannel(LC._walletChan); } catch(_){} LC._walletChan = null; }
-
-      const filter = `user_id=eq.${user.id}`;
-      const chan = sb.channel(`wallets:${user.id}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wallets', filter }, (payload) => {
-          const cents = payload?.new?.balance_cents;
-          if (cents != null) setBalanceText(cents);
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'wallets', filter }, (payload) => {
-          const cents = payload?.new?.balance_cents;
-          if (cents != null) setBalanceText(cents);
-        });
-      await chan.subscribe();
-      LC._walletChan = chan;
-    } catch(e) { console.warn('[LC] startWalletRealtime', e?.message||e); }
+      if (error) return;
+      // НЕ перетирать баланс на 0: обновляем только при реальном значении
+      if (data && typeof data.balance_cents === 'number') {
+        const el = $('[data-balance]');
+        if (el) {
+          const formatted = (data.balance_cents / 100).toLocaleString('ru-RU', {
+            minimumFractionDigits: 0, maximumFractionDigits: 2
+          });
+          el.textContent = formatted;
+        }
+      }
+    } catch(e) {
+      console.warn('[LC] refreshBalance', e?.message||e);
+    }
   };
 
   LC.getLevelInfo = async function() {
@@ -156,7 +153,7 @@
 
       const badge = $('#perViewBadge'); if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
 
-      // Цель следующего уровня (из БД через RPC next_level_goal)
+      // Цель следующего уровня — из RPC next_level_goal()
       const goalEl = document.querySelector('[data-next-target]');
       if (goalEl) {
         try {
@@ -184,13 +181,21 @@
     if (error) { console.error(error); alert(error.message || 'Ошибка начисления'); return null; }
     const row = Array.isArray(data) ? data[0] : data;
     if (!row?.ok) { alert(row?.message || 'Начисление отклонено'); return null; }
-    await LC.refreshBalance();
-    // Обновим лимиты из источника, но сразу проставим views_left, если бэк вернул
+
+    // Моментально поднимем баланс локально, без перезагрузки
+    if (typeof row.reward_per_view_cents === 'number') {
+      bumpBalanceByCents(row.reward_per_view_cents);
+    }
+    // Если бэк вернул оставшиеся просмотры — отрисуем сразу
     if (typeof row.views_left === 'number') {
       const el = document.querySelector('[data-views-left]');
       if (el) el.textContent = String(row.views_left);
     }
+
+    // Фоновое подтверждение: подтянуть баланс и инфо из БД
+    await LC.refreshBalance();
     await LC.refreshLevelInfo();
+
     return row;
   };
 
@@ -281,7 +286,6 @@
         console.error('[LC] credit()', e);
         alert('Ошибка начисления');
       } finally {
-        // через секунду разблокируем кнопку для следующего ролика
         setTimeout(()=>{ startBtn.disabled = false; }, 900);
       }
     }
@@ -311,12 +315,23 @@
         sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle()
       ]);
       if (!info) return;
-      const balanceCents = wal?.data?.balance_cents ?? 0;
 
-      // гарантированно обновим баланс в карточке
-      setBalanceText(balanceCents);
+      const balanceCents = (wal && wal.data && typeof wal.data.balance_cents === 'number')
+        ? wal.data.balance_cents : null;
 
-      const baseCents = info.level_base_cents ?? info.base_cents ?? Math.min(Number(balanceCents||0), Number(info.level_cap_cents||balanceCents||0));
+      // НЕ трогаем баланс, если из БД ничего не пришло
+      if (balanceCents !== null) {
+        const el = $('[data-balance]');
+        if (el) {
+          const formatted = (balanceCents / 100).toLocaleString('ru-RU', {
+            minimumFractionDigits: 0, maximumFractionDigits: 2
+          });
+          el.textContent = formatted;
+        }
+      }
+
+      const baseCents = info.level_base_cents ?? info.base_cents ??
+        Math.min(Number(balanceCents||0), Number(info.level_cap_cents||balanceCents||0));
       const perViewUSDT = Number(info.reward_per_view_cents||0)/100;
       const dailyUSDT   = Number(info.daily_reward_cents||0)/100;
       const baseUSDT    = Number(baseCents||0)/100;
@@ -328,7 +343,9 @@
 
       const set = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; };
       const byLabel = (label, value)=>{
-        const nodes = Array.from(document.querySelectorAll('*')).filter(n=>{try{return n.childElementCount===0&&n.textContent.trim()===label;}catch{return false;}});
+        const nodes = Array.from(document.querySelectorAll('*')).filter(n=>{
+          try { return n.childElementCount===0 && n.textContent.trim()===label; } catch { return false; }
+        });
         nodes.forEach(node=>{
           let card = node.closest('.card') || node.parentElement;
           if (!card) return;
@@ -349,7 +366,12 @@
       if (document.querySelector('[data-card-capital]'))  { set('[data-card-capital]', `$${baseUSDT.toFixed(2)}`); used = true; }
       if (document.querySelector('[data-refs-total]'))    { set('[data-refs-total]', String(info.refs_total ?? 0)); used = true; }
       if (document.querySelector('[data-card-views]'))    { set('[data-card-views]', String(done)); used = true; }
-      if (!used) { byLabel('Ставка',`${ratePct.toFixed(2)} %`); byLabel('Капитал (расч.)',`$${baseUSDT.toFixed(2)}`); byLabel('Рефералы',String(info.refs_total??0)); byLabel('Просмотры',String(done)); }
+      if (!used) {
+        byLabel('Ставка',`${ratePct.toFixed(2)} %`);
+        byLabel('Капитал (расч.)',`$${baseUSDT.toFixed(2)}`);
+        byLabel('Рефералы',String(info.refs_total??0));
+        byLabel('Просмотры',String(done));
+      }
 
       set('[data-level-name]', info.level_name || '—');
       set('[data-reward-per-view]', `${perViewUSDT.toFixed(2)} USDT`);
@@ -371,7 +393,7 @@
         }
       } catch(_) {}
 
-      // Реф-панель: суммы (referral_payouts.reward_usdt → fallback referral_rewards.amount_cents)
+      // Реф-панель: суммы
       let sumsRows=null, eS=null;
       try {
         const resp = await sb.from('referral_payouts').select('level,reward_usdt').eq('referrer_user_id', user.id);
@@ -390,7 +412,7 @@
       $('#ref-sum-l3')&&($('#ref-sum-l3').textContent=fmtMoney(sumBy[3]));
       $('#ref-sum-total')&&($('#ref-sum-total').textContent=fmtMoney(sumBy[1]+sumBy[2]+sumBy[3]));
 
-      // Реф-панель: последние выплаты (v_referral_payouts → fallback referral_rewards)
+      // Реф-панель: последние выплаты
       const tbody = $('#ref-last-tbody');
       if (tbody) {
         let lastRows=null, eL=null;
@@ -442,7 +464,9 @@
     if (drawerCta) drawerCta.innerHTML = cta.innerHTML.replace('id="nav-logout"','id="drawerLogout"');
     const logout1 = document.getElementById('nav-logout');
     const logout2 = document.getElementById('drawerLogout');
-    [logout1, logout2].forEach(el=>{ if (el) el.addEventListener('click', async (e)=>{ e.preventDefault(); await LC.logout(); }); });
+    [logout1, logout2].forEach(el=>{
+      if (el) el.addEventListener('click', async (e)=>{ e.preventDefault(); await LC.logout(); });
+    });
   }
 
   // ===== Инициализация DOM ====================================================
@@ -451,4 +475,55 @@
     LC.initVideoWatch();
 
     try {
-      const { data: {
+      const { data: { session } } = await sb.auth.getSession();
+      renderAuthUI(session);
+      sb.auth.onAuthStateChange((_evt, sess)=>renderAuthUI(sess));
+    } catch(_){}
+
+    // Кнопка тестового начисления (если есть)
+    const btnCredit = document.getElementById('btnCreditView');
+    if (btnCredit) btnCredit.addEventListener('click', async ()=>{
+      const vid = btnCredit.getAttribute('data-video-id')||'video1';
+      await LC.creditView(vid, 35);
+    });
+
+    // Форма вывода
+    const wForm = document.getElementById('withdrawForm');
+    if (wForm) wForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const amount  = parseFloat($('#amount')?.value || '0');
+      const method  = $('#method')?.value || 'TRC20';
+      const address = $('#address')?.value || '';
+      await LC.requestWithdrawal(Math.round(amount*100), method, address);
+    });
+
+    // Форма депозита
+    const dForm = document.getElementById('depositForm');
+    if (dForm) dForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const get=(id,def='')=>document.getElementById(id)?.value||def;
+      const amount=parseFloat(get('dAmount','0'));
+      const network=get('dNetwork','TRC20');
+      const currency=get('dCurrency','USDT');
+      const addr=get('dAddress','');
+      await LC.createDeposit(Math.round(amount*100), network, currency, addr);
+    });
+
+    // Привязка TX
+    const tForm = document.getElementById('attachTxForm');
+    if (tForm) tForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const depId=$('#depositId')?.value||'';
+      const tx=$('#txHash')?.value||'';
+      if(!depId||!tx){ alert('Укажите ID депозита и TX hash'); return; }
+      await LC.attachTxToDeposit(depId, tx);
+    });
+
+    await LC.ensureProfile();
+    await LC.applyReferral();
+    await LC.refreshBalance();
+    await LC.mountReferral();
+    await LC.refreshLevelInfo();
+    await LC.refreshDashboardCards();
+  });
+})();
