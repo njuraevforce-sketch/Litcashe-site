@@ -1265,6 +1265,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch(e) { console.error(e); return null; }
   }
 
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  // --- НАСТРОЙКИ ---
+  const MIN_SEC = 10; // 10 секунд до начисления
+
+  // --- DOM ---
+  const video        = document.querySelector('#dashboard-video') || document.querySelector('video');
+  const startBtn     = document.querySelector('[data-action="earn"]') || document.querySelector('#earnBtn');
+  const progressBar  = document.querySelector('.video-progress');        // полоса прогресса (если есть)
+  const progressText = document.querySelector('.video-progress-text');   // подпись "Доступно просмотров сегодня: ..."
+  const overlay      = document.querySelector('.video-overlay');
+
+  // --- УТИЛИТЫ (используют уже существующие глобальные функции на странице) ---
+  const sb = window.sb;                                    // supabase client (создан ранее)
+  const toast = window.toast || ((m)=>alert(m));
+  const setBlocked = window.setBlocked || function(dis){ if (startBtn) startBtn.disabled = !!dis; };
+  const setProgress = (sec) => {
+    if (!progressBar || !video) return;
+    const total = Number(video.duration || 0) || MIN_SEC;
+    const pct = Math.min(100, Math.round((sec/total)*100));
+    progressBar.style.width = pct + '%';
+  };
+  const ensureSession = window.ensureSession || (async ()=> true);
+  const getLeftToday  = window.getLeftToday  || (async ()=> 0);
+
+  // === ГЛАВНАЯ ЗАЩИТА ОТ ДУБЛИРОВАНИЯ ===
+  // Если app_supabase.js уже инициализировал видео (ставит data-атрибут),
+  // мы только проверим доступ и выйдем — чтобы не было второго вызова RPC.
+  if (video && video.dataset.lcInit === '1') {
+    try { await checkAccessAndInit(); } catch(_){}
+    return;
+  }
+
+  let awarding = false;
+  let played = 0;
+
   async function checkAccessAndInit() {
     try {
       const session = await ensureSession(); if (!session) { toast('Нужно войти'); return 0; }
@@ -1272,37 +1308,47 @@ document.addEventListener('DOMContentLoaded', async () => {
       const active = !error && (Array.isArray(data) ? data[0]?.get_video_access_state : data);
       if (!active) {
         setBlocked(true);
-        if (overlay) overlay.textContent = 'Аккаунт не активен. Пополните баланс минимум на 29 USDT.';
+        if (overlay)      overlay.textContent = 'Аккаунт не активен. Пополните баланс минимум на 29 USDT.';
         if (progressText) progressText.textContent = 'Доступ закрыт';
         return 0;
       }
     } catch(err) { console.error(err); }
     const left = await getLeftToday();
     setBlocked(left <= 0);
+    if (progressText) progressText.textContent = `Доступно просмотров сегодня: ${left}`;
     return left;
   }
 
   async function award() {
-    if (awarding) return; awarding = true;
+    if (awarding) return; 
+    awarding = true;
     try {
       const session = await ensureSession(); if (!session) { awarding=false; return; }
       if (played < MIN_SEC) { awarding=false; return; }
 
+      // ВНИМАНИЕ: фронт вызывает именно award_view_v2(duration_sec)
       const { data, error } = await sb.rpc('award_view_v2', { duration_sec: played });
       if (error) { toast('Ошибка начисления: ' + (error.message || 'unknown')); return; }
 
-      const res = Array.isArray(data) ? data[0] : (data || {});
-      const left = Number(res?.views_left_today ?? 0);
-      const credited = Number(res?.credited ?? 0);
+      // Нормализуем ответ: берем реальное поле суммы в центах и остаток лимита
+      const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
+      const left  = Number(row.views_left ?? row.views_left_today ?? row.left ?? 0);
+      const cents = Number(row.reward_per_view_cents ?? row.reward_cents ?? 0);
+      const usdt  = (cents / 100).toFixed(2);
 
       if (progressText) progressText.textContent = `Доступно просмотров сегодня: ${left}`;
       setBlocked(left <= 0);
-      toast(`Зачислено ✅ +${credited.toFixed(2)}`, true);
 
+      // зелёный тост
+      toast(`Зачислено ✅ +${usdt} USDT`, true);
+
+      // обновить карточки/баланс
       if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
     } finally {
       try { if (video) { video.pause(); video.currentTime = 0; } } catch(_){}
-      setProgress(0); played = 0; awarding = false;
+      setProgress(0); 
+      played = 0; 
+      awarding = false;
     }
   }
 
@@ -1311,21 +1357,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     video.addEventListener('timeupdate', () => {
       played = Math.floor(video.currentTime || 0);
       setProgress(played);
-      if (played >= MIN_SEC && !awarding) award();
+      if (played >= MIN_SEC && !awarding) award();       // однократно на 10-й секунде
     });
     video.addEventListener('ended', award);
+    // анти-фуллскрин (как было)
     video.addEventListener('webkitbeginfullscreen', () => {
       try{ video.pause(); video.webkitExitFullscreen && video.webkitExitFullscreen(); }catch(_){}
     }, true);
   }
 
   function start() {
-    if (startBtn.disabled) return;
+    if (startBtn && startBtn.disabled) return;
     played = 0; setProgress(0);
     try { video && (video.currentTime = 0, video.play()); } catch(_){}
   }
 
-  startBtn.addEventListener('click', start);
+  if (startBtn) startBtn.addEventListener('click', start);
+
   bindVideo();
   await checkAccessAndInit();
 });
