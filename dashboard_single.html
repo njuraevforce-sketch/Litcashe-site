@@ -1264,119 +1264,140 @@ document.addEventListener('DOMContentLoaded', async () => {
       return session || null;
     } catch(e) { console.error(e); return null; }
   }
-
+<script>
 document.addEventListener('DOMContentLoaded', async () => {
-  // --- НАСТРОЙКИ ---
-  const MIN_SEC = 10; // 10 секунд до начисления
+  const sb = window.supabase;
+  const video = document.getElementById('promoVid');
+  const startBtn = document.getElementById('startBtn');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
 
-  // --- DOM ---
-  const video        = document.querySelector('#dashboard-video') || document.querySelector('video');
-  const startBtn     = document.querySelector('[data-action="earn"]') || document.querySelector('#earnBtn');
-  const progressBar  = document.querySelector('.video-progress');        // полоса прогресса (если есть)
-  const progressText = document.querySelector('.video-progress-text');   // подпись "Доступно просмотров сегодня: ..."
-  const overlay      = document.querySelector('.video-overlay');
+  const MIN_SEC = 10;
+  let played = 0;
+  let awarding = false;
+  let alreadyAwardedForThisPlay = false;
 
-  // --- УТИЛИТЫ (используют уже существующие глобальные функции на странице) ---
-  const sb = window.sb;                                    // supabase client (создан ранее)
-  const toast = window.toast || ((m)=>alert(m));
-  const setBlocked = window.setBlocked || function(dis){ if (startBtn) startBtn.disabled = !!dis; };
-  const setProgress = (sec) => {
-    if (!progressBar || !video) return;
-    const total = Number(video.duration || 0) || MIN_SEC;
-    const pct = Math.min(100, Math.round((sec/total)*100));
-    progressBar.style.width = pct + '%';
-  };
-  const ensureSession = window.ensureSession || (async ()=> true);
-  const getLeftToday  = window.getLeftToday  || (async ()=> 0);
-
-  // === ГЛАВНАЯ ЗАЩИТА ОТ ДУБЛИРОВАНИЯ ===
-  // Если app_supabase.js уже инициализировал видео (ставит data-атрибут),
-  // мы только проверим доступ и выйдем — чтобы не было второго вызова RPC.
-  if (video && video.dataset.lcInit === '1') {
-    try { await checkAccessAndInit(); } catch(_){}
-    return;
+  function toast(msg, ok=false){
+    try{ window.LC?.toast?.(msg, ok); }catch(_){ alert(msg); }
   }
 
-  let awarding = false;
-  let played = 0;
+  function setProgress(sec){
+    const p = Math.min(100, Math.floor(sec / MIN_SEC * 100));
+    progressFill && (progressFill.style.width = p + '%');
+  }
 
-  async function checkAccessAndInit() {
-    try {
-      const session = await ensureSession(); if (!session) { toast('Нужно войти'); return 0; }
+  function parseMoney(txt){ return Number(String(txt||'').replace(/[^0-9.]/g,'')) || 0; }
+  function formatMoney(v){ return '$' + Number(v||0).toFixed(2); }
+
+  function bumpBalance(delta){
+    const el = document.querySelector('[data-balance]');
+    if (!el) return;
+    const cur = parseMoney(el.textContent);
+    el.textContent = formatMoney(cur + Number(delta||0));
+  }
+  function bumpViews(n=1){
+    const el = document.querySelector('[data-views]');
+    if (!el) return;
+    const cur = parseInt(el.textContent||'0',10) || 0;
+    el.textContent = String(cur + n);
+  }
+
+  async function ensureSession(){
+    const { data:{ session } } = await sb.auth.getSession();
+    return session;
+  }
+
+  async function getLeftToday(){
+    const { data, error } = await sb.rpc('get_left_today_views');
+    if (error) return 0;
+    return Array.isArray(data) ? Number(data[0]?.get_left_today_views||0) : Number(data||0);
+  }
+
+  function setBlocked(blocked){
+    startBtn.disabled = !!blocked;
+    startBtn.style.opacity = blocked ? .6 : 1;
+  }
+
+  async function checkAccessAndInit(){
+    try{
+      const session = await ensureSession(); if(!session){ toast('Нужно войти'); return 0; }
       const { data, error } = await sb.rpc('get_video_access_state');
       const active = !error && (Array.isArray(data) ? data[0]?.get_video_access_state : data);
       if (!active) {
         setBlocked(true);
-        if (overlay)      overlay.textContent = 'Аккаунт не активен. Пополните баланс минимум на 29 USDT.';
-        if (progressText) progressText.textContent = 'Доступ закрыт';
+        progressText && (progressText.textContent = 'Доступ закрыт');
         return 0;
       }
-    } catch(err) { console.error(err); }
+    }catch(e){ console.error(e); }
     const left = await getLeftToday();
     setBlocked(left <= 0);
-    if (progressText) progressText.textContent = `Доступно просмотров сегодня: ${left}`;
+    progressText && (progressText.textContent = `Доступно просмотров сегодня: ${left}`);
     return left;
   }
 
-  async function award() {
-    if (awarding) return; 
-    awarding = true;
-    try {
-      const session = await ensureSession(); if (!session) { awarding=false; return; }
-      if (played < MIN_SEC) { awarding=false; return; }
+  async function awardOnce(){
+    if (awarding || alreadyAwardedForThisPlay) return;
+    if (played < MIN_SEC) return;
 
-      // ВНИМАНИЕ: фронт вызывает именно award_view_v2(duration_sec)
-      const { data, error } = await sb.rpc('award_view_v2', { duration_sec: played });
+    awarding = true;
+    try{
+      const session = await ensureSession(); if(!session){ awarding=false; return; }
+
+      // duration_sec для БД — хватит 10–12 сек (неважно, проиграл ли пользователь дальше)
+      const { data, error } = await sb.rpc('award_view_v2', { duration_sec: Math.min(played, 12) });
       if (error) { toast('Ошибка начисления: ' + (error.message || 'unknown')); return; }
 
-      // Нормализуем ответ: берем реальное поле суммы в центах и остаток лимита
-      const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
-      const left  = Number(row.views_left ?? row.views_left_today ?? row.left ?? 0);
-      const cents = Number(row.reward_per_view_cents ?? row.reward_cents ?? 0);
-      const usdt  = (cents / 100).toFixed(2);
+      const res = Array.isArray(data) ? data[0] : (data || {});
+      const left = Number(res?.views_left_today ?? res?.views_left ?? 0);
+      const credited = Number(res?.credited ?? res?.reward_per_view ?? 0);
 
-      if (progressText) progressText.textContent = `Доступно просмотров сегодня: ${left}`;
+      // Оптимистично обновляем UI сразу
+      if (credited > 0){
+        bumpBalance(credited);
+        bumpViews(1);
+        toast(`Зачислено ✅ +${credited.toFixed(2)}`, true);
+      }
+      progressText && (progressText.textContent = `Доступно просмотров сегодня: ${left}`);
       setBlocked(left <= 0);
 
-      // зелёный тост
-      toast(`Зачислено ✅ +${usdt} USDT`, true);
+      // Чтобы не дать доначислить по событию ended()
+      alreadyAwardedForThisPlay = true;
 
-      // обновить карточки/баланс
-      if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
+      // Дадим БД/триггерам время применить транзакцию и только потом обновим показатели
+      setTimeout(() => { try{ window.LC?.loadLevelInfo?.(); }catch(_){ } }, 1200);
+
     } finally {
-      try { if (video) { video.pause(); video.currentTime = 0; } } catch(_){}
-      setProgress(0); 
-      played = 0; 
-      awarding = false;
+      // Сбрасываем плеер и прогресс
+      try{ video && (video.pause(), video.currentTime = 0); }catch(_){}
+      setProgress(0); played = 0; awarding = false;
+      // Разрешим новое начисление только после следующего клика "Старт"
     }
   }
 
-  function bindVideo() {
+  function bindVideo(){
     if (!video) return;
     video.addEventListener('timeupdate', () => {
       played = Math.floor(video.currentTime || 0);
       setProgress(played);
-      if (played >= MIN_SEC && !awarding) award();       // однократно на 10-й секунде
+      if (played >= MIN_SEC) awardOnce();
     });
-    video.addEventListener('ended', award);
-    // анти-фуллскрин (как было)
-    video.addEventListener('webkitbeginfullscreen', () => {
-      try{ video.pause(); video.webkitExitFullscreen && video.webkitExitFullscreen(); }catch(_){}
-    }, true);
+    // На всякий случай, если досмотрели до конца
+    video.addEventListener('ended', awardOnce);
   }
 
-  function start() {
-    if (startBtn && startBtn.disabled) return;
+  function start(){
+    if (startBtn.disabled) return;
+    // Новая сессия просмотра — позволяем одно начисление
+    alreadyAwardedForThisPlay = false;
     played = 0; setProgress(0);
-    try { video && (video.currentTime = 0, video.play()); } catch(_){}
+    try{ video && (video.currentTime = 0, video.play()); }catch(_){}
   }
 
-  if (startBtn) startBtn.addEventListener('click', start);
-
+  startBtn.addEventListener('click', start);
   bindVideo();
   await checkAccessAndInit();
 });
-<script>
+</script>
 
 <!-- Patch: referral link + 3-gen counters, safe & idempotent -->
 <script id="lc-referrals-patch">
