@@ -262,112 +262,91 @@ const LC_VIDEO_LIST = ['/assets/videos/ad1.mp4','/assets/videos/ad2.mp4','/asset
 const LC_MIN_SECONDS = 10;
 
 LC.initVideoWatch = function () {
-  const video    = document.querySelector('#promoVid');
-  const startBtn = document.querySelector('#startBtn');
-  const bar      = document.querySelector('#progressFill');
-  const txt      = document.querySelector('#progressText');
+  // 🔒 1) Защита от повторной инициализации (дубликаты обработчиков)
+  if (LC.__VIDEO_WATCH_INIT__) return;
+  LC.__VIDEO_WATCH_INIT__ = true;
+
+  const video    = $('#promoVid');
+  const startBtn = $('#startBtn');
+  const bar      = $('#progressFill');
+  const txt      = $('#progressText');
   if (!video || !startBtn) return;
 
-  let allowed = false;        // можно ли стартовать
-  let crediting = false;      // сейчас идёт начисление (чтобы не запустить повторно)
-  let acc = 0;                // накопленные секунды просмотра
-  let lastT = 0;              // последняя отметка времени
+  let allowed = false;
+  let acc = 0, lastT = 0;
 
-  const ui = (m) => { if (txt) txt.textContent = m; };
-  const setBar = (p) => { if (bar) bar.style.width = Math.max(0, Math.min(100, p)) + '%'; };
-  const pickVideo = () => LC_VIDEO_LIST[(Math.random() * LC_VIDEO_LIST.length) | 0];
-  const reset = () => { crediting = false; acc = 0; lastT = 0; setBar(0); ui('Прогресс…'); };
+  // Мьютексы против дублей
+  let creditRequested = false;   // уже решили начислять (даже если запрос еще в полете)
+  let creditInFlight  = false;   // запрос полетел, ждем ответ
 
-  async function refreshState() {
+  function ui(msg){ if (txt) txt.textContent = msg; }
+  function setBar(p){ if (bar) bar.style.width = Math.max(0,Math.min(100,p)) + '%'; }
+  function pickVideo(){ return LC_VIDEO_LIST[Math.floor(Math.random()*LC_VIDEO_LIST.length)]; }
+  function reset(){ acc=0; lastT=0; creditRequested=false; creditInFlight=false; setBar(0); ui('Прогресс…'); }
+
+  async function refreshState(){
     try {
-      const info = await LC.getLevelInfo(); // твоя функция, как и была
-      const left =
-        Number(info?.views_left_today ?? info?.views_left ?? 0);
-      const isActive =
-        !!info && ((info.level_key && info.level_key !== 'guest') || Number(info.reward_percent_bp || 0) > 0);
-
+      const info = await LC.getLevelInfo(); if (!info) throw new Error('no level');
+      const left = Number(info.views_left_today ?? 0);
+      const isActive = (info.level_key && info.level_key !== 'guest') || Number(info.reward_percent_bp||0) > 0;
       allowed = isActive && left > 0;
       startBtn.disabled = !allowed;
-
-      // обновляем виджет “Доступно просмотров сегодня: …” если он есть
-      const elLeft = document.querySelector('[data-views-left]');
-      if (elLeft) elLeft.textContent = String(left);
-
       if (!isActive) ui('Аккаунт не активен. Пополните баланс и/или пригласите рефералов.');
       else if (left <= 0) ui('Лимит на сегодня исчерпан.');
       else ui(`Доступно просмотров сегодня: ${left}`);
-    } catch {
-      startBtn.disabled = true;
-      ui('Не удалось получить лимит.');
-    }
+    } catch(e) { startBtn.disabled = true; ui('Не удалось получить лимит.'); }
   }
 
-  async function credit() {
-    crediting = true;                 // блокируем повторы ДО асинхронщины
+  // 🔒 2) Начисление строго один раз на просмотр
+  async function creditOnce(){
+    if (creditRequested || creditInFlight) return; // второй/третий вызов игнорируем
+    creditRequested = true;
+    creditInFlight  = true;
     startBtn.disabled = true;
 
     try {
-      const vidId = (video.currentSrc || '').split('/').pop() || 'video';
-      const row = await LC.creditView(vidId, Math.round(acc)); // твоя RPC как и раньше
-
-      // успех
-      const per = Number(row?.reward_per_view_cents ?? row?.reward_cents ?? 0) / 100;
-      if (per > 0) {
+      const vidId = (video.currentSrc||'').split('/').pop() || 'video';
+      // ⚠️ дергаем ИДЕМПОТЕНТНУЮ RPC на БД (credit_view_safe)
+      const row = await LC.creditView(vidId, Math.round(acc));
+      if (row) {
+        const per = Number(row.reward_per_view_cents||0)/100;
         ui(`Зачислено +${per.toFixed(2)} USDT`);
         setBar(100);
+        const el = document.querySelector('[data-views-left]');
+        if (el && typeof row.views_left === 'number') el.textContent = String(row.views_left);
+        // если показываешь баланс/капитал — обнови их отсюда же из row.balance_cents
       }
-    } catch (e) {
-      // дубликат – просто молча игнорируем (начисление уже прошло)
-      const msg  = String(e?.message || e?.error || '');
-      const code = String(e?.code || '');
-      const isDuplicate =
-        msg.includes('ux_view_credits_user_day_bucket') ||
-        msg.includes('duplicate key value') ||
-        code === '23505';
-      if (!isDuplicate) {
-        console.error('[LC] credit error:', e);
-        ui('Не удалось зачислить. Попробуйте ещё раз.');
-      }
+    } catch(e) {
+      console.error('[LC] creditOnce()', e);
+      // умышленно без alert'ов — чтобы не мелькали «левые» попапы
     } finally {
-      // подтягиваем актуальные цифры (оставшиеся просмотры и др.)
-      await refreshState();
-      // снова разрешаем кнопку, если ещё остались просмотры
-      setTimeout(() => { startBtn.disabled = !allowed; }, 300);
+      creditInFlight = false;
+      // небольшая задержка, чтобы пользователь не спамил кликом старт
+      setTimeout(()=>{ startBtn.disabled = false; }, 600);
     }
   }
 
-  function tryCredit() {
-    if (crediting) return;               // уже пошло начисление – выходим
-    if (acc >= LC_MIN_SECONDS) credit(); // достаточно секунд – запускаем
-  }
-
-  // Накапливаем время и двигаем прогресс-бар
-  video.addEventListener('timeupdate', () => {
+  video.addEventListener('timeupdate', ()=>{
     const t = Math.max(0, video.currentTime || 0);
-    if (t > lastT) acc += (t - lastT);
-    lastT = t;
-    setBar(Math.min(100, Math.round((acc / LC_MIN_SECONDS) * 100)));
-    tryCredit();
+    if (t > lastT) { acc += (t - lastT); lastT = t; setBar(Math.round((acc/LC_MIN_SECONDS)*100)); }
+    else { lastT = t; }
+    if (acc >= LC_MIN_SECONDS) creditOnce();  // вызываем только обертку
   });
 
-  // На случай мгновенного завершения/паузы
-  video.addEventListener('ended', tryCredit);
-  video.addEventListener('pause', tryCredit);
+  // На всякий случай: если пользователь долистал до конца — тоже один раз.
+  video.addEventListener('ended', ()=> creditOnce(), { once: true });
 
-  // Кнопка старта
-  startBtn.addEventListener('click', async () => {
-    await refreshState();
-    if (!allowed) return;
+  startBtn.addEventListener('click', async ()=>{
+    await refreshState(); if (!allowed) return;
     reset();
     video.src = pickVideo();
-    video.currentTime = 0;
     video.muted = true;
-    video.play().catch(() => {});
+    video.play().catch(()=>{});
   });
 
-  // первичная отрисовка
   refreshState();
 };
+
 
   // ===== Карточки дашборда + Реф-панель ======================================
   LC.refreshDashboardCards = async function() {
