@@ -1,3 +1,16 @@
+;(function(){
+  try{
+    if (!window.sb || typeof window.sb.from !== 'function') {
+      if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+        window.sb = window.supabase.createClient(
+          window.SUPABASE_URL,
+          window.SUPABASE_ANON_KEY,
+          { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+        );
+      }
+    }
+  }catch(_){}
+})();
 // app_supabase.full.js — единый файл для дашборда
 // Требует: window.SUPABASE_URL / window.SUPABASE_ANON_KEY, supabase-js v2
 ;(function () {
@@ -59,7 +72,7 @@ try {
     .select('user_id, ref_code')
     .eq('user_id', user.id)
     .maybeSingle();
-  if (!e1 and row) return;
+  if (!e1 && row) return;
   await sb.from('profiles').insert({ user_id: user.id });
 } catch(e) { console.warn('[LC] ensureProfile', e?.message||e); }
 
