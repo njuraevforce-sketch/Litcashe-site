@@ -504,7 +504,7 @@ on conflict do nothing;</code></pre>
     }
     const tb = $('#uTable tbody'); tb.innerHTML='';
     rows.forEach(r => {
-      const w = byWallet[r.id] || { balance_cents: 0 };
+      const w = byWallet[r.user_id] || { balance_cents: 0 };
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td title="${r.user_id}">${short(r.user_id)}</td>
