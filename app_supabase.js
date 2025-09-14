@@ -84,28 +84,19 @@ try {
   const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
   if (!refParam) return;
   localStorage.setItem('lc_ref_code', refParam);
+
   const { data, error } = await sb.auth.getUser();
-  const user = data?.user; if (!user) return;
+  const user = data?.user; if (error || !user) return;
 
-  // already linked?
-  const cur = await sb.from('user_referrals')
-    .select('referrer_user_id')
-    .eq('user_id', user.id)
-    .maybeSingle();
-  if (!cur.error && cur.data?.referrer_user_id) return;
+  // Ensure profile row exists (idempotent)
+  await sb.from('profiles').upsert({ user_id: user.id }, { onConflict: 'user_id' });
 
-  // find owner of ref code (profiles.user_id)
-  const owner = await sb.from('profiles')
-    .select('user_id')
-    .eq('ref_code', refParam)
-    .maybeSingle();
-  if (owner.error || !owner.data || owner.data.user_id === user.id) return;
+  // Delegate to secure RPC (handles idempotency & self-ref checks)
+  await sb.rpc('apply_referral', { p_ref_code: refParam });
+} catch(e) {
+  console.warn('[LC] applyReferral', e?.message||e);
+}
 
-  await sb.from('user_referrals').upsert(
-    { user_id: user.id, referrer_user_id: owner.data.user_id },
-    { onConflict: 'user_id' }
-  );
-} catch(e) { console.warn('[LC] applyReferral', e?.message||e); }
 
 };
 
