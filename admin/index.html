@@ -111,7 +111,7 @@
         <table id="wTable">
           <thead><tr>
             <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
-            <th class="right">Сумма</th><th>Реквизиты</th><th>Статус</th><th>TX/примечание</th><th></th>
+            <th class="right">Сумма</th><th class="right">Комиссия</th><th class="right">Итого</th><th>Реквизиты</th><th>Статус</th><th>TX/примечание</th><th></th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -324,7 +324,7 @@ on conflict do nothing;</code></pre>
     const q = ($('#wSearch').value||'').trim().toLowerCase();
 
     let sel = sb.from('withdrawals')
-      .select('id,user_id,amount_cents,status,txid,network,address,paid_at,created_at')
+      .select('id,user_id,amount_cents,fee_cents,status,txid,network,address,paid_at,created_at')
       .order('created_at',{ascending:false})
       .range(wPage*wLimit, wPage*wLimit + wLimit - 1);
 
@@ -353,6 +353,8 @@ on conflict do nothing;</code></pre>
         <td>${p.email||'—'}</td>
         <td>${p.phone||'—'}</td>
         <td class="right">${fmtAmount(r.amount_cents)}</td>
+        <td class="right">${fmtAmount(r.fee_cents||0)}</td>
+        <td class="right">${fmtAmount((r.amount_cents||0)+(+r.fee_cents||0))}</td>
         <td>${r.address||'—'} <span class="muted">${r.network||''}</span></td>
         <td>${pill(r.status)}</td>
         <td><input data-tx="${r.id}" placeholder="TX / примечание" value="${r.txid||''}" style="height:34px;min-width:180px"></td>
