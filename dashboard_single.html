@@ -1465,10 +1465,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           set('gen3Count', row?.gen3 ?? 0);
           return; // успех, дальше не идём
         }
-        console.warn('get_ref_counts_me RPC error:', error);
+        console.warn('get_referral_counts_active (active>=29) RPC error:', error);
       }
     } catch (e) {
-      console.warn('get_ref_counts_me RPC exception:', e);
+      console.warn('get_referral_counts_active (active>=29) RPC exception:', e);
     }
 
     // ---- 2) запасной путь: читаем вью напрямую (может упереться в RLS) ----
@@ -1526,14 +1526,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       return true;
     }
 
-    // 1) Try RPC: get_ref_counts_me() (returns gen1, gen2, gen3 for auth.uid())
+    // 1) Try RPC: get_referral_counts_active (active>=29)() (returns gen1, gen2, gen3 for auth.uid())
     try {
       const rpc = await sb.rpc('get_referral_counts_active', { p_min_cents: 2900 });
       if (!rpc.error && rpc.data) {
         const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
         if (applyCounts(row)) return;
       }
-    } catch(e) { console.warn('get_ref_counts_me RPC error', e); }
+    } catch(e) { console.warn('get_referral_counts_active (active>=29) RPC error', e); }
 
     // 2) Fallback to view v_referral_counts (RLS-scoped to user_id)
     try {
