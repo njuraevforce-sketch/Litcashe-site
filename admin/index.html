@@ -276,9 +276,23 @@ on conflict do nothing;</code></pre>
     $('#btnLogout').style.display = sessionUser ? 'inline-block':'none';
   }
   $('#btnLogin').addEventListener('click', async () => {
-    try{
-      await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.href } });
-    }catch(e){ alert(e.message || e); }
+      try{
+        // Универсальный вход без OAuth: email+пароль, с фолбэком на magic-link
+        const email = prompt('Email для входа в админку:');
+        if(!email) return;
+        const pwd = prompt('Пароль (либо оставьте пустым для входа по ссылке):') || '';
+        if(pwd){
+          const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+          if(error){ alert('Ошибка входа: '+(error.message||error)); return; }
+          location.reload();
+          return;
+        }else{
+          const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href } });
+          if(error){ alert('Ошибка отправки magic‑link: '+(error.message||error)); return; }
+          alert('Мы отправили ссылку для входа на '+email);
+        }
+      }catch(e){ alert(e.message || e); }
+    });}catch(e){ alert(e.message || e); }
   });
   $('#btnLogout').addEventListener('click', async () => {
     try{ await sb.auth.signOut(); location.reload(); }catch(e){ alert(e.message || e); }
