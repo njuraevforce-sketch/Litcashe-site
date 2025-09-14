@@ -51,51 +51,69 @@
 
   // ===== Профиль + Реф-код ====================================================
   LC.ensureProfile = async function() {
-    try {
-      const user = await getUser(); if (!user) return;
-      const { data, error } = await sb.from('profiles').select('id').eq('id', user.id).maybeSingle();
-      if (!error && data) return;
-      await sb.from('profiles').insert({ id: user.id });
-    } catch(e) { console.warn('[LC] ensureProfile', e?.message||e); }
-  };
+try {
+  const user = await getUser(); if (!user) return;
+  // use user_id, not id
+  const { data, error } = await sb
+    .from('profiles')
+    .select('user_id, ref_code')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (!error && data) return;
+  await sb.from('profiles').insert({ user_id: user.id });
+} catch(e) { console.warn('[LC] ensureProfile', e?.message||e); }
+};
 
   LC.applyReferral = async function() {
-    try {
-      const params = new URLSearchParams(location.search);
-      const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
-      if (!refParam) return;
-      localStorage.setItem('lc_ref_code', refParam);
-      const user = await getUser(); if (!user) return;
+try {
+  const params = new URLSearchParams(location.search);
+  const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
+  if (!refParam) return;
+  localStorage.setItem('lc_ref_code', refParam);
+  const user = await getUser(); if (!user) return;
 
-      const cur = await sb.from('user_referrals').select('referrer_user_id').eq('user_id', user.id).maybeSingle();
-      if (!cur.error && cur.data?.referrer_user_id) return;
+  // already linked?
+  const cur = await sb.from('user_referrals')
+    .select('referrer_user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (!cur.error && cur.data?.referrer_user_id) return;
 
-      const owner = await sb.from('profiles').select('id').eq('ref_code', refParam).maybeSingle();
-      if (owner.error || !owner.data || owner.data.id === user.id) return;
+  // find owner of ref code (profiles.user_id)
+  const owner = await sb.from('profiles')
+    .select('user_id')
+    .eq('ref_code', refParam)
+    .maybeSingle();
+  if (owner.error || !owner.data || owner.data.user_id === user.id) return;
 
-      await sb.from('user_referrals').upsert(
-        { user_id: user.id, referrer_user_id: owner.data.id },
-        { onConflict: 'user_id' }
-      );
-    } catch(e) { console.warn('[LC] applyReferral', e?.message||e); }
-  };
+  await sb.from('user_referrals').upsert(
+    { user_id: user.id, referrer_user_id: owner.data.user_id },
+    { onConflict: 'user_id' }
+  );
+} catch(e) { console.warn('[LC] applyReferral', e?.message||e); }
+};
 
   LC.mountReferral = async function() {
-    try {
-      const wrap = $('#refLinkWrap'), input = $('#refLink');
-      if (!wrap || !input) return;
-      const user = await getUser(); if (!user) return;
-      const { data, error } = await sb.from('profiles').select('ref_code').eq('id', user.id).maybeSingle();
-      if (error || !data?.ref_code) return;
-      const url = new URL(location.origin + '/register_single.html');
-      url.searchParams.set('ref', data.ref_code);
-      input.value = url.toString(); wrap.style.display = 'block';
-      const btn = $('#btnCopyRef');
-      if (btn) btn.addEventListener('click', async ()=>{
-        try { await navigator.clipboard.writeText(input.value); btn.textContent='Скопировано'; setTimeout(()=>btn.textContent='Скопировать',1200); } catch(_){}
-      });
-    } catch(e) { console.error('[LC] mountReferral', e?.message||e); }
-  };
+try {
+  const wrap = $('#refLinkWrap'), input = $('#refLink');
+  if (!wrap || !input) return;
+  const user = await getUser(); if (!user) return;
+  // get my ref_code by user_id
+  const { data, error } = await sb
+    .from('profiles')
+    .select('ref_code')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (error || !data?.ref_code) return;
+  const url = new URL(location.origin + '/register_single.html');
+  url.searchParams.set('ref', data.ref_code);
+  input.value = url.toString(); wrap.style.display = 'block';
+  const btn = $('#btnCopyRef');
+  if (btn) btn.addEventListener('click', async ()=>{
+    try { await navigator.clipboard.writeText(input.value); btn.textContent='Скопировано'; setTimeout(()=>btn.textContent='Скопировать',1200); } catch(_){}
+  });
+} catch(e) { console.error('[LC] mountReferral', e?.message||e); }
+};
 
   // ===== Баланс / Уровни =====================================================
   LC.refreshBalance = async function() {
