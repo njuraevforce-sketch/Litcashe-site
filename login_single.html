@@ -140,6 +140,16 @@ img,video{max-width:100%;height:auto}
 <input class="input" id="loginPass" placeholder="Пароль" required="" type="password"/ data-i18n-attr="placeholder:ph_password">
 <button class="btn" type="submit">Войти</button>
 </form>
+<!-- LC: Forgot password (email) -->
+<div id="lc-forgot-card" class="card" style="margin-top:12px; padding:12px;">
+  <div class="grid" style="grid-template-columns: 1fr auto; gap:10px;">
+    <input id="forgotEmail" class="input" type="email" placeholder="Ваш email для восстановления">
+    <button id="sendReset" class="btn" type="button">Сбросить пароль</button>
+  </div>
+  <div class="muted" style="margin-top:8px">
+    Укажи email и получи письмо со ссылкой для смены пароля.
+  </div>
+</div>
 <p class="muted">Нет аккаунта? <a href="register_single.html">Зарегистрируйтесь</a></p>
 </div>
 </main>
@@ -268,4 +278,45 @@ document.addEventListener('DOMContentLoaded', function(){
 <!-- 4) Уже был: логика форм -->
 <script defer src="assets/js/auth.js"></script>
 
+<script id="lc-forgot-inline">
+(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  ready(function(){
+    var emailInput=document.getElementById('forgotEmail');
+    var sendBtn=document.getElementById('sendReset');
+    if(!emailInput||!sendBtn) return;
+
+    var sb=(function(){
+      try{
+        if (window.sb && window.sb.auth && typeof window.sb.auth.resetPasswordForEmail==='function') return window.sb;
+        if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+          return (window.sb = window.supabase.createClient(
+            window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
+            { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
+          ));
+        }
+      }catch(_){}
+      return null;
+    })();
+
+    sendBtn.addEventListener('click', async function(e){
+      e.preventDefault();
+      if(!sb){ alert('Supabase не инициализирован'); return; }
+      var email=(emailInput.value||'').trim();
+      if(!email){ alert('Введите email'); return; }
+      var redirectTo = new URL('reset_password.html', location.origin).href;
+      sendBtn.disabled=true;
+      try{
+        var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
+        if (res && res.error) throw res.error;
+        alert('Письмо отправлено. Проверьте почту и перейдите по ссылке.');
+      }catch(err){
+        alert('Ошибка: ' + (err && err.message ? err.message : err));
+      }finally{
+        sendBtn.disabled=false;
+      }
+    });
+  });
+})();
+</script>
 </body></html>
