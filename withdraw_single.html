@@ -144,6 +144,21 @@ img,video{max-width:100%;height:auto}
 <p class="muted" data-i18n="withdraw_notice">Первый вывод — через 5 дней после активации. Далее — не чаще 1 раза в 24 часа.</p>
 </div>
 </div>
+
+<div class="card" id="wd-history-card">
+  <h2 class="section-title">История заявок</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Дата</th><th>Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th></tr>
+      </thead>
+      <tbody id="wd-table-body">
+        <tr><td colspan="5" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 </main>
 <footer class="footer"><div class="container">© 2025 Litcash</div></footer>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -281,6 +296,19 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
+
+  
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    if (window.LC){
+      if (typeof LC.bindWithdrawControls === 'function') LC.bindWithdrawControls();
+      if (typeof LC.subscribeWithdrawalStatus === 'function') LC.subscribeWithdrawalStatus();
+      if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
+    }
+  }catch(_){}
+});
+</script>
 
   <script defer src="assets/js/guard.js"></script>
 </body></html>
