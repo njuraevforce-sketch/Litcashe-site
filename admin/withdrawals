@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Admin · Withdrawals</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
+  <style>
+    :root{--bg:#0f1115;--card:#161a22;--text:#e6e9ef;--muted:#9fb3c8;--ok:#18c964;--warn:#f5a623;--bad:#ff6b6b}
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    h1{margin:0 0 16px;font-size:22px}
+    .row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+    input,select,button{height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0b0e13;color:var(--text);padding:0 10px}
+    input[type="number"]{width:120px}
+    input[type="search"], input[type="text"]{min-width:220px}
+    .btn{cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18))}
+    .btn.danger{background:linear-gradient(180deg, rgba(255,0,80,.18), rgba(255,80,80,.18));border-color:rgba(255,0,80,.25)}
+    .muted{color:var(--muted)}
+    .note{font-size:12px;color:var(--muted)}
+    .diag{padding:8px 10px;border-radius:10px;border:1px dashed rgba(255,255,255,.18);font-size:12px}
+    .table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:12px}
+    table{width:100%;border-collapse:collapse;min-width:980px}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left;vertical-align:middle}
+    th{position:sticky;top:0;background:var(--card);z-index:2}
+    tr.ok{background:rgba(24,201,100,.06)}
+    tr.pending{background:rgba(245,166,35,.05)}
+    tr.failed{background:rgba(255,107,107,.05)}
+    .pill{padding:3px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.18);display:inline-flex;align-items:center;gap:6px}
+    .pill.ok{border-color:rgba(24,201,100,.35);color:#9ef3c6}
+    .pill.warn{border-color:rgba(245,166,35,.35);color:#ffd79a}
+    .pill.bad{border-color:rgba(255,107,107,.35);color:#ffc7c7}
+    .right{display:flex;gap:8px;margin-left:auto}
+    .tag{font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid rgba(255,255,255,.15)}
+    @media (max-width: 768px){
+      .row{flex-direction:column}
+      input,select,button{width:100%}
+      table{min-width:820px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Панель админа — Заявки на вывод</h1>
+  <div class="row">
+    <input id="sbUrl" placeholder="Supabase URL" />
+    <input id="sbAnon" placeholder="Anon key" />
+    <button class="btn" id="saveConn">Сохранить</button>
+    <div class="right">
+      <select id="fltStatus">
+        <option value="">Все статусы</option>
+        <option value="pending">Ожидает</option>
+        <option value="paid">Оплачено</option>
+        <option value="rejected">Отклонено</option>
+      </select>
+      <input id="search" type="search" placeholder="поиск: email / phone / id"/>
+      <button class="btn primary" id="btnLoad">Загрузить</button>
+      <button class="btn" id="btnNext">Вперёд ▶</button>
+    </div>
+  </div>
+  <div class="diag" id="diag">Диагностика: <span id="whoami">—</span></div>
+
+  <div class="table-wrap" style="margin-top:12px">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Дата</th>
+          <th>Email</th>
+          <th>Телефон</th>
+          <th>Сумма</th>
+          <th>Кошелёк</th>
+          <th>Статус</th>
+          <th>TX / примечание</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <p class="note" style="margin-top:8px">
+    Ставьте статус <b>Оплачено</b> только после фактической оплаты. Обновление сохраняет поля: <code>status</code>, <code>paid_at</code>, <code>processed_by</code>, <code>txid</code>.
+  </p>
+</div>
+
+<!-- Supabase client -->
+<script type="module">
+  let sb = null;
+  let page = 0;
+  const limit = 50;
+
+  function $(s){ return document.querySelector(s); }
+  function fmtMoney(x){
+    if (x == null) return '—';
+    try{
+      // cents -> dollars if looks like int >= 50
+      if (typeof x === 'number' && Number.isInteger(x) && x > 50){
+        return '$' + (x/100).toFixed(2);
+      }
+      return '$' + Number(x).toFixed(2);
+    }catch(_){ return String(x); }
+  }
+  function shortId(id){ if(!id) return '—'; return String(id).slice(0,6)+'…'+String(id).slice(-4); }
+
+  function saveConn(){
+    try{
+      localStorage.setItem('sb_url', $('#sbUrl').value.trim());
+      localStorage.setItem('sb_anon', $('#sbAnon').value.trim());
+    }catch(_){}
+  }
+
+  function loadConn(){
+    try{
+      $('#sbUrl').value = localStorage.getItem('sb_url') || $('#sbUrl').value;
+      $('#sbAnon').value = localStorage.getItem('sb_anon') || $('#sbAnon').value;
+    }catch(_){}
+  }
+
+  async function initSupabase(){
+    const url = $('#sbUrl').value.trim();
+    const anon = $('#sbAnon').value.trim();
+    if(!url || !anon){ alert('Укажите Supabase URL и ключ'); return false; }
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    sb = createClient(url, anon, { auth: { persistSession: true } });
+    return true;
+  }
+
+  async function checkAdmin(){
+    try{
+      const { data: { user } } = await sb.auth.getUser();
+      if (user && user.email) { $('#whoami').textContent = user.email; }
+      // функция в БД: is_admin(uid) returns boolean
+      const { data, error } = await sb.rpc('is_admin');
+      if(error){ throw error; }
+      if(!data){ alert('Нет прав admin'); return false; }
+      return true;
+    }catch(e){
+      console.error(e);
+      alert('Ошибка входа: ' + (e.message || e));
+      return false;
+    }
+  }
+
+  function guessAmount(row){
+    return row.amount_cents ?? row.amount_usd_cents ?? row.amount_usdt_cents ?? row.amount ?? row.sum ?? null;
+  }
+  function guessWallet(row){
+    return row.wallet ?? row.address ?? row.usdt_wallet ?? row.card ?? row.purse ?? '';
+  }
+
+  function statusPill(s){
+    s = (s||'').toLowerCase();
+    let cls = 'pill';
+    if(s === 'paid') cls += ' ok';
+    else if(s === 'pending' || !s) cls += ' warn';
+    else cls += ' bad';
+    return `<span class="${cls}">${s||'pending'}</span>`;
+  }
+
+  function rowClass(s){
+    s = (s||'').toLowerCase();
+    if(s === 'paid') return 'ok';
+    if(!s || s === 'pending') return 'pending';
+    if(s === 'rejected' || s === 'failed' || s === 'canceled') return 'failed';
+    return '';
+  }
+
+  async function loadPage(next=false){
+    if(next) page += 1;
+    const status = $('#fltStatus').value;
+    const q = $('#search').value.trim();
+
+    let sel = sb.from('withdrawals')
+      .select('id, user_id, created_at, status, paid_at, processed_by, txid, note, wallet, address, amount, amount_cents, amount_usdt_cents, currency, profiles:profiles!inner(email, phone)', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(page*limit, page*limit + limit - 1);
+
+    if(status){ sel = sel.eq('status', status); }
+    if(q){
+      // try basic ilike filters
+      sel = sel.or(`id.ilike.%${q}%, profiles.email.ilike.%${q}%, profiles.phone.ilike.%${q}%`);
+    }
+
+    const { data, error } = await sel;
+    if(error){
+      console.error(error);
+      alert('Ошибка загрузки: ' + error.message);
+      return;
+    }
+    const tb = $('#tbl tbody'); tb.innerHTML = '';
+    for(const r of (data||[])){
+      const amount = guessAmount(r);
+      const wal = guessWallet(r);
+      const tr = document.createElement('tr');
+      tr.className = rowClass(r.status);
+      tr.innerHTML = `
+        <td title="${r.id}">${shortId(r.id)}</td>
+        <td>${new Date(r.created_at).toLocaleString()}</td>
+        <td>${r.profiles?.email || '—'}</td>
+        <td>${r.profiles?.phone || '—'}</td>
+        <td>${fmtMoney(amount)}</td>
+        <td>${wal || '—'}</td>
+        <td>${statusPill(r.status)}</td>
+        <td>
+          <input data-tx="${r.id}" value="${r.txid||''}" placeholder="TX / примечание" style="min-width:180px;height:34px"/>
+        </td>
+        <td>
+          <button class="btn" data-paid="${r.id}">Оплачено</button>
+          <button class="btn danger" data-reject="${r.id}">Отклонить</button>
+        </td>
+      `;
+      tb.appendChild(tr);
+    }
+  }
+
+  async function updateStatus(id, status){
+    try{
+      const tx = document.querySelector(`input[data-tx="${id}"]`)?.value || null;
+      const payload = { status, txid: tx };
+      if(status === 'paid'){ payload.paid_at = new Date().toISOString(); }
+      const { data, error } = await sb.from('withdrawals').update(payload).eq('id', id).select();
+      if(error){ throw error; }
+      await loadPage(false);
+    }catch(e){
+      console.error(e);
+      alert('Ошибка сохранения: ' + (e.message || e));
+    }
+  }
+
+  // UI wiring
+  $('#saveConn').addEventListener('click', saveConn);
+  $('#btnLoad').addEventListener('click', async () => {
+    if(!sb && !(await initSupabase())) return;
+    if(!(await checkAdmin())) return;
+    page = 0; await loadPage(false);
+  });
+  $('#btnNext').addEventListener('click', async () => { await loadPage(true); });
+
+  document.addEventListener('click', async (e)=>{
+    const paid = e.target.closest('[data-paid]');
+    const rej = e.target.closest('[data-reject]');
+    if(paid){
+      if(!confirm('Отметить как ОПЛАЧЕНО?')) return;
+      await updateStatus(paid.getAttribute('data-paid'), 'paid');
+    }else if(rej){
+      if(!confirm('Отклонить заявку?')) return;
+      await updateStatus(rej.getAttribute('data-reject'), 'rejected');
+    }
+  });
+
+  // load saved connection on open
+  loadConn();
+</script>
+</body>
+</html>
