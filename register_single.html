@@ -278,4 +278,30 @@ document.addEventListener('DOMContentLoaded', function(){
 <!-- 4) Уже был: логика форм -->
 <script defer src="assets/js/auth.js"></script>
 
+
+<script>
+// Idempotent finalize after auth sign-in/sign-up
+(function(){
+  const boot = async () => {
+    if (!window.sb && window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+      window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+    }
+    if (!window.sb || !window.LC) return;
+
+    try {
+      const { data, error } = await sb.auth.getUser();
+      if (error || !data?.user) return;
+      // ensure profile row and referral link
+      await LC.ensureProfile();
+      await LC.applyReferral();
+    } catch (_) {}
+  };
+
+  // run on load and on auth events
+  document.addEventListener('DOMContentLoaded', boot);
+  if (window.sb && sb.auth && sb.auth.onAuthStateChange) {
+    sb.auth.onAuthStateChange((e)=>{ if (e === 'SIGNED_IN') boot(); });
+  }
+})();
+</script>
 </body></html>
