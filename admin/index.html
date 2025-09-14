@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin — FULL</title>
+  <title>Admin — FULL (v3)</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{--bg:#0f1115;--card:#161a22;--text:#e6e9ef;--muted:#94a3b8;--accent:#00eaff;--line:rgba(255,255,255,.1)}
@@ -12,7 +12,6 @@
     .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.35);padding:12px}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     input,button,select,textarea{height:38px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);padding:0 10px}
-    textarea{height:80px;width:100%;padding:8px}
     button{cursor:pointer;font-weight:700}
     table{width:100%;border-collapse:collapse}
     th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
@@ -32,7 +31,7 @@
 <body>
   <div class="container">
     <div class="card row">
-      <strong>Admin · FULL</strong>
+      <strong>Admin · FULL (v3)</strong>
       <div class="right row">
         <label class="pill">URL <input id="url" size="24" placeholder="https://XYZ.supabase.co"></label>
         <label class="pill">ANON <input id="anon" size="28" placeholder="ey..."></label>
@@ -58,15 +57,7 @@
         <table id="tbl">
           <thead>
             <tr>
-              <th>user_id</th>
-              <th>email</th>
-              <th>phone</th>
-              <th>created</th>
-              <th>last_signin</th>
-              <th>balance</th>
-              <th>ref</th>
-              <th>1/2/3</th>
-              <th>действия</th>
+              <th>user_id</th><th>email</th><th>phone</th><th>created</th><th>last_signin</th><th>balance</th><th>ref</th><th>1/2/3</th><th>действия</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -74,17 +65,13 @@
       </div>
       <div class="row" style="margin-top:8px">
         <div class="pill">Страница: <span id="page">1</span></div>
-        <button id="prev">Назад</button>
-        <button id="next">Вперёд</button>
+        <button id="prev">Назад</button><button id="next">Вперёд</button>
       </div>
     </div>
   </div>
 
   <div class="drawer" id="drawer">
-    <div class="row">
-      <strong>Карточка пользователя</strong>
-      <button id="close" class="right">×</button>
-    </div>
+    <div class="row"><strong>Карточка пользователя</strong><button id="close" class="right">×</button></div>
     <div id="details" style="margin-top:8px" class="grid">
       <div class="grid-1">
         <label>user_id <input id="u_id" readonly></label>
@@ -92,24 +79,17 @@
         <label>Phone <input id="u_phone"></label>
         <label>Ref code <input id="u_refcode"></label>
         <label>Parent (uuid) <input id="u_parent"></label>
-        <div class="row">
-          <button id="saveProfile">Сохранить профиль</button>
-          <button id="regenRef">Новый реф-код</button>
-        </div>
+        <div class="row"><button id="saveProfile">Сохранить профиль</button><button id="regenRef">Новый реф-код</button></div>
         <hr>
         <div class="row">
           <label>Сумма (в у.е.) <input id="u_amount" placeholder="например 10.00" size="10"></label>
           <label>Причина <input id="u_reason" placeholder="manual"></label>
-          <button id="plus">+ Начислить</button>
-          <button id="minus">– Списать</button>
+          <button id="plus">+ Начислить</button><button id="minus">– Списать</button>
         </div>
         <div id="refLinkBox" class="muted">Реф-ссылка: <a id="refLink" target="_blank">—</a></div>
-        <small class="muted">Базовый URL: <code id="refBase">https://www.litcash.biz/register_single.html?ref=</code></small>
+        <small class="muted">Базовый URL: <code>https://www.litcash.biz/register_single.html?ref=</code></small>
       </div>
-      <div class="grid-1">
-        <div><b>Рефералы (список)</b></div>
-        <div id="refs"></div>
-      </div>
+      <div class="grid-1"><div><b>Рефералы (список)</b></div><div id="refs"></div></div>
     </div>
     <h4>JSON</h4>
     <pre id="json">—</pre>
@@ -127,9 +107,12 @@
     };
     $('#url').value = cfg.url; $('#anon').value = cfg.anon; $('#email').value = cfg.email;
     let sb=null, page=0, pageSize=200, session=null;
-    const REF_BASE = 'https://www.litcash.biz/register_single.html?ref=';
-
-    function init(){ if(!cfg.url||!cfg.anon){ setDiag('Укажи URL и ANON', true); return false;} sb = supabase.createClient(cfg.url,cfg.anon); setDiag('Клиент готов'); return true; }
+    function init(){
+      if(!cfg.url||!cfg.anon){ setDiag('Укажи URL и ANON', true); return false;}
+      // отдельный storageKey чтобы не конфликтовать с другим клиентом
+      sb = supabase.createClient(cfg.url,cfg.anon,{auth:{storageKey:'admin-auth'}});
+      setDiag('Клиент готов'); return true;
+    }
     function setDiag(text, isErr=false){ const el=$('#diag'); el.textContent='Диагностика: '+text; el.className='badge '+(isErr?'err':'ok'); }
 
     async function ensureAdmin(){
@@ -138,7 +121,8 @@
       session = au?.user || null;
       $('#me').textContent = session ? (session.email || session.id) : '—';
       if(!session){ setDiag('Нет сессии', true); return false; }
-      const { data, error } = await sb.rpc('is_admin');
+      // ключевая правка: передаём uid явно
+      const { data, error } = await sb.rpc('is_admin', { u: session.id });
       const ok = Boolean(!error && (Array.isArray(data)?data[0]:data));
       $('#role').textContent = ok ? 'admin':'—';
       setDiag(ok ? 'is_admin = true' : 'is_admin = false', !ok);
@@ -154,8 +138,8 @@
       const pass = $('#pass').value;
       if(!email || !pass){ alert('Введите email и пароль'); return; }
       cfg.email = email;
-      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error){ console.warn('signIn error', error); setDiag('Ошибка входа: '+(error.message||error), true); alert('Ошибка входа: '+(error.message||error)); return; }
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if(error){ setDiag('Ошибка входа: '+(error.message||error), true); alert('Ошибка входа: '+(error.message||error)); return; }
       await ensureAdmin();
       alert('Вход выполнен');
     }
@@ -164,7 +148,7 @@
     async function load(q=null){
       if(!await ensureAdmin()) { alert('Нет прав admin'); return; }
       const { data, error } = await sb.rpc('admin_list_users', { p_q:q, p_limit: pageSize, p_offset: page*pageSize });
-      if(error){ console.warn(error); setDiag('Ошибка загрузки: '+(error.message||error), true); alert('Ошибка загрузки'); return; }
+      if(error){ setDiag('Ошибка загрузки: '+(error.message||error), true); alert('Ошибка загрузки'); return; }
       const rows = Array.isArray(data)?data:[];
       const tb = $('#tbl tbody'); tb.innerHTML = '';
       for(const r of rows){
@@ -178,9 +162,7 @@
           <td>${fmtUSD(r.balance_cents)}</td>
           <td>${r.ref_code||''}</td>
           <td class="muted">${r.gen1|0}/${r.gen2|0}/${r.gen3|0}</td>
-          <td>
-            <button data-act="details" data-id="${r.user_id}">Открыть</button>
-          </td>`;
+          <td><button data-act="details" data-id="${r.user_id}">Открыть</button></td>`;
         tb.appendChild(tr);
       }
       setDiag('Загружено: '+rows.length+' записей');
@@ -188,27 +170,22 @@
 
     async function showDetails(id){
       const dr = $('#drawer'); dr.classList.add('open');
-      $('#details').style.opacity = .5;
-      $('#json').textContent = '…';
+      $('#details').style.opacity = .5; $('#json').textContent = '…';
       try{
         const { data, error } = await sb.rpc('admin_user_details_json', { p_user: id });
-        if(error){ console.warn(error); setDiag('Ошибка деталей: '+(error.message||error), true); return; }
+        if(error){ setDiag('Ошибка деталей: '+(error.message||error), true); return; }
         const j = data && (Array.isArray(data)?data[0]:data);
         $('#json').textContent = JSON.stringify(j, null, 2);
-
         $('#u_id').value = id;
         $('#u_email').value = j?.auth?.email || j?.profile?.email || '';
         $('#u_phone').value = j?.profile?.phone || '';
-        $('#u_refcode').value = j?.refs?.code || j?.profile?.ref_code || '';
-        $('#u_parent').value = j?.refs?.parent || j?.profile?.ref_parent || '';
-
+        $('#u_refcode').value = j?.profile?.ref_code || '';
+        $('#u_parent').value = j?.profile?.ref_parent || '';
         const rc = $('#u_refcode').value;
         const link = rc ? ('https://www.litcash.biz/register_single.html?ref=' + encodeURIComponent(rc)) : '';
-        $('#refLink').textContent = link || '—';
-        $('#refLink').href = link || '#';
-
+        $('#refLink').textContent = link || '—'; $('#refLink').href = link || '#';
         await loadRefs(id);
-      }catch(e){ console.warn(e); setDiag('Исключение деталей: '+e, true); }
+      }catch(e){ setDiag('Исключение деталей: '+e, true); }
       finally { $('#details').style.opacity = 1; }
     }
 
@@ -229,10 +206,9 @@
       const phone = $('#u_phone').value.trim() || null;
       const refcode = $('#u_refcode').value.trim() || null;
       const parent = $('#u_parent').value.trim() || null;
-      const { data, error } = await sb.rpc('admin_update_profile', { p_user: id, p_email: email, p_phone: phone, p_ref_code: refcode, p_ref_parent: parent });
+      const { error } = await sb.rpc('admin_update_profile', { p_user: id, p_email: email, p_phone: phone, p_ref_code: refcode, p_ref_parent: parent });
       if(error){ alert('Ошибка сохранения: '+(error.message||error)); return; }
-      alert('Профиль сохранён');
-      await showDetails(id);
+      alert('Профиль сохранён'); await showDetails(id);
     }
 
     async function regenRef(){
@@ -252,25 +228,22 @@
       if(isNaN(amt)){ alert('Неверная сумма'); return; }
       const cents = Math.round(amt*100) * (sign>0?1:-1);
       const reason = $('#u_reason').value || 'manual';
-      const { data, error } = await sb.rpc('admin_adjust_balance', { p_user: id, p_delta_cents: cents, p_reason: reason });
+      const { error } = await sb.rpc('admin_adjust_balance', { p_user: id, p_delta_cents: cents, p_reason: reason });
       if(error){ alert('Ошибка баланса: '+(error.message||error)); return; }
-      alert('Баланс обновлён');
-      await showDetails(id);
+      alert('Баланс обновлён'); await showDetails(id);
     }
 
+    // events
     $('#save').onclick = ()=>{ cfg.url=$('#url').value; cfg.anon=$('#anon').value; init(); alert('Сохранено'); };
-    $('#loginPwd').onclick = loginPwd;
-    $('#logout').onclick = logout;
+    $('#loginPwd').onclick = loginPwd; $('#logout').onclick = logout;
     $('#load').onclick = ()=>{ page=0; load($('#q').value||null); };
     $('#all').onclick = ()=>{ page=0; load(null); };
     $('#prev').onclick = ()=>{ if(page>0){ page--; load($('#q').value||null);} $('#page').textContent = page+1; };
     $('#next').onclick = ()=>{ page++; load($('#q').value||null); $('#page').textContent = page+1; };
     $('#tbl').addEventListener('click', (e)=>{ const btn=e.target.closest('button'); if(!btn) return; if(btn.dataset.act==='details'){ showDetails(btn.dataset.id); } });
     $('#close').onclick = ()=> $('#drawer').classList.remove('open');
-    $('#saveProfile').onclick = saveProfile;
-    $('#regenRef').onclick = regenRef;
-    $('#plus').onclick = ()=>adjustBalance(+1);
-    $('#minus').onclick = ()=>adjustBalance(-1);
+    $('#saveProfile').onclick = saveProfile; $('#regenRef').onclick = regenRef;
+    $('#plus').onclick = ()=>adjustBalance(+1); $('#minus').onclick = ()=>adjustBalance(-1);
   </script>
 </body>
 </html>
