@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin — Users</title>
+  <title>Admin — Users (password login)</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root{--bg:#0f1115;--card:#161a22;--text:#e6e9ef;--muted:#94a3b8;--accent:#00eaff;--line:rgba(255,255,255,.1)}
@@ -12,6 +12,7 @@
     .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.35);padding:12px}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     input,button{height:38px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);padding:0 10px}
+    input[type=password]{letter-spacing:0.1em}
     button{cursor:pointer;font-weight:700}
     table{width:100%;border-collapse:collapse}
     th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
@@ -30,7 +31,9 @@
         <label class="pill">URL <input id="url" size="22" placeholder="https://XYZ.supabase.co"></label>
         <label class="pill">ANON <input id="anon" size="30" placeholder="ey..."></label>
         <button id="save">Сохранить</button>
-        <button id="login">Войти</button>
+        <label class="pill">Email <input id="email" size="22" placeholder="admin@site"></label>
+        <label class="pill">Пароль <input id="pass" type="password" size="14" placeholder="••••••••"></label>
+        <button id="loginPwd">Войти по паролю</button>
         <button id="logout">Выйти</button>
       </div>
     </div>
@@ -49,7 +52,7 @@
           <thead>
             <tr>
               <th>user_id</th>
-              <th>email</th>
+              <th>email</</th>
               <th>phone</th>
               <th>created</th>
               <th>last_signin</th>
@@ -88,8 +91,10 @@
       set url(v){ localStorage.setItem('adm_url',v); $('#url').value=v; },
       get anon(){ return localStorage.getItem('adm_anon')||$('#anon').value||'';},
       set anon(v){ localStorage.setItem('adm_anon',v); $('#anon').value=v; },
+      get email(){ return localStorage.getItem('adm_email')||$('#email').value||'';},
+      set email(v){ localStorage.setItem('adm_email',v); $('#email').value=v; },
     };
-    $('#url').value = cfg.url; $('#anon').value = cfg.anon;
+    $('#url').value = cfg.url; $('#anon').value = cfg.anon; $('#email').value = cfg.email;
     let sb=null, page=0, pageSize=200, session=null;
 
     function init(){ if(!cfg.url||!cfg.anon){ alert('Укажи URL и ANON'); return false;} sb = supabase.createClient(cfg.url,cfg.anon); return true;}
@@ -109,6 +114,27 @@
     function fmtDate(s){ if(!s) return ''; const d=new Date(s); return d.toISOString().slice(0,19).replace('T',' '); }
     function fmtUSD(c){ return '$'+((+c||0)/100).toFixed(2); }
 
+    async function loginPwd(){
+      if(!init()) return;
+      const email = $('#email').value.trim();
+      const pass = $('#pass').value;
+      if(!email || !pass){ alert('Введите email и пароль'); return; }
+      cfg.email = email;
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if(error){ console.warn(error); alert('Ошибка входа: '+(error.message||error)); return; }
+      await ensureAdmin();
+      alert('Вход выполнен');
+    }
+
+    async function logout(){
+      if(!init()) return;
+      await sb.auth.signOut();
+      session = null;
+      $('#me').textContent = '—';
+      $('#role').textContent = '—';
+      alert('Выход выполнен');
+    }
+
     async function load(q=null){
       if(!await ensureAdmin()) { alert('Нет прав admin'); return; }
       const { data, error } = await sb.rpc('admin_list_users', { p_q:q, p_limit: pageSize, p_offset: page*pageSize });
@@ -126,9 +152,7 @@
           <td>${fmtUSD(r.balance_cents)}</td>
           <td>${r.ref_code||''}</td>
           <td class="muted">${r.gen1|0}/${r.gen2|0}/${r.gen3|0}</td>
-          <td>
-            <button data-act="details" data-id="${r.user_id}">Подробнее</button>
-          </td>`;
+          <td><button data-act="details" data-id="${r.user_id}">Подробнее</button></td>`;
         tb.appendChild(tr);
       }
     }
@@ -142,7 +166,6 @@
         if(error){ console.warn(error); $('#details').textContent='Ошибка'; return; }
         const j = data && (Array.isArray(data)?data[0]:data);
         $('#json').textContent = JSON.stringify(j, null, 2);
-        // quick header
         const email = j?.auth?.email || '';
         const phone = j?.profile?.phone || '';
         const bal = j?.wallet?.balance_cents||0;
@@ -157,8 +180,8 @@
     }
 
     $('#save').onclick = ()=>{ cfg.url=$('#url').value; cfg.anon=$('#anon').value; init(); alert('Сохранено'); };
-    $('#login').onclick = async ()=>{ if(!init())return; const email=prompt('Admin email:'); if(!email)return; const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false}}); if(error) alert('Ошибка входа'); else alert('Ссылка отправлена'); };
-    $('#logout').onclick = async ()=>{ if(!init())return; await sb.auth.signOut(); alert('Вышли'); };
+    $('#loginPwd').onclick = loginPwd;
+    $('#logout').onclick = logout;
     $('#load').onclick = ()=>{ page=0; load($('#q').value||null); };
     $('#all').onclick = ()=>{ page=0; load(null); };
     $('#prev').onclick = ()=>{ if(page>0){ page--; load($('#q').value||null);} $('#page').textContent = page+1; };
@@ -169,29 +192,6 @@
       if(btn.dataset.act==='details'){ showDetails(btn.dataset.id); }
     });
     $('#close').onclick = ()=> $('#drawer').classList.remove('open');
-
-    // CSV export
-    $('#csv').onclick = async ()=>{
-      if(!await ensureAdmin()) return;
-      const chunks = [];
-      let offset = 0, limit = 1000;
-      while(true){
-        const { data, error } = await sb.rpc('admin_list_users', { p_q: null, p_limit: limit, p_offset: offset });
-        if(error){ console.warn(error); break; }
-        const rows = data||[];
-        if(!rows.length) break;
-        chunks.push(...rows);
-        offset += limit;
-        if(rows.length < limit) break;
-      }
-      const headers = ['user_id','email','phone','created_at','last_sign_in_at','balance_cents','ref_code','gen1','gen2','gen3'];
-      const csv = [headers.join(',')].concat(chunks.map(r=>headers.map(h=>JSON.stringify(r[h]??'')).join(','))).join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'users.csv';
-      a.click();
-    };
   </script>
 </body>
 </html>
