@@ -62,6 +62,144 @@
   // Глобальный объект
   const LC = window.LC = window.LC || {};
 
+/* =========================  WITHDRAWALS — FRONTEND  =========================
+   Ненавязчивые добавления: подписка на статус, фолбэки для разных id полей,
+   и рендер истории заявок — только если на странице есть соответствующие узлы.
+   Ничего существующего не ломает.
+=============================================================================*/
+
+// Подписка на обновления статуса заявок для текущего пользователя
+LC.subscribeWithdrawalStatus = async function () {
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user || LC._wdSub) return;
+    LC._wdSub = sb.channel('wd-status-' + user.id)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'withdrawals',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        try {
+          const st = String(payload?.new?.status || '').toLowerCase();
+          if (st === 'paid') {
+            alert('Вывод подтверждён ✅');
+          } else if (st === 'rejected') {
+            alert('Заявка отклонена, средства возвращены ↩︎');
+            if (typeof LC.refreshBalance === 'function') LC.refreshBalance();
+          }
+          // Обновим список, если он смонтирован
+          if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
+        } catch(_){}
+      })
+      .subscribe();
+  } catch(_){}
+};
+
+// Универсальный сабмит формы вывода (поддерживает разные id полей)
+LC.bindWithdrawControls = function () {
+  // Вариант 1: полноценная форма с id="withdrawForm"
+  const form = document.getElementById('withdrawForm');
+  if (form && !form.dataset.lcInit) {
+    form.dataset.lcInit = '1';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const get = (sel, def='') => (document.querySelector(sel)?.value ?? def);
+      const amount  = parseFloat(get('#amount','0'));
+      const method  = get('#method','TRC20') || 'TRC20';
+      const address = get('#address','');
+      await LC.requestWithdrawal(Math.round((Number.isFinite(amount)?amount:0) * 100), method, address);
+    });
+  }
+
+  // Вариант 2: кнопка + поля c id="withAmount" и id="wallet", как на старой странице
+  const btn = document.getElementById('withSubmit');
+  if (btn && !btn.dataset.lcInit) {
+    btn.dataset.lcInit = '1';
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      btn.disabled = true;
+      const amount  = parseFloat(document.getElementById('withAmount')?.value || '0');
+      const address = document.getElementById('wallet')?.value || '';
+      try {
+        const row = await LC.requestWithdrawal(Math.round((Number.isFinite(amount)?amount:0) * 100), 'TRC20', address);
+        if (row?.ok) { btn.textContent = 'Заявка создана — ожидание'; }
+      } catch(e) {
+        console.warn(e);
+      } finally {
+        setTimeout(()=>{ try{ btn.disabled = false; btn.textContent = 'Отправить заявку'; }catch(_){} }, 1200);
+      }
+    });
+  }
+};
+
+// Рендерим историю заявок пользователя, если на странице есть место под неё
+LC.loadWithdrawalsList = async function () {
+  const tbody = document.getElementById('wd-table-body');
+  const list  = document.getElementById('wdList');
+  if (!tbody && !list) return;
+
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await sb
+      .from('withdrawals')
+      .select('id, created_at, amount_cents, status, txid, network, address')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+    const rows = Array.isArray(data) ? data : [];
+
+    const renderStatus = (s) => {
+      s = String(s||'').toLowerCase();
+      if (s === 'paid') return 'подтверждено';
+      if (s === 'rejected') return 'отменено';
+      return 'ожидание';
+    };
+    const fmtAmt = (c) => (Number(c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+
+    if (tbody) {
+      tbody.innerHTML = '';
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Пока нет заявок</td></tr>`;
+      } else {
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${new Date(r.created_at).toLocaleString()}</td>
+                          <td>${fmtAmt(r.amount_cents)} USDT</td>
+                          <td>${(r.network||'TRC20')}</td>
+                          <td>${renderStatus(r.status)}</td>
+                          <td>${r.txid? `<code>${r.txid}</code>` : '—'}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    if (list) {
+      list.innerHTML = '';
+      if (!rows.length) {
+        list.innerHTML = `<div class="empty">Пока нет заявок</div>`;
+      } else {
+        rows.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'wd-item';
+          item.innerHTML = `<div class="wd-row">
+                              <div class="wd-date">${new Date(r.created_at).toLocaleString()}</div>
+                              <div class="wd-amount">${fmtAmt(r.amount_cents)} USDT</div>
+                              <div class="wd-status">${renderStatus(r.status)}</div>
+                              <div class="wd-tx">${r.txid? `<code>${r.txid}</code>` : ''}</div>
+                            </div>`;
+          list.appendChild(item);
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('[LC] loadWithdrawalsList', e?.message || e);
+  }
+};
+
+
   // ===== Профиль + Реф-код ====================================================
   LC.ensureProfile = async function() {
 try {
@@ -655,5 +793,10 @@ LC.initVideoWatch = function () {
     await LC.mountReferral();
     await LC.refreshLevelInfo();
     await LC.refreshDashboardCards();
+    // --- Withdrawals wiring (safe & optional)
+    if (typeof LC.bindWithdrawControls === 'function') LC.bindWithdrawControls();
+    if (typeof LC.subscribeWithdrawalStatus === 'function') LC.subscribeWithdrawalStatus();
+    if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
+
   });
 })();
