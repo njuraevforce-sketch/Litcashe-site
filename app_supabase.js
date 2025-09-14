@@ -129,6 +129,34 @@ try {
 
 };
 
+  // ===== Активные рефералы (фильтр по балансу) ===============================
+  // Активным считаем пользователя, у которого balance_cents >= minCents (по умолчанию 2900 = 29 USDT)
+  LC.getActiveReferrals = async function(level = 1, minCents = 2900) {
+    try {
+      const { data, error } = await sb.rpc('get_referrals_by_generation', {
+        p_level: level,
+        p_min_cents: minCents
+      });
+      if (error) { console.warn('[LC] getActiveReferrals', error); return []; }
+      return Array.isArray(data) ? data : (data ? [data] : []);
+    } catch (e) {
+      console.warn('[LC] getActiveReferrals', e);
+      return [];
+    }
+  };
+
+  LC.getActiveReferralCounts = async function(minCents = 2900) {
+    try {
+      const { data, error } = await sb.rpc('get_referral_counts_active', { p_min_cents: minCents });
+      if (error) { console.warn('[LC] getActiveReferralCounts', error); return { gen1:0, gen2:0, gen3:0 }; }
+      const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
+      return { gen1: Number(row.gen1||0), gen2: Number(row.gen2||0), gen3: Number(row.gen3||0) };
+    } catch (e) {
+      console.warn('[LC] getActiveReferralCounts', e);
+      return { gen1:0, gen2:0, gen3:0 };
+    }
+  };
+
   // ===== Баланс / Уровни =====================================================
   LC.refreshBalance = async function() {
     try {
