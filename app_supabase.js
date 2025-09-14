@@ -67,14 +67,20 @@
 try {
   const { data, error } = await sb.auth.getUser();
   const user = data?.user; if (!user) return;
-  const { data: row, error: e1 } = await sb
+
+  const { data: row } = await sb
     .from('profiles')
     .select('user_id, ref_code')
     .eq('user_id', user.id)
     .maybeSingle();
-  if (!e1 && row) return;
-  await sb.from('profiles').insert({ user_id: user.id });
+  if (row) return;
+
+  const ins = await sb.from('profiles').insert({ user_id: user.id });
+  if (ins.error && ins.error.code !== '23505') {
+    console.warn('[LC] ensureProfile insert error', ins.error);
+  }
 } catch(e) { console.warn('[LC] ensureProfile', e?.message||e); }
+
 
 };
 
@@ -88,14 +94,12 @@ try {
   const { data, error } = await sb.auth.getUser();
   const user = data?.user; if (error || !user) return;
 
-  // Ensure profile row exists (idempotent)
-  await sb.from('profiles').upsert({ user_id: user.id }, { onConflict: 'user_id' });
-
-  // Delegate to secure RPC (handles idempotency & self-ref checks)
+  // Server-side will ensure profile via trigger, and apply referral safely
   await sb.rpc('apply_referral', { p_ref_code: refParam });
 } catch(e) {
   console.warn('[LC] applyReferral', e?.message||e);
 }
+
 
 
 };
