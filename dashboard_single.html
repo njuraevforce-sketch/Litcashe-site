@@ -1457,7 +1457,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ---- 1) основной путь: RPC (обходит RLS) ----
     try {
       if (typeof sb.rpc === 'function') {
-        const { data, error } = await sb.rpc('get_ref_counts_me');
+        const { data, error } = await sb.rpc('get_referral_counts_active', { p_min_cents: 2900 });
         if (!error && data) {
           const row = Array.isArray(data) ? data[0] : data;
           set('gen1Count', row?.gen1 ?? 0);
@@ -1528,7 +1528,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 1) Try RPC: get_ref_counts_me() (returns gen1, gen2, gen3 for auth.uid())
     try {
-      const rpc = await sb.rpc('get_ref_counts_me');
+      const rpc = await sb.rpc('get_referral_counts_active', { p_min_cents: 2900 });
       if (!rpc.error && rpc.data) {
         const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
         if (applyCounts(row)) return;
