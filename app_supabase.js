@@ -52,16 +52,17 @@
   // ===== Профиль + Реф-код ====================================================
   LC.ensureProfile = async function() {
 try {
-  const user = await getUser(); if (!user) return;
-  // use user_id, not id
-  const { data, error } = await sb
+  const { data, error } = await sb.auth.getUser();
+  const user = data?.user; if (!user) return;
+  const { data: row, error: e1 } = await sb
     .from('profiles')
     .select('user_id, ref_code')
     .eq('user_id', user.id)
     .maybeSingle();
-  if (!error && data) return;
+  if (!e1 and row) return;
   await sb.from('profiles').insert({ user_id: user.id });
 } catch(e) { console.warn('[LC] ensureProfile', e?.message||e); }
+
 };
 
   LC.applyReferral = async function() {
@@ -70,7 +71,8 @@ try {
   const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
   if (!refParam) return;
   localStorage.setItem('lc_ref_code', refParam);
-  const user = await getUser(); if (!user) return;
+  const { data, error } = await sb.auth.getUser();
+  const user = data?.user; if (!user) return;
 
   // already linked?
   const cur = await sb.from('user_referrals')
@@ -91,28 +93,32 @@ try {
     { onConflict: 'user_id' }
   );
 } catch(e) { console.warn('[LC] applyReferral', e?.message||e); }
+
 };
 
   LC.mountReferral = async function() {
 try {
-  const wrap = $('#refLinkWrap'), input = $('#refLink');
+  const wrap = document.querySelector('#refLinkWrap');
+  const input = document.querySelector('#refLink');
   if (!wrap || !input) return;
-  const user = await getUser(); if (!user) return;
-  // get my ref_code by user_id
-  const { data, error } = await sb
+  const { data, error } = await sb.auth.getUser();
+  const user = data?.user; if (!user) return;
+  const { data: row, error: e1 } = await sb
     .from('profiles')
     .select('ref_code')
     .eq('user_id', user.id)
     .maybeSingle();
-  if (error || !data?.ref_code) return;
+  if (e1 || !row?.ref_code) return;
   const url = new URL(location.origin + '/register_single.html');
-  url.searchParams.set('ref', data.ref_code);
-  input.value = url.toString(); wrap.style.display = 'block';
-  const btn = $('#btnCopyRef');
+  url.searchParams.set('ref', row.ref_code);
+  input.value = url.toString();
+  wrap.style.display = 'block';
+  const btn = document.querySelector('#btnCopyRef');
   if (btn) btn.addEventListener('click', async ()=>{
-    try { await navigator.clipboard.writeText(input.value); btn.textContent='Скопировано'; setTimeout(()=>btn.textContent='Скопировать',1200); } catch(_){}
+    try { await navigator.clipboard.writeText(input.value); btn.textContent='Скопировано'; setTimeout(()=>btn.textContent='Скопировать', 1200); } catch(_){}
   });
 } catch(e) { console.error('[LC] mountReferral', e?.message||e); }
+
 };
 
   // ===== Баланс / Уровни =====================================================
