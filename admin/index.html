@@ -2,47 +2,18 @@
 <html lang="ru">
 <head>
 
-  <!-- Robust Supabase autoinit -->
+  <!-- Supabase client (hard-wired) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-(async()=>{ if(!(await window.__ensureSupabase?.())) return; })();
-
-  (function(){
-    const warn = (msg) => { try { console.warn(msg) } catch(_) {} };
-    const load = (src) => new Promise((res, rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error('load '+src)); document.head.appendChild(s); });
-    const tryInit = async () => {
-      // 1) If app_supabase.js already present and set window.sb — done
-      if (window.sb) return true;
-
-      // 2) Try to load app_supabase.js from common paths
-      const candidates = ['/app_supabase.js','../app_supabase.js','/static/app_supabase.js'];
-      for (const src of candidates) {
-        try { await load(src); if (window.sb) return true; } catch(e){ warn(e); }
-      }
-
-      // 3) Try to create client from inline constants (if provided)
-      if (!window.supabase) {
-        try { await load('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'); } catch(e){ warn(e); }
-      }
-      if (!window.sb && window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-        try { window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY); return true; } catch(e){ warn(e); }
-      }
-
-      // 4) Try from data-attrs on <html> or <body>
-      const root = document.documentElement, body = document.body;
-      const url = (root.dataset.supabaseUrl || body?.dataset?.supabaseUrl || '').trim();
-      const key = (root.dataset.supabaseAnonKey || body?.dataset?.supabaseAnonKey || '').trim();
-      if (!window.sb && window.supabase && url && key) {
-        try { window.sb = window.supabase.createClient(url, key); return true; } catch(e){ warn(e); }
-      }
-
-      return !!window.sb;
-    };
-    window.__ensureSupabase = async () => {
-      const ok = await tryInit();
-      if (!ok) alert('Не найден Supabase клиент. Либо подключите /app_supabase.js, либо задайте window.SUPABASE_URL/ANON_KEY.');
-      return ok;
-    };
-  })();
+    try {
+      window.SUPABASE_URL = 'https://einpfuegfsilnoiareco.supabase.co';
+      window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w';
+      if (!window.supabase) throw new Error('supabase lib not loaded');
+      window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+      window.SB_READY = true;
+    } catch(e) {
+      alert('Ошибка инициализации Supabase: ' + e.message);
+    }
   </script>
 
   <meta charset="utf-8"/>
