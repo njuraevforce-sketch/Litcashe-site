@@ -21,6 +21,9 @@
     .drawer{position:fixed;top:0;right:-520px;width:520px;height:100%;background:#0e1219;border-left:1px solid var(--line);box-shadow:-6px 0 24px rgba(0,0,0,.4);transition:right .25s ease;padding:16px;overflow:auto}
     .drawer.open{right:0}
     pre{white-space:pre-wrap;background:#0c1017;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto}
+    .badge{padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+    .ok{color:#22c55e;border-color:#22c55e66}
+    .err{color:#ef4444;border-color:#ef444466}
   </style>
 </head>
 <body>
@@ -28,8 +31,8 @@
     <div class="card row">
       <strong>Admin · Users</strong>
       <div class="right row">
-        <label class="pill">URL <input id="url" size="22" placeholder="https://XYZ.supabase.co"></label>
-        <label class="pill">ANON <input id="anon" size="30" placeholder="ey..."></label>
+        <label class="pill">URL <input id="url" size="24" placeholder="https://XYZ.supabase.co"></label>
+        <label class="pill">ANON <input id="anon" size="28" placeholder="ey..."></label>
         <button id="save">Сохранить</button>
         <label class="pill">Email <input id="email" size="22" placeholder="admin@site"></label>
         <label class="pill">Пароль <input id="pass" type="password" size="14" placeholder="••••••••"></label>
@@ -46,13 +49,14 @@
         <button id="csv">Экспорт CSV</button>
         <div class="pill">Вы: <span id="me">—</span></div>
         <div class="pill">Роль: <span id="role">—</span></div>
+        <span id="diag" class="badge muted">Диагностика: —</span>
       </div>
       <div style="margin-top:8px; overflow:auto">
         <table id="tbl">
           <thead>
             <tr>
               <th>user_id</th>
-              <th>email</</th>
+              <th>email</th>
               <th>phone</th>
               <th>created</th>
               <th>last_signin</th>
@@ -97,17 +101,27 @@
     $('#url').value = cfg.url; $('#anon').value = cfg.anon; $('#email').value = cfg.email;
     let sb=null, page=0, pageSize=200, session=null;
 
-    function init(){ if(!cfg.url||!cfg.anon){ alert('Укажи URL и ANON'); return false;} sb = supabase.createClient(cfg.url,cfg.anon); return true;}
+    function init(){
+      if(!cfg.url||!cfg.anon){ setDiag('Укажи URL и ANON', true); return false;}
+      sb = supabase.createClient(cfg.url,cfg.anon);
+      setDiag('Клиент готов');
+      return true;
+    }
+
+    function setDiag(text, isErr=false){
+      const el = $('#diag'); el.textContent = 'Диагностика: '+text; el.className = 'badge ' + (isErr? 'err':'ok');
+    }
 
     async function ensureAdmin(){
       if(!sb && !init()) return false;
       const { data: au } = await sb.auth.getUser();
       session = au?.user || null;
       $('#me').textContent = session ? (session.email || session.id) : '—';
-      if(!session) return false;
+      if(!session){ setDiag('Нет сессии', true); return false; }
       const { data, error } = await sb.rpc('is_admin');
       const ok = Boolean(!error && (Array.isArray(data)?data[0]:data));
       $('#role').textContent = ok ? 'admin':'—';
+      setDiag(ok ? 'is_admin = true' : 'is_admin = false', !ok);
       return ok;
     }
 
@@ -121,7 +135,12 @@
       if(!email || !pass){ alert('Введите email и пароль'); return; }
       cfg.email = email;
       const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error){ console.warn(error); alert('Ошибка входа: '+(error.message||error)); return; }
+      if(error){
+        console.warn('signIn error', error);
+        setDiag('Ошибка входа: '+(error.message||error), true);
+        alert('Ошибка входа: '+(error.message||error));
+        return;
+      }
       await ensureAdmin();
       alert('Вход выполнен');
     }
@@ -132,13 +151,13 @@
       session = null;
       $('#me').textContent = '—';
       $('#role').textContent = '—';
-      alert('Выход выполнен');
+      setDiag('Выход выполнен');
     }
 
     async function load(q=null){
       if(!await ensureAdmin()) { alert('Нет прав admin'); return; }
       const { data, error } = await sb.rpc('admin_list_users', { p_q:q, p_limit: pageSize, p_offset: page*pageSize });
-      if(error){ console.warn(error); alert('Ошибка загрузки'); return; }
+      if(error){ console.warn(error); setDiag('Ошибка загрузки: '+(error.message||error), true); alert('Ошибка загрузки'); return; }
       const rows = Array.isArray(data)?data:[];
       const tb = $('#tbl tbody'); tb.innerHTML = '';
       for(const r of rows){
@@ -155,6 +174,7 @@
           <td><button data-act="details" data-id="${r.user_id}">Подробнее</button></td>`;
         tb.appendChild(tr);
       }
+      setDiag('Загружено: '+rows.length+' записей');
     }
 
     async function showDetails(id){
@@ -163,7 +183,7 @@
       $('#json').textContent = '…';
       try{
         const { data, error } = await sb.rpc('admin_user_details_json', { p_user: id });
-        if(error){ console.warn(error); $('#details').textContent='Ошибка'; return; }
+        if(error){ console.warn(error); $('#details').textContent='Ошибка'; setDiag('Ошибка деталей: '+(error.message||error), true); return; }
         const j = data && (Array.isArray(data)?data[0]:data);
         $('#json').textContent = JSON.stringify(j, null, 2);
         const email = j?.auth?.email || '';
@@ -176,7 +196,8 @@
           <div>Баланс: <b>${fmtUSD(bal)}</b></div>
           <div>Рефералы: ${rc.gen1||0}/${rc.gen2||0}/${rc.gen3||0}</div>
         `;
-      }catch(e){ console.warn(e); $('#details').textContent='Ошибка'; }
+        setDiag('Детали загружены');
+      }catch(e){ console.warn(e); $('#details').textContent='Ошибка'; setDiag('Исключение деталей: '+e, true); }
     }
 
     $('#save').onclick = ()=>{ cfg.url=$('#url').value; cfg.anon=$('#anon').value; init(); alert('Сохранено'); };
