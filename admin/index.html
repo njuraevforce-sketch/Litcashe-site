@@ -292,8 +292,8 @@ on conflict do nothing;</code></pre>
           alert('Мы отправили ссылку для входа на '+email);
         }
       }catch(e){ alert(e.message || e); }
-    });}catch(e){ alert(e.message || e); }
-  });
+    });
+  
   $('#btnLogout').addEventListener('click', async () => {
     try{ await sb.auth.signOut(); location.reload(); }catch(e){ alert(e.message || e); }
   });
