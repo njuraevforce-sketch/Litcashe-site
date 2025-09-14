@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Регистрация — Litcash</title>
-<link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
+<link rel="preconnect" crossorigin href="https://cdn.jsdelivr.net"/>
 <style>
 :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
 *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg-2),var(--bg));color:var(--text);font:15px/1.6 Inter,system-ui}
@@ -16,8 +15,8 @@
 .input{width:100%;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);padding:0 12px}
 .header{position:sticky;top:0;background:rgba(10,12,18,.6);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0} .nav a{color:#cfe9ff;margin-right:12px;text-decoration:none}
-  </style>
-<link href="assets/css/lang-switcher.css" rel="stylesheet"/>
+</style>
+<link rel="stylesheet" href="assets/css/lang-switcher.css"/>
 <style id="lc-lang-style-inline">
 /* LC Globe (inline) */
 #lc-inline-lang{position:relative;display:inline-flex;align-items:center}
@@ -35,7 +34,8 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
   #lc-inline-lang .lc-lang__menu{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}
   #lc-inline-lang .lc-lang__menu li:hover{background:rgba(0,0,0,.06)}
 }
-</style><style id="lc-lang-inline">/* LC Globe — forced dark style */
+</style>
+<style id="lc-lang-inline">/* LC Globe — forced dark style */
 .lc-lang{position:relative;display:inline-flex;align-items:center}
 .lc-lang__btn{height:36px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18)!important;background:rgba(255,255,255,.06)!important;color:#eee!important;display:inline-flex;gap:8px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:transform .08s ease,box-shadow .2s ease,background .2s ease}
 .lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)!important}
@@ -45,7 +45,9 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
 .lc-lang__menu{position:absolute;top:calc(100% + 8px);right:0;list-style:none!important;padding-left:0!important;margin:8px 0 0;padding:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96)!important;color:#eee!important;min-width:160px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:10000}
 .lc-lang.is-open .lc-lang__menu{display:block}
 .lc-lang__menu li{padding:8px 12px;cursor:pointer}
-.lc-lang__menu li:hover{background:rgba(255,255,255,.08)}</style><style id="lang-select-inline">
+.lc-lang__menu li:hover{background:rgba(255,255,255,.08)}
+</style>
+<style id="lang-select-inline">
 /* Styled <select> pill with globe */
 .lang-select{
   -webkit-appearance:none; -moz-appearance:none; appearance:none;
@@ -76,7 +78,6 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
 .video{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;aspect-ratio:16/9;background:#0b0e13}
 .section-title{margin:10px 0 12px;font-size:20px}
 </style>
-
 <style>
 /* ideal-mobile */
 html,body{overflow-x:hidden}
@@ -102,68 +103,87 @@ img,video{max-width:100%;height:auto}
 .lc-drawer__panel a{display:block;padding:12px;border-radius:10px;color:#cfe9ff;text-decoration:none;border:1px solid rgba(255,255,255,.08);margin:6px 0}
 </style>
 
+<script>
+// Сохраняем ?ref= в localStorage ещё до загрузки
+(function(){
+  try {
+    const p = new URLSearchParams(location.search).get('ref');
+    if (p) localStorage.setItem('lc_ref_code', p);
+  } catch(e){}
+})();
+</script>
+</head>
+<body>
+<header class="header noscript-header">
+  <div class="container nav">
+    <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
+    <nav class="nav-links">
+      <a href="index.html" data-i18n="home_nav" data-i18n-attr="text:nav_home">Главная</a>
+      <a href="dashboard_single.html" data-i18n="dashboard_nav" data-i18n-attr="text:nav_dashboard">Личный кабинет</a>
+      <a href="deposit_single.html" data-i18n="deposit_nav" data-i18n-attr="text:deposit_title">Пополнение</a>
+      <a href="withdraw_single.html" data-i18n="withdraw_nav" data-i18n-attr="text:withdraw_title">Вывод</a>
+      <a href="faq_single.html" data-i18n="faq_nav" data-i18n-attr="text:faq_title">FAQ</a>
+      <a href="settings_single.html" data-i18n="settings_nav" data-i18n-attr="text:settings_title">Настройки</a>
+    </nav>
+    <div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
+    <div class="lang">
+      <div class="lc-lang">
+        <button class="lc-lang__btn" aria-expanded="false" aria-haspopup="listbox">
+          <svg class="lc-lang__icon" aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+          </svg>
+          <span class="lc-lang__label">EN</span>
+        </button>
+        <ul class="lc-lang__menu" role="listbox" tabindex="-1">
+          <li data-lang="ru" role="option">RU Русский</li>
+          <li data-lang="en" role="option">GB English</li>
+        </ul>
+      </div>
+    </div>
+    <div class="nav-cta">
+      <a class="btn ghost" href="login_single.html" data-i18n="login_title">Вход</a>
+      <a class="btn primary" href="register_single.html" data-i18n="register_title">Регистрация</a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="card">
+    <h1 data-i18n="register_title">Регистрация</h1>
+    <form class="grid" id="regForm">
+      <input class="input" id="regEmail" type="email" placeholder="Email" required data-i18n-attr="placeholder:ph_email"/>
+      <input class="input" id="regPhone" type="tel" placeholder="Телефон (с кодом страны)" required data-i18n-attr="placeholder:ph_phone"/>
+      <input class="input" id="regPass" type="password" placeholder="Пароль" required data-i18n-attr="placeholder:ph_password"/>
+      <input class="input" id="refId" type="text" placeholder="Реферальный код (по желанию)"/>
+      <button class="btn" type="submit">Создать аккаунт</button>
+    </form>
+  </div>
   <script>
     (function(){
-      try {
-        const p = new URLSearchParams(location.search).get('ref');
-        if (p) localStorage.setItem('lc_ref_code', p);
-      } catch(e){}
+      const ref = new URLSearchParams(location.search).get('ref');
+      const input = document.getElementById('refId');
+      if (ref && input) input.value = ref;
     })();
   </script>
-</head>
-<body><header class="header noscript-header">
-<div class="container nav">
-<a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
-<nav class="nav-links">
-<a href="index.html" data-i18n="home_nav" data-i18n="nav_home">Главная</a>
-<a href="dashboard_single.html" data-i18n="dashboard_nav" data-i18n="nav_dashboard">Личный кабинет</a>
-<a href="deposit_single.html" data-i18n="deposit_nav" data-i18n="deposit_title">Пополнение</a>
-<a href="withdraw_single.html" data-i18n="withdraw_nav" data-i18n="withdraw_title">Вывод</a>
-<a href="faq_single.html" data-i18n="faq_nav" data-i18n="faq_title">FAQ</a>
-<a href="settings_single.html" data-i18n="settings_nav" data-i18n="settings_title">Настройки</a>
-</nav>
-<div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
-<div class="lang"><div class="lc-lang">
-<button aria-expanded="false" aria-haspopup="listbox" class="lc-lang__btn">
-<svg aria-hidden="true" class="lc-lang__icon" viewbox="0 0 24 24">
-<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
-</svg>
-<span class="lc-lang__label">EN</span>
-</button>
-<ul class="lc-lang__menu" role="listbox" tabindex="-1">
-<li data-lang="ru" role="option">RU Русский</li>
-<li data-lang="en" role="option">GB English</li>
-</ul>
-</div></div><div class="nav-cta">
-<a class="btn ghost" href="login_single.html" data-i18n="login_title">Вход</a>
-<a class="btn primary" href="register_single.html" data-i18n="register_title">Регистрация</a>
-</div>
-</div>
-</header>
-<main class="container">
-<div class="card">
-<h1 data-i18n="register_title">Регистрация</h1>
-<form class="grid" id="regForm">
-<input class="input" id="regEmail" placeholder="Email" required="" type="email"/ data-i18n-attr="placeholder:ph_email">
-<input class="input" id="regPhone" placeholder="Телефон (с кодом страны)" required="" type="tel"/ data-i18n-attr="placeholder:ph_phone">
-<input class="input" id="regPass" placeholder="Пароль" required="" type="password"/ data-i18n-attr="placeholder:ph_password">
-<input class="input" id="refId" placeholder="Реферальный код (по желанию)" type="text"/>
-<button class="btn" type="submit">Создать аккаунт</button>
-</form>
-</div>
-<script>(function(){const ref=new URLSearchParams(location.search).get('ref');const input=document.getElementById('refId');if(ref&&input)input.value=ref;})();</script>
 </main>
-<footer class="footer"><div class="container">© 2025 Litcash</div></footer>
+
+<footer class="footer">
+  <div class="container">© 2025 Litcash</div>
+</footer>
+
+<!-- JS: порядок важен -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
-<script defer src="assets/js/i18n.js"></script>
 <script defer src="app_supabase.js"></script>
+<script defer src="assets/js/i18n.js"></script>
 <script defer src="assets/js/lang-switcher.js"></script>
+<script defer src="assets/js/auth.js"></script>
+
 <script id="lc-lang-script-inline" type="text/plain">
 (function(){
   if (!window.LC_I18N) {
     const DEFAULT_LANG='ru', KEY='litcash_lang';
-    const dict={ru:{}, en:{}}; // fill later as needed
+    const dict={ru:{}, en:{}};
     function getLang(){ try{ return localStorage.getItem(KEY)||DEFAULT_LANG }catch(e){ return DEFAULT_LANG } }
     function setLang(l){ try{ localStorage.setItem(KEY,l) }catch(e){} }
     function t(key,lang){ lang=lang||getLang(); if(dict[lang]&&key in dict[lang]) return dict[lang][key]; if(dict[DEFAULT_LANG]&&key in dict[DEFAULT_LANG]) return dict[DEFAULT_LANG][key]; return null }
@@ -181,7 +201,6 @@ img,video{max-width:100%;height:auto}
     window.LC_I18N={getLang,setLang,apply,t,dict};
     document.addEventListener('DOMContentLoaded',()=>apply());
   }
-  // Bind globe
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
   ready(function(){
     var root = document.querySelector('#lc-inline-lang') || document.querySelector('.lc-lang');
@@ -197,7 +216,9 @@ img,video{max-width:100%;height:auto}
     menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
   });
 })();
-</script><script id="lc-lang-inline" type="text/plain">(function(){
+</script>
+<script id="lc-lang-inline" type="text/plain">
+(function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
   function getLang(){ try{return localStorage.getItem('litcash_lang')||'en'}catch(e){return 'en'} }
   function setLang(l){ try{localStorage.setItem('litcash_lang',l)}catch(e){} }
@@ -219,13 +240,14 @@ img,video{max-width:100%;height:auto}
     menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
     apply();
   });
-})();</script><script id="lang-select-inline" type="text/plain">
+})();
+</script>
+<script id="lang-select-inline" type="text/plain">
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
   ready(function(){
     var sel = document.querySelector('.lang-select') || document.getElementById('langSelect');
     if(!sel) return;
-    // init value from storage
     try{
       var cur = localStorage.getItem('litcash_lang') || 'ru';
       if ([].some.call(sel.options, o => o.value === cur)) sel.value = cur;
@@ -236,11 +258,11 @@ img,video{max-width:100%;height:auto}
       try{ document.documentElement.setAttribute('lang', l); }catch(_){}
     }
     sel.addEventListener('change', function(){ apply(this.value); });
-    // Also apply on load
     apply(sel.value);
   });
 })();
 </script>
+
 <div class="lc-drawer" id="lc-drawer" aria-hidden="true">
   <div class="lc-drawer__panel">
     <nav id="lc-drawer-links"></nav>
@@ -260,48 +282,31 @@ document.addEventListener('DOMContentLoaded', function(){
   function close(){ drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden','true'); }
   burger.addEventListener('click', function(e){ e.preventDefault(); open(); });
   drawer.addEventListener('click', function(e){ if(e.target===drawer) close(); });
-  // Clone links/cta
   if(links && dl){ dl.innerHTML = links.outerHTML; }
   if(cta && dc){ dc.innerHTML = cta.outerHTML; }
 });
 </script>
 
-<!-- 1) Библиотека Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- 2) Твой конфиг с ключами (файл лежит в КОРНЕ) -->
-<script src="supabaseConfig.js"></script>
-
-<!-- 3) Твой код инициализации клиента (в КОРНЕ) -->
-<script src="app_supabase.js"></script>
-
-<!-- 4) Уже был: логика форм -->
-<script defer src="assets/js/auth.js"></script>
-
-
+<!-- Finalize after auth -->
 <script>
-// Idempotent finalize after auth sign-in/sign-up
 (function(){
   const boot = async () => {
     if (!window.sb && window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
       window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
     }
     if (!window.sb || !window.LC) return;
-
     try {
       const { data, error } = await sb.auth.getUser();
       if (error || !data?.user) return;
-      // ensure profile row and referral link
-      await LC.ensureProfile();
-      await LC.applyReferral();
+      await LC.ensureProfile();   // создаст profiles по user_id
+      await LC.applyReferral();   // привяжет пригласившего по ?ref=
     } catch (_) {}
   };
-
-  // run on load and on auth events
   document.addEventListener('DOMContentLoaded', boot);
   if (window.sb && sb.auth && sb.auth.onAuthStateChange) {
-    sb.auth.onAuthStateChange((e)=>{ if (e === 'SIGNED_IN') boot(); });
+    sb.auth.onAuthStateChange((event)=>{ if (event === 'SIGNED_IN') boot(); });
   }
 })();
 </script>
-</body></html>
+</body>
+</html>
