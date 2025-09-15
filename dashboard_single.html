@@ -1679,5 +1679,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 <script>
 <!-- ===== /PATCH ===== -->
 
+
+<!-- LC: recovery bounce guard -->
+<script id="lc-recovery-bounce">
+(function(){
+  try {
+    var p = new URLSearchParams(location.search);
+    var isRecovery = (p.get('type') === 'recovery') || p.has('access_token') || p.has('recovery_token');
+    if (isRecovery) {
+      // перенаправляем на страницу логина, сохраняя токены в query
+      var qs = location.search || '';
+      location.replace('login_single.html' + qs);
+    }
+  } catch(_) {}
+})();
+</script>
+
 </body>
 </html>
