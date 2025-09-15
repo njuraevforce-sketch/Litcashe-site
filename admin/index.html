@@ -1,273 +1,326 @@
 <!doctype html>
 <html lang="ru">
 <head>
-
-  <!-- Supabase client (hard-wired) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    try {
-      window.SUPABASE_URL = 'https://einpfuegfsilnoiareco.supabase.co';
-      window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w';
-      if (!window.supabase) throw new Error('supabase lib not loaded');
-      window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-      window.SB_READY = true;
-    } catch(e) {
-      alert('Ошибка инициализации Supabase: ' + e.message);
-    }
-  </script>
-
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Litcash — Единая Админ‑панель</title>
-  <style>
-    :root{ --bg:#0b0f14; --panel:#11161d; --muted:#7c8794; --text:#e6edf3; --accent:#3ea6ff; --ok:#30d158; --warn:#ffd60a; --bad:#ff453a; --card:#0f1520; }
-    html,body{ height:100%; background:var(--bg); color:var(--text); font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif; margin:0 }
-    a{ color:var(--accent); text-decoration:none }
-    .wrap{ max-width:1200px; margin:0 auto; padding:16px }
-    .topbar{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px }
-    .brand{ font-weight:700; letter-spacing:.3px }
-    .authbar{ display:flex; gap:8px; align-items:center }
-    .authbar .muted{ color:var(--muted) }
-    .btn{ background:#151c25; border:1px solid #1c2430; color:var(--text); padding:8px 12px; border-radius:10px; cursor:pointer }
-    .btn:hover{ background:#182130 }
-    .btn.ok{ border-color:#1f4730; background:#10301d }
-    .btn.warn{ border-color:#5b4b10; background:#2a250a }
-    .btn.bad{ border-color:#55222a; background:#2a0f13 }
-    .btn.ghost{ background:transparent; border-color:#2a3647 }
-    .tabs{ display:flex; gap:8px; margin:10px 0 16px }
-    .tab{ padding:8px 12px; border-radius:10px; background:#121a24; border:1px solid #223245; cursor:pointer }
-    .tab.active{ background:#182130; border-color:#335074 }
-    .panel{ background:var(--panel); border:1px solid #1b2330; border-radius:14px; padding:14px; margin-bottom:14px }
-    .grid{ display:grid; gap:10px }
-    .grid.cols-2{ grid-template-columns: 1fr 1fr }
-    .grid.cols-3{ grid-template-columns: 1fr 1fr 1fr }
-    .grid.cols-4{ grid-template-columns: repeat(4,1fr) }
-    .field{ display:grid; gap:6px }
-    .field label{ color:#91a0b3; font-size:12px }
-    input, select{ background:#0f1520; border:1px solid #253144; color:var(--text); border-radius:10px; padding:8px 10px; outline:none }
-    input:focus, select:focus{ border-color:#3e5f85; }
-    .muted{ color:var(--muted) }
-    .table-wrap{ overflow:auto; border:1px solid #1b2330; border-radius:10px }
-    table{ width:100%; border-collapse:collapse; font-size:13px }
-    thead{ background:#0f1520 }
-    th,td{ padding:10px; border-bottom:1px solid #1b2330; vertical-align:top }
-    tr:hover td{ background:#0e1520 }
-    .pill{ padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid #223245; background:#101826 }
-    .pill.paid{ border-color:#1f4730; background:#0f2219; color:#8ef0b0 }
-    .pill.pending{ border-color:#334256; background:#121b28; color:#a6c6ff }
-    .pill.rejected{ border-color:#55222a; background:#2a0f13; color:#ff8f8a }
-    .right{ text-align:right }
-    .row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-    .grow{ flex:1 }
-    .hint{ background:#0f1520; border:1px dashed #304055; padding:8px 10px; border-radius:10px; color:#aab6c3 }
-    .danger{ color:#ff8f8a }
-    .green{ color:#8ef0b0 }
-    .card{ background:var(--card); border:1px solid #1b2330; border-radius:12px; padding:12px }
-    .drawer{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:flex-end; justify-content:flex-end }
-    .drawer.open{ display:flex }
-    .drawer .sheet{ width:480px; max-width:92vw; height:100%; overflow:auto; background:#0e141c; border-left:1px solid #1b2330; padding:16px }
-    code{ background:#0c1118; border:1px solid #1a222e; padding:2px 6px; border-radius:8px }
-    .nowrap{ white-space:nowrap }
-  </style>
-  <!-- Supabase client (fallback to CDN if window.sb not present) -->
-  <script>
-    window.SUPABASE_URL = window.SUPABASE_URL || "";
-    window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
-  </script>
+  <title>LC • Pro Admin</title>
+
+  <!-- Supabase client -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#10161f; --muted:#8a97a7; --text:#e6edf3; --accent:#3ea6ff;
+      --ok:#30d158; --warn:#ffd60a; --bad:#ff453a; --card:#0e141d;
+      --b:#1b2533; --b2:#233244; --b3:#2b3a50;
+    }
+    html,body{height:100%;background:var(--bg);color:var(--text);margin:0;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+    a{color:var(--accent);text-decoration:none}
+    .wrap{max-width:1280px;margin:0 auto;padding:14px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .brand{font-weight:800;letter-spacing:.3px}
+    .authbar{display:flex;gap:8px;align-items:center}
+    .muted{color:var(--muted)}
+    .btn{background:#121a24;border:1px solid var(--b);color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .btn:hover{background:#172131;border-color:var(--b2)}
+    .btn.ok{background:#0d2718;border-color:#1e4b2e}
+    .btn.warn{background:#2a250a;border-color:#5b4b10}
+    .btn.bad{background:#2a0f13;border-color:#55222a}
+    .btn.ghost{background:transparent;border-color:var(--b3)}
+    .tabs{display:flex;gap:8px;margin:10px 0 14px;flex-wrap:wrap}
+    .tab{padding:8px 12px;border-radius:10px;background:#121a24;border:1px solid var(--b);cursor:pointer}
+    .tab.active{background:#182130;border-color:#335074}
+    .panel{background:var(--panel);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:12px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .grow{flex:1}
+    input,select,textarea{background:#0f1520;border:1px solid var(--b2);color:var(--text);border-radius:10px;padding:8px 10px;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:#3e5f85}
+    textarea{min-height:80px;resize:vertical}
+    .table-wrap{overflow:auto;border:1px solid var(--b);border-radius:10px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead{background:#0f1520}
+    th,td{padding:10px;border-bottom:1px solid var(--b);vertical-align:top}
+    tr:hover td{background:#0e1520}
+    .right{text-align:right}
+    .pill{padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--b2);background:#0f1826}
+    .pill.paid{border-color:#1f4730;background:#0f2219;color:#8ef0b0}
+    .pill.pending{border-color:#334256;background:#121b28;color:#a6c6ff}
+    .pill.rejected{border-color:#55222a;background:#2a0f13;color:#ff8f8a}
+    .card{background:var(--card);border:1px solid var(--b);border-radius:12px;padding:12px}
+    .hint{background:#0f1520;border:1px dashed var(--b2);padding:8px 10px;border-radius:10px;color:#aab6c3}
+    code{background:#0c1118;border:1px solid #1a222e;padding:2px 6px;border-radius:8px}
+    .nowrap{white-space:nowrap}
+    .grid{display:grid;gap:10px}
+    .grid.cols-2{grid-template-columns:1fr 1fr}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .grid.cols-4{grid-template-columns:repeat(4,1fr)}
+    .drawer{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:flex-end}
+    .drawer.open{display:flex}
+    .drawer .sheet{width:520px;max-width:92vw;height:100%;overflow:auto;background:#0e141c;border-left:1px solid var(--b);padding:16px}
+    .search{min-width:240px}
+    .small{font-size:12px}
+    .sep{height:1px;background:var(--b);margin:8px 0}
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">Litcash • Admin</div>
-      <div class="authbar">
-        <span class="muted">Аккаунт:</span>
-        <span id="authInfo" class="nowrap">не авторизованы</span>
-        <button class="btn" id="btnLogin">Войти</button>
-        <button class="btn" id="btnLogout" style="display:none">Выйти</button>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">LC • Pro Admin</div>
+    <div class="authbar">
+      <span class="muted">Аккаунт:</span>
+      <span id="authInfo" class="nowrap">—</span>
+      <button class="btn" id="btnLogin">Войти</button>
+      <button class="btn" id="btnLogout" style="display:none">Выйти</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="withdrawals">Заявки</button>
+    <button class="tab" data-tab="users">Пользователи</button>
+    <button class="tab" data-tab="refs">Рефералы</button>
+    <button class="tab" data-tab="rewards">Начисления</button>
+    <button class="tab" data-tab="about">Настройки/Справка</button>
+  </div>
+
+  <!-- WITHDRAWALS -->
+  <section class="panel" data-page="withdrawals">
+    <div class="row">
+      <select id="wStatus">
+        <option value="">Все статусы</option>
+        <option value="pending">Ожидание</option>
+        <option value="paid">Оплачено</option>
+        <option value="rejected">Отклонено</option>
+      </select>
+      <input id="wSearch" class="grow search" placeholder="Поиск: id, адрес, TX, email, телефон">
+      <input id="wFrom" type="date">
+      <input id="wTo" type="date">
+      <button class="btn" id="wReload">Обновить</button>
+      <button class="btn ghost" id="wExport">Экспорт CSV</button>
+    </div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table id="wTable">
+        <thead><tr>
+          <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
+          <th class="right">Сумма</th><th class="right">Комиссия</th><th class="right">Итого</th>
+          <th>Сеть</th><th>Адрес</th><th>Статус</th><th>TX/Примечание</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <span class="muted" id="wDiag">—</span>
+      <span class="grow"></span>
+      <button class="btn ghost" id="wPrev">Назад</button>
+      <button class="btn ghost" id="wNext">Вперёд</button>
+    </div>
+  </section>
+
+  <!-- USERS -->
+  <section class="panel" data-page="users" style="display:none">
+    <div class="row">
+      <input id="uSearch" class="grow search" placeholder="Поиск: email, телефон, user_id, ref_code">
+      <button class="btn" id="uReload">Обновить</button>
+      <button class="btn ghost" id="uExport">Экспорт CSV</button>
+      <span class="muted" id="uDiag">—</span>
+    </div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table id="uTable">
+        <thead><tr>
+          <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
+          <th class="right">Баланс</th><th>Реф-код</th><th>Реф-ссылка</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- REFS -->
+  <section class="panel" data-page="refs" style="display:none">
+    <div class="grid cols-3">
+      <div class="card">
+        <h3>Общий обзор</h3>
+        <div class="row">
+          <input id="rUser" class="grow" placeholder="User ID для обзора">
+          <button class="btn" id="rLoad">Показать</button>
+        </div>
+        <div class="grid cols-3" style="margin-top:10px">
+          <div><div class="muted small">Поколение 1</div><div class="pill" id="rGen1">—</div></div>
+          <div><div class="muted small">Поколение 2</div><div class="pill" id="rGen2">—</div></div>
+          <div><div class="muted small">Поколение 3</div><div class="pill" id="rGen3">—</div></div>
+        </div>
+        <div class="grid cols-3" style="margin-top:10px">
+          <div><div class="muted small">Сумма L1</div><div class="pill" id="rSum1">—</div></div>
+          <div><div class="muted small">Сумма L2</div><div class="pill" id="rSum2">—</div></div>
+          <div><div class="muted small">Сумма L3</div><div class="pill" id="rSum3">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Последние начисления</h3>
+        <div class="table-wrap">
+          <table id="rLast">
+            <thead><tr><th>Дата</th><th>Уровень</th><th>Сумма</th><th>Источник</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Ссылка/Код</h3>
+        <div class="grid cols-1">
+          <div class="row"><span class="muted small">Реф-код:</span><input id="rCode" class="grow" readonly></div>
+          <div class="row"><span class="muted small">Реф-ссылка:</span><input id="rLink" class="grow" readonly><button class="btn" id="rCopy">Копировать</button></div>
+        </div>
       </div>
     </div>
 
-    <div class="tabs">
-      <button class="tab active" data-tab="withdrawals">Заявки на вывод</button>
-      <button class="tab" data-tab="users">Пользователи</button>
-      <button class="tab" data-tab="refs">Рефералы</button>
-      <button class="tab" data-tab="about">Настройки / Справка</button>
+    <div class="card" style="margin-top:10px">
+      <h3>Дерево рефералов</h3>
+      <div class="row">
+        <input id="treeUser" class="grow" placeholder="User ID (корень дерева)">
+        <button class="btn" id="treeLoad">Построить</button>
+        <button class="btn ghost" id="treeExport">Экспорт CSV</button>
+      </div>
+      <div class="table-wrap" style="margin-top:8px">
+        <table id="treeTable">
+          <thead><tr><th>Уровень</th><th>User ID</th><th>Email</th><th>Телефон</th><th class="right">Баланс</th><th>Реф-код</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
+  </section>
 
-    <!-- WITHDRAWALS -->
-    <section class="panel" data-page="withdrawals">
-      <div class="row">
-        <select id="wStatus">
-          <option value="">Все статусы</option>
-          <option value="pending">Ожидание</option>
-          <option value="paid">Оплачено</option>
-          <option value="rejected">Отклонено</option>
-        </select>
-        <input id="wSearch" class="grow" placeholder="Поиск: id, адрес, TX, email, телефон"/>
-        <button class="btn" id="wReload">Обновить</button>
-      </div>
-      <div class="table-wrap" style="margin-top:10px">
-        <table id="wTable">
-          <thead><tr>
-            <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
-            <th class="right">Сумма</th><th class="right">Комиссия</th><th class="right">Итого</th><th>Реквизиты</th><th>Статус</th><th>TX/примечание</th><th></th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <span class="muted" id="wDiag">—</span>
-        <span class="grow"></span>
-        <button class="btn ghost" id="wPrev">Назад</button>
-        <button class="btn ghost" id="wNext">Вперёд</button>
-      </div>
-    </section>
+  <!-- REWARDS (global feed) -->
+  <section class="panel" data-page="rewards" style="display:none">
+    <div class="row">
+      <input id="rwSearch" class="grow search" placeholder="Поиск: source_user, target_user, уровень">
+      <button class="btn" id="rwReload">Обновить</button>
+      <button class="btn ghost" id="rwExport">Экспорт CSV</button>
+      <span class="muted" id="rwDiag">—</span>
+    </div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table id="rwTable">
+        <thead><tr>
+          <th>Дата</th><th>Уровень</th><th>Получатель</th><th>Источник</th><th class="right">Сумма</th><th>Комментарий</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
 
-    <!-- USERS -->
-    <section class="panel" data-page="users" style="display:none">
-      <div class="row">
-        <input id="uSearch" class="grow" placeholder="Поиск: email, телефон, user_id"/>
-        <button class="btn" id="uReload">Обновить</button>
-        <span class="muted" id="uDiag">—</span>
-      </div>
-      <div class="table-wrap" style="margin-top:10px">
-        <table id="uTable">
-          <thead><tr>
-            <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th><th class="right">Баланс</th><th></th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-
-    <!-- REFS -->
-    <section class="panel" data-page="refs" style="display:none">
-      <div class="grid cols-3">
-        <div class="card">
-          <h3>Общий обзор</h3>
-          <div class="row">
-            <input id="rUser" class="grow" placeholder="User ID для обзора (или откройте пользователя во вкладке «Пользователи»)">
-            <button class="btn" id="rLoad">Показать</button>
-          </div>
-          <div class="grid cols-3" style="margin-top:10px">
-            <div class="field"><label>Поколение 1</label><div class="pill" id="rGen1">—</div></div>
-            <div class="field"><label>Поколение 2</label><div class="pill" id="rGen2">—</div></div>
-            <div class="field"><label>Поколение 3</label><div class="pill" id="rGen3">—</div></div>
-          </div>
-          <div class="grid cols-3" style="margin-top:10px">
-            <div class="field"><label>Сумма L1</label><div class="pill" id="rSum1">—</div></div>
-            <div class="field"><label>Сумма L2</label><div class="pill" id="rSum2">—</div></div>
-            <div class="field"><label>Сумма L3</label><div class="pill" id="rSum3">—</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Последние начисления</h3>
-          <div class="table-wrap">
-            <table id="rLast">
-              <thead><tr><th>Дата</th><th>Уровень</th><th>Сумма</th><th>Источник</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Ссылка/Код</h3>
-          <div class="field"><label>Реф-код</label><input id="rCode" readonly></div>
-          <div class="field"><label>Реф‑ссылка</label><div class="row"><input id="rLink" class="grow" readonly><button class="btn" id="rCopy">Копировать</button></div></div>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ABOUT -->
-    <section class="panel" data-page="about" style="display:none">
-      <div class="grid cols-2">
-        <div class="card">
-          <h3>Доступ</h3>
-          <div class="hint">
-            В админ‑панель допускаются только пользователи из таблицы <code>public.admins</code>.
-            Проверка идёт через RPC <code>lc_is_admin()</code>.
-          </div>
-          <p class="muted">Если не видите данные — добавьте свой user_id:</p>
-          <pre><code>insert into public.admins(user_id)
+  <!-- ABOUT -->
+  <section class="panel" data-page="about" style="display:none">
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Доступ</h3>
+        <div class="hint">
+          В админ-панель допускаются только пользователи из таблицы <code>public.admins</code>. Проверка идёт через RPC <code>lc_is_admin()</code>.<br>
+          Для добавления:<br>
+          <code>insert into public.admins(user_id)
 select id from auth.users where email = 'ВАШ_EMAIL'
-on conflict do nothing;</code></pre>
+on conflict do nothing;</code>
         </div>
-        <div class="card">
-          <h3>Баланс/выводы</h3>
-          <p>Заявки на вывод обрабатываются через RPC <code>admin_update_withdrawal</code> (транзакционно; при отклонении средства возвращаются).</p>
-          <p>Баланс меняется через политику RLS для админов или RPC <code>admin_adjust_balance</code> (если добавите).</p>
-        </div>
+        <div class="muted small">Также поддерживается фолбэк-проверка наличия записи в <code>admins</code>, если RPC недоступен.</div>
       </div>
-    </section>
-  </div>
-
-  <!-- DRAWER: USER DETAILS -->
-  <div class="drawer" id="drawer">
-    <div class="sheet">
-      <div class="row" style="justify-content:space-between">
-        <h3 id="dTitle" style="margin:6px 0">Профиль пользователя</h3>
-        <button class="btn ghost" id="dClose">Закрыть</button>
+      <div class="card">
+        <h3>Финансы</h3>
+        <p class="muted small">Подтверждение/отмена заявок: RPC <code>admin_update_withdrawal(p_id, p_status, p_txid, p_note)</code>.
+        При отклонении средства должны возвращаться транзакционно.</p>
+        <p class="muted small">Коррекция баланса: <code>admin_adjust_balance(p_user_id, p_delta_cents)</code> (опционально).</p>
       </div>
-
-      <div class="grid cols-2">
-        <div class="field"><label>User ID</label><input id="dUserId" readonly></div>
-        <div class="field"><label>Создан</label><input id="dCreated" readonly></div>
-        <div class="field"><label>Email</label><input id="dEmail"></div>
-        <div class="field"><label>Телефон</label><input id="dPhone"></div>
-        <div class="field"><label>Баланс (USDT)</label><input id="dBalance" type="number" step="0.01"></div>
-        <div class="field"><label>Реф-код</label><div class="row"><input id="dRefCode"><button class="btn ghost" id="dGenRef">Сгенерировать</button></div></div>
-        <div class="field"><label>Реф‑ссылка</label><div class="row"><input id="dRefLink" readonly><button class="btn" id="dCopyRef">Копировать</button></div></div>
-
-        <div class="field"><label>Изменение (±USDT)</label><input id="dDelta" type="number" step="0.01" placeholder="например, 15 или -7.5"></div>
+      <div class="card">
+        <h3>Рефералы</h3>
+        <p class="muted small">Сводные данные подтягиваются через <code>get_referral_counts_active(p_min_cents)</code> и <code>get_referrals_by_generation(p_level, p_min_cents)</code>. Последние начисления — из таблицы <code>referral_rewards</code>.</p>
       </div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn ok" id="dSaveProfile">Сохранить профиль</button>
-        <button class="btn warn" id="dApplyDelta">Применить изменение баланса</button>
-      </div>
-
-      <h4 style="margin:16px 0 8px">Последние заявки пользователя</h4>
-      <div class="table-wrap">
-        <table id="dWTable">
-          <thead><tr><th>Дата</th><th>Сумма</th><th>Статус</th><th>TX</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    
-      <h4 style="margin:16px 0 8px">Реферальные начисления</h4>
-      <div class="table-wrap">
-        <table id="dRTable">
-          <thead><tr><th>Дата</th><th>Уровень</th><th>Сумма</th><th>Источник</th></tr></thead>
-          <tbody></tbody>
-        </table>
+      <div class="card">
+        <h3>Настройка клиента</h3>
+        <p class="muted small">Если у вас уже инициализирован глобальный <code>window.sb</code>, панель использует его. Иначе укажите <code>window.SUPABASE_URL</code> и <code>window.SUPABASE_ANON_KEY</code> до загрузки этого файла.</p>
       </div>
     </div>
+  </section>
+</div>
+
+<!-- DRAWER: USER DETAILS -->
+<div class="drawer" id="drawer">
+  <div class="sheet">
+    <div class="row" style="justify-content:space-between">
+      <h3 id="dTitle" style="margin:6px 0">Профиль пользователя</h3>
+      <button class="btn ghost" id="dClose">Закрыть</button>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="row"><span class="muted small">User ID</span><input id="dUserId" class="grow" readonly></div>
+      <div class="row"><span class="muted small">Создан</span><input id="dCreated" class="grow" readonly></div>
+      <div class="row"><span class="muted small">Email</span><input id="dEmail" class="grow"></div>
+      <div class="row"><span class="muted small">Телефон</span><input id="dPhone" class="grow"></div>
+      <div class="row"><span class="muted small">Баланс (USDT)</span><input id="dBalance" type="number" step="0.01" class="grow"></div>
+      <div class="row"><span class="muted small">Реф-код</span><input id="dRefCode" class="grow"><button class="btn ghost" id="dGenRef">Сгенерировать</button></div>
+      <div class="row"><span class="muted small">Реф-ссылка</span><input id="dRefLink" class="grow" readonly><button class="btn" id="dCopyRef">Копировать</button></div>
+      <div class="row"><span class="muted small">Изменение (±USDT)</span><input id="dDelta" type="number" step="0.01" placeholder="например, 15 или -7.5" class="grow"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn ok" id="dSaveProfile">Сохранить профиль</button>
+      <button class="btn warn" id="dApplyDelta">Применить изменение баланса</button>
+    </div>
+
+    <h4 style="margin:16px 0 8px">Последние заявки пользователя</h4>
+    <div class="table-wrap">
+      <table id="dWTable">
+        <thead><tr><th>Дата</th><th>Сумма</th><th>Статус</th><th>TX</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h4 style="margin:16px 0 8px">Реферальные начисления</h4>
+    <div class="table-wrap">
+      <table id="dRTable">
+        <thead><tr><th>Дата</th><th>Уровень</th><th>Сумма</th><th>Источник</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
+</div>
 
 <script>
 (function(){
-  // ---- Bootstrap Supabase client
-  const haveSb = !!(window.sb);
-  const SB = window.sb || (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY
-    ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null);
-  if(!SB){
-    alert('Не найден Supabase клиент. Либо задайте window.sb, либо SUPABASE_URL/ANON_KEY.');
-    return;
-  }
-  window.sb = SB; // unify
+  // ===== Bootstrap Supabase client =====
+  try {
+    if (!window.sb) {
+      if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+        console.warn('[Admin] No window.sb and no SUPABASE_URL/ANON_KEY provided.');
+      } else {
+        window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+      }
+    }
+  } catch(e){ console.error(e); }
+  const sb = window.sb;
+  if (!sb) { alert('Supabase клиент не инициализирован. Передайте window.sb либо SUPABASE_URL/ANON_KEY.'); return; }
 
-  // ---- Helpers
-  const $ = sel => document.querySelector(sel);
-  const $$ = sel => Array.from(document.querySelectorAll(sel));
-  const fmtAmount = c => ((+c||0)/100).toFixed(2) + ' USDT';
-  const short = s => (s ? String(s).slice(0,6)+'…'+String(s).slice(-4) : '');
+  // ===== Helpers =====
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const fmtCents = c => ((+c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2}) + ' USDT';
   const pill = s => '<span class="pill '+s+'">'+(s==='paid'?'оплачено':s==='rejected'?'отклонено':'ожидание')+'</span>';
+  const short = s => (s ? String(s).slice(0,6)+'…'+String(s).slice(-4) : '');
+  const toCents = v => Math.round((Number(v)||0) * 100);
+  const qlike = v => v? `%${String(v).toLowerCase().trim()}%` : null;
 
-  let sessionUser = null;
-  let isAdmin = false;
+  let sessionUser = null, isAdmin = false;
 
-  // ---- Auth Bar
+  // ===== Tabs =====
+  $$('#tabs .tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#tabs .tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      $$('[data-page]').forEach(p => p.style.display = (p.getAttribute('data-page') === tab) ? 'block' : 'none');
+      if (tab === 'withdrawals') loadWithdrawals();
+      if (tab === 'users') loadUsers();
+      if (tab === 'rewards') loadRewards();
+    });
+  });
+
+  // ===== Auth bar =====
   async function refreshAuth(){
     const { data: { session } } = await sb.auth.getSession();
     sessionUser = session?.user || null;
@@ -276,367 +329,439 @@ on conflict do nothing;</code></pre>
     $('#btnLogout').style.display = sessionUser ? 'inline-block':'none';
   }
   $('#btnLogin').addEventListener('click', async () => {
-      try{
-        // Универсальный вход без OAuth: email+пароль, с фолбэком на magic-link
-        const email = prompt('Email для входа в админку:');
-        if(!email) return;
-        const pwd = prompt('Пароль (либо оставьте пустым для входа по ссылке):') || '';
-        if(pwd){
-          const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-          if(error){ alert('Ошибка входа: '+(error.message||error)); return; }
-          location.reload();
-          return;
-        }else{
-          const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href } });
-          if(error){ alert('Ошибка отправки magic‑link: '+(error.message||error)); return; }
-          alert('Мы отправили ссылку для входа на '+email);
-        }
-      }catch(e){ alert(e.message || e); }
-    });
-  
-  $('#btnLogout').addEventListener('click', async () => {
-    try{ await sb.auth.signOut(); location.reload(); }catch(e){ alert(e.message || e); }
+    try{
+      const email = prompt('Email для входа в админку:');
+      if(!email) return;
+      const pwd = prompt('Пароль (оставьте пустым для magic-link):') || '';
+      if(pwd){
+        const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+        if(error){ alert('Ошибка входа: '+(error.message||error)); return; }
+        location.reload();
+      } else {
+        const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href }});
+        if(error){ alert('Ошибка отправки ссылки: '+(error.message||error)); return; }
+        alert('Ссылка для входа отправлена на email.');
+      }
+    }catch(e){ alert(e.message||e); }
   });
-  sb.auth.onAuthStateChange((_e,s)=>{ refreshAuth(); if(s?.user){ initAfterAuth(); } });
+  $('#btnLogout').addEventListener('click', async ()=>{ await sb.auth.signOut(); location.reload(); });
 
-  // ---- Tabs
-  $$('.tab').forEach(t => t.addEventListener('click', () => {
-    $$('.tab').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    const name = t.dataset.tab;
-    $$('section.panel').forEach(s => s.style.display = (s.dataset.page===name ? '' : 'none'));
-    if(name==='withdrawals') loadWithdrawals(true);
-    if(name==='users') loadUsers(true);
-  }));
+  async function checkAdmin(){
+    isAdmin = false;
+    try {
+      const r = await sb.rpc('lc_is_admin'); // предпочтительно
+      if (!r.error) {
+        const row = Array.isArray(r.data) ? r.data[0] : r.data;
+        if (row === true || row?.is_admin === true) isAdmin = true;
+      }
+    } catch(_) {}
 
-  // ---- Ensure admin
-  async function ensureAdmin(){
-    const { data, error } = await sb.rpc('lc_is_admin');
-    if(error){ console.warn(error); return false; }
-    return data === true;
-  }
-
-  // ---- Withdrawals
-  let wPage = 0, wLimit = 30;
-  async function loadWithdrawals(reset=false){
-    if(reset) wPage = 0;
-    const st = $('#wStatus').value;
-    const q = ($('#wSearch').value||'').trim().toLowerCase();
-
-    let sel = sb.from('withdrawals')
-      .select('id,user_id,amount_cents,fee_cents,status,txid,network,address,paid_at,created_at')
-      .order('created_at',{ascending:false})
-      .range(wPage*wLimit, wPage*wLimit + wLimit - 1);
-
-    if(st) sel = sel.eq('status', st);
-    if(q) sel = sel.or(`id.ilike.%${q}%,address.ilike.%${q}%,txid.ilike.%${q}%`);
-
-    const { data, error } = await sel;
-    if(error){ $('#wDiag').textContent = 'Ошибка: '+(error.message||error); return; }
-    const rows = Array.isArray(data)?data:[];
-
-    // fetch profiles
-    const uids = [...new Set(rows.map(r=>r.user_id).filter(Boolean))];
-    let byUser = {};
-    if(uids.length){
-      const { data: prof } = await sb.from('profiles').select('id,email,phone').in('id', uids);
-      if(Array.isArray(prof)) byUser = Object.fromEntries(prof.map(p=>[p.id,p]));
+    if (!isAdmin) { // fallback: check presence in public.admins by current user id
+      try{
+        const { data: { user } } = await sb.auth.getUser();
+        if (user) {
+          const q = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+          if (!q.error && q.data?.user_id) isAdmin = true;
+        }
+      }catch(_){}
     }
 
-    const tb = $('#wTable tbody'); tb.innerHTML='';
-    rows.forEach(r => {
-      const p = byUser[r.user_id] || {};
+    if (!isAdmin) {
+      alert('Доступ запрещён: вы не администратор.');
+      $$('#tabs .tab').forEach(b=>b.disabled=true);
+    }
+  }
+
+  // ===== Withdrawals =====
+  let wPage = 0, wLimit = 25, wLastCount = 0, wRowsCache = [];
+  async function loadWithdrawals(){
+    if (!isAdmin) return;
+    const tbody = $('#wTable tbody');
+    tbody.innerHTML = '<tr><td colspan="12" class="muted">Загрузка…</td></tr>';
+    const status = $('#wStatus').value || null;
+    const s = $('#wSearch').value.trim();
+    const from = $('#wFrom').value ? new Date($('#wFrom').value) : null;
+    const to = $('#wTo').value ? new Date($('#wTo').value) : null;
+
+    let q = sb.from('withdrawals')
+      .select('id, created_at, user_id, amount_cents, fee_cents, status, txid, note, network, address', { count: 'exact' })
+      .order('created_at', { ascending:false })
+      .range(wPage*wLimit, wPage*wLimit + wLimit - 1);
+    if (status) q = q.eq('status', status);
+    if (from) q = q.gte('created_at', from.toISOString());
+    if (to) q = q.lte('created_at', to.toISOString());
+    if (s) {
+      q = q.or([
+        `id.ilike.${qlike(s)}`,
+        `address.ilike.${qlike(s)}`,
+        `txid.ilike.${qlike(s)}`,
+        `note.ilike.${qlike(s)}`
+      ].join(','));
+    }
+    const { data, error, count } = await q;
+    if (error) { tbody.innerHTML = `<tr><td colspan="12" class="danger">${error.message||error}</td></tr>`; return; }
+    wLastCount = count || 0;
+    wRowsCache = data || [];
+    $('#wDiag').textContent = `Страница ${wPage+1} · ${wLastCount} записей`;
+
+    const emailByUser = {}; const phoneByUser = {};
+    try {
+      const ids = (data||[]).map(r=>r.user_id).filter(Boolean);
+      if (ids.length) {
+        const { data: profs } = await sb.from('profiles').select('user_id, email, phone').in('user_id', ids);
+        (profs||[]).forEach(p=>{ emailByUser[p.user_id]=p.email; phoneByUser[p.user_id]=p.phone; });
+      }
+    }catch(_){}
+
+    tbody.innerHTML='';
+    if (!data || !data.length) {
+      tbody.innerHTML = '<tr><td colspan="12" class="muted">Пусто</td></tr>'; return;
+    }
+    for (const r of data) {
+      const amount = r.amount_cents ?? 0;
+      const fee = r.fee_cents ?? 0;
+      const total = (amount + fee);
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td title="${r.user_id}">${short(r.user_id)}</td>
-        <td>${new Date(r.created_at).toLocaleString()}</td>
-        <td>${p.email||'—'}</td>
-        <td>${p.phone||'—'}</td>
-        <td class="right">${fmtAmount(r.amount_cents)}</td>
-        <td class="right">${fmtAmount(r.fee_cents||0)}</td>
-        <td class="right">${fmtAmount((r.amount_cents||0)+(+r.fee_cents||0))}</td>
-        <td>${r.address||'—'} <span class="muted">${r.network||''}</span></td>
-        <td>${pill(r.status)}</td>
-        <td><input data-tx="${r.id}" placeholder="TX / примечание" value="${r.txid||''}" style="height:34px;min-width:180px"></td>
+        <td class="nowrap">${r.id}</td>
+        <td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
+        <td>${emailByUser[r.user_id]||'—'}</td>
+        <td>${phoneByUser[r.user_id]||'—'}</td>
+        <td class="right">${fmtCents(amount)}</td>
+        <td class="right">${fmtCents(fee)}</td>
+        <td class="right">${fmtCents(total)}</td>
+        <td>${r.network||'—'}</td>
+        <td class="nowrap">${r.address?'<code>'+r.address+'</code>':'—'}</td>
+        <td>${pill(String(r.status||'pending').toLowerCase())}</td>
+        <td class="nowrap">${r.txid?'<code>'+short(r.txid)+'</code>':'—'} ${r.note?('<div class="small muted">'+r.note+'</div>'):''}</td>
         <td class="nowrap">
-          <button class="btn ok" data-paid="${r.id}">Оплачено</button>
-          <button class="btn bad" data-rej="${r.id}">Отклонить</button>
+          <button class="btn ok small" data-act="pay" data-id="${r.id}">Оплатить</button>
+          <button class="btn bad small" data-act="reject" data-id="${r.id}">Отклонить</button>
+          <button class="btn ghost small" data-act="view" data-user="${r.user_id}">Профиль</button>
         </td>`;
-      tb.appendChild(tr);
-    });
-
-    $('#wDiag').textContent = rows.length ? `Показано ${rows.length} записей` : 'Нет записей';
+      tbody.appendChild(tr);
+    }
   }
-  $('#wReload').addEventListener('click', ()=>loadWithdrawals(true));
-  $('#wPrev').addEventListener('click', ()=>{ if(wPage>0){ wPage--; loadWithdrawals(false); } });
-  $('#wNext').addEventListener('click', ()=>{ wPage++; loadWithdrawals(false); });
-  $('#wTable').addEventListener('click', async (e) => {
-    const paidId = e.target.dataset?.paid;
-    const rejId  = e.target.dataset?.rej;
-    if(!paidId && !rejId) return;
-    const id = paidId || rejId;
-    const status = paidId ? 'paid' : 'rejected';
-    const tx = document.querySelector(`input[data-tx="${id}"]`)?.value || null;
-    const note = (status==='rejected' && !tx) ? (prompt('Причина отклонения?') || null) : tx;
-    e.target.disabled = true;
-    const { error } = await sb.rpc('admin_update_withdrawal', {
-      p_withdrawal_id: id, p_status: status, p_txid: note
-    });
-    e.target.disabled = false;
-    if(error){ return alert('Ошибка: '+(error.message||error)); }
-    alert(status==='paid' ? 'Оплата подтверждена' : 'Заявка отклонена — средства возвращены');
-    loadWithdrawals(false);
+  $('#wReload').addEventListener('click', ()=>{ wPage=0; loadWithdrawals(); });
+  $('#wPrev').addEventListener('click', ()=>{ if (wPage>0){ wPage--; loadWithdrawals(); } });
+  $('#wNext').addEventListener('click', ()=>{ if ((wPage+1)*wLimit < wLastCount){ wPage++; loadWithdrawals(); } });
+  $('#wTable').addEventListener('click', async (e)=>{
+    const btn = e.target.closest('button[data-act]'); if (!btn) return;
+    const id = btn.dataset.id; const act = btn.dataset.act;
+    if (act==='view'){ openUserDrawer(btn.dataset.user); return; }
+    if (act==='pay'){
+      const tx = prompt('Укажите TX/комментарий для отметки "Оплачено":');
+      if (!tx) return;
+      try{
+        const r = await sb.rpc('admin_update_withdrawal', { p_id: id, p_status:'paid', p_txid: tx, p_note: tx });
+        if (r.error) throw r.error; loadWithdrawals();
+      }catch(e){ alert(e.message||e); }
+    }
+    if (act==='reject'){
+      const note = prompt('Причина отмены (средства будут возвращены пользователю):') || 'rejected by admin';
+      try{
+        const r = await sb.rpc('admin_update_withdrawal', { p_id: id, p_status:'rejected', p_txid: null, p_note: note });
+        if (r.error) throw r.error; loadWithdrawals();
+      }catch(e){ alert(e.message||e); }
+    }
   });
+  $('#wExport').addEventListener('click', ()=>exportCSV('withdrawals.csv', wRowsCache.map(r=>({
+    id:r.id, created_at:r.created_at, user_id:r.user_id, amount_cents:r.amount_cents, fee_cents:r.fee_cents,
+    status:r.status, txid:r.txid, note:r.note, network:r.network, address:r.address
+  })));
 
+  try{
+    sb.channel('adm-wd').on('postgres_changes', { event:'*', schema:'public', table:'withdrawals' }, ()=>{
+      if ($('.tab.active')?.dataset.tab==='withdrawals') loadWithdrawals();
+    }).subscribe();
+  }catch(_){}
 
-  // ---- Refs
-  async function fetchRefCounts(targetUserId){
-    try{
-      const { data, error } = await sb.rpc('ref_counts', { p_user: targetUserId });
-      if(error) { console.warn('[refs] ref_counts', error); return {gen1:0,gen2:0,gen3:0}; }
-      const row = Array.isArray(data) ? (data[0]||{}) : (data||{});
-      const vals = Object.values(row||{}).map(n=>Number(n)||0);
-      return { gen1: vals[0]||0, gen2: vals[1]||0, gen3: vals[2]||0 };
-    }catch(e){ console.warn('[refs] ref_counts', e); return {gen1:0,gen2:0,gen3:0}; }
+  // ===== Users =====
+  let uRowsCache = [];
+  async function loadUsers(){
+    if (!isAdmin) return;
+    const tbody = $('#uTable tbody');
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Загрузка…</td></tr>';
+    const s = $('#uSearch').value.trim();
+    let rows = null;
+    try {
+      const r = await sb.rpc('admin_list_users', { p_search: s || null });
+      if (!r.error) rows = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+    } catch(_){}
+    if (!rows) {
+      const profQ = sb.from('profiles')
+        .select('user_id, created_at, email, phone, ref_code')
+        .order('created_at', { ascending:false })
+        .limit(300);
+      const { data: profs, error: e1 } = s ? profQ.or([
+        `user_id.ilike.${qlike(s)}`,
+        `email.ilike.${qlike(s)}`,
+        `phone.ilike.${qlike(s)}`,
+        `ref_code.ilike.${qlike(s)}`
+      ].join(',')) : await profQ;
+      if (e1) { tbody.innerHTML = `<tr><td colspan="8" class="danger">${e1.message||e1}</td></tr>`; return; }
+      const ids = (profs||[]).map(p=>p.user_id);
+      const { data: wallets } = ids.length ? await sb.from('wallets').select('user_id, balance_cents').in('user_id', ids) : {data:[]};
+      const balByUser = {}; (wallets||[]).forEach(w=>balByUser[w.user_id]=w.balance_cents||0);
+      rows = (profs||[]).map(p=>({
+        user_id:p.user_id, created_at:p.created_at, email:p.email, phone:p.phone,
+        balance_cents: balByUser[p.user_id]||0, ref_code:p.ref_code
+      }));
+    }
+    uRowsCache = rows || [];
+    $('#uDiag').textContent = `${uRowsCache.length} пользователей`;
+
+    tbody.innerHTML = '';
+    if (!uRowsCache.length) { tbody.innerHTML = '<tr><td colspan="8" class="muted">Пусто</td></tr>'; return; }
+    for (const r of uRowsCache) {
+      const link = buildRefLink(r.ref_code);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="nowrap">${r.user_id}</td>
+        <td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
+        <td>${r.email||'—'}</td>
+        <td>${r.phone||'—'}</td>
+        <td class="right">${fmtCents(r.balance_cents||0)}</td>
+        <td>${r.ref_code||'—'}</td>
+        <td class="nowrap">${link?('<code>'+link+'</code>'):'—'}</td>
+        <td class="nowrap"><button class="btn ghost small" data-open="${r.user_id}">Открыть</button></td>`;
+      tbody.appendChild(tr);
+    }
   }
-  async function fetchRefSums(targetUserId){
-    let sums = {1:0,2:0,3:0};
-    try{
-      const resp = await sb.from('referral_payouts').select('level,reward_usdt').eq('referrer_user_id', targetUserId);
-      if(!resp.error && Array.isArray(resp.data)){
-        resp.data.forEach(r => { const L=Number(r.level||0); const v=Number(r.reward_usdt||0); if(L>=1 && L<=3) sums[L]+=v; });
-        return sums;
-      }
-    }catch(_){}
-    try{
-      const resp = await sb.from('referral_rewards').select('level,reward_usdt').eq('referrer_user_id', targetUserId);
-      if(!resp.error && Array.isArray(resp.data)){
-        resp.data.forEach(r => { const L=Number(r.level||0); const v=Number(r.reward_usdt||0); if(L>=1 && L<=3) sums[L]+=v; });
-      }
-    }catch(_){}
-    return sums;
+  $('#uReload').addEventListener('click', loadUsers);
+  $('#uTable').addEventListener('click', e=>{
+    const btn = e.target.closest('button[data-open]'); if (!btn) return;
+    openUserDrawer(btn.dataset.open);
+  });
+  $('#uExport').addEventListener('click', ()=>exportCSV('users.csv', uRowsCache));
+
+  // ===== Rewards (global) =====
+  let rwRowsCache = [];
+  async function loadRewards(){
+    if (!isAdmin) return;
+    const tbody = $('#rwTable tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Загрузка…</td></tr>';
+    const s = $('#rwSearch').value.trim();
+    let q = sb.from('referral_rewards')
+      .select('created_at, level, target_user_id, source_user_id, amount_cents, note')
+      .order('created_at', { ascending:false }).limit(300);
+    if (s) {
+      q = q.or([
+        `target_user_id.ilike.${qlike(s)}`,
+        `source_user_id.ilike.${qlike(s)}`,
+        `level.eq.${Number(s)||-1}`
+      ].join(','));
+    }
+    const { data, error } = await q;
+    if (error) { tbody.innerHTML = `<tr><td colspan="6" class="danger">${error.message||error}</td></tr>`; return; }
+    rwRowsCache = data || [];
+    $('#rwDiag').textContent = `${rwRowsCache.length} записей`;
+    tbody.innerHTML='';
+    if (!rwRowsCache.length) { tbody.innerHTML = '<tr><td colspan="6" class="muted">Пусто</td></tr>'; return; }
+    for (const r of rwRowsCache) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
+        <td>${r.level||'—'}</td>
+        <td class="nowrap">${r.target_user_id}</td>
+        <td class="nowrap">${r.source_user_id}</td>
+        <td class="right">${fmtCents(r.amount_cents||0)}</td>
+        <td>${r.note||'—'}</td>`;
+      tbody.appendChild(tr);
+    }
   }
-  async function fetchRefLast(targetUserId, limit=20){
-    try{
-      const v = await sb.from('v_referral_payouts').select('created_at,level,reward_usdt,source').eq('referrer_user_id', targetUserId).order('created_at',{ascending:false}).limit(limit);
-      if(!v.error && Array.isArray(v.data)) return v.data;
-    }catch(_){}
-    try{
-      const p = await sb.from('referral_payouts').select('created_at,level,reward_usdt,source').eq('referrer_user_id', targetUserId).order('created_at',{ascending:false}).limit(limit);
-      if(!p.error && Array.isArray(p.data)) return p.data;
-    }catch(_){}
-    try{
-      const r = await sb.from('referral_rewards').select('created_at,level,reward_usdt,source').eq('referrer_user_id', targetUserId).order('created_at',{ascending:false}).limit(limit);
-      if(!r.error && Array.isArray(r.data)) return r.data;
-    }catch(_){}
-    return [];
-  }
-  function setRefOverview({gen1,gen2,gen3}, sums){
-    const fmt = v => (Number(v||0)).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2});
+  $('#rwReload').addEventListener('click', loadRewards);
+  $('#rwExport').addEventListener('click', ()=>exportCSV('rewards.csv', rwRowsCache));
+
+  try{
+    sb.channel('adm-rw').on('postgres_changes', { event:'INSERT', schema:'public', table:'referral_rewards' }, ()=>{
+      if ($('.tab.active')?.dataset.tab==='rewards') loadRewards();
+    }).subscribe();
+  }catch(_){}
+
+  // ===== Ref overview =====
+  $('#rLoad').addEventListener('click', loadRefOverview);
+  async function loadRefOverview(){
+    const uid = $('#rUser').value.trim(); if (!uid) { alert('Укажите User ID'); return; }
+    const [counts, last, prof] = await Promise.all([
+      sb.rpc('get_referral_counts_active', { p_min_cents: 2900 }),
+      sb.from('referral_rewards').select('created_at, level, amount_cents, source_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(30),
+      sb.from('profiles').select('ref_code').eq('user_id', uid).maybeSingle()
+    ]);
+    let gen1=0, gen2=0, gen3=0, s1=0, s2=0, s3=0;
+    if (!counts.error && counts.data) {
+      const row = Array.isArray(counts.data) ? (counts.data[0]||{}) : counts.data;
+      gen1 = Number(row.gen1||0); gen2 = Number(row.gen2||0); gen3 = Number(row.gen3||0);
+      s1 = Number(row.sum1_cents||0); s2 = Number(row.sum2_cents||0); s3 = Number(row.sum3_cents||0);
+    }
     $('#rGen1').textContent = String(gen1);
     $('#rGen2').textContent = String(gen2);
     $('#rGen3').textContent = String(gen3);
-    $('#rSum1').textContent = fmt(sums[1])+' USDT';
-    $('#rSum2').textContent = fmt(sums[2])+' USDT';
-    $('#rSum3').textContent = fmt(sums[3])+' USDT';
-  }
-  async function loadRefsFor(userId){
-    const [counts, sums, last] = await Promise.all([fetchRefCounts(userId), fetchRefSums(userId), fetchRefLast(userId, 20)]);
-    setRefOverview(counts, sums);
-    const tb = $('#rLast tbody'); tb.innerHTML='';
-    last.forEach(r => {
+    $('#rSum1').textContent = fmtCents(s1);
+    $('#rSum2').textContent = fmtCents(s2);
+    $('#rSum3').textContent = fmtCents(s3);
+
+    const tbody = $('#rLast tbody'); tbody.innerHTML = '';
+    const arr = Array.isArray(last.data) ? last.data : [];
+    if (!arr.length) tbody.innerHTML = '<tr><td colspan="4" class="muted">Пока нет начислений</td></tr>';
+    for (const r of arr) {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${new Date(r.created_at).toLocaleString()}</td>
-                      <td>${r.level||'-'}</td>
-                      <td>${Number(r.reward_usdt||0).toFixed(2)} USDT</td>
-                      <td>${r.source||''}</td>`;
-      tb.appendChild(tr);
-    });
+      tr.innerHTML = `<td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
+                      <td>${r.level}</td>
+                      <td class="right">${fmtCents(r.amount_cents||0)}</td>
+                      <td class="nowrap">${r.source_user_id}</td>`;
+      tbody.appendChild(tr);
+    }
+    const code = prof?.data?.ref_code || '';
+    $('#rCode').value = code || '';
+    $('#rLink').value = code ? buildRefLink(code) : '';
   }
-  $('#rLoad').addEventListener('click', async ()=>{
-    const id = ($('#rUser').value||'').trim();
-    if(!id) return alert('Укажите User ID (или откройте пользователя во вкладке «Пользователи»).');
-    await loadRefsFor(id);
-    try{
-      const { data: prof } = await sb.from('profiles').select('ref_code').eq('user_id', id).maybeSingle();
-      const code = prof?.ref_code || '';
-      $('#rCode').value = code;
-      const base = location.origin || '';
-      $('#rLink').value = code ? (base + '/?ref=' + encodeURIComponent(code)) : '';
-    }catch(_){}
-  });
   $('#rCopy').addEventListener('click', async ()=>{
-    try{ await navigator.clipboard.writeText($('#rLink').value||''); $('#rCopy').textContent='Скопировано'; setTimeout(()=>$('#rCopy').textContent='Копировать',1200);}catch(_){}
+    try{ await navigator.clipboard.writeText($('#rLink').value); alert('Скопировано'); }catch(_){}
   });
 
-  // ---- Users
-
-  let uPage = 0, uLimit = 40;
-  async function loadUsers(reset=false){
-    if(reset) uPage=0;
-    const q = ($('#uSearch').value||'').trim().toLowerCase();
-
-    let sel = sb.from('profiles').select('user_id,created_at,email,phone,ref_code').order('created_at',{ascending:false}).range(uPage*uLimit, uPage*uLimit+uLimit-1);
-    if(q){
-      // simple client side filter post-load (to keep compatibility with any RLS)
-      const { data, error } = await sel;
-      if(error){ $('#uDiag').textContent='Ошибка: '+(error.message||error); return; }
-      let rows = Array.isArray(data)?data:[];
-      rows = rows.filter(p =>
-        String(p.id).toLowerCase().includes(q) ||
-        String(p.email||'').toLowerCase().includes(q) ||
-        String(p.phone||'').toLowerCase().includes(q)
-      );
-      await renderUsers(rows);
-    }else{
-      const { data, error } = await sel;
-      if(error){ $('#uDiag').textContent='Ошибка: '+(error.message||error); return; }
-      await renderUsers(Array.isArray(data)?data:[]);
-    }
-  }
-  async function renderUsers(rows){
-    // fetch wallets
-    const uids = rows.map(r=>r.user_id);
-    let byWallet = {};
-    if(uids.length){
-      const { data: ws } = await sb.from('wallets').select('user_id,balance_cents').in('user_id', uids);
-      if(Array.isArray(ws)) byWallet = Object.fromEntries(ws.map(w=>[w.user_id, w]));
-    }
-    const tb = $('#uTable tbody'); tb.innerHTML='';
-    rows.forEach(r => {
-      const w = byWallet[r.user_id] || { balance_cents: 0 };
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td title="${r.user_id}">${short(r.user_id)}</td>
-        <td>${new Date(r.created_at).toLocaleString()}</td>
-        <td>${r.email||'—'}</td>
-        <td>${r.phone||'—'}</td>
-        <td class="right">${fmtAmount(w.balance_cents)}</td>
-        <td class="nowrap"><button class="btn" data-edit="${r.user_id}">Открыть</button></td>`;
-      tb.appendChild(tr);
-    });
-    $('#uDiag').textContent = rows.length ? `Показано ${rows.length} пользователей` : 'Нет пользователей';
-  }
-  $('#uReload').addEventListener('click', ()=>loadUsers(true));
-  $('#uTable').addEventListener('click', (e) => {
-    const id = e.target.dataset?.edit;
-    if(id) openUser(id);
-  });
-
-  // ---- Drawer User
-  async function openUser(userId){
-    $('#drawer').classList.add('open');
-    $('#dUserId').value = userId;
-    $('#dTitle').textContent = 'Профиль пользователя';
-    $('#dEmail').value = ''; $('#dPhone').value=''; $('#dBalance').value=''; $('#dDelta').value='';
-    $('#dWTable tbody').innerHTML = '<tr><td colspan="4" class="muted">Загрузка…</td></tr>';
-
-    const [{ data: prof }, { data: wal }, { data: wd }] = await Promise.all([
-      sb.from('profiles').select('user_id,created_at,email,phone,ref_code').eq('user_id', userId).maybeSingle(),
-      sb.from('wallets').select('user_id,balance_cents').eq('user_id', userId).maybeSingle(),
-      sb.from('withdrawals').select('created_at,amount_cents,status,txid').eq('user_id', userId).order('created_at',{ascending:false}).limit(20)
-    ]);
-    if(prof){
-      $('#dCreated').value = new Date(prof.created_at).toLocaleString();
-      $('#dEmail').value = prof.email || '';
-      $('#dPhone').value = prof.phone || '';
-      $('#dRefCode').value = prof.ref_code || '';
-      $('#dRefLink').value = (prof.ref_code? (location.origin + '/?ref='+encodeURIComponent(prof.ref_code)) : '');
-    }else{
-      $('#dCreated').value = '—';
-    }
-    const bal = wal?.balance_cents ?? 0;
-    $('#dBalance').value = (bal/100).toFixed(2);
-
-    const tb = $('#dWTable tbody'); tb.innerHTML = ''; // withdrawals
-    // referral payouts
-    const rtb = $('#dRTable tbody'); if (rtb) {
-      rtb.innerHTML = '<tr><td colspan="4" class="muted">Загрузка…</td></tr>';
-      const last = await fetchRefLast(userId, 20);
-      rtb.innerHTML = '';
-      last.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${new Date(r.created_at).toLocaleString()}</td>
-                        <td>${r.level||'-'}</td>
-                        <td>${Number(r.reward_usdt||0).toFixed(2)} USDT</td>
-                        <td>${r.source||''}</td>`;
-        rtb.appendChild(tr);
-      });
-    }
-    (Array.isArray(wd)?wd:[]).forEach(r => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${new Date(r.created_at).toLocaleString()}</td>
-                      <td>${fmtAmount(r.amount_cents)}</td>
-                      <td>${r.status}</td>
-                      <td>${r.txid||''}</td>`;
-      tb.appendChild(tr);
-    });
-
-    $('#dSaveProfile').onclick = async () => {
-      const email = $('#dEmail').value.trim() || null;
-      const phone = $('#dPhone').value.trim() || null;
-      const { error } = await sb.from('profiles').update({ email, phone }).eq('user_id', userId);
-      if(error){ alert('Ошибка сохранения профиля: '+(error.message||error)); }
-      else { alert('Профиль сохранён'); loadUsers(false); }
-    };
-
-    
-  $('#dGenRef').onclick = async () => {
-    const rnd = () => Array.from(crypto.getRandomValues(new Uint8Array(6))).map(n => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[n%36]).join('');
-    let code = rnd(); let tries = 0;
-    while(tries++ < 8){
-      const { data } = await sb.from('profiles').select('user_id').eq('ref_code', code).limit(1);
-      if(!data || !data.length) break; code = rnd();
-    }
-    $('#dRefCode').value = code;
-    $('#dRefLink').value = location.origin + '/?ref='+encodeURIComponent(code);
-  };
-  $('#dCopyRef').onclick = async () => {
-    try{ await navigator.clipboard.writeText($('#dRefLink').value||''); $('#dCopyRef').textContent='Скопировано'; setTimeout(()=>$('#dCopyRef').textContent='Копировать',1200);}catch(_){}
-  };
-
-  $('#dApplyDelta').onclick = async () => {
-      const delta = Math.round((parseFloat($('#dDelta').value||'0')||0)*100);
-      if(!delta) return alert('Укажите изменение баланса (±USDT)');
-      const reason = prompt('Причина изменения баланса?') || null;
-
-      // Try RPC first (если добавлен admin_adjust_balance), иначе прямое обновление (требует RLS-политики для админа)
-      let ok = false, err = null;
+  // ===== Ref tree =====
+  $('#treeLoad').addEventListener('click', buildTree);
+  async function buildTree(){
+    const root = $('#treeUser').value.trim(); if (!root){ alert('Укажите User ID'); return; }
+    const tbody = $('#treeTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted">Загрузка…</td></tr>';
+    const rows = [];
+    for (const level of [1,2,3]){
       try{
-        const { error } = await sb.rpc('admin_adjust_balance', { p_user_id: userId, p_delta_cents: delta, p_reason: reason });
-        if(!error){ ok = True; }
-        else err = error;
-      }catch(e){ err = e; }
+        const r = await sb.rpc('get_referrals_by_generation', { p_level: level, p_min_cents: 0, p_root_user: root });
+        const list = Array.isArray(r.data) ? r.data : (r.data? [r.data] : []);
+        rows.push(...list.map(x => ({ level, ...x })));
+      }catch(_){}
+    }
+    const ids = Array.from(new Set(rows.map(r=>r.user_id).filter(Boolean)));
+    const [profs, wallets] = await Promise.all([
+      ids.length ? sb.from('profiles').select('user_id, email, phone, ref_code').in('user_id', ids) : { data: [] },
+      ids.length ? sb.from('wallets').select('user_id, balance_cents').in('user_id', ids) : { data: [] }
+    ]);
+    const byUser = {}; (profs.data||[]).forEach(p=>byUser[p.user_id] = {...(byUser[p.user_id]||{}), ...p});
+    (wallets.data||[]).forEach(w=>byUser[w.user_id] = {...(byUser[w.user_id]||{}), ...w});
 
-      if(!ok){
-        // fallback: direct update
-        const cur = Math.round(parseFloat($('#dBalance').value||'0')*100);
-        const next = cur + delta;
-        const { error } = await sb.from('wallets').update({ balance_cents: next }).eq('user_id', userId);
-        if(error){ return alert('Ошибка изменения баланса: '+(error.message||error)); }
-      }
-      alert('Баланс обновлён');
-      openUser(userId); // reload
-      loadUsers(false);
-    };
+    tbody.innerHTML = '';
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="muted">Пусто</td></tr>'; return; }
+    for (const r of rows){
+      const info = byUser[r.user_id] || {};
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.level}</td>
+                      <td class="nowrap">${r.user_id}</td>
+                      <td>${info.email||'—'}</td>
+                      <td>${info.phone||'—'}</td>
+                      <td class="right">${fmtCents(info.balance_cents||0)}</td>
+                      <td>${info.ref_code||'—'}</td>`;
+      tbody.appendChild(tr);
+    }
+    window._treeCache = rows;
   }
+  $('#treeExport').addEventListener('click', ()=>{
+    const arr = (window._treeCache||[]).map(r=>({ level:r.level, user_id:r.user_id }));
+    exportCSV('ref_tree.csv', arr);
+  });
+
+  // ===== Drawer (user profile) =====
   $('#dClose').addEventListener('click', ()=>$('#drawer').classList.remove('open'));
 
-  // ---- Boot
-  async function initAfterAuth(){
-    isAdmin = await ensureAdmin();
-    if(!isAdmin){ alert('Нет прав администратора. Добавьте ваш user_id в public.admins'); return; }
-    // default tab
-    loadWithdrawals(true);
+  async function openUserDrawer(uid){
+    if (!uid) return;
+    $('#drawer').classList.add('open');
+    $('#dTitle').textContent = 'Профиль: ' + uid;
+    $('#dUserId').value = uid;
+
+    const [prof, wallet, wds, rrs] = await Promise.all([
+      sb.from('profiles').select('user_id, created_at, email, phone, ref_code').eq('user_id', uid).maybeSingle(),
+      sb.from('wallets').select('user_id, balance_cents').eq('user_id', uid).maybeSingle(),
+      sb.from('withdrawals').select('created_at, amount_cents, status, txid').eq('user_id', uid).order('created_at', {ascending:false}).limit(20),
+      sb.from('referral_rewards').select('created_at, level, amount_cents, source_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(30)
+    ]);
+    $('#dCreated').value = prof?.data?.created_at ? new Date(prof.data.created_at).toLocaleString() : '—';
+    $('#dEmail').value = prof?.data?.email || '';
+    $('#dPhone').value = prof?.data?.phone || '';
+    $('#dBalance').value = ((wallet?.data?.balance_cents||0)/100).toFixed(2);
+    $('#dRefCode').value = prof?.data?.ref_code || '';
+    $('#dRefLink').value = prof?.data?.ref_code ? buildRefLink(prof.data.ref_code) : '';
+
+    const wtbody = $('#dWTable tbody'); wtbody.innerHTML='';
+    (wds?.data||[]).forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
+                      <td class="right">${fmtCents(r.amount_cents||0)}</td>
+                      <td>${String(r.status||'pending')}</td>
+                      <td class="nowrap">${r.txid?'<code>'+short(r.txid)+'</code>':'—'}</td>`;
+      wtbody.appendChild(tr);
+    });
+    const rtbody = $('#dRTable tbody'); rtbody.innerHTML='';
+    (rrs?.data||[]).forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
+                      <td>${r.level}</td>
+                      <td class="right">${fmtCents(r.amount_cents||0)}</td>
+                      <td class="nowrap">${r.source_user_id}</td>`;
+      rtbody.appendChild(tr);
+    });
+
+    $('#dGenRef').onclick = ()=>{ const code = genRefCode(); $('#dRefCode').value = code; $('#dRefLink').value = buildRefLink(code); };
+    $('#dCopyRef').onclick = async ()=>{ try{ await navigator.clipboard.writeText($('#dRefLink').value); alert('Скопировано'); }catch(_){}};
+    $('#dSaveProfile').onclick = async ()=>{
+      try{
+        const upd = await sb.from('profiles').update({
+          email: $('#dEmail').value || null,
+          phone: $('#dPhone').value || null,
+          ref_code: $('#dRefCode').value || null
+        }).eq('user_id', uid).select().maybeSingle();
+        if (upd.error) throw upd.error;
+        alert('Сохранено');
+        loadUsers();
+      }catch(e){ alert(e.message||e); }
+    };
+    $('#dApplyDelta').onclick = async ()=>{
+      const delta = Number($('#dDelta').value||'0');
+      if (!Number.isFinite(delta) || !delta) { alert('Введите число (USDT)'); return; }
+      try{
+        const r = await sb.rpc('admin_adjust_balance', { p_user_id: uid, p_delta_cents: toCents(delta) });
+        if (r.error) throw r.error;
+        alert('Баланс скорректирован');
+        openUserDrawer(uid);
+        loadUsers();
+      }catch(e){ alert(e.message||e); }
+    };
   }
 
-  (async function start(){
-    await refreshAuth();
-    const { data: { user } } = await sb.auth.getUser();
-    if(user) await initAfterAuth();
-  })();
-})();
-</script>
+  // ===== Utils =====
+  function genRefCode(){
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s=''; for(let i=0;i<8;i++) s += alphabet[Math.floor(Math.random()*alphabet.length)];
+    return s;
+  }
+  function buildRefLink(code){
+    if (!code) return '';
+    try { const url = new URL(location.origin + '/register_single.html'); url.searchParams.set('ref', code); return url.toString(); }
+    catch { return 'https://example.com/register_single.html?ref='+encodeURIComponent(code); }
+  }
+  function exportCSV(name, rows){
+    const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
+    const keys = Object.keys(rows[0]||{sample:1});
+    const csv = [keys.join(',')].concat(rows.map(r=>keys.map(k=>esc(r[k])).join(','))).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  }
 
+  (async function init(){
+    await refreshAuth();
+    await checkAdmin();
+    if (isAdmin) {
+      loadWithdrawals();
+      setTimeout(loadUsers, 200);
+      setTimeout(loadRewards, 400);
+    }
+  })();
+
+})();</script>
 </body>
 </html>
