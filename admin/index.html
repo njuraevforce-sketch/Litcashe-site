@@ -139,7 +139,7 @@
   <!-- REFS -->
   <section class="panel" data-page="refs" style="display:none">
     <div class="row">
-      <input id="rInviter" class="grow" placeholder="User ID пригласившего (показать его L1)">
+      <input id="rInviter" class="grow" placeholder="User ID или РЕФ-КОД пригласившего (показать его L1)">
       <button class="btn" id="rLoadL1">Показать L1</button>
       <button class="btn ghost" id="rExportL1">Экспорт L1</button>
     </div>
@@ -151,7 +151,7 @@
     </div>
 
     <div class="row" style="margin-top:12px">
-      <input id="treeUser" class="grow" placeholder="User ID (корень дерева 1–3)">
+      <input id="treeUser" class="grow" placeholder="User ID или РЕФ-КОД (корень дерева 1–3)">
       <button class="btn" id="treeLoad">Построить дерево 1–3</button>
       <button class="btn ghost" id="treeExport">Экспорт дерева</button>
     </div>
@@ -243,6 +243,7 @@
   const short = s => (s ? String(s).slice(0,6)+'…'+String(s).slice(-4) : '');
   const toCents = v => Math.round((Number(v)||0) * 100);
   const qlike = v => v? '%' + String(v).toLowerCase().trim() + '%' : null;
+  const isUUID = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(s||''));
 
   let sessionUser = null, isAdmin = false;
 
@@ -495,7 +496,7 @@ rows.forEach(x=>{
 window._l1Cache = rows.map(x=>({ user_id:x.user_id, email:x.email||'', phone:x.phone||'', balance_cents: balances[x.user_id]||0, ref_code:x.ref_code||'' }));
 }
 
-  document.getElementById('rLoadL1').addEventListener('click', ()=>loadL1(document.getElementById('rInviter').value.trim()));
+  document.getElementById('rLoadL1').addEventListener('click', ()=>loadL1ByKey(document.getElementById('rInviter').value.trim()));
   document.getElementById('rExportL1').addEventListener('click', ()=>exportCSV('referrals_L1.csv', window._l1Cache||[]));
 
   // Ref tree 1–3
@@ -554,7 +555,7 @@ rows.forEach(r=>{
 window._treeCache = rows;
 }
 
-  document.getElementById('treeLoad').addEventListener('click', buildTree);
+  document.getElementById('treeLoad').addEventListener('click', buildTreeByKey);
   document.getElementById('treeExport').addEventListener('click', ()=>{ const arr=(window._treeCache||[]).map(r=>({ level:r.level, user_id:r.user_id })); exportCSV('ref_tree.csv', arr); });
 
   // Drawer
@@ -603,6 +604,66 @@ window._treeCache = rows;
 
   // Init
   (async function init(){ await refreshAuth(); await checkAdmin(); if(isAdmin){ loadWithdrawals(); setTimeout(loadUsers,150); setTimeout(loadRewards,300); } })();
+  // === Added: accept REF-CODEs in REFS ===
+  async function loadL1ByKey(key){
+    const tbody = document.querySelector('#rL1Table tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
+    key = (key||'').trim();
+    if(!key){ tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
+    if (isUUID(key)) { await loadL1(key); return; }
+    let rows = [];
+    try{
+      const v = await sb.from('profiles_refs_admin')
+        .select('user_id,email,phone,ref_code')
+        .eq('invited_by_code', key)
+        .limit(1000);
+      if(!v.error && Array.isArray(v.data)) rows = v.data;
+    }catch(_){}
+    if(!rows.length){
+      try{
+        const prof = await sb.from('profiles').select('user_id').eq('ref_code', key).maybeSingle();
+        const uid = prof.data?.user_id;
+        if(uid){ await loadL1(uid); return; }
+      }catch(_){}
+    }
+    if(!rows.length){ tbody.innerHTML = '<tr><td colspan="5" class="muted small">Нет данных</td></tr>'; return; }
+    const ids = rows.map(x=>x.user_id);
+    const balances = {};
+    try{
+      const w = await sb.from('wallets').select('user_id,balance_cents').in('user_id', ids);
+      (w.data||[]).forEach(x=>balances[x.user_id]=x.balance_cents||0);
+    }catch(_){}
+    tbody.innerHTML='';
+    rows.forEach(x=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = '<td class="nowrap">'+x.user_id+'</td>'
+        + '<td>'+(x.email||'—')+'</td>'
+        + '<td>'+(x.phone||'—')+'</td>'
+        + '<td class="right">'+fmtCents(balances[x.user_id]||0)+'</td>'
+        + '<td>'+(x.ref_code||'—')+'</td>';
+      tbody.appendChild(tr);
+    });
+    window._l1Cache = rows.map(x=>({ user_id:x.user_id, email:x.email||'', phone:x.phone||'', balance_cents: balances[x.user_id]||0, ref_code:x.ref_code||'' }));
+  }
+
+  async function buildTreeByKey(){
+    const key = document.querySelector('#treeUser').value.trim();
+    if(!key){ const tbody = document.querySelector('#treeTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
+    if(!isUUID(key)){
+      try{
+        const prof = await sb.from('profiles').select('user_id').eq('ref_code', key).maybeSingle();
+        const uid = prof.data?.user_id;
+        if(uid){
+          document.querySelector('#treeUser').value = uid;
+        } else {
+          const pr = await sb.from('profiles_refs_admin').select('user_id').eq('ref_code', key).maybeSingle();
+          if(pr.data?.user_id){ document.querySelector('#treeUser').value = pr.data.user_id; }
+        }
+      }catch(_){}
+    }
+    await buildTree();
+  }
+
 
 })();
 </script>
