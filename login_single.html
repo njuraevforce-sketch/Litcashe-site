@@ -383,10 +383,11 @@ document.addEventListener('DOMContentLoaded', function(){
         btn.disabled = true;
         try{
           var r = await sb.auth.updateUser({ password: p1.value });
-          if (r && r.error) throw r.error;
-          alert('Пароль обновлён. Теперь войдите с новым паролем.');
-          // Clean URL and show login form
-          location.href = 'login_single.html';
+if (r && r.error) throw r.error;
+// Завершаем восстановительную сессию, чтобы пользователь вошёл по новому паролю
+try { await sb.auth.signOut(); } catch(_) {}
+alert('Пароль обновлён. Войдите с новым паролем.');
+location.href = 'login_single.html';
         }catch(err){
           alert('Ошибка: ' + (err && err.message ? err.message : err));
         }finally{
