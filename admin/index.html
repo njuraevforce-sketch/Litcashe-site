@@ -3,81 +3,73 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>LC • Pro Admin</title>
-
-  <!-- Supabase client -->
-  \1
-  <!-- Direct Supabase init (injected) -->
+  <title>LC • Admin (Light)</title>
+  <link rel="icon" href="data:,">
+  <!-- Supabase client from CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script>
-    try {
-      window.sb = window.supabase.createClient('https://einpfuegfsilnoiareco.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w', {
-        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-      });
-      console.log('[Admin] Supabase client initialized for', 'https://einpfuegfsilnoiareco.supabase.co');
-    } catch(e) { console.error('Supabase init error', e); }
+    (function(){
+      try {
+        if (!window.supabase) throw new Error('supabase.js not loaded');
+        window.sb = window.supabase.createClient(
+'https://einpfuegfsilnoiareco.supabase.co',
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w',
+          { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+        );
+        console.log('[Admin] Supabase init OK');
+      } catch (e) { console.error('[Admin] Supabase init error', e); }
+    })();
   </script>
-
-
   <style>
     :root{
-      --bg:#0b0f14; --panel:#10161f; --muted:#8a97a7; --text:#e6edf3; --accent:#3ea6ff;
-      --ok:#30d158; --warn:#ffd60a; --bad:#ff453a; --card:#0e141d;
-      --b:#1b2533; --b2:#233244; --b3:#2b3a50;
+      --bg:#f7f8fa; --panel:#ffffff; --text:#17223b; --muted:#6b7280; --accent:#2563eb;
+      --ok:#10b981; --warn:#eab308; --bad:#ef4444; --line:#e5e7eb; --chip:#f3f4f6;
     }
-    html,body{height:100%;background:var(--bg);color:var(--text);margin:0;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-    a{color:var(--accent);text-decoration:none}
-    .wrap{max-width:1280px;margin:0 auto;padding:14px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .brand{font-weight:800;letter-spacing:.3px}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+    .wrap{max-width:1280px;margin:0 auto;padding:18px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .brand{font-weight:800;font-size:18px;letter-spacing:.2px}
     .authbar{display:flex;gap:8px;align-items:center}
     .muted{color:var(--muted)}
-    .btn{background:#121a24;border:1px solid var(--b);color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer}
-    .btn:hover{background:#172131;border-color:var(--b2)}
-    .btn.ok{background:#0d2718;border-color:#1e4b2e}
-    .btn.warn{background:#2a250a;border-color:#5b4b10}
-    .btn.bad{background:#2a0f13;border-color:#55222a}
-    .btn.ghost{background:transparent;border-color:var(--b3)}
-    .tabs{display:flex;gap:8px;margin:10px 0 14px;flex-wrap:wrap}
-    .tab{padding:8px 12px;border-radius:10px;background:#121a24;border:1px solid var(--b);cursor:pointer}
-    .tab.active{background:#182130;border-color:#335074}
-    .panel{background:var(--panel);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:12px}
+    .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;transition:.15s}
+    .btn:hover{box-shadow:0 1px 0 rgba(0,0,0,.05)}
+    .btn.ok{background:#ecfdf5;border-color:#d1fae5}
+    .btn.warn{background:#fffbeb;border-color:#fef3c7}
+    .btn.bad{background:#fef2f2;border-color:#fee2e2}
+    .btn.ghost{background:#fff}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+    .tab{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
+    .tab.active{background:#e8f0ff;border-color:#c7d2fe;color:#1e40af}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .grow{flex:1}
-    input,select,textarea{background:#0f1520;border:1px solid var(--b2);color:var(--text);border-radius:10px;padding:8px 10px;outline:none}
-    input:focus,select:focus,textarea:focus{border-color:#3e5f85}
-    textarea{min-height:80px;resize:vertical}
-    .table-wrap{overflow:auto;border:1px solid var(--b);border-radius:10px}
+    input,select,textarea{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
     table{width:100%;border-collapse:collapse;font-size:13px}
-    thead{background:#0f1520}
-    th,td{padding:10px;border-bottom:1px solid var(--b);vertical-align:top}
-    tr:hover td{background:#0e1520}
+    thead th{background:#f9fafb;border-bottom:1px solid var(--line);padding:10px;text-align:left;white-space:nowrap}
+    td{border-top:1px solid var(--line);padding:10px;vertical-align:top}
     .right{text-align:right}
-    .pill{padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid var(--b2);background:#0f1826}
-    .pill.paid{border-color:#1f4730;background:#0f2219;color:#8ef0b0}
-    .pill.pending{border-color:#334256;background:#121b28;color:#a6c6ff}
-    .pill.rejected{border-color:#55222a;background:#2a0f13;color:#ff8f8a}
-    .card{background:var(--card);border:1px solid var(--b);border-radius:12px;padding:12px}
-    .hint{background:#0f1520;border:1px dashed var(--b2);padding:8px 10px;border-radius:10px;color:#aab6c3}
-    code{background:#0c1118;border:1px solid #1a222e;padding:2px 6px;border-radius:8px}
-    .nowrap{white-space:nowrap}
-    .grid{display:grid;gap:10px}
-    .grid.cols-2{grid-template-columns:1fr 1fr}
-    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
-    .grid.cols-4{grid-template-columns:repeat(4,1fr)}
-    .drawer{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:flex-end}
+    .chip{display:inline-block;background:var(--chip);border:1px solid var(--line);padding:3px 8px;border-radius:999px;font-size:12px}
+    .pill{padding:3px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line)}
+    .pill.paid{background:#ecfdf5;border-color:#d1fae5;color:#065f46}
+    .pill.pending{background:#eff6ff;border-color:#dbeafe;color:#1e40af}
+    .pill.rejected{background:#fef2f2;border-color:#fee2e2;color:#991b1b}
+    .drawer{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;justify-content:flex-end}
     .drawer.open{display:flex}
-    .drawer .sheet{width:520px;max-width:92vw;height:100%;overflow:auto;background:#0e141c;border-left:1px solid var(--b);padding:16px}
-    .search{min-width:240px}
+    .drawer .sheet{width:560px;max-width:92vw;height:100%;overflow:auto;background:#fff;border-left:1px solid var(--line);padding:16px}
     .small{font-size:12px}
-    .sep{height:1px;background:var(--b);margin:8px 0}
+    .nowrap{white-space:nowrap}
+    h3{margin:6px 0 8px}
   </style>
 </head>
 <body>
 <div class="wrap">
   <div class="topbar">
-    <div class="brand">LC • Pro Admin</div>
+    <div class="brand">LC • Admin</div>
     <div class="authbar">
-      <span class="muted">Аккаунт:</span>
+      <span class="muted small">Аккаунт:</span>
       <span id="authInfo" class="nowrap">—</span>
       <button class="btn" id="btnLogin">Войти</button>
       <button class="btn" id="btnLogout" style="display:none">Выйти</button>
@@ -101,13 +93,13 @@
         <option value="paid">Оплачено</option>
         <option value="rejected">Отклонено</option>
       </select>
-      <input id="wSearch" class="grow search" placeholder="Поиск: id, адрес, TX, email, телефон">
+      <input id="wSearch" class="grow" placeholder="Поиск: id, адрес, TX, email, телефон">
       <input id="wFrom" type="date">
       <input id="wTo" type="date">
       <button class="btn" id="wReload">Обновить</button>
       <button class="btn ghost" id="wExport">Экспорт CSV</button>
     </div>
-    <div class="table-wrap" style="margin-top:10px">
+    <div class="table-wrap" style="margin-top:8px">
       <table id="wTable">
         <thead><tr>
           <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
@@ -117,8 +109,8 @@
         <tbody></tbody>
       </table>
     </div>
-    <div class="row" style="margin-top:10px">
-      <span class="muted" id="wDiag">—</span>
+    <div class="row" style="margin-top:8px">
+      <span class="muted small" id="wDiag">—</span>
       <span class="grow"></span>
       <button class="btn ghost" id="wPrev">Назад</button>
       <button class="btn ghost" id="wNext">Вперёд</button>
@@ -128,12 +120,12 @@
   <!-- USERS -->
   <section class="panel" data-page="users" style="display:none">
     <div class="row">
-      <input id="uSearch" class="grow search" placeholder="Поиск: email, телефон, user_id, ref_code">
+      <input id="uSearch" class="grow" placeholder="Поиск: email, телефон, user_id, ref_code">
       <button class="btn" id="uReload">Обновить</button>
       <button class="btn ghost" id="uExport">Экспорт CSV</button>
-      <span class="muted" id="uDiag">—</span>
+      <span class="muted small" id="uDiag">—</span>
     </div>
-    <div class="table-wrap" style="margin-top:10px">
+    <div class="table-wrap" style="margin-top:8px">
       <table id="uTable">
         <thead><tr>
           <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
@@ -146,67 +138,40 @@
 
   <!-- REFS -->
   <section class="panel" data-page="refs" style="display:none">
-    <div class="grid cols-3">
-      <div class="card">
-        <h3>Общий обзор</h3>
-        <div class="row">
-          <input id="rUser" class="grow" placeholder="User ID для обзора">
-          <button class="btn" id="rLoad">Показать</button>
-        </div>
-        <div class="grid cols-3" style="margin-top:10px">
-          <div><div class="muted small">Поколение 1</div><div class="pill" id="rGen1">—</div></div>
-          <div><div class="muted small">Поколение 2</div><div class="pill" id="rGen2">—</div></div>
-          <div><div class="muted small">Поколение 3</div><div class="pill" id="rGen3">—</div></div>
-        </div>
-        <div class="grid cols-3" style="margin-top:10px">
-          <div><div class="muted small">Сумма L1</div><div class="pill" id="rSum1">—</div></div>
-          <div><div class="muted small">Сумма L2</div><div class="pill" id="rSum2">—</div></div>
-          <div><div class="muted small">Сумма L3</div><div class="pill" id="rSum3">—</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Последние начисления</h3>
-        <div class="table-wrap">
-          <table id="rLast">
-            <thead><tr><th>Дата</th><th>Уровень</th><th>Сумма</th><th>Источник</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Ссылка/Код</h3>
-        <div class="grid cols-1">
-          <div class="row"><span class="muted small">Реф-код:</span><input id="rCode" class="grow" readonly></div>
-          <div class="row"><span class="muted small">Реф-ссылка:</span><input id="rLink" class="grow" readonly><button class="btn" id="rCopy">Копировать</button></div>
-        </div>
-      </div>
+    <div class="row">
+      <input id="rInviter" class="grow" placeholder="User ID пригласившего (показать его L1)">
+      <button class="btn" id="rLoadL1">Показать L1</button>
+      <button class="btn ghost" id="rExportL1">Экспорт L1</button>
+    </div>
+    <div class="table-wrap" style="margin-top:8px">
+      <table id="rL1Table">
+        <thead><tr><th>User ID</th><th>Email</th><th>Телефон</th><th class="right">Баланс</th><th>Реф-код</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
 
-    <div class="card" style="margin-top:10px">
-      <h3>Дерево рефералов</h3>
-      <div class="row">
-        <input id="treeUser" class="grow" placeholder="User ID (корень дерева)">
-        <button class="btn" id="treeLoad">Построить</button>
-        <button class="btn ghost" id="treeExport">Экспорт CSV</button>
-      </div>
-      <div class="table-wrap" style="margin-top:8px">
-        <table id="treeTable">
-          <thead><tr><th>Уровень</th><th>User ID</th><th>Email</th><th>Телефон</th><th class="right">Баланс</th><th>Реф-код</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+    <div class="row" style="margin-top:12px">
+      <input id="treeUser" class="grow" placeholder="User ID (корень дерева 1–3)">
+      <button class="btn" id="treeLoad">Построить дерево 1–3</button>
+      <button class="btn ghost" id="treeExport">Экспорт дерева</button>
+    </div>
+    <div class="table-wrap" style="margin-top:8px">
+      <table id="treeTable">
+        <thead><tr><th>Уровень</th><th>User ID</th><th>Email</th><th>Телефон</th><th class="right">Баланс</th><th>Реф-код</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
   </section>
 
-  <!-- REWARDS (global feed) -->
+  <!-- REWARDS -->
   <section class="panel" data-page="rewards" style="display:none">
     <div class="row">
-      <input id="rwSearch" class="grow search" placeholder="Поиск: source_user, target_user, уровень">
+      <input id="rwSearch" class="grow" placeholder="Поиск: source_user, target_user, уровень">
       <button class="btn" id="rwReload">Обновить</button>
       <button class="btn ghost" id="rwExport">Экспорт CSV</button>
-      <span class="muted" id="rwDiag">—</span>
+      <span class="muted small" id="rwDiag">—</span>
     </div>
-    <div class="table-wrap" style="margin-top:10px">
+    <div class="table-wrap" style="margin-top:8px">
       <table id="rwTable">
         <thead><tr>
           <th>Дата</th><th>Уровень</th><th>Получатель</th><th>Источник</th><th class="right">Сумма</th><th>Комментарий</th>
@@ -218,106 +183,70 @@
 
   <!-- ABOUT -->
   <section class="panel" data-page="about" style="display:none">
-    <div class="grid cols-2">
-      <div class="card">
-        <h3>Доступ</h3>
-        <div class="hint">
-          В админ-панель допускаются только пользователи из таблицы <code>public.admins</code>. Проверка идёт через RPC <code>lc_is_admin()</code>.<br>
-          Для добавления:<br>
-          <code>insert into public.admins(user_id)
-select id from auth.users where email = 'ВАШ_EMAIL'
-on conflict do nothing;</code>
-        </div>
-        <div class="muted small">Также поддерживается фолбэк-проверка наличия записи в <code>admins</code>, если RPC недоступен.</div>
-      </div>
-      <div class="card">
-        <h3>Финансы</h3>
-        <p class="muted small">Подтверждение/отмена заявок: RPC <code>admin_update_withdrawal(p_id, p_status, p_txid, p_note)</code>.
-        При отклонении средства должны возвращаться транзакционно.</p>
-        <p class="muted small">Коррекция баланса: <code>admin_adjust_balance(p_user_id, p_delta_cents)</code> (опционально).</p>
-      </div>
-      <div class="card">
-        <h3>Рефералы</h3>
-        <p class="muted small">Сводные данные подтягиваются через <code>get_referral_counts_active(p_min_cents)</code> и <code>get_referrals_by_generation(p_level, p_min_cents)</code>. Последние начисления — из таблицы <code>referral_rewards</code>.</p>
-      </div>
-      <div class="card">
-        <h3>Настройка клиента</h3>
-        <p class="muted small">Если у вас уже инициализирован глобальный <code>window.sb</code>, панель использует его. Иначе укажите <code>window.SUPABASE_URL</code> и <code>window.SUPABASE_ANON_KEY</code> до загрузки этого файла.</p>
-      </div>
-    </div>
+    <h3>Справка</h3>
+    <p class="small muted">Панель работает с таблицами <code>profiles(user_id,email,phone,ref_code)</code>, <code>wallets(user_id,balance_cents)</code>, <code>withdrawals</code>, <code>referral_rewards</code> и RPC: <code>lc_is_admin</code>, <code>admin_update_withdrawal</code>, <code>admin_adjust_balance</code>, <code>get_referrals_by_generation</code>.</p>
   </section>
 </div>
 
-<!-- DRAWER: USER DETAILS -->
+<!-- Drawer -->
 <div class="drawer" id="drawer">
   <div class="sheet">
     <div class="row" style="justify-content:space-between">
       <h3 id="dTitle" style="margin:6px 0">Профиль пользователя</h3>
       <button class="btn ghost" id="dClose">Закрыть</button>
     </div>
-
-    <div class="grid cols-2">
-      <div class="row"><span class="muted small">User ID</span><input id="dUserId" class="grow" readonly></div>
-      <div class="row"><span class="muted small">Создан</span><input id="dCreated" class="grow" readonly></div>
-      <div class="row"><span class="muted small">Email</span><input id="dEmail" class="grow"></div>
-      <div class="row"><span class="muted small">Телефон</span><input id="dPhone" class="grow"></div>
-      <div class="row"><span class="muted small">Баланс (USDT)</span><input id="dBalance" type="number" step="0.01" class="grow"></div>
-      <div class="row"><span class="muted small">Реф-код</span><input id="dRefCode" class="grow"><button class="btn ghost" id="dGenRef">Сгенерировать</button></div>
-      <div class="row"><span class="muted small">Реф-ссылка</span><input id="dRefLink" class="grow" readonly><button class="btn" id="dCopyRef">Копировать</button></div>
-      <div class="row"><span class="muted small">Изменение (±USDT)</span><input id="dDelta" type="number" step="0.01" placeholder="например, 15 или -7.5" class="grow"></div>
+    <div class="row">
+      <div class="grow">
+        <div class="small muted">User ID</div><input id="dUserId" class="grow" readonly>
+      </div>
+      <div class="grow">
+        <div class="small muted">Создан</div><input id="dCreated" class="grow" readonly>
+      </div>
     </div>
-    <div class="row" style="margin-top:8px">
-      <button class="btn ok" id="dSaveProfile">Сохранить профиль</button>
-      <button class="btn warn" id="dApplyDelta">Применить изменение баланса</button>
+    <div class="row">
+      <div class="grow"><div class="small muted">Email</div><input id="dEmail" class="grow"></div>
+      <div class="grow"><div class="small muted">Телефон</div><input id="dPhone" class="grow"></div>
     </div>
-
-    <h4 style="margin:16px 0 8px">Последние заявки пользователя</h4>
+    <div class="row">
+      <div class="grow"><div class="small muted">Баланс (USDT)</div><input id="dBalance" type="number" step="0.01" class="grow"></div>
+      <div class="grow"><div class="small muted">Реф-код</div><input id="dRefCode" class="grow"></div>
+    </div>
+    <div class="row">
+      <div class="grow"><div class="small muted">Реф-ссылка</div><input id="dRefLink" class="grow" readonly></div>
+      <button class="btn" id="dCopyRef">Копировать</button>
+    </div>
+    <div class="row">
+      <div class="grow"><div class="small muted">Изменение (±USDT)</div><input id="dDelta" type="number" step="0.01" class="grow" placeholder="например, 15 или -7.5"></div>
+      <button class="btn warn" id="dApplyDelta">Применить</button>
+      <button class="btn ok" id="dSaveProfile">Сохранить</button>
+    </div>
+    <h3>Заявки пользователя</h3>
     <div class="table-wrap">
-      <table id="dWTable">
-        <thead><tr><th>Дата</th><th>Сумма</th><th>Статус</th><th>TX</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <table id="dWTable"><thead><tr><th>Дата</th><th>Сумма</th><th>Статус</th><th>TX</th></tr></thead><tbody></tbody></table>
     </div>
-
-    <h4 style="margin:16px 0 8px">Реферальные начисления</h4>
+    <h3>Реферальные начисления</h3>
     <div class="table-wrap">
-      <table id="dRTable">
-        <thead><tr><th>Дата</th><th>Уровень</th><th>Сумма</th><th>Источник</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <table id="dRTable"><thead><tr><th>Дата</th><th>Уровень</th><th>Сумма</th><th>Источник</th></tr></thead><tbody></tbody></table>
     </div>
   </div>
 </div>
 
 <script>
 (function(){
-  // ===== Bootstrap Supabase client =====
-  try {
-    if (!window.sb) {
-      if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
-        console.warn('[Admin] No window.sb and no SUPABASE_URL/ANON_KEY provided.');
-      } else {
-        window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
-          auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-        });
-      }
-    }
-  } catch(e){ console.error(e); }
-  const sb = window.sb;
-  if (!sb) { alert('Supabase клиент не инициализирован. Передайте window.sb либо SUPABASE_URL/ANON_KEY.'); return; }
 
-  // ===== Helpers =====
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
+  const sb = window.sb;
+  if (!sb) { alert('Supabase не инициализирован'); }
   const fmtCents = c => ((+c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2}) + ' USDT';
   const pill = s => '<span class="pill '+s+'">'+(s==='paid'?'оплачено':s==='rejected'?'отклонено':'ожидание')+'</span>';
   const short = s => (s ? String(s).slice(0,6)+'…'+String(s).slice(-4) : '');
   const toCents = v => Math.round((Number(v)||0) * 100);
-  const qlike = v => v? `%${String(v).toLowerCase().trim()}%` : null;
+  const qlike = v => v? '%' + String(v).toLowerCase().trim() + '%' : null;
 
   let sessionUser = null, isAdmin = false;
 
-  // ===== Tabs =====
+  // Tabs
   $$('#tabs .tab').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('#tabs .tab').forEach(b=>b.classList.remove('active'));
@@ -330,7 +259,7 @@ on conflict do nothing;</code>
     });
   });
 
-  // ===== Auth bar =====
+  // Auth
   async function refreshAuth(){
     const { data: { session } } = await sb.auth.getSession();
     sessionUser = session?.user || null;
@@ -340,15 +269,15 @@ on conflict do nothing;</code>
   }
   $('#btnLogin').addEventListener('click', async () => {
     try{
-      const email = prompt('Email для входа в админку:');
+      const email = prompt('Email для входа:');
       if(!email) return;
       const pwd = prompt('Пароль (оставьте пустым для magic-link):') || '';
       if(pwd){
         const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-        if(error){ alert('Ошибка входа: '+(error.message||error)); return; }
+        if(error){ alert('Ошибка: '+(error.message||error)); return; }
         location.reload();
       } else {
-        const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href }});
+        const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href } });
         if(error){ alert('Ошибка отправки ссылки: '+(error.message||error)); return; }
         alert('Ссылка для входа отправлена на email.');
       }
@@ -359,14 +288,14 @@ on conflict do nothing;</code>
   async function checkAdmin(){
     isAdmin = false;
     try {
-      const r = await sb.rpc('lc_is_admin'); // предпочтительно
+      const r = await sb.rpc('lc_is_admin');
       if (!r.error) {
         const row = Array.isArray(r.data) ? r.data[0] : r.data;
         if (row === true || row?.is_admin === true) isAdmin = true;
       }
     } catch(_) {}
 
-    if (!isAdmin) { // fallback: check presence in public.admins by current user id
+    if (!isAdmin) {
       try{
         const { data: { user } } = await sb.auth.getUser();
         if (user) {
@@ -382,39 +311,32 @@ on conflict do nothing;</code>
     }
   }
 
-  // ===== Withdrawals =====
-  let wPage = 0, wLimit = 25, wLastCount = 0, wRowsCache = [];
+  // Withdrawals
+  let wPage=0, wLimit=25, wLastCount=0, wRowsCache=[];
   async function loadWithdrawals(){
     if (!isAdmin) return;
-    const tbody = $('#wTable tbody');
-    tbody.innerHTML = '<tr><td colspan="12" class="muted">Загрузка…</td></tr>';
+    const tbody = $('#wTable tbody'); tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
     const status = $('#wStatus').value || null;
     const s = $('#wSearch').value.trim();
     const from = $('#wFrom').value ? new Date($('#wFrom').value) : null;
     const to = $('#wTo').value ? new Date($('#wTo').value) : null;
 
     let q = sb.from('withdrawals')
-      .select('id, created_at, user_id, amount_cents, fee_cents, status, txid, note, network, address', { count: 'exact' })
+      .select('id, created_at, user_id, amount_cents, fee_cents, status, txid, note, network, address', { count:'exact' })
       .order('created_at', { ascending:false })
       .range(wPage*wLimit, wPage*wLimit + wLimit - 1);
     if (status) q = q.eq('status', status);
     if (from) q = q.gte('created_at', from.toISOString());
     if (to) q = q.lte('created_at', to.toISOString());
     if (s) {
-      q = q.or([
-        `id.ilike.${qlike(s)}`,
-        `address.ilike.${qlike(s)}`,
-        `txid.ilike.${qlike(s)}`,
-        `note.ilike.${qlike(s)}`
-      ].join(','));
+      const like = qlike(s);
+      q = q.or('id.ilike.'+like+',address.ilike.'+like+',txid.ilike.'+like+',note.ilike.'+like);
     }
     const { data, error, count } = await q;
-    if (error) { tbody.innerHTML = `<tr><td colspan="12" class="danger">${error.message||error}</td></tr>`; return; }
-    wLastCount = count || 0;
-    wRowsCache = data || [];
-    $('#wDiag').textContent = `Страница ${wPage+1} · ${wLastCount} записей`;
+    if (error) { tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(error.message||error)+'</td></tr>'; return; }
+    wLastCount = count || 0; wRowsCache = data||[]; $('#wDiag').textContent = 'Страница '+(wPage+1)+' · '+wLastCount+' записей';
 
-    const emailByUser = {}; const phoneByUser = {};
+    const emailByUser={}, phoneByUser={};
     try {
       const ids = (data||[]).map(r=>r.user_id).filter(Boolean);
       if (ids.length) {
@@ -424,262 +346,170 @@ on conflict do nothing;</code>
     }catch(_){}
 
     tbody.innerHTML='';
-    if (!data || !data.length) {
-      tbody.innerHTML = '<tr><td colspan="12" class="muted">Пусто</td></tr>'; return;
-    }
+    if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="12" class="muted small">Пусто</td></tr>'; return; }
     for (const r of data) {
-      const amount = r.amount_cents ?? 0;
-      const fee = r.fee_cents ?? 0;
-      const total = (amount + fee);
+      const amount = r.amount_cents||0, fee=r.fee_cents||0, total=amount+fee;
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="nowrap">${r.id}</td>
-        <td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
-        <td>${emailByUser[r.user_id]||'—'}</td>
-        <td>${phoneByUser[r.user_id]||'—'}</td>
-        <td class="right">${fmtCents(amount)}</td>
-        <td class="right">${fmtCents(fee)}</td>
-        <td class="right">${fmtCents(total)}</td>
-        <td>${r.network||'—'}</td>
-        <td class="nowrap">${r.address?'<code>'+r.address+'</code>':'—'}</td>
-        <td>${pill(String(r.status||'pending').toLowerCase())}</td>
-        <td class="nowrap">${r.txid?'<code>'+short(r.txid)+'</code>':'—'} ${r.note?('<div class="small muted">'+r.note+'</div>'):''}</td>
-        <td class="nowrap">
-          <button class="btn ok small" data-act="pay" data-id="${r.id}">Оплатить</button>
-          <button class="btn bad small" data-act="reject" data-id="${r.id}">Отклонить</button>
-          <button class="btn ghost small" data-act="view" data-user="${r.user_id}">Профиль</button>
-        </td>`;
+      tr.innerHTML = '<td class="nowrap">'+r.id+'</td>'
+        + '<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td>'
+        + '<td>'+(emailByUser[r.user_id]||'—')+'</td>'
+        + '<td>'+(phoneByUser[r.user_id]||'—')+'</td>'
+        + '<td class="right">'+fmtCents(amount)+'</td>'
+        + '<td class="right">'+fmtCents(fee)+'</td>'
+        + '<td class="right">'+fmtCents(total)+'</td>'
+        + '<td>'+(r.network||'—')+'</td>'
+        + '<td class="nowrap">'+(r.address?('<code>'+r.address+'</code>'):'—')+'</td>'
+        + '<td>'+ (function(s){s=String(s||'pending').toLowerCase(); return '<span class="pill '+s+'">'+(s==='paid'?'оплачено':s==='rejected'?'отклонено':'ожидание')+'</span>';})(r.status) +'</td>'
+        + '<td class="nowrap">'+(r.txid?('<code>'+short(r.txid)+'</code>'):'—')+(r.note?('<div class="small muted">'+r.note+'</div>'):'')+'</td>'
+        + '<td class="nowrap">'
+          + '<button class="btn ok small" data-act="pay" data-id="'+r.id+'">Оплатить</button> '
+          + '<button class="btn bad small" data-act="reject" data-id="'+r.id+'">Отклонить</button> '
+          + '<button class="btn ghost small" data-act="view" data-user="'+r.user_id+'">Профиль</button>'
+        + '</td>';
       tbody.appendChild(tr);
     }
   }
   $('#wReload').addEventListener('click', ()=>{ wPage=0; loadWithdrawals(); });
   $('#wPrev').addEventListener('click', ()=>{ if (wPage>0){ wPage--; loadWithdrawals(); } });
   $('#wNext').addEventListener('click', ()=>{ if ((wPage+1)*wLimit < wLastCount){ wPage++; loadWithdrawals(); } });
-  $('#wTable').addEventListener('click', async (e)=>{
-    const btn = e.target.closest('button[data-act]'); if (!btn) return;
-    const id = btn.dataset.id; const act = btn.dataset.act;
-    if (act==='view'){ openUserDrawer(btn.dataset.user); return; }
-    if (act==='pay'){
-      const tx = prompt('Укажите TX/комментарий для отметки "Оплачено":');
-      if (!tx) return;
-      try{
-        const r = await sb.rpc('admin_update_withdrawal', { p_id: id, p_status:'paid', p_txid: tx, p_note: tx });
-        if (r.error) throw r.error; loadWithdrawals();
-      }catch(e){ alert(e.message||e); }
-    }
-    if (act==='reject'){
-      const note = prompt('Причина отмены (средства будут возвращены пользователю):') || 'rejected by admin';
-      try{
-        const r = await sb.rpc('admin_update_withdrawal', { p_id: id, p_status:'rejected', p_txid: null, p_note: note });
-        if (r.error) throw r.error; loadWithdrawals();
-      }catch(e){ alert(e.message||e); }
-    }
+  $('#wTable').addEventListener('click', async (e)=>{ const btn=e.target.closest('button[data-act]'); if(!btn) return;
+    const id=btn.dataset.id, act=btn.dataset.act;
+    if(act==='view'){ openUserDrawer(btn.dataset.user); return; }
+    if(act==='pay'){ const tx=prompt('TX/комментарий для "Оплачено":'); if(!tx) return;
+      try{ const r=await sb.rpc('admin_update_withdrawal', { p_id:id, p_status:'paid', p_txid:tx, p_note:tx }); if(r.error) throw r.error; loadWithdrawals(); }
+      catch(e){ alert(e.message||e); } }
+    if(act==='reject'){ const note=prompt('Причина отмены:')||'rejected by admin';
+      try{ const r=await sb.rpc('admin_update_withdrawal', { p_id:id, p_status:'rejected', p_txid:null, p_note:note }); if(r.error) throw r.error; loadWithdrawals(); }
+      catch(e){ alert(e.message||e); } }
   });
-  $('#wExport').addEventListener('click', ()=>exportCSV('withdrawals.csv', wRowsCache.map(r=>({
-    id:r.id, created_at:r.created_at, user_id:r.user_id, amount_cents:r.amount_cents, fee_cents:r.fee_cents,
-    status:r.status, txid:r.txid, note:r.note, network:r.network, address:r.address
-  })));
+  $('#wExport').addEventListener('click', ()=>{ exportCSV('withdrawals.csv', (wRowsCache||[])); });
 
-  try{
-    sb.channel('adm-wd').on('postgres_changes', { event:'*', schema:'public', table:'withdrawals' }, ()=>{
-      if ($('.tab.active')?.dataset.tab==='withdrawals') loadWithdrawals();
-    }).subscribe();
-  }catch(_){}
+  try{ sb.channel('adm-wd').on('postgres_changes', { event:'*', schema:'public', table:'withdrawals' }, ()=>{ if($('.tab.active')?.dataset.tab==='withdrawals') loadWithdrawals(); }).subscribe(); }catch(_){}
 
-  // ===== Users =====
-  let uRowsCache = [];
+  // Users
+  let uRowsCache=[];
   async function loadUsers(){
     if (!isAdmin) return;
-    const tbody = $('#uTable tbody');
-    tbody.innerHTML = '<tr><td colspan="8" class="muted">Загрузка…</td></tr>';
+    const tbody = $('#uTable tbody'); tbody.innerHTML = '<tr><td colspan="8" class="muted small">Загрузка…</td></tr>';
     const s = $('#uSearch').value.trim();
-    let rows = null;
-    try {
-      const r = await sb.rpc('admin_list_users', { p_search: s || null });
-      if (!r.error) rows = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
-    } catch(_){}
+    let rows=null;
+    try { const r = await sb.rpc('admin_list_users', { p_search: s||null }); if(!r.error) rows = Array.isArray(r.data)? r.data : (r.data? [r.data] : []); } catch(_){}
     if (!rows) {
-      const profQ = sb.from('profiles')
-        .select('user_id, created_at, email, phone, ref_code')
-        .order('created_at', { ascending:false })
-        .limit(300);
-      const { data: profs, error: e1 } = s ? profQ.or([
-        `user_id.ilike.${qlike(s)}`,
-        `email.ilike.${qlike(s)}`,
-        `phone.ilike.${qlike(s)}`,
-        `ref_code.ilike.${qlike(s)}`
-      ].join(',')) : await profQ;
-      if (e1) { tbody.innerHTML = `<tr><td colspan="8" class="danger">${e1.message||e1}</td></tr>`; return; }
-      const ids = (profs||[]).map(p=>p.user_id);
-      const { data: wallets } = ids.length ? await sb.from('wallets').select('user_id, balance_cents').in('user_id', ids) : {data:[]};
-      const balByUser = {}; (wallets||[]).forEach(w=>balByUser[w.user_id]=w.balance_cents||0);
-      rows = (profs||[]).map(p=>({
-        user_id:p.user_id, created_at:p.created_at, email:p.email, phone:p.phone,
-        balance_cents: balByUser[p.user_id]||0, ref_code:p.ref_code
-      }));
+      let q = sb.from('profiles').select('user_id, created_at, email, phone, ref_code').order('created_at', {ascending:false}).limit(300);
+      if (s) { const like=qlike(s); q = q.or('user_id.ilike.'+like+',email.ilike.'+like+',phone.ilike.'+like+',ref_code.ilike.'+like); }
+      const r = await q; if (r.error) { tbody.innerHTML='<tr><td colspan="8" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
+      const ids = (r.data||[]).map(p=>p.user_id);
+      let balances={}; if (ids.length) { const w = await sb.from('wallets').select('user_id, balance_cents').in('user_id', ids); (w.data||[]).forEach(x=>balances[x.user_id]=x.balance_cents||0); }
+      rows = (r.data||[]).map(p=>({ user_id:p.user_id, created_at:p.created_at, email:p.email, phone:p.phone, ref_code:p.ref_code, balance_cents: balances[p.user_id]||0 }));
     }
-    uRowsCache = rows || [];
-    $('#uDiag').textContent = `${uRowsCache.length} пользователей`;
-
-    tbody.innerHTML = '';
-    if (!uRowsCache.length) { tbody.innerHTML = '<tr><td colspan="8" class="muted">Пусто</td></tr>'; return; }
+    uRowsCache = rows||[]; $('#uDiag').textContent = uRowsCache.length+' пользователей';
+    tbody.innerHTML=''; if(!uRowsCache.length){ tbody.innerHTML='<tr><td colspan="8" class="muted small">Пусто</td></tr>'; return; }
     for (const r of uRowsCache) {
       const link = buildRefLink(r.ref_code);
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="nowrap">${r.user_id}</td>
-        <td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
-        <td>${r.email||'—'}</td>
-        <td>${r.phone||'—'}</td>
-        <td class="right">${fmtCents(r.balance_cents||0)}</td>
-        <td>${r.ref_code||'—'}</td>
-        <td class="nowrap">${link?('<code>'+link+'</code>'):'—'}</td>
-        <td class="nowrap"><button class="btn ghost small" data-open="${r.user_id}">Открыть</button></td>`;
+      tr.innerHTML = '<td class="nowrap">'+r.user_id+'</td>'
+        + '<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td>'
+        + '<td>'+(r.email||'—')+'</td>'
+        + '<td>'+(r.phone||'—')+'</td>'
+        + '<td class="right">'+fmtCents(r.balance_cents||0)+'</td>'
+        + '<td>'+(r.ref_code||'—')+'</td>'
+        + '<td class="nowrap">'+(link?('<code>'+link+'</code>'):'—')+'</td>'
+        + '<td class="nowrap"><button class="btn ghost small" data-open="'+r.user_id+'">Открыть</button></td>';
       tbody.appendChild(tr);
     }
   }
   $('#uReload').addEventListener('click', loadUsers);
-  $('#uTable').addEventListener('click', e=>{
-    const btn = e.target.closest('button[data-open]'); if (!btn) return;
-    openUserDrawer(btn.dataset.open);
-  });
+  $('#uTable').addEventListener('click', e=>{ const btn=e.target.closest('button[data-open]'); if(!btn) return; openUserDrawer(btn.dataset.open); });
   $('#uExport').addEventListener('click', ()=>exportCSV('users.csv', uRowsCache));
 
-  // ===== Rewards (global) =====
-  let rwRowsCache = [];
+  // Rewards
+  let rwRowsCache=[];
   async function loadRewards(){
     if (!isAdmin) return;
-    const tbody = $('#rwTable tbody');
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Загрузка…</td></tr>';
+    const tbody = $('#rwTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
     const s = $('#rwSearch').value.trim();
-    let q = sb.from('referral_rewards')
-      .select('created_at, level, target_user_id, source_user_id, amount_cents, note')
-      .order('created_at', { ascending:false }).limit(300);
-    if (s) {
-      q = q.or([
-        `target_user_id.ilike.${qlike(s)}`,
-        `source_user_id.ilike.${qlike(s)}`,
-        `level.eq.${Number(s)||-1}`
-      ].join(','));
-    }
-    const { data, error } = await q;
-    if (error) { tbody.innerHTML = `<tr><td colspan="6" class="danger">${error.message||error}</td></tr>`; return; }
-    rwRowsCache = data || [];
-    $('#rwDiag').textContent = `${rwRowsCache.length} записей`;
-    tbody.innerHTML='';
-    if (!rwRowsCache.length) { tbody.innerHTML = '<tr><td colspan="6" class="muted">Пусто</td></tr>'; return; }
-    for (const r of rwRowsCache) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
-        <td>${r.level||'—'}</td>
-        <td class="nowrap">${r.target_user_id}</td>
-        <td class="nowrap">${r.source_user_id}</td>
-        <td class="right">${fmtCents(r.amount_cents||0)}</td>
-        <td>${r.note||'—'}</td>`;
+    let q = sb.from('referral_rewards').select('created_at, level, target_user_id, source_user_id, amount_cents, note').order('created_at', {ascending:false}).limit(300);
+    if (s) { const like=qlike(s); q = q.or('target_user_id.ilike.'+like+',source_user_id.ilike.'+like+',level.eq.'+(Number(s)||-1)); }
+    const r = await q; if (r.error) { tbody.innerHTML='<tr><td colspan="6" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
+    rwRowsCache = r.data||[]; $('#rwDiag').textContent = rwRowsCache.length+' записей';
+    tbody.innerHTML=''; if(!rwRowsCache.length){ tbody.innerHTML='<tr><td colspan="6" class="muted small">Пусто</td></tr>'; return; }
+    for (const x of rwRowsCache) {
+      const tr=document.createElement('tr');
+      tr.innerHTML = '<td class="nowrap">'+new Date(x.created_at).toLocaleString()+'</td>'
+        + '<td>'+x.level+'</td>'
+        + '<td class="nowrap">'+x.target_user_id+'</td>'
+        + '<td class="nowrap">'+x.source_user_id+'</td>'
+        + '<td class="right">'+fmtCents(x.amount_cents||0)+'</td>'
+        + '<td>'+(x.note||'—')+'</td>';
       tbody.appendChild(tr);
     }
   }
   $('#rwReload').addEventListener('click', loadRewards);
   $('#rwExport').addEventListener('click', ()=>exportCSV('rewards.csv', rwRowsCache));
 
-  try{
-    sb.channel('adm-rw').on('postgres_changes', { event:'INSERT', schema:'public', table:'referral_rewards' }, ()=>{
-      if ($('.tab.active')?.dataset.tab==='rewards') loadRewards();
-    }).subscribe();
-  }catch(_){}
-
-  // ===== Ref overview =====
-  $('#rLoad').addEventListener('click', loadRefOverview);
-  async function loadRefOverview(){
-    const uid = $('#rUser').value.trim(); if (!uid) { alert('Укажите User ID'); return; }
-    const [counts, last, prof] = await Promise.all([
-      sb.rpc('get_referral_counts_active', { p_min_cents: 2900 }),
-      sb.from('referral_rewards').select('created_at, level, amount_cents, source_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(30),
-      sb.from('profiles').select('ref_code').eq('user_id', uid).maybeSingle()
-    ]);
-    let gen1=0, gen2=0, gen3=0, s1=0, s2=0, s3=0;
-    if (!counts.error && counts.data) {
-      const row = Array.isArray(counts.data) ? (counts.data[0]||{}) : counts.data;
-      gen1 = Number(row.gen1||0); gen2 = Number(row.gen2||0); gen3 = Number(row.gen3||0);
-      s1 = Number(row.sum1_cents||0); s2 = Number(row.sum2_cents||0); s3 = Number(row.sum3_cents||0);
-    }
-    $('#rGen1').textContent = String(gen1);
-    $('#rGen2').textContent = String(gen2);
-    $('#rGen3').textContent = String(gen3);
-    $('#rSum1').textContent = fmtCents(s1);
-    $('#rSum2').textContent = fmtCents(s2);
-    $('#rSum3').textContent = fmtCents(s3);
-
-    const tbody = $('#rLast tbody'); tbody.innerHTML = '';
-    const arr = Array.isArray(last.data) ? last.data : [];
-    if (!arr.length) tbody.innerHTML = '<tr><td colspan="4" class="muted">Пока нет начислений</td></tr>';
-    for (const r of arr) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
-                      <td>${r.level}</td>
-                      <td class="right">${fmtCents(r.amount_cents||0)}</td>
-                      <td class="nowrap">${r.source_user_id}</td>`;
-      tbody.appendChild(tr);
-    }
-    const code = prof?.data?.ref_code || '';
-    $('#rCode').value = code || '';
-    $('#rLink').value = code ? buildRefLink(code) : '';
-  }
-  $('#rCopy').addEventListener('click', async ()=>{
-    try{ await navigator.clipboard.writeText($('#rLink').value); alert('Скопировано'); }catch(_){}
-  });
-
-  // ===== Ref tree =====
-  $('#treeLoad').addEventListener('click', buildTree);
-  async function buildTree(){
-    const root = $('#treeUser').value.trim(); if (!root){ alert('Укажите User ID'); return; }
-    const tbody = $('#treeTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted">Загрузка…</td></tr>';
-    const rows = [];
-    for (const level of [1,2,3]){
-      try{
-        const r = await sb.rpc('get_referrals_by_generation', { p_level: level, p_min_cents: 0, p_root_user: root });
-        const list = Array.isArray(r.data) ? r.data : (r.data? [r.data] : []);
-        rows.push(...list.map(x => ({ level, ...x })));
-      }catch(_){}
-    }
-    const ids = Array.from(new Set(rows.map(r=>r.user_id).filter(Boolean)));
+  // Referrals: L1 list by inviter
+  async function loadL1(inviterId){
+    const tbody = $('#rL1Table tbody'); tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
+    if (!inviterId) { tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID пригласившего</td></tr>'; return; }
+    let rows=[];
+    try { 
+      const r = await sb.rpc('get_referrals_by_generation', { p_level:1, p_min_cents:0, p_root_user: inviterId });
+      const list = Array.isArray(r.data) ? r.data : (r.data? [r.data] : []);
+      rows = list.map(x=>({ user_id:x.user_id }));
+    } catch (_){}
+    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="muted small">Нет данных</td></tr>'; return; }
+    const ids = rows.map(x=>x.user_id);
     const [profs, wallets] = await Promise.all([
-      ids.length ? sb.from('profiles').select('user_id, email, phone, ref_code').in('user_id', ids) : { data: [] },
-      ids.length ? sb.from('wallets').select('user_id, balance_cents').in('user_id', ids) : { data: [] }
+      sb.from('profiles').select('user_id,email,phone,ref_code').in('user_id', ids),
+      sb.from('wallets').select('user_id,balance_cents').in('user_id', ids)
     ]);
-    const byUser = {}; (profs.data||[]).forEach(p=>byUser[p.user_id] = {...(byUser[p.user_id]||{}), ...p});
-    (wallets.data||[]).forEach(w=>byUser[w.user_id] = {...(byUser[w.user_id]||{}), ...w});
-
-    tbody.innerHTML = '';
-    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="muted">Пусто</td></tr>'; return; }
-    for (const r of rows){
-      const info = byUser[r.user_id] || {};
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${r.level}</td>
-                      <td class="nowrap">${r.user_id}</td>
-                      <td>${info.email||'—'}</td>
-                      <td>${info.phone||'—'}</td>
-                      <td class="right">${fmtCents(info.balance_cents||0)}</td>
-                      <td>${info.ref_code||'—'}</td>`;
+    const by={}; (profs.data||[]).forEach(p=>by[p.user_id]={...(by[p.user_id]||{}),...p}); (wallets.data||[]).forEach(w=>by[w.user_id]={...(by[w.user_id]||{}),...w});
+    tbody.innerHTML='';
+    rows.forEach(r=>{ const x=by[r.user_id]||{}; const tr=document.createElement('tr');
+      tr.innerHTML = '<td class="nowrap">'+r.user_id+'</td>'
+        + '<td>'+(x.email||'—')+'</td>'
+        + '<td>'+(x.phone||'—')+'</td>'
+        + '<td class="right">'+fmtCents(x.balance_cents||0)+'</td>'
+        + '<td>'+(x.ref_code||'—')+'</td>';
       tbody.appendChild(tr);
-    }
+    });
+    window._l1Cache = rows.map(r=>({ user_id:r.user_id, email:(by[r.user_id]||{}).email||'', phone:(by[r.user_id]||{}).phone||'', balance_cents:(by[r.user_id]||{}).balance_cents||0, ref_code:(by[r.user_id]||{}).ref_code||'' }));
+  }
+  document.getElementById('rLoadL1').addEventListener('click', ()=>loadL1(document.getElementById('rInviter').value.trim()));
+  document.getElementById('rExportL1').addEventListener('click', ()=>exportCSV('referrals_L1.csv', window._l1Cache||[]));
+
+  // Ref tree 1–3
+  async function buildTree(){
+    const root = $('#treeUser').value.trim(); const tbody = $('#treeTable tbody'); tbody.innerHTML='<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
+    if (!root) { tbody.innerHTML='<tr><td colspan="6" class="muted small">Укажите User ID</td></tr>'; return; }
+    const rows=[];
+    for (const level of [1,2,3]){ try{ const r=await sb.rpc('get_referrals_by_generation', { p_level:level, p_min_cents:0, p_root_user:root }); const list=Array.isArray(r.data)?r.data:(r.data?[r.data]:[]); rows.push(...list.map(x=>({level,user_id:x.user_id}))); }catch(_){}};
+    const ids = Array.from(new Set(rows.map(r=>r.user_id)));
+    const [profs, wallets] = await Promise.all([
+      ids.length? sb.from('profiles').select('user_id,email,phone,ref_code').in('user_id', ids) : {data:[]},
+      ids.length? sb.from('wallets').select('user_id,balance_cents').in('user_id', ids) : {data:[]}
+    ]);
+    const by={}; (profs.data||[]).forEach(p=>by[p.user_id]={...(by[p.user_id]||{}),...p}); (wallets.data||[]).forEach(w=>by[w.user_id]={...(by[w.user_id]||{}),...w});
+    tbody.innerHTML=''; if(!rows.length){ tbody.innerHTML='<tr><td colspan="6" class="muted small">Пусто</td></tr>'; return; }
+    rows.forEach(r=>{ const x=by[r.user_id]||{}; const tr=document.createElement('tr');
+      tr.innerHTML = '<td>'+r.level+'</td>'
+        + '<td class="nowrap">'+r.user_id+'</td>'
+        + '<td>'+(x.email||'—')+'</td>'
+        + '<td>'+(x.phone||'—')+'</td>'
+        + '<td class="right">'+fmtCents(x.balance_cents||0)+'</td>'
+        + '<td>'+(x.ref_code||'—')+'</td>';
+      tbody.appendChild(tr);
+    });
     window._treeCache = rows;
   }
-  $('#treeExport').addEventListener('click', ()=>{
-    const arr = (window._treeCache||[]).map(r=>({ level:r.level, user_id:r.user_id }));
-    exportCSV('ref_tree.csv', arr);
-  });
+  document.getElementById('treeLoad').addEventListener('click', buildTree);
+  document.getElementById('treeExport').addEventListener('click', ()=>{ const arr=(window._treeCache||[]).map(r=>({ level:r.level, user_id:r.user_id })); exportCSV('ref_tree.csv', arr); });
 
-  // ===== Drawer (user profile) =====
+  // Drawer
   $('#dClose').addEventListener('click', ()=>$('#drawer').classList.remove('open'));
-
   async function openUserDrawer(uid){
-    if (!uid) return;
-    $('#drawer').classList.add('open');
-    $('#dTitle').textContent = 'Профиль: ' + uid;
-    $('#dUserId').value = uid;
-
+    if(!uid) return;
+    $('#drawer').classList.add('open'); $('#dTitle').textContent='Профиль: '+uid; $('#dUserId').value=uid;
     const [prof, wallet, wds, rrs] = await Promise.all([
       sb.from('profiles').select('user_id, created_at, email, phone, ref_code').eq('user_id', uid).maybeSingle(),
       sb.from('wallets').select('user_id, balance_cents').eq('user_id', uid).maybeSingle(),
@@ -693,68 +523,25 @@ on conflict do nothing;</code>
     $('#dRefCode').value = prof?.data?.ref_code || '';
     $('#dRefLink').value = prof?.data?.ref_code ? buildRefLink(prof.data.ref_code) : '';
 
-    const wtbody = $('#dWTable tbody'); wtbody.innerHTML='';
-    (wds?.data||[]).forEach(r=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
-                      <td class="right">${fmtCents(r.amount_cents||0)}</td>
-                      <td>${String(r.status||'pending')}</td>
-                      <td class="nowrap">${r.txid?'<code>'+short(r.txid)+'</code>':'—'}</td>`;
-      wtbody.appendChild(tr);
-    });
-    const rtbody = $('#dRTable tbody'); rtbody.innerHTML='';
-    (rrs?.data||[]).forEach(r=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="nowrap">${new Date(r.created_at).toLocaleString()}</td>
-                      <td>${r.level}</td>
-                      <td class="right">${fmtCents(r.amount_cents||0)}</td>
-                      <td class="nowrap">${r.source_user_id}</td>`;
-      rtbody.appendChild(tr);
-    });
+    const wtbody = $('#dWTable tbody'); wtbody.innerHTML=''; (wds?.data||[]).forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML='<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td><td class="right">'+fmtCents(r.amount_cents||0)+'</td><td>'+String(r.status||'pending')+'</td><td class="nowrap">'+(r.txid?('<code>'+short(r.txid)+'</code>'):'—')+'</td>'; wtbody.appendChild(tr); });
+    const rtbody = $('#dRTable tbody'); rtbody.innerHTML=''; (rrs?.data||[]).forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML='<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td><td>'+r.level+'</td><td class="right">'+fmtCents(r.amount_cents||0)+'</td><td class="nowrap">'+r.source_user_id+'</td>'; rtbody.appendChild(tr); });
 
-    $('#dGenRef').onclick = ()=>{ const code = genRefCode(); $('#dRefCode').value = code; $('#dRefLink').value = buildRefLink(code); };
     $('#dCopyRef').onclick = async ()=>{ try{ await navigator.clipboard.writeText($('#dRefLink').value); alert('Скопировано'); }catch(_){}};
-    $('#dSaveProfile').onclick = async ()=>{
-      try{
-        const upd = await sb.from('profiles').update({
-          email: $('#dEmail').value || null,
-          phone: $('#dPhone').value || null,
-          ref_code: $('#dRefCode').value || null
-        }).eq('user_id', uid).select().maybeSingle();
-        if (upd.error) throw upd.error;
-        alert('Сохранено');
-        loadUsers();
-      }catch(e){ alert(e.message||e); }
-    };
-    $('#dApplyDelta').onclick = async ()=>{
-      const delta = Number($('#dDelta').value||'0');
-      if (!Number.isFinite(delta) || !delta) { alert('Введите число (USDT)'); return; }
-      try{
-        const r = await sb.rpc('admin_adjust_balance', { p_user_id: uid, p_delta_cents: toCents(delta) });
-        if (r.error) throw r.error;
-        alert('Баланс скорректирован');
-        openUserDrawer(uid);
-        loadUsers();
-      }catch(e){ alert(e.message||e); }
-    };
+    $('#dSaveProfile').onclick = async ()=>{ try{ const upd=await sb.from('profiles').update({ email:$('#dEmail').value||null, phone:$('#dPhone').value||null, ref_code:$('#dRefCode').value||null }).eq('user_id', uid).select().maybeSingle(); if(upd.error) throw upd.error; alert('Сохранено'); loadUsers(); }catch(e){ alert(e.message||e); } };
+    $('#dApplyDelta').onclick = async ()=>{ const delta=Number($('#dDelta').value||'0'); if(!Number.isFinite(delta)||!delta){ alert('Введите число (USDT)'); return; } try{ const r=await sb.rpc('admin_adjust_balance', { p_user_id: uid, p_delta_cents: toCents(delta) }); if(r.error) throw r.error; alert('Баланс скорректирован'); openUserDrawer(uid); loadUsers(); }catch(e){ alert(e.message||e); } };
   }
 
-  // ===== Utils =====
-  function genRefCode(){
-    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let s=''; for(let i=0;i<8;i++) s += alphabet[Math.floor(Math.random()*alphabet.length)];
-    return s;
-  }
-  function buildRefLink(code){
-    if (!code) return '';
-    try { const url = new URL(location.origin + '/register_single.html'); url.searchParams.set('ref', code); return url.toString(); }
-    catch { return 'https://example.com/register_single.html?ref='+encodeURIComponent(code); }
-  }
+  // Utils
+  function buildRefLink(code){ if(!code) return ''; try{ const url = new URL(location.origin + '/register_single.html'); url.searchParams.set('ref', code); return url.toString(); }catch(_){ return 'https://example.com/register_single.html?ref='+encodeURIComponent(code); } }
+  function exportCSV(name, rows){ if(!rows||!rows.length){ alert('Нет данных'); return; } const esc=v='"'+String(v??'').replace(/"/g,'""')+'"'; }
+
+  // Proper CSV export (fixed separate function)
   function exportCSV(name, rows){
-    const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
-    const keys = Object.keys(rows[0]||{sample:1});
+    if(!rows||!rows.length){ alert('Нет данных'); return; }
+    const keys = Object.keys(rows[0]);
+    const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
     const csv = [keys.join(',')].concat(rows.map(r=>keys.map(k=>esc(r[k])).join(','))).join('\n');
-    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = name;
@@ -762,16 +549,10 @@ on conflict do nothing;</code>
     setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   }
 
-  (async function init(){
-    await refreshAuth();
-    await checkAdmin();
-    if (isAdmin) {
-      loadWithdrawals();
-      setTimeout(loadUsers, 200);
-      setTimeout(loadRewards, 400);
-    }
-  })();
+  // Init
+  (async function init(){ await refreshAuth(); await checkAdmin(); if(isAdmin){ loadWithdrawals(); setTimeout(loadUsers,150); setTimeout(loadRewards,300); } })();
 
-})();</script>
+})();
+</script>
 </body>
 </html>
