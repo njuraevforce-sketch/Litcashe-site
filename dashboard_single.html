@@ -1689,7 +1689,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isRecovery) {
       // перенаправляем на страницу логина, сохраняя токены в query
       var qs = location.search || '';
-      location.replace('login_single.html' + qs);
+      location.replace('login_single.html' + (location.search||'') + (location.hash||''));
     }
   } catch(_) {}
 })();
