@@ -1146,31 +1146,59 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 <script>
-// Referrals widgets: fill left "Реферальный доход" and right "Последние реферальные начисления"
+// Referrals widgets (with fallback): left sums + right recent list
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const sb = window.sb || window._supabase || window.supabase;
     if (!sb) return;
 
-    // Загрузим выплаты (RLS: только для своего referrer_id)
-    const { data: rows, error } = await sb
-      .from('v_referral_payouts')
-      .select('created_at, level, reward_usdt')
-      .order('created_at', { ascending: false })
-      .limit(50);
+    async function loadPayouts() {
+      // 1) try view v_referral_payouts (preferred: has RLS)
+      try {
+        const r = await sb
+          .from('v_referral_payouts')
+          .select('created_at, level, reward_usdt, source_type')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!r.error && Array.isArray(r.data)) return r.data;
+      } catch (_) {}
 
-    if (error) { console.warn('v_referral_payouts error', error); return; }
+      // 2) fallback: raw referral_rewards (RLS by referrer_user_id)
+      try {
+        const { data: au } = await sb.auth.getUser();
+        const uid = au?.user?.id;
+        if (!uid) return [];
+        const r2 = await sb
+          .from('referral_rewards')
+          .select('created_at, level, reward_usdt, source')
+          .eq('referrer_user_id', uid)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!r2.error && Array.isArray(r2.data)) {
+          return r2.data.map(x => ({
+            created_at: x.created_at,
+            level: x.level,
+            reward_usdt: x.reward_usdt,
+            source_type: x.source || 'view'
+          }));
+        }
+      } catch (e) { console.warn('fallback referral_rewards error', e); }
 
-    // Агрегаты по поколениям
+      return [];
+    }
+
+    const rows = await loadPayouts();
+
+    // aggregate by generation
     const sum = {1:0,2:0,3:0};
-    (rows||[]).forEach(r => {
+    rows.forEach(r => {
       const lvl = Number(r.level||0);
       const amt = Number(r.reward_usdt||0);
       if (lvl>=1 && lvl<=3) sum[lvl] += amt;
     });
     const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
 
-    // Левая таблица
+    // left table
     const g1 = document.getElementById('gen1Cell');
     const g2 = document.getElementById('gen2Cell');
     const g3 = document.getElementById('gen3Cell');
@@ -1178,29 +1206,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (g1) g1.textContent = fmt(sum[1]);
     if (g2) g2.textContent = fmt(sum[2]);
     if (g3) g3.textContent = fmt(sum[3]);
-    if (total) total.textContent = fmt(sum[1] + sum[2] + sum[3]);
+    if (total) total.textContent = fmt(sum[1]+sum[2]+sum[3]);
 
-    // Правая таблица
+    // right table
     const list = document.getElementById('refList');
     if (list) {
       list.innerHTML = '';
-      if (!rows || !rows.length) {
+      if (!rows.length) {
         list.innerHTML = '<tr><td class="muted" colspan="4">Нет данных</td></tr>';
       } else {
-        rows.slice(0,12).forEach(r => {
+        rows.slice(0, 12).forEach(r => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${new Date(r.created_at).toLocaleString()}</td>
             <td>${r.level}</td>
             <td style="text-align:right">${fmt(r.reward_usdt)}</td>
-            <td>доход</td>`;
+            <td>${r.source_type || 'view'}</td>`;
           list.appendChild(tr);
         });
       }
     }
-  } catch (e) {
-    console.warn('ref tables init error', e);
-  }
+  } catch (e) { console.warn('ref widgets init error', e); }
 });
 </script>
 <!-- removed duplicate supabase includes -->
@@ -1669,6 +1695,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 <script>
 <!-- ===== /PATCH ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try { if (window.LC && typeof LC.initVideoWatch === 'function') LC.initVideoWatch(); } catch(_){}
+});
+</script>
+
 
 </body>
 </html>
