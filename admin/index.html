@@ -17,28 +17,32 @@
           { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
         );
         console.log('[Admin] Supabase init OK');
-  // === Admin RPC helpers (server-side) ===
-  async function rpcL1ByKey(key){
-    try{
-      const r = await sb.rpc('admin_l1_by_inviter_or_code', { p_key: key });
-      if (r && !r.error && Array.isArray(r.data)) return r.data;
-    }catch(e){ console.warn('rpcL1ByKey:', e); }
-    return null;
-  }
-  async function rpcTreeByKey(key, level){
-    try{
-      const r = await sb.rpc('admin_ref_tree_by_key', { p_key: key, p_level: level||3 });
-      if (r && !r.error && Array.isArray(r.data)) return r.data;
-    }catch(e){ console.warn('rpcTreeByKey:', e); }
-    return null;
-  }
-  async function rpcBalances(ids){
-    try{
-      const r = await sb.rpc('admin_balances_by_user_ids', { p_ids: ids });
-      if (r && !r.error && Array.isArray(r.data)) return r.data;
-    }catch(e){ console.warn('rpcBalances:', e); }
-    return null;
-  }
+
+// === RPC helpers (global) ===
+window.rpcL1ByKey = async function(key){
+  try{
+    const r = await sb.rpc('admin_l1_by_inviter_or_code', { p_key: key });
+    if (r && !r.error && Array.isArray(r.data)) return r.data;
+    if (r && r.error) console.warn('RPC admin_l1_by_inviter_or_code error:', r.error);
+  }catch(e){ console.warn('rpcL1ByKey exception:', e); }
+  return null;
+};
+window.rpcTreeByKey = async function(key, level){
+  try{
+    const r = await sb.rpc('admin_ref_tree_by_key', { p_key: key, p_level: level||3 });
+    if (r && !r.error && Array.isArray(r.data)) return r.data;
+    if (r && r.error) console.warn('RPC admin_ref_tree_by_key error:', r.error);
+  }catch(e){ console.warn('rpcTreeByKey exception:', e); }
+  return null;
+};
+window.rpcBalances = async function(ids){
+  try{
+    const r = await sb.rpc('admin_balances_by_user_ids', { p_ids: ids });
+    if (r && !r.error && Array.isArray(r.data)) return r.data;
+    if (r && r.error) console.warn('RPC admin_balances_by_user_ids error:', r.error);
+  }catch(e){ console.warn('rpcBalances exception:', e); }
+  return null;
+};
 
       } catch (e) { console.error('[Admin] Supabase init error', e); }
     })();
@@ -519,7 +523,7 @@ rows.forEach(x=>{
 window._l1Cache = rows.map(x=>({ user_id:x.user_id, email:x.email||'', phone:x.phone||'', balance_cents: balances[x.user_id]||0, ref_code:x.ref_code||'' }));
 }
 
-  document.getElementById('rLoadL1').addEventListener('click', ()=>adminLoadL1(document.getElementById('rInviter').value.trim()));
+  document.getElementById('rLoadL1').addEventListener('click', ()=>loadL1ByKey(document.getElementById('rInviter').value.trim()));
   document.getElementById('rExportL1').addEventListener('click', ()=>exportCSV('referrals_L1.csv', window._l1Cache||[]));
 
   // Ref tree 1–3
@@ -578,7 +582,7 @@ rows.forEach(r=>{
 window._treeCache = rows;
 }
 
-  document.getElementById('treeLoad').addEventListener('click', ()=>adminBuildTree(document.getElementById('treeUser').value.trim()));
+  document.getElementById('treeLoad').addEventListener('click', buildTreeByKey);
   document.getElementById('treeExport').addEventListener('click', ()=>{ const arr=(window._treeCache||[]).map(r=>({ level:r.level, user_id:r.user_id })); exportCSV('ref_tree.csv', arr); });
 
   // Drawer
@@ -685,77 +689,6 @@ window._treeCache = rows;
       }catch(_){}
     }
     await buildTree();
-  }
-
-  // === Prefer RPC-backed loaders (fallback to existing) ===
-  async function adminLoadL1(rawKey){
-    const key = (rawKey||'').trim();
-    const tbody = document.querySelector('#rL1Table tbody');
-    tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
-    if(!key){ tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
-
-    // 1) Try RPC
-    let rows = await rpcL1ByKey(key);
-    if (rows && rows.length){
-      // hydrate balances
-      const ids = rows.map(x=>x.user_id);
-      const balRows = await rpcBalances(ids);
-      const bal = {}; (balRows||[]).forEach(b=>bal[b.user_id]=b.balance_cents||0);
-      tbody.innerHTML='';
-      rows.forEach(x=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = '<td class="nowrap">'+x.user_id+'</td>'
-          + '<td>'+(x.email||'—')+'</td>'
-          + '<td>'+(x.phone||'—')+'</td>'
-          + '<td class="right">'+fmtCents(bal[x.user_id]||0)+'</td>'
-          + '<td>'+(x.ref_code||'—')+'</td>';
-        tbody.appendChild(tr);
-      });
-      window._l1Cache = rows.map(x=>({ user_id:x.user_id, email:x.email||'', phone:x.phone||'', balance_cents: bal[x.user_id]||0, ref_code:x.ref_code||'' }));
-      return;
-    }
-
-    // 2) Fallback to existing client-side flow
-    await loadL1ByKey(key);
-  }
-
-  async function adminBuildTree(rawKey){
-    const key = (rawKey||'').trim();
-    const tbody = document.querySelector('#treeTable tbody');
-    tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
-    if(!key){ tbody.innerHTML = '<tr><td colspan="6" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
-
-    // 1) Try RPC
-    const rows = await rpcTreeByKey(key, 3);
-    if (rows && rows.length){
-      // hydrate profiles + balances
-      const ids = Array.from(new Set(rows.map(r=>r.user_id)));
-      let emailBy={}, phoneBy={}, refBy={};
-      try{
-        const prof = await sb.from('profiles').select('user_id,email,phone,ref_code').in('user_id', ids);
-        (prof.data||[]).forEach(p=>{ emailBy[p.user_id]=p.email||''; phoneBy[p.user_id]=p.phone||''; refBy[p.user_id]=p.ref_code||''; });
-      }catch(_){}
-      const balRows = await rpcBalances(ids);
-      const bal = {}; (balRows||[]).forEach(b=>bal[b.user_id]=b.balance_cents||0);
-
-      tbody.innerHTML='';
-      rows.forEach(r=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = '<td>'+r.level+'</td>'
-          + '<td class="nowrap">'+r.user_id+'</td>'
-          + '<td>'+(emailBy[r.user_id]||'—')+'</td>'
-          + '<td>'+(phoneBy[r.user_id]||'—')+'</td>'
-          + '<td class="right">'+fmtCents(bal[r.user_id]||0)+'</td>'
-          + '<td>'+(refBy[r.user_id] || r.ref_code || '—')+'</td>';
-        tbody.appendChild(tr);
-      });
-      window._treeCache = rows;
-      return;
-    }
-
-    // 2) Fallback to existing client-side flow
-    document.getElementById('treeUser').value = key; // keep same
-    await buildTreeByKey();
   }
 
 
