@@ -428,7 +428,7 @@
     if (!isAdmin) return;
     const tbody = $('#rwTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
     const s = $('#rwSearch').value.trim();
-    let q = sb.from('referral_rewards_admin').select('created_at, level, target_user_id, source_user_id, amount_cents, note').order('created_at', {ascending:false}).limit(300);
+    let q = sb.from('referral_rewards').select('created_at, level, target_user_id, source_user_id, amount_cents, note').order('created_at', {ascending:false}).limit(300);
     if (s) { const like=qlike(s); q = q.or('target_user_id.ilike.'+like+',source_user_id.ilike.'+like+',level.eq.'+(Number(s)||-1)); }
     const r = await q; if (r.error) { tbody.innerHTML='<tr><td colspan="6" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
     rwRowsCache = r.data||[]; $('#rwDiag').textContent = rwRowsCache.length+' записей';
@@ -449,59 +449,111 @@
 
   // Referrals: L1 list by inviter
   async function loadL1(inviterId){
-    const tbody = $('#rL1Table tbody'); tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
-    if (!inviterId) { tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID пригласившего</td></tr>'; return; }
-    let rows=[];
-    try { 
-      const r = await sb.rpc('get_referrals_by_generation', { p_level:1, p_min_cents:0, p_root_user: inviterId });
-      const list = Array.isArray(r.data) ? r.data : (r.data? [r.data] : []);
-      rows = list.map(x=>({ user_id:x.user_id }));
-    } catch (_){}
-    if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="muted small">Нет данных</td></tr>'; return; }
-    const ids = rows.map(x=>x.user_id);
-    const [profs, wallets] = await Promise.all([
-      sb.from('profiles').select('user_id,email,phone,ref_code').in('user_id', ids),
-      sb.from('wallets').select('user_id,balance_cents').in('user_id', ids)
-    ]);
-    const by={}; (profs.data||[]).forEach(p=>by[p.user_id]={...(by[p.user_id]||{}),...p}); (wallets.data||[]).forEach(w=>by[w.user_id]={...(by[w.user_id]||{}),...w});
-    tbody.innerHTML='';
-    rows.forEach(r=>{ const x=by[r.user_id]||{}; const tr=document.createElement('tr');
-      tr.innerHTML = '<td class="nowrap">'+r.user_id+'</td>'
-        + '<td>'+(x.email||'—')+'</td>'
-        + '<td>'+(x.phone||'—')+'</td>'
-        + '<td class="right">'+fmtCents(x.balance_cents||0)+'</td>'
-        + '<td>'+(x.ref_code||'—')+'</td>';
-      tbody.appendChild(tr);
-    });
-    window._l1Cache = rows.map(r=>({ user_id:r.user_id, email:(by[r.user_id]||{}).email||'', phone:(by[r.user_id]||{}).phone||'', balance_cents:(by[r.user_id]||{}).balance_cents||0, ref_code:(by[r.user_id]||{}).ref_code||'' }));
+const tbody = $('#rL1Table tbody'); tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
+if (!inviterId) { tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID пригласившего</td></tr>'; return; }
+let rows = [];
+// 1) Пытаемся через RPC
+try { 
+  const r = await sb.rpc('get_referrals_by_generation', { p_level:1, p_min_cents:0, p_root_user: inviterId });
+  const list = Array.isArray(r.data) ? r.data : (r.data? [r.data] : []);
+  rows = list.map(x=>({ user_id:x.user_id }));
+} catch (_){}
+// 2) Фолбэк: через VIEW profiles_refs_admin
+if (!rows.length) {
+  // по inviter_id
+  const v1 = await sb.from('profiles_refs_admin').select('user_id,email,phone,ref_code').eq('inviter_id', inviterId).limit(1000);
+  if (!v1.error && v1.data && v1.data.length) {
+    rows = v1.data;
+  } else {
+    // по invited_by_code (реф-код родителя)
+    const root = await sb.from('profiles_refs_admin').select('ref_code').eq('user_id', inviterId).maybeSingle();
+    const code = root.data?.ref_code;
+    if (code) {
+       const v2 = await sb.from('profiles_refs_admin').select('user_id,email,phone,ref_code').eq('invited_by_code', code).limit(1000);
+       if (!v2.error && v2.data) rows = v2.data;
+    }
   }
+}
+if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="muted small">Нет данных</td></tr>'; return; }
+// балансы
+const ids = rows.map(x=>x.user_id);
+const balances = {};
+try {
+  const w = await sb.from('wallets').select('user_id,balance_cents').in('user_id', ids);
+  (w.data||[]).forEach(x=>balances[x.user_id]=x.balance_cents||0);
+} catch(_){}
+tbody.innerHTML='';
+rows.forEach(x=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML = '<td class="nowrap">'+x.user_id+'</td>'
+    + '<td>'+(x.email||'—')+'</td>'
+    + '<td>'+(x.phone||'—')+'</td>'
+    + '<td class="right">'+fmtCents(balances[x.user_id]||0)+'</td>'
+    + '<td>'+(x.ref_code||'—')+'</td>';
+  tbody.appendChild(tr);
+});
+window._l1Cache = rows.map(x=>({ user_id:x.user_id, email:x.email||'', phone:x.phone||'', balance_cents: balances[x.user_id]||0, ref_code:x.ref_code||'' }));
+}
+
   document.getElementById('rLoadL1').addEventListener('click', ()=>loadL1(document.getElementById('rInviter').value.trim()));
   document.getElementById('rExportL1').addEventListener('click', ()=>exportCSV('referrals_L1.csv', window._l1Cache||[]));
 
   // Ref tree 1–3
   async function buildTree(){
-    const root = $('#treeUser').value.trim(); const tbody = $('#treeTable tbody'); tbody.innerHTML='<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
-    if (!root) { tbody.innerHTML='<tr><td colspan="6" class="muted small">Укажите User ID</td></tr>'; return; }
-    const rows=[];
-    for (const level of [1,2,3]){ try{ const r=await sb.rpc('get_referrals_by_generation', { p_level:level, p_min_cents:0, p_root_user:root }); const list=Array.isArray(r.data)?r.data:(r.data?[r.data]:[]); rows.push(...list.map(x=>({level,user_id:x.user_id}))); }catch(_){}};
-    const ids = Array.from(new Set(rows.map(r=>r.user_id)));
-    const [profs, wallets] = await Promise.all([
-      ids.length? sb.from('profiles').select('user_id,email,phone,ref_code').in('user_id', ids) : {data:[]},
-      ids.length? sb.from('wallets').select('user_id,balance_cents').in('user_id', ids) : {data:[]}
-    ]);
-    const by={}; (profs.data||[]).forEach(p=>by[p.user_id]={...(by[p.user_id]||{}),...p}); (wallets.data||[]).forEach(w=>by[w.user_id]={...(by[w.user_id]||{}),...w});
-    tbody.innerHTML=''; if(!rows.length){ tbody.innerHTML='<tr><td colspan="6" class="muted small">Пусто</td></tr>'; return; }
-    rows.forEach(r=>{ const x=by[r.user_id]||{}; const tr=document.createElement('tr');
-      tr.innerHTML = '<td>'+r.level+'</td>'
-        + '<td class="nowrap">'+r.user_id+'</td>'
-        + '<td>'+(x.email||'—')+'</td>'
-        + '<td>'+(x.phone||'—')+'</td>'
-        + '<td class="right">'+fmtCents(x.balance_cents||0)+'</td>'
-        + '<td>'+(x.ref_code||'—')+'</td>';
-      tbody.appendChild(tr);
-    });
-    window._treeCache = rows;
+const root = $('#treeUser').value.trim(); const tbody = $('#treeTable tbody'); tbody.innerHTML='<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
+if (!root) { tbody.innerHTML='<tr><td colspan="6" class="muted small">Укажите User ID</td></tr>'; return; }
+let rows=[];
+// 1) Пытаемся через RPC
+try {
+  for (const level of [1,2,3]){
+    const r=await sb.rpc('get_referrals_by_generation', { p_level:level, p_min_cents:0, p_root_user:root });
+    const list=Array.isArray(r.data)?r.data:(r.data?[r.data]:[]);
+    rows.push(...list.map(x=>({level,user_id:x.user_id})));
   }
+} catch(_){}
+// 2) Фолбэк: послойно через VIEW profiles_refs_admin
+if (!rows.length) {
+  let parents=[{user_id:root, ref_code:null}];
+  try {
+    const p = await sb.from('profiles_refs_admin').select('ref_code').eq('user_id', root).maybeSingle();
+    parents[0].ref_code = p.data?.ref_code || null;
+  } catch(_){}
+  for (let lvl=1; lvl<=3; lvl++) {
+    const parentIds = parents.map(p=>p.user_id);
+    let childs = [];
+    // по inviter_id
+    const q1 = await sb.from('profiles_refs_admin').select('user_id,email,phone,ref_code,inviter_id,invited_by_code').in('inviter_id', parentIds).limit(2000);
+    if (!q1.error && q1.data && q1.data.length) childs = q1.data;
+    // по invited_by_code
+    const parentCodes = parents.map(p=>p.ref_code).filter(Boolean);
+    if (parentCodes.length) {
+      const q2 = await sb.from('profiles_refs_admin').select('user_id,email,phone,ref_code,inviter_id,invited_by_code').in('invited_by_code', parentCodes).limit(2000);
+      if (!q2.error && q2.data) {
+        const seen=new Set(childs.map(c=>c.user_id));
+        q2.data.forEach(c=>{ if(!seen.has(c.user_id)) childs.push(c);});
+      }
+    }
+    if (!childs.length) break;
+    rows.push(...childs.map(c=>({level:lvl, user_id:c.user_id, email:c.email, phone:c.phone, ref_code:c.ref_code})));
+    parents = childs;
+  }
+}
+if (!rows.length) { tbody.innerHTML='<tr><td colspan="6" class="muted small">Пусто</td></tr>'; window._treeCache=[]; return; }
+const ids = Array.from(new Set(rows.map(r=>r.user_id)));
+const bal = {};
+try{
+  const w = await sb.from('wallets').select('user_id,balance_cents').in('user_id', ids);
+  (w.data||[]).forEach(x=>bal[x.user_id]=x.balance_cents||0);
+}catch(_){}
+tbody.innerHTML='';
+rows.forEach(r=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML = '<td>'+r.level+'</td><td class="nowrap">'+r.user_id+'</td><td>'+(r.email||'—')+'</td><td>'+(r.phone||'—')+'</td><td class="right">'+fmtCents(bal[r.user_id]||0)+'</td><td>'+(r.ref_code||'—')+'</td>';
+  tbody.appendChild(tr);
+});
+window._treeCache = rows;
+}
+
   document.getElementById('treeLoad').addEventListener('click', buildTree);
   document.getElementById('treeExport').addEventListener('click', ()=>{ const arr=(window._treeCache||[]).map(r=>({ level:r.level, user_id:r.user_id })); exportCSV('ref_tree.csv', arr); });
 
@@ -514,7 +566,7 @@
       sb.from('profiles').select('user_id, created_at, email, phone, ref_code').eq('user_id', uid).maybeSingle(),
       sb.from('wallets').select('user_id, balance_cents').eq('user_id', uid).maybeSingle(),
       sb.from('withdrawals').select('created_at, amount_cents, status, txid').eq('user_id', uid).order('created_at', {ascending:false}).limit(20),
-      sb.from('referral_rewards_admin').select('created_at, level, amount_cents, source_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(30)
+      sb.from('referral_rewards').select('created_at, level, amount_cents, source_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(30)
     ]);
     $('#dCreated').value = prof?.data?.created_at ? new Date(prof.data.created_at).toLocaleString() : '—';
     $('#dEmail').value = prof?.data?.email || '';
