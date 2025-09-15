@@ -401,11 +401,9 @@ try {
     if (error) { console.error(error); alert(error.message || 'Ошибка начисления'); return null; }
     const row = Array.isArray(data) ? data[0] : data;
     if (!row?.ok) { alert(row?.message || 'Начисление отклонено'); return null; }
-
-    if (typeof row.reward_per_view_cents === 'number') {
-      bumpBalanceByCents(row.reward_per_view_cents);
-    }
-    if (typeof row.views_left === 'number') {
+    // (removed optimistic bump to avoid flicker)
+    // if (typeof row.reward_per_view_cents === 'number') { /* bumpBalanceByCents(row.reward_per_view_cents); */ }
+if (typeof row.views_left === 'number') {
       const el = document.querySelector('[data-views-left]');
       if (el) el.textContent = String(row.views_left);
     }
