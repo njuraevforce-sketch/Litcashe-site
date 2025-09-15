@@ -694,5 +694,146 @@ window._treeCache = rows;
 
 })();
 </script>
+<!-- LC: RPC glue (stable) -->
+<script>
+(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+
+  ready(function(){
+    // 1) Клиент Supabase (не создаём второй раз)
+    try{
+      if (!window.sb && window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY){
+        window.sb = window.supabase.createClient(
+          window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
+          { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
+        );
+      }
+    }catch(e){ console.warn('SB init fallback error:', e); }
+
+    // 2) Глобальные RPC-хелперы (idempotent)
+    if (!window.rpcL1ByKey){
+      window.rpcL1ByKey = async function(key){
+        try{
+          const r = await sb.rpc('admin_l1_by_inviter_or_code', { p_key: key });
+          if (r && r.error) { console.warn('RPC admin_l1_by_inviter_or_code error:', r.error); return []; }
+          return (r && r.data) || [];
+        }catch(e){ console.warn('rpcL1ByKey exception:', e); return []; }
+      };
+    }
+    if (!window.rpcTreeByKey){
+      window.rpcTreeByKey = async function(key, level){
+        try{
+          const r = await sb.rpc('admin_ref_tree_by_key', { p_key: key, p_level: level||3 });
+          if (r && r.error) { console.warn('RPC admin_ref_tree_by_key error:', r.error); return []; }
+          return (r && r.data) || [];
+        }catch(e){ console.warn('rpcTreeByKey exception:', e); return []; }
+      };
+    }
+    if (!window.rpcBalances){
+      window.rpcBalances = async function(ids){
+        try{
+          const r = await sb.rpc('admin_balances_by_user_ids', { p_ids: ids });
+          if (r && r.error) { console.warn('RPC admin_balances_by_user_ids error:', r.error); return []; }
+          return (r && r.data) || [];
+        }catch(e){ console.warn('rpcBalances exception:', e); return []; }
+      };
+    }
+
+    // 3) Обёртки UI (используют RPC; если пусто — падают в старые функции)
+    if (!window.adminLoadL1){
+      window.adminLoadL1 = async function(rawKey){
+        const key = (rawKey||'').trim();
+        const tbody = document.querySelector('#rL1Table tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
+        if(!key){ if(tbody) tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
+
+        const rows = await window.rpcL1ByKey(key);
+        if (rows && rows.length){
+          const ids = rows.map(x=>x.user_id);
+          const balRows = await window.rpcBalances(ids);
+          const bal = {}; (balRows||[]).forEach(b=>bal[b.user_id]=b.balance_cents||0);
+          if (tbody){
+            tbody.innerHTML='';
+            rows.forEach(x=>{
+              const tr=document.createElement('tr');
+              tr.innerHTML =
+                '<td class="nowrap">'+x.user_id+'</td>'+
+                '<td>'+(x.email||'—')+'</td>'+
+                '<td>'+(x.phone||'—')+'</td>'+
+                '<td class="right">'+(typeof fmtCents==='function'?fmtCents(bal[x.user_id]||0):(bal[x.user_id]||0))+'</td>'+
+                '<td>'+(x.ref_code||'—')+'</td>';
+              tbody.appendChild(tr);
+            });
+          }
+          window._l1Cache = rows;
+          return;
+        }
+        // fallback на старую реализацию, если RPC ничего не дал
+        if (typeof window.loadL1ByKey === 'function') await window.loadL1ByKey(key);
+      };
+    }
+
+    if (!window.adminBuildTree){
+      window.adminBuildTree = async function(rawKey){
+        const key = (rawKey||'').trim();
+        const tbody = document.querySelector('#treeTable tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
+        if(!key){ if(tbody) tbody.innerHTML = '<tr><td colspan="6" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
+
+        const rows = await window.rpcTreeByKey(key, 3);
+        if (rows && rows.length){
+          const ids = Array.from(new Set(rows.map(r=>r.user_id)));
+          let emailBy={}, phoneBy={}, refBy={};
+          try{
+            const prof = await sb.from('profiles').select('user_id,email,phone,ref_code').in('user_id', ids);
+            (prof.data||[]).forEach(p=>{ emailBy[p.user_id]=p.email||''; phoneBy[p.user_id]=p.phone||''; refBy[p.user_id]=p.ref_code||''; });
+          }catch(_){}
+          const balRows = await window.rpcBalances(ids);
+          const bal = {}; (balRows||[]).forEach(b=>bal[b.user_id]=b.balance_cents||0);
+
+          if (tbody){
+            tbody.innerHTML='';
+            rows.forEach(r=>{
+              const tr=document.createElement('tr');
+              tr.innerHTML =
+                '<td>'+r.level+'</td>'+
+                '<td class="nowrap">'+r.user_id+'</td>'+
+                '<td>'+(emailBy[r.user_id]||'—')+'</td>'+
+                '<td>'+(phoneBy[r.user_id]||'—')+'</td>'+
+                '<td class="right">'+(typeof fmtCents==='function'?fmtCents(bal[r.user_id]||0):(bal[r.user_id]||0))+'</td>'+
+                '<td>'+(refBy[r.user_id] || r.ref_code || '—')+'</td>';
+              tbody.appendChild(tr);
+            });
+          }
+          window._treeCache = rows;
+          return;
+        }
+        // fallback
+        if (typeof window.buildTreeByKey === 'function'){
+          const el = document.getElementById('treeUser');
+          if (el) el.value = key;
+          await window.buildTreeByKey();
+        }
+      };
+    }
+
+    // 4) Перепривязка кнопок ОДИН раз (idempotent)
+    const btnL1 = document.getElementById('rLoadL1');
+    if (btnL1 && !btnL1.dataset.lcBound){
+      btnL1.dataset.lcBound = '1';
+      btnL1.addEventListener('click', ()=>window.adminLoadL1(document.getElementById('rInviter').value.trim()));
+    }
+    const btnTree = document.getElementById('treeLoad');
+    if (btnTree && !btnTree.dataset.lcBound){
+      btnTree.dataset.lcBound = '1';
+      btnTree.addEventListener('click', ()=>window.adminBuildTree(document.getElementById('treeUser').value.trim()));
+    }
+
+    // отладочная проверка наличия функций
+    window.LC = window.LC || {};
+    window.LC.rpcReady = () => ({ rpcL1ByKey: typeof window.rpcL1ByKey, rpcTreeByKey: typeof window.rpcTreeByKey, rpcBalances: typeof window.rpcBalances });
+  });
+})();
+</script>
 </body>
 </html>
