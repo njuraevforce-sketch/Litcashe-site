@@ -2,14 +2,14 @@
 
 <html lang="ru">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <!-- FIX: disable floating joystick & duplicate burger -->
 <style>#lcJoy{display:none !important}.burger-btn{display:none !important}</style>
 <script>window.__lcJoyInit = true;</script>
 
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Кабинет — Litcash</title>
-<link rel="icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64'><rect width="64" height="64" rx="12" fill="%2300eaff"/><text x="50%" y="54%" font-size="28" text-anchor="middle" fill="%230b0e13" font-family="Arial" font-weight="700">
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2300eaff'/><text x='50%' y='56%' font-size='28' text-anchor='middle' fill='%230b0e13' font-family='Arial' font-weight='700'>LC</text></svg>"/><rect width="64" height="64" rx="12" fill="%2300eaff"/><text x="50%" y="54%" font-size="28" text-anchor="middle" fill="%230b0e13" font-family="Arial" font-weight="700">
 <style>
 :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
 *{box-sizing:border-box}
@@ -329,9 +329,6 @@ ul li, ol li { margin:4px 0 !important; }</style>
     pointer-events:none;
   }
 }</style>
-
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
-
 <style id="hard-mobile-fixes">
 /* === HARD MOBILE ADAPTATION PACK === */
 html, body { width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior-y:none; -webkit-text-size-adjust:100%; }
@@ -394,7 +391,7 @@ header { overflow: visible; }
 <div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
 <div class="lang"><div class="lc-lang">
 <button aria-expanded="false" aria-haspopup="listbox" class="lc-lang__btn">
-<svg aria-hidden="true" class="lc-lang__icon" viewbox="0 0 24 24">
+<svg aria-hidden="true" class="lc-lang__icon" viewBox="0 0 24 24">
 <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
 </svg>
 <span class="lc-lang__label">EN</span>
@@ -548,6 +545,11 @@ header { overflow: visible; }
 <script defer src="supabaseConfig.js"></script>
 <script defer src="assets/js/i18n.js"></script>
 <script defer src="app_supabase.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try{ if(window.LC && typeof LC.initVideoWatch==='function') LC.initVideoWatch(); }catch(_){}
+});
+</script>
 <script defer src="assets/js/lang-switcher.js"></script>
 <script id="lc-lang-script-inline" type="text/plain">
 (function(){
@@ -840,8 +842,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 </script>
-</script>
-
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase;
@@ -1146,59 +1146,43 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 <script>
-// Referrals widgets (with fallback): left sums + right recent list
+// Referrals widgets (robust): totals + recent with fallback
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const sb = window.sb || window._supabase || window.supabase;
     if (!sb) return;
 
-    async function loadPayouts() {
-      // 1) try view v_referral_payouts (preferred: has RLS)
+    async function loadRows(){
+      // Preferred view (RLS-scoped)
       try {
-        const r = await sb
-          .from('v_referral_payouts')
-          .select('created_at, level, reward_usdt, source_type')
+        const r = await sb.from('v_referral_payouts')
+          .select('created_at,level,reward_usdt,source_type')
           .order('created_at', { ascending: false })
           .limit(50);
-        if (!r.error && Array.isArray(r.data)) return r.data;
-      } catch (_) {}
-
-      // 2) fallback: raw referral_rewards (RLS by referrer_user_id)
+        if(!r.error && Array.isArray(r.data)) return r.data;
+      } catch(_) {}
+      // Fallback to base table (scoped by referrer_user_id RLS)
       try {
         const { data: au } = await sb.auth.getUser();
         const uid = au?.user?.id;
-        if (!uid) return [];
-        const r2 = await sb
-          .from('referral_rewards')
-          .select('created_at, level, reward_usdt, source')
-          .eq('referrer_user_id', uid)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        if (!r2.error && Array.isArray(r2.data)) {
-          return r2.data.map(x => ({
-            created_at: x.created_at,
-            level: x.level,
-            reward_usdt: x.reward_usdt,
-            source_type: x.source || 'view'
-          }));
+        if(!uid) return [];
+        const r2 = await sb.from('referral_rewards')
+           .select('created_at,level,reward_usdt,source')
+           .eq('referrer_user_id', uid)
+           .order('created_at', { ascending: false })
+           .limit(50);
+        if(!r2.error && Array.isArray(r2.data)){
+          return r2.data.map(x => ({created_at:x.created_at, level:x.level, reward_usdt:x.reward_usdt, source_type:x.source||'view'}));
         }
-      } catch (e) { console.warn('fallback referral_rewards error', e); }
-
+      } catch(e){ console.warn('fallback referral_rewards error', e); }
       return [];
     }
 
-    const rows = await loadPayouts();
-
-    // aggregate by generation
+    const rows = await loadRows();
     const sum = {1:0,2:0,3:0};
-    rows.forEach(r => {
-      const lvl = Number(r.level||0);
-      const amt = Number(r.reward_usdt||0);
-      if (lvl>=1 && lvl<=3) sum[lvl] += amt;
-    });
-    const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
+    rows.forEach(r => { const L=Number(r.level||0), A=Number(r.reward_usdt||0); if(L>=1 && L<=3) sum[L]+=A; });
+    const fmt = n => '$'+(Math.round(Number(n||0)*100)/100).toFixed(2);
 
-    // left table
     const g1 = document.getElementById('gen1Cell');
     const g2 = document.getElementById('gen2Cell');
     const g3 = document.getElementById('gen3Cell');
@@ -1208,7 +1192,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (g3) g3.textContent = fmt(sum[3]);
     if (total) total.textContent = fmt(sum[1]+sum[2]+sum[3]);
 
-    // right table
     const list = document.getElementById('refList');
     if (list) {
       list.innerHTML = '';
@@ -1221,12 +1204,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td>${new Date(r.created_at).toLocaleString()}</td>
             <td>${r.level}</td>
             <td style="text-align:right">${fmt(r.reward_usdt)}</td>
-            <td>${r.source_type || 'view'}</td>`;
+            <td>${r.source_type || 'доход'}</td>`;
           list.appendChild(tr);
         });
       }
     }
-  } catch (e) { console.warn('ref widgets init error', e); }
+  } catch(e){ console.warn('ref widgets error', e); }
 });
 </script>
 <!-- removed duplicate supabase includes -->
@@ -1427,6 +1410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindVideo();
   await checkAccessAndInit();
 });
+<script>
 
 <!-- Patch: referral link + 3-gen counters, safe & idempotent -->
 <script id="lc-referrals-patch">
@@ -1694,12 +1678,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 <script>
 <!-- ===== /PATCH ===== -->
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  try { if (window.LC && typeof LC.initVideoWatch === 'function') LC.initVideoWatch(); } catch(_){}
-});
-</script>
-
 
 </body>
 </html>
