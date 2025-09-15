@@ -428,7 +428,7 @@
     if (!isAdmin) return;
     const tbody = $('#rwTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
     const s = $('#rwSearch').value.trim();
-    let q = sb.from('referral_rewards').select('created_at, level, target_user_id, source_user_id, amount_cents, note').order('created_at', {ascending:false}).limit(300);
+    let q = sb.from('referral_rewards_admin').select('created_at, level, target_user_id, source_user_id, amount_cents, note').order('created_at', {ascending:false}).limit(300);
     if (s) { const like=qlike(s); q = q.or('target_user_id.ilike.'+like+',source_user_id.ilike.'+like+',level.eq.'+(Number(s)||-1)); }
     const r = await q; if (r.error) { tbody.innerHTML='<tr><td colspan="6" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
     rwRowsCache = r.data||[]; $('#rwDiag').textContent = rwRowsCache.length+' записей';
@@ -514,7 +514,7 @@
       sb.from('profiles').select('user_id, created_at, email, phone, ref_code').eq('user_id', uid).maybeSingle(),
       sb.from('wallets').select('user_id, balance_cents').eq('user_id', uid).maybeSingle(),
       sb.from('withdrawals').select('created_at, amount_cents, status, txid').eq('user_id', uid).order('created_at', {ascending:false}).limit(20),
-      sb.from('referral_rewards').select('created_at, level, amount_cents, source_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(30)
+      sb.from('referral_rewards_admin').select('created_at, level, amount_cents, source_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(30)
     ]);
     $('#dCreated').value = prof?.data?.created_at ? new Date(prof.data.created_at).toLocaleString() : '—';
     $('#dEmail').value = prof?.data?.email || '';
