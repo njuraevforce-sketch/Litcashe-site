@@ -150,6 +150,19 @@ img,video{max-width:100%;height:auto}
     Укажи email и получи письмо со ссылкой для смены пароля.
   </div>
 </div>
+
+<!-- LC: Recovery (set new password after clicking email link) -->
+<div id="lc-recovery-card" class="card" style="display:none; margin-top:12px; padding:12px;">
+  <div class="grid">
+    <input id="recoverPass1" class="input" type="password" placeholder="Новый пароль" minlength="6" required>
+    <input id="recoverPass2" class="input" type="password" placeholder="Повторите новый пароль" minlength="6" required>
+    <button id="applyNewPass" class="btn" type="button">Сохранить новый пароль</button>
+  </div>
+  <div class="muted" id="recoveryHint" style="margin-top:8px">
+    Вы открыли ссылку из письма. Установите новый пароль.
+  </div>
+</div>
+
 <p class="muted">Нет аккаунта? <a href="register_single.html">Зарегистрируйтесь</a></p>
 </div>
 </main>
@@ -304,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(!sb){ alert('Supabase не инициализирован'); return; }
       var email=(emailInput.value||'').trim();
       if(!email){ alert('Введите email'); return; }
-      var redirectTo = new URL('reset_password.html', location.origin).href;
+      var redirectTo = new URL('login_single.html', location.origin).href;
       sendBtn.disabled=true;
       try{
         var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
@@ -319,4 +332,70 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 })();
 </script>
+
+<script id="lc-recovery-inline">
+(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  ready(async function(){
+    try{
+      var params = new URLSearchParams(location.search);
+      var isRecovery = (params.get('type') === 'recovery') || params.has('access_token') || params.has('recovery_token');
+      if (!isRecovery) return;
+
+      // Reuse existing client or create minimal fallback
+      var sb = (function(){
+        try{
+          if (window.sb && window.sb.auth) return window.sb;
+          if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+            return (window.sb = window.supabase.createClient(
+              window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
+              { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
+            ));
+          }
+        }catch(_){}
+        return null;
+      })();
+      if (!sb) return;
+
+      // Ensure the recovery session is active (detectSessionInUrl=true handles tokens in URL)
+      var s = await sb.auth.getSession();
+      if (!s || !s.data || !s.data.session) {
+        // If no session, let the user know and don't show recover form
+        return;
+      }
+
+      // Show recovery UI, hide login/forgot
+      var loginForm = document.getElementById('loginForm');
+      var forgot = document.getElementById('lc-forgot-card');
+      var rec = document.getElementById('lc-recovery-card');
+      if (loginForm) loginForm.style.display = 'none';
+      if (forgot) forgot.style.display = 'none';
+      if (rec) rec.style.display = 'block';
+
+      var p1 = document.getElementById('recoverPass1');
+      var p2 = document.getElementById('recoverPass2');
+      var btn = document.getElementById('applyNewPass');
+      if (!btn) return;
+
+      btn.addEventListener('click', async function(){
+        if ((p1.value||'').length < 6){ alert('Минимум 6 символов'); return; }
+        if (p1.value !== p2.value){ alert('Пароли не совпадают'); return; }
+        btn.disabled = true;
+        try{
+          var r = await sb.auth.updateUser({ password: p1.value });
+          if (r && r.error) throw r.error;
+          alert('Пароль обновлён. Теперь войдите с новым паролем.');
+          // Clean URL and show login form
+          location.href = 'login_single.html';
+        }catch(err){
+          alert('Ошибка: ' + (err && err.message ? err.message : err));
+        }finally{
+          btn.disabled = false;
+        }
+      });
+    }catch(_){}
+  });
+})();
+</script>
+
 </body></html>
