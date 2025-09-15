@@ -465,10 +465,13 @@ on conflict do nothing;</code>
       }catch(e){ alert(e.message||e); }
     }
   });
-  $('#wExport').addEventListener('click', ()=>exportCSV('withdrawals.csv', wRowsCache.map(r=>({
-    id:r.id, created_at:r.created_at, user_id:r.user_id, amount_cents:r.amount_cents, fee_cents:r.fee_cents,
-    status:r.status, txid:r.txid, note:r.note, network:r.network, address:r.address
-  })));
+  $('#wExport').addEventListener('click', ()=>{
+    const rows = (wRowsCache||[]).map(r => ({
+      id:r.id, created_at:r.created_at, user_id:r.user_id, amount_cents:r.amount_cents, fee_cents:r.fee_cents,
+      status:r.status, txid:r.txid, note:r.note, network:r.network, address:r.address
+    }));
+    exportCSV('withdrawals.csv', rows);
+  });
 
   try{
     sb.channel('adm-wd').on('postgres_changes', { event:'*', schema:'public', table:'withdrawals' }, ()=>{
