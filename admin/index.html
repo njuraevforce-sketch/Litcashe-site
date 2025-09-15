@@ -6,7 +6,17 @@
   <title>LC • Pro Admin</title>
 
   <!-- Supabase client -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  \1
+  <!-- Direct Supabase init (injected) -->
+  <script>
+    try {
+      window.sb = window.supabase.createClient('https://einpfuegfsilnoiareco.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w', {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+      console.log('[Admin] Supabase client initialized for', 'https://einpfuegfsilnoiareco.supabase.co');
+    } catch(e) { console.error('Supabase init error', e); }
+  </script>
+
 
   <style>
     :root{
@@ -465,13 +475,10 @@ on conflict do nothing;</code>
       }catch(e){ alert(e.message||e); }
     }
   });
-  $('#wExport').addEventListener('click', ()=>{
-    const rows = (wRowsCache||[]).map(r => ({
-      id:r.id, created_at:r.created_at, user_id:r.user_id, amount_cents:r.amount_cents, fee_cents:r.fee_cents,
-      status:r.status, txid:r.txid, note:r.note, network:r.network, address:r.address
-    }));
-    exportCSV('withdrawals.csv', rows);
-  });
+  $('#wExport').addEventListener('click', ()=>exportCSV('withdrawals.csv', wRowsCache.map(r=>({
+    id:r.id, created_at:r.created_at, user_id:r.user_id, amount_cents:r.amount_cents, fee_cents:r.fee_cents,
+    status:r.status, txid:r.txid, note:r.note, network:r.network, address:r.address
+  })));
 
   try{
     sb.channel('adm-wd').on('postgres_changes', { event:'*', schema:'public', table:'withdrawals' }, ()=>{
