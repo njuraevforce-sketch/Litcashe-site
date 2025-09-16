@@ -336,13 +336,38 @@ document.addEventListener('DOMContentLoaded', function(){
 <script id="lc-recovery-inline">
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+
+  // Merge params from both ?query and #hash (Supabase often uses the hash for access_token/type)
+  function readParams(){
+    var map = new Map();
+    try {
+      var q = new URLSearchParams(location.search||'');
+      q.forEach((v,k)=>map.set(k,v));
+    } catch(_){}
+    try {
+      var h = location.hash ? location.hash.replace(/^#/, '') : '';
+      // If hash is something like "#access_token=...&type=recovery"
+      var hp = new URLSearchParams(h);
+      hp.forEach((v,k)=>map.set(k,v));
+    } catch(_){}
+    return map;
+  }
+
+  function showRecoveryUI(){
+    var loginForm = document.getElementById('loginForm');
+    var forgot = document.getElementById('lc-forgot-card');
+    var rec = document.getElementById('lc-recovery-card');
+    if (loginForm) loginForm.style.display = 'none';
+    if (forgot) forgot.style.display = 'none';
+    if (rec) rec.style.display = 'block';
+  }
+
   ready(async function(){
     try{
-      var params = new URLSearchParams(location.search);
-      var isRecovery = (params.get('type') === 'recovery') || params.has('access_token') || params.has('recovery_token');
-      if (!isRecovery) return;
+      var params = readParams();
+      var isRecovery = (String(params.get('type')||'').toLowerCase() === 'recovery') || params.has('access_token') || params.has('recovery_token');
 
-      // Reuse existing client or create minimal fallback
+      // Reuse or create Supabase client
       var sb = (function(){
         try{
           if (window.sb && window.sb.auth) return window.sb;
@@ -357,35 +382,40 @@ document.addEventListener('DOMContentLoaded', function(){
       })();
       if (!sb) return;
 
-      // Ensure the recovery session is active (detectSessionInUrl=true handles tokens in URL)
-      var s = await sb.auth.getSession();
-      if (!s || !s.data || !s.data.session) {
-        // If no session, let the user know and don't show recover form
-        return;
-      }
+      // If URL suggests recovery, proactively show UI. We'll still verify session before changing password.
+      if (isRecovery) showRecoveryUI();
 
-      // Show recovery UI, hide login/forgot
-      var loginForm = document.getElementById('loginForm');
-      var forgot = document.getElementById('lc-forgot-card');
-      var rec = document.getElementById('lc-recovery-card');
-      if (loginForm) loginForm.style.display = 'none';
-      if (forgot) forgot.style.display = 'none';
-      if (rec) rec.style.display = 'block';
+      // If not clearly recovery yet, listen for auth state changes — Supabase emits PASSWORD_RECOVERY upon token parsing.
+      try {
+        sb.auth.onAuthStateChange(function(event, session){
+          if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+            // For some projects, the event could be SIGNED_IN with recovery tokens
+            showRecoveryUI();
+          }
+        });
+      } catch(_){}
 
+      // Wire up "save new password" handler
       var p1 = document.getElementById('recoverPass1');
       var p2 = document.getElementById('recoverPass2');
       var btn = document.getElementById('applyNewPass');
       if (!btn) return;
-
       btn.addEventListener('click', async function(){
         if ((p1.value||'').length < 6){ alert('Минимум 6 символов'); return; }
         if (p1.value !== p2.value){ alert('Пароли не совпадают'); return; }
         btn.disabled = true;
         try{
+          // Ensure we actually have a session from the recovery link
+          var s = await sb.auth.getSession();
+          if (!s || !s.data || !s.data.session) {
+            throw new Error('Нет активной сессии восстановления. Откройте ссылку из письма ещё раз.');
+          }
           var r = await sb.auth.updateUser({ password: p1.value });
           if (r && r.error) throw r.error;
-          alert('Пароль обновлён. Теперь войдите с новым паролем.');
-          // Clean URL and show login form
+          // End the temporary session and return to clean login
+          try { await sb.auth.signOut(); } catch(_){}
+          alert('Пароль обновлён. Войдите с новым паролем.');
+          // Remove tokens from URL
           location.href = 'login_single.html';
         }catch(err){
           alert('Ошибка: ' + (err && err.message ? err.message : err));
@@ -393,6 +423,15 @@ document.addEventListener('DOMContentLoaded', function(){
           btn.disabled = false;
         }
       });
+
+      // Fallback: if UI not shown yet but session exists (token parsed), show it shortly after
+      setTimeout(async function(){
+        try {
+          var s = await sb.auth.getSession();
+          if (s && s.data && s.data.session) showRecoveryUI();
+        } catch(_){}
+      }, 400);
+
     }catch(_){}
   });
 })();
