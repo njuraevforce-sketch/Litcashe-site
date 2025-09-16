@@ -2,6 +2,56 @@
 
 <html lang="ru">
 
+<!-- === LC RECOVERY HARDLOCK (v8) — prevent any auto-redirect to dashboard until password is updated === -->
+<script>(function(){
+  try {
+    var parts = (location.search||'') + (location.hash||'');
+    var isRec = /(^|[?#&])type=recovery|access_token=|recovery_token=/i.test(parts);
+    if (isRec) {
+      window.__LC_RECOVERY_LOCK__ = true;
+      try { sessionStorage.setItem('lc_recovery_lock','1'); } catch(_){}
+    } else {
+      try { if (sessionStorage.getItem('lc_recovery_lock') === '1') window.__LC_RECOVERY_LOCK__ = true; } catch(_){}
+    }
+    function isDash(u){
+      try { return /dashboard_single\.html/i.test(String(u==null?location.href:u)); } catch(_){ return false; }
+    }
+    try {
+      var _assign = location.assign.bind(location);
+      var _replace = location.replace.bind(location);
+      location.assign = function(u){ if (window.__LC_RECOVERY_LOCK__ && isDash(u)) return; return _assign(u); };
+      location.replace = function(u){ if (window.__LC_RECOVERY_LOCK__ && isDash(u)) return; return _replace(u); };
+    } catch(_){}
+    try {
+      var desc = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
+      if (desc && desc.set && desc.get) {
+        Object.defineProperty(window.location, 'href', {
+          configurable: false, enumerable: true,
+          get: function(){ return desc.get.call(window.location); },
+          set: function(u){ if (window.__LC_RECOVERY_LOCK__ && isDash(u)) return; return desc.set.call(window.location, u); }
+        });
+      }
+    } catch(_){}
+    try {
+      var _ps = history.pushState.bind(history), _rs = history.replaceState.bind(history);
+      history.pushState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && isDash(u)) return; return _ps(s,t,u); };
+      history.replaceState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && isDash(u)) return; return _rs(s,t,u); };
+    } catch(_){}
+    // Watchdog: if anything still moves to dashboard, yank back to login#recovery for ~20s
+    (function(){
+      var t0 = Date.now();
+      var int = setInterval(function(){
+        if (!window.__LC_RECOVERY_LOCK__) { clearInterval(int); return; }
+        if (isDash()) {
+          try { history.replaceState(null,'', 'login_single.html' + (location.search||'') + '#recovery'); } catch(_){}
+        }
+        if (Date.now() - t0 > 20000) clearInterval(int);
+      }, 60);
+    })();
+  } catch(e){}
+})();</script>
+
+
 <!-- === LC RECOVERY LOCK (v4) — block any auto-redirects away from recovery === -->
 <script>
 (function(){
@@ -24,19 +74,6 @@
       }
       location.assign = function(url){ if (blockIfDashboard(url)) return; return origAssign(url); };
       location.replace = function(url){ if (blockIfDashboard(url)) return; return origReplace(url); };
-try { var hrefDesc = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
-  if (hrefDesc && hrefDesc.set && hrefDesc.get) {
-    Object.defineProperty(window.location, 'href', {
-      configurable: false, enumerable: true,
-      get: function(){ return hrefDesc.get.call(window.location); },
-      set: function(u){ if (window.__LC_RECOVERY_LOCK__ && /dashboard_single\.html/i.test(String(u||''))) return; return hrefDesc.set.call(window.location,u); }
-    });
-  }
-} catch(_){};
-try { var _ps = history.pushState.bind(history), _rs = history.replaceState.bind(history);
-  history.pushState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && /dashboard_single\.html/i.test(String(u||''))) return; return _ps(s,t,u); };
-  history.replaceState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && /dashboard_single\.html/i.test(String(u||''))) return; return _rs(s,t,u); };
-} catch(_){};
       // Restore after full load (once recovery UI is shown)
       window.addEventListener('load', function(){ setTimeout(function(){ window.__LC_RECOVERY_LOCK__ = false; }, 8000); });
     }
@@ -405,21 +442,22 @@ document.addEventListener('DOMContentLoaded', function(){
 
   ready(async function(){
       // Force recovery UI if link contains recovery tokens
-  var _lcHash = (location.hash||'');
-  var _lcMap = new URLSearchParams(_lcHash.replace(/^#/,''));
-  var _lcIsRecovery = /recovery/i.test(String(_lcMap.get('type')||'')) || _lcMap.has('access_token') || _lcMap.has('recovery_token');
-  if (_lcIsRecovery) { try{ showRecoveryUI(); setTimeout(showRecoveryUI, 50); }catch(_){} }
-
-  // After Supabase parses tokens, clean the hash to '#recovery' (so tokens disappear from URL)
   try {
-    var _lcWait = 0;
-    while (_lcIsRecovery && _lcWait < 40) { // up to ~2s
-      var _s = await sb.auth.getSession();
-      if (_s && _s.data && _s.data.session) {
-        try { history.replaceState(null,'', location.pathname + location.search + '#recovery'); } catch(_) {}
+    var _h = (location.hash||''); var _s = (location.search||'');
+    var _map = new URLSearchParams(_h.replace(/^#/,'')); var _q = new URLSearchParams(_s.replace(/^\?/,''));
+    var _isRec = /recovery/i.test(String(_map.get('type')||_q.get('type')||'')) || _map.has('access_token') || _map.has('recovery_token') || _q.has('access_token') || _q.has('recovery_token');
+    if (_isRec) { try{ showRecoveryUI(); setTimeout(showRecoveryUI, 50); }catch(_){} }
+  } catch(_){}
+  // After Supabase parses tokens, clean hash to '#recovery' so tokens disappear
+  try {
+    var _wait = 0;
+    while (_isRec && _wait < 60) { // up to ~3.6s
+      var _sess = await sb.auth.getSession();
+      if (_sess && _sess.data && _sess.data.session) {
+        try { history.replaceState(null,'', location.pathname + (location.search||'') + '#recovery'); } catch(_) {}
         break;
       }
-      await new Promise(r=>setTimeout(r,50)); _lcWait++;
+      await new Promise(r=>setTimeout(r,60)); _wait++;
     }
   } catch(_){}
 try{
