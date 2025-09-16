@@ -102,9 +102,7 @@ img,video{max-width:100%;height:auto}
 .lc-drawer__panel a{display:block;padding:12px;border-radius:10px;color:#cfe9ff;text-decoration:none;border:1px solid rgba(255,255,255,.08);margin:6px 0}
 </style>
 </head>
-<body>
-<script>window.LC_SKIP_LOGIN_REDIRECT=true;</script>
-<header class="header noscript-header">
+<body><header class="header noscript-header">
 <div class="container nav">
 <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
 <nav class="nav-links">
@@ -280,6 +278,18 @@ document.addEventListener('DOMContentLoaded', function(){
   if(cta && dc){ dc.innerHTML = cta.outerHTML; }
 });
 </script>
+
+<!-- 1) Библиотека Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- 2) Твой конфиг с ключами (файл лежит в КОРНЕ) -->
+<script src="supabaseConfig.js"></script>
+
+<!-- 3) Твой код инициализации клиента (в КОРНЕ) -->
+<script src="app_supabase.js"></script>
+
+<!-- 4) Уже был: логика форм -->
+<script defer src="assets/js/auth.js"></script>
 
 <script id="lc-forgot-inline">
 (function(){
