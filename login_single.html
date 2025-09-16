@@ -345,70 +345,6 @@ document.addEventListener('DOMContentLoaded', function(){
     window.getSb = function(){ return window.sb || (window.supabase && window.supabase.createClient()); };
   })();
 </script>
-
-<script id="lc-login-inline">
-(function(){
-  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
-  ready(function(){
-    var form = document.getElementById('loginForm');
-    if (!form) return;
-    var emailEl = document.getElementById('loginEmail');
-    var phoneEl = document.getElementById('loginPhone');
-    var passEl  = document.getElementById('loginPass');
-    var btn = form.querySelector('button[type="submit"]');
-
-    function getClient(){ return (window.getSb ? window.getSb() : (window.sb || null)); }
-
-    async function signInEmail(sb, email, password){
-      return sb.auth.signInWithPassword({ email: email, password: password });
-    }
-    async function signInPhone(sb, phone, password){
-      return sb.auth.signInWithPassword({ phone: phone, password: password });
-    }
-
-    form.addEventListener('submit', async function(e){
-      e.preventDefault();
-      var sb = getClient();
-      if (!sb){ alert('Supabase не инициализирован'); return; }
-      var email = (emailEl && emailEl.value || '').trim();
-      var phone = (phoneEl && phoneEl.value || '').trim();
-      var password = (passEl && passEl.value || '').trim();
-      if (!password){ alert('Введите пароль'); return; }
-      if (!email && !phone){ alert('Введите email (или телефон если включено)'); return; }
-
-      btn.disabled = true;
-      try{
-        let r;
-        if (email) {
-          // Строго как в «старом» варианте: если есть email — входим ТОЛЬКО по email
-          r = await signInEmail(sb, email, password);
-        } else {
-          // email пуст — пробуем вход по телефону (если включён в проекте)
-          r = await signInPhone(sb, phone, password);
-        }
-        if (r && r.error) {
-          let msg = r.error.message || 'Не удалось войти';
-          if (/phone logins are disabled/i.test(msg)) {
-            msg = 'Вход по телефону отключен в настройках проекта. Войдите по email.';
-          }
-          if (/email is required/i.test(msg)) {
-            msg = 'Требуется email. Укажите email аккаунта и попробуйте снова.';
-          }
-          alert('Ошибка входа: ' + msg);
-          return;
-        }
-        // success
-        location.href = 'dashboard_single.html';
-      }catch(err){
-        alert('Ошибка входа: ' + (err && err.message ? err.message : err));
-      }finally{
-        btn.disabled = false;
-      }
-    });
-  });
-})();
-</script>
-
 <script id="lc-recovery-inline">
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
@@ -520,4 +456,5 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+  <script defer src="app_supabase.js"></script>
 </body></html>
