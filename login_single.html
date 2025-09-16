@@ -289,18 +289,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var sendBtn=document.getElementById('sendReset');
     if(!emailInput||!sendBtn) return;
 
-    var sb=(function(){
-      try{
-        if (window.sb && window.sb.auth && typeof window.sb.auth.resetPasswordForEmail==='function') return window.sb;
-        if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-          return (window.sb = window.supabase.createClient(
-            window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
-            { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
-          ));
-        }
-      }catch(_){}
-      return null;
-    })();
+    var sb = (window.getSb ? window.getSb() : (window.sb || null));
 
     sendBtn.addEventListener('click', async function(e){
       e.preventDefault();
@@ -324,27 +313,38 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 
-<!-- Inline Supabase init (injected) -->
-<script>
-  window.SUPABASE_URL = "https://einpfuegfsilnoiareco.supabase.co";
-  window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w";
-  // Create a global client early so inline handlers can reuse it
-  window.sb = null;
-  document.addEventListener('DOMContentLoaded', function() {
-    try {
-      if (window.supabase && !window.sb) {
-        window.sb = window.supabase.createClient(
-          window.SUPABASE_URL,
-          window.SUPABASE_ANON_KEY,
-          { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
-        );
-      }
-    } catch(_){
-      console.warn('Supabase init failed', _);
-    }
-  });
-</script>
 
+<!-- Inline Supabase init (singleton + config) -->
+<script>
+  (function(){
+    window.SUPABASE_URL = "https://einpfuegfsilnoiareco.supabase.co";
+    window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w";
+    function patchOnce(){
+      if (!window.supabase || !window.supabase.createClient) return false;
+      var _orig = window.supabase.createClient;
+      if (_orig.__lc_patched_singleton) return true;
+      var _client = null;
+      function make(url, key, opts){
+        if (_client) return _client;
+        _client = _orig(url || window.SUPABASE_URL, key || window.SUPABASE_ANON_KEY, opts || { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+        window.sb = _client; // expose global
+        return _client;
+      }
+      make.__lc_singleton = true;
+      _orig.__lc_patched_singleton = true;
+      window.supabase.createClient = function(url,key,opts){ return make(url,key,opts); };
+      // Create the singleton immediately so early code can use it
+      try { make(); } catch(_){ console.warn('Supabase createClient failed:', _); }
+      return true;
+    }
+    // Try now and also on DOM ready
+    if (!patchOnce()) {
+      document.addEventListener('DOMContentLoaded', patchOnce);
+    }
+    // Helper accessor for inline scripts
+    window.getSb = function(){ return window.sb || (window.supabase && window.supabase.createClient()); };
+  })();
+</script>
 <script id="lc-recovery-inline">
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
