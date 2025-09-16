@@ -359,21 +359,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
     function getClient(){ return (window.getSb ? window.getSb() : (window.sb || null)); }
 
-    async function tryEmail(sb, email, password){
-      if (!email) return { ok:false, err:{ message: 'email is empty' } };
-      try{
-        var r = await sb.auth.signInWithPassword({ email: email, password: password });
-        if (r && r.error) throw r.error;
-        return { ok:true, data:r.data };
-      }catch(e){ return { ok:false, err:e }; }
+    async function signInEmail(sb, email, password){
+      return sb.auth.signInWithPassword({ email: email, password: password });
     }
-    async function tryPhone(sb, phone, password){
-      if (!phone) return { ok:false, err:{ message: 'phone is empty' } };
-      try{
-        var r = await sb.auth.signInWithPassword({ phone: phone, password: password });
-        if (r && r.error) throw r.error;
-        return { ok:true, data:r.data };
-      }catch(e){ return { ok:false, err:e }; }
+    async function signInPhone(sb, phone, password){
+      return sb.auth.signInWithPassword({ phone: phone, password: password });
     }
 
     form.addEventListener('submit', async function(e){
@@ -384,26 +374,26 @@ document.addEventListener('DOMContentLoaded', function(){
       var phone = (phoneEl && phoneEl.value || '').trim();
       var password = (passEl && passEl.value || '').trim();
       if (!password){ alert('Введите пароль'); return; }
-      if (!email && !phone){ alert('Введите email или телефон'); return; }
+      if (!email && !phone){ alert('Введите email (или телефон если включено)'); return; }
 
       btn.disabled = true;
       try{
-        let res;
+        let r;
         if (email) {
-          res = await tryEmail(sb, email, password);
-          if (!res.ok && phone) {
-            // Ловим частый кейс: аккаунт создан по телефону, email-логин даёт "Invalid login"
-            res = await tryPhone(sb, phone, password);
-          }
+          // Строго как в «старом» варианте: если есть email — входим ТОЛЬКО по email
+          r = await signInEmail(sb, email, password);
         } else {
-          // email пуст -> пробуем телефон
-          res = await tryPhone(sb, phone, password);
+          // email пуст — пробуем вход по телефону (если включён в проекте)
+          r = await signInPhone(sb, phone, password);
         }
-
-        if (!res.ok){
-          var msg = (res.err && res.err.message) ? res.err.message : 'Не удалось войти';
-          // Подсказываем, если сервер требует именно email
-          if (/email is required/i.test(msg)) msg = 'Требуется email. Укажите email аккаунта и попробуйте снова.';
+        if (r && r.error) {
+          let msg = r.error.message || 'Не удалось войти';
+          if (/phone logins are disabled/i.test(msg)) {
+            msg = 'Вход по телефону отключен в настройках проекта. Войдите по email.';
+          }
+          if (/email is required/i.test(msg)) {
+            msg = 'Требуется email. Укажите email аккаунта и попробуйте снова.';
+          }
           alert('Ошибка входа: ' + msg);
           return;
         }
