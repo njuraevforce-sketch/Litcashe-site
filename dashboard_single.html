@@ -2,7 +2,1706 @@
 
 <html lang="ru">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/<!DOCTYPE html>
+
+<html lang="ru">
+<head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
+<!-- FIX: disable floating joystick & duplicate burger -->
+<style>#lcJoy{display:none !important}.burger-btn{display:none !important}</style>
+<script>window.__lcJoyInit = true;</script>
+
+<meta charset="utf-8"/>
+<title>Кабинет — Litcash</title>
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2300eaff'/><text x='50%' y='56%' font-size='28' text-anchor='middle' fill='%230b0e13' font-family='Arial' font-weight='700'>LC</text></svg>"/><rect width="64" height="64" rx="12" fill="%2300eaff"/><text x="50%" y="54%" font-size="28" text-anchor="middle" fill="%230b0e13" font-family="Arial" font-weight="700">
+<style>
+:root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
+*{box-sizing:border-box}
+html,body{display:flex;flex-direction:column;min-height:100vh;height:100%}
+body{margin:0;background:
+  radial-gradient(1200px 600px at -10% -30%, rgba(30,136,229,.15), transparent 55%),
+  radial-gradient(900px 400px at 110% 10%, rgba(0,234,255,.15), transparent 60%),
+  linear-gradient(180deg, var(--bg-2), var(--bg));color:var(--text);
+  font:15px/1.6 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;}
+a{color:var(--text);text-decoration:none}
+.container{width:min(1200px,92vw);margin:0 auto;padding:24px 0}
+.card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:20px;backdrop-filter:blur(6px)}
+.grid{display:grid;gap:18px}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:980px){.grid-3,.grid-2{grid-template-columns:1fr}}
+.muted{color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 10px;font-size:12px;border-radius:999px;background:rgba(0,234,255,.12);color:#cfe9ff;border:1px solid rgba(0,234,255,.25)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 24px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18));color:white;font-weight:700;letter-spacing:.2px;cursor:pointer;transition:transform .15s ease, box-shadow .2s ease;box-shadow:0 8px 22px rgba(30,136,229,.35)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(30,136,229,.45)}
+.btn.start{height:64px;font-size:18px;border-radius:18px}
+.table{width:100%;border-collapse:separate;border-spacing:0 10px}
+.table th,.table td{padding:12px 14px;text-align:left}
+.table tr{background:rgba(255,255,255,.03);border-radius:12px}
+.table tr:hover{background:rgba(255,255,255,.06)}
+.progress{height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+#progressFill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.video{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;aspect-ratio:16/9;background:#0b0e13}
+.header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(180%) blur(8px);background:rgba(10,12,18,.6);border-bottom:1px solid rgba(255,255,255,.08)}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;color:white}
+.brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 6px 18px rgba(0,234,255,.45)}
+.nav-links{display:flex;align-items:center;gap:14px}
+.nav-cta{display:flex;align-items:center;gap:10px}</style>
+<link href="assets/css/lang-switcher.css" rel="stylesheet"/>
+<style id="lc-lang-style-inline">
+/* LC Globe (inline) */
+#lc-inline-lang{position:relative;display:inline-flex;align-items:center}
+#lc-inline-lang .lc-lang__btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#eee;cursor:pointer;transition:transform .08s ease,box-shadow .2s ease,background .2s ease;backdrop-filter:blur(6px)}
+#lc-inline-lang .lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)}
+#lc-inline-lang .lc-lang__btn:active{transform:translateY(1px)}
+#lc-inline-lang .lc-lang__icon{width:18px;height:18px}
+#lc-inline-lang .lc-lang__menu{list-style:none;margin:8px 0 0;padding:6px 0;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96);color:#eee;position:absolute;right:0;min-width:140px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:99999}
+#lc-inline-lang.is-open .lc-lang__menu{display:block}
+#lc-inline-lang .lc-lang__menu li{padding:8px 12px;cursor:pointer}
+#lc-inline-lang .lc-lang__menu li:hover{background:rgba(255,255,255,.08)}
+body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:99999}
+@media (prefers-color-scheme:light){
+  #lc-inline-lang .lc-lang__btn{border-color:rgba(0,0,0,.12);background:rgba(255,255,255,.85);color:#111}
+  #lc-inline-lang .lc-lang__menu{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}
+  #lc-inline-lang .lc-lang__menu li:hover{background:rgba(0,0,0,.06)}
+}</style><style id="lc-lang-inline">/* LC Globe — forced dark style */
+.lc-lang{position:relative;display:inline-flex;align-items:center}
+.lc-lang__btn{height:36px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18)!important;background:rgba(255,255,255,.06)!important;color:#eee!important;display:inline-flex;gap:8px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:transform .08s ease,box-shadow .2s ease,background .2s ease}
+.lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)!important}
+.lc-lang__btn:active{transform:translateY(1px)}
+.lc-lang__icon{width:16px;height:16px}
+.lc-lang__label{font-size:12px;line-height:1}
+.lc-lang__menu{position:absolute;top:calc(100% + 8px);right:0;list-style:none!important;padding-left:0!important;margin:8px 0 0;padding:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96)!important;color:#eee!important;min-width:160px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:10000}
+.lc-lang.is-open .lc-lang__menu{display:block}
+.lc-lang__menu li{padding:8px 12px;cursor:pointer}
+.lc-lang__menu li:hover{background:rgba(255,255,255,.08)}</style><style id="lang-select-inline">
+/* Styled <select> pill with globe */
+.lang-select{
+  -webkit-appearance:none; -moz-appearance:none; appearance:none;
+  background: rgba(255,255,255,.06) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="white" stroke-width="1.4"/></svg>') no-repeat 10px 50%;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  padding: 8px 28px 8px 34px;
+  color: #eee; font-size: 12px; line-height: 1; cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.lang-select:focus{ outline:none; box-shadow:0 2px 12px rgba(0,0,0,.35); }
+.lang-select option{ color:#111; }
+@media (prefers-color-scheme:light){
+  .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
+}</style>
+<style>
+/* tidy utils */
+.container{width:min(1100px,92vw);margin:0 auto;padding:20px 0}
+.card{margin:18px 0;padding:20px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.grid{display:grid;gap:14px}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.input{width:100%;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);padding:0 12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(90deg, rgba(30,136,229,.25), rgba(0,234,255,.18));color:#fff;font-weight:700;cursor:pointer}
+.muted{color:var(--muted)}
+.video{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;aspect-ratio:16/9;background:#0b0e13}
+.section-title{margin:10px 0 12px;font-size:20px}</style>
+
+<style>
+/* ideal-mobile */
+html,body{overflow-x:hidden}
+img,video{max-width:100%;height:auto}
+/* tap comfort */
+.btn{min-height:48px}
+/* tables: wrap for narrow screens */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table{min-width:560px}
+/* burger */
+@media (max-width:900px){
+  .nav-links{display:none}
+  .nav .burger{display:inline-flex}
+}
+.burger{display:none;align-items:center;justify-content:center;width:42px;height:42px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);cursor:pointer}
+.burger span{display:block;width:18px;height:2px;background:#cfe9ff;position:relative}
+.burger span:before,.burger span:after{content:"";position:absolute;left:0;width:18px;height:2px;background:#cfe9ff}
+.burger span:before{top:-6px}.burger span:after{top:6px}
+/* drawer */
+.lc-drawer{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);display:none}
+.lc-drawer.is-open{display:block}
+.lc-drawer__panel{position:absolute;right:0;top:0;height:100%;width:min(86vw,320px);background:#0b0e13;border-left:1px solid rgba(255,255,255,.08);padding:16px;overflow:auto}
+.lc-drawer__panel a{display:block;padding:12px;border-radius:10px;color:#cfe9ff;text-decoration:none;border:1px solid rgba(255,255,255,.08);margin:6px 0}</style>
+<style>/* toast */.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}/* skeleton */.skel{position:relative;overflow:hidden;background:rgba(255,255,255,.06);border-radius:10px}.skel:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:sh 1.2s infinite}@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}</style>
+
+<style>
+/* --- Mobile-friendly base fixes --- */
+* { box-sizing: border-box; }
+html, body { width:100%; max-width:100%; overflow-x:hidden; }
+img, video, canvas, iframe { max-width:100%; height:auto; display:block; }
+
+/* Cards/grid common names */
+.dashboard-grid, .grid, .cards, .cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* Generic card fix */
+.card { width:100%; min-width:0; }
+
+/* Buttons */
+button, .btn { touch-action: manipulation; }
+
+/* Burger */
+.burger-btn {
+  display:none; cursor:pointer; user-select:none;
+  padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
+}
+#mobileMenu { display:none; }
+
+@media (max-width: 768px) {
+  .burger-btn { display:inline-flex; align-items:center; gap:8px; }
+  #mobileMenu.open { display:block; }
+  .row, .cols, .flex { flex-direction:column !important; gap:12px; }
+  .card h2, .card h3 { font-size:1rem; }
+  .card .big, [data-balance] { font-size:24px !important; }
+  .container, .wrap, main { padding-left:12px; padding-right:12px; }
+}</style>
+
+
+<style>
+/* Header flexible wrap */
+header nav, header .menu, .header-buttons {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+@media(max-width:768px){
+  header nav, header .menu, .header-buttons {
+    justify-content:center;
+  }
+}
+
+/* Tables responsive */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; }
+@media(max-width:768px){
+  table td, table th {
+    font-size:13px; padding:6px; white-space:nowrap;
+  }
+}
+
+/* Cards full width on mobile */
+@media(max-width:768px){
+  .card, .dashboard-card { width:100% !important; min-width:0 !important; }
+}</style>
+
+
+<style>
+/* --- MOBILE OVERFLOW & GLOW FIXES --- */
+html, body { overflow-x:hidden; }
+:root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+body { padding-bottom: calc(var(--safe-bottom) + 8px); -webkit-text-size-adjust: 100%; }
+
+/* Header: keep inside screen and allow wrap */
+header { position: sticky; top: 0; left:0; right:0; overflow: clip; z-index: 50; }
+header * { max-width:100%; }
+header nav, header .menu, .header-buttons { flex-wrap: wrap; }
+header a, header button { max-width: 100%; }
+
+/* Cards: clip inner glows/shadows so they don't stick out */
+.card, .dashboard-card, .panel, .box, .widget {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+/* Tables: prevent horizontal bleed; ellipsis on narrow screens */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse: collapse; table-layout: auto; }
+@media(max-width:768px){
+  table th, table td {
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Utility: wrap any long text tokens/urls */
+.wrap, .text, .content, .card, .panel {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Buttons/chips: avoid huge glow spill */
+.btn, .chip, .badge {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}</style>
+
+
+<style>
+/* ==== COMPACT SPACING PRESET ==== */
+/* Reduce global paddings/margins and grid gaps */
+.container, .wrap, main { padding-left:8px !important; padding-right:8px !important; }
+.dashboard-grid, .grid, .cards, .cards-grid { gap:8px !important; }
+
+/* Cards / panels tighter */
+.card, .dashboard-card, .panel, .box, .widget {
+  margin-bottom:8px !important;
+  padding:12px !important;
+  border-radius:14px !important;
+}
+
+/* Headings tighter */
+h1, h2, h3 { margin:8px 0 8px 0 !important; }
+.section-title, .card h2, .card h3 { margin-bottom:8px !important; }
+
+/* Tables tighter */
+table { border-collapse:collapse; }
+table th, table td { padding:8px 10px !important; }
+@media (max-width:768px){
+  .dashboard-grid, .grid, .cards, .cards-grid { gap:6px !important; }
+  .card, .dashboard-card, .panel, .box, .widget { margin-bottom:6px !important; padding:10px !important; }
+  table th, table td { padding:6px 8px !important; }
+  .container, .wrap, main { padding-left:6px !important; padding-right:6px !important; }
+}
+
+/* Buttons / chips tighter */
+button, .btn, .chip, .badge { padding:6px 10px !important; line-height:1.15 !important; }
+
+/* Lists tighter */
+ul, ol { margin:6px 0 !important; }
+ul li, ol li { margin:4px 0 !important; }</style>
+
+
+<style>
+/* === Conservative mobile wrap for tables inside cards (no layout surprises) === */
+@media (max-width: 768px){
+  .card table, .dashboard-card table, .panel table, .widget table {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+  .card table th, .card table td,
+  .dashboard-card table th, .dashboard-card table td,
+  .panel table th, .panel table td,
+  .widget table th, .widget table td {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+    padding: 6px 8px !important;
+  }
+  /* Keep cards clipping glows to avoid spill */
+  .card, .dashboard-card, .panel, .widget { overflow: hidden !important; }
+}</style>
+
+
+<style>
+@media (max-width: 768px){
+  #lcJoy {
+    position: fixed;
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    width: 68px; height: 68px;
+    z-index: 9999;
+    touch-action: none;
+    user-select: none;
+  }
+  #lcJoy .base {
+    width: 100%; height: 100%;
+    border-radius: 9999px;
+    background: radial-gradient(120% 120% at 30% 30%, rgba(255,255,255,.15), rgba(0,0,0,.4));
+    box-shadow: 0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
+    backdrop-filter: blur(6px);
+    position: relative;
+    overflow: hidden;
+  }
+  #lcJoy .knob {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 36px; height: 36px;
+    margin-left: -18px; margin-top: -18px;
+    border-radius: 9999px;
+    background: radial-gradient(120% 120% at 30% 30%, rgba(255,255,255,.9), rgba(255,255,255,.2));
+    box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    transition: transform 120ms ease;
+  }
+  #lcJoy.hint .base::after{
+    content:''; position:absolute; inset:0;
+    background: conic-gradient(from 0deg, rgba(255,255,255,.12), transparent 25%);
+    pointer-events:none;
+  }
+}</style>
+<style id="hard-mobile-fixes">
+/* === HARD MOBILE ADAPTATION PACK === */
+html, body { width:100%; max-width:100%; overflow-x:hidden; overscroll-behavior-y:none; -webkit-text-size-adjust:100%; }
+* { box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+img, video, canvas, iframe { max-width:100%; height:auto; display:block; }
+header.header, header { position: sticky; top:0; left:0; right:0; z-index:60; overflow:visible; backdrop-filter:saturate(180%) blur(8px); }
+header .container, .container { padding-left:12px; padding-right:12px; }
+@media (max-width: 900px){
+  .grid-3, .grid-2, .dashboard-grid, .cards, .cards-grid { grid-template-columns:1fr !important; }
+}
+.card .n, [data-balance], [data-views], #gen1Cell, #gen2Cell, #gen3Cell {
+  font-size: clamp(18px, 5.2vw, 28px) !important;
+  line-height:1.15;
+}
+.card h2, .section-title { font-size: clamp(16px, 4.4vw, 22px); line-height:1.2; }
+button, .btn { min-height:48px; touch-action:manipulation; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.badge { max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+@media (max-width: 768px){ table.table { min-width: 600px; } }
+.video, #promoVid { width:100% !important; height:auto !important; aspect-ratio:16/9; border-radius:16px; overflow:hidden; }
+:root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+body { padding-bottom: calc(var(--safe-bottom) + 8px); }
+/* === MOBILE NAV DRAWER (moves nodes; prevents duplicates) === */
+#lc-burger { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; gap:3px; border:none; background:transparent; }
+#lc-burger .burger-bar{ display:block; width:22px; height:2px; border-radius:2px; background:currentColor; }
+@media (min-width: 901px){ #lc-burger{ display:none !important; } }
+#lc-drawer[hidden]{ display:none; }
+#lc-drawer{ position:fixed; inset:0; z-index:9999; }
+#lc-drawer .drawer-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.45); }
+#lc-drawer .drawer-panel{
+  position:absolute; top:0; right:0; height:100%; width:min(86vw, 360px);
+  background:var(--bg, #0f1115); box-shadow: -6px 0 24px rgba(0,0,0,.35); padding:16px;
+  display:flex; flex-direction:column; gap:12px;
+}
+#lc-drawer .drawer-close{ align-self:flex-end; width:40px; height:40px; font-size:20px; background:transparent; border:none; color:var(--text, #e6e9ef); }
+#lc-drawer .drawer-links{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+#lc-drawer .drawer-links a, #lc-drawer .drawer-links button{
+  display:flex; align-items:center; min-height:44px; padding:10px 12px; border-radius:12px;
+  color:var(--text, #e6e9ef); text-decoration:none; background:var(--card, #161a22);
+}
+@media (max-width:900px){
+  header .nav-links, header nav .links, header nav ul { display:none !important; }
+}
+/* Ensure header can show burger without overflow issues */
+header { overflow: visible; }
+.mobile-nav-only{ display:flex; align-items:center; gap:8px; }</style>
+
+</head>
+<body><header class="header noscript-header">
+<div class="container nav">
+<a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
+<nav class="nav-links">
+<a data-i18n="nav_home" href="index.html">Главная</a>
+<a data-i18n="nav_dashboard" href="dashboard_single.html">Личный кабинет</a>
+<a data-i18n="deposit_title" href="deposit_single.html">Пополнение</a>
+<a data-i18n="withdraw_title" href="withdraw_single.html">Вывод</a>
+<a data-i18n="faq_title" href="faq_single.html">FAQ</a>
+<a data-i18n="settings_title" href="settings_single.html">Настройки</a>
+</nav>
+<div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
+<div class="lang"><div class="lc-lang">
+<button aria-expanded="false" aria-haspopup="listbox" class="lc-lang__btn">
+<svg aria-hidden="true" class="lc-lang__icon" viewBox="0 0 24 24">
+<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+</svg>
+<span class="lc-lang__label">EN</span>
+</button>
+<ul class="lc-lang__menu" role="listbox" tabindex="-1">
+<li data-lang="ru" role="option">RU Русский</li>
+<li data-lang="en" role="option">GB English</li>
+</ul>
+</div></div><div class="nav-cta">
+        <!-- Login/Register buttons support i18n -->
+        <a data-i18n="login_title" class="btn ghost" href="login_single.html">Вход</a>
+        <a data-i18n="register_title" class="btn primary" href="register_single.html">Регистрация</a>
+</div>
+</div>
+</header>
+<main class="container">
+<section class="grid grid-3">
+<div class="card" id="notActiveWarn" style="display:none;background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.25)"><strong data-i18n="not_active_warning">Аккаунт не активен...</strong></div>
+<div class="card"><div class="muted" data-i18n="balance">Баланс</div><div class="n" data-balance="" style="font-size:28px;font-weight:800">$0.00</div></div>
+<div class="card"><div class="muted" data-i18n="views">Просмотры</div><div class="n" data-views="" style="font-size:28px;font-weight:800">0</div></div>
+<div class="card"><div class="muted">Уровень</div><div class="n" style="font-size:20px;font-weight:700"><span data-level="">—</span> <span class="badge" id="perViewBadge">+$0.00 за просмотр</span></div></div>
+</section>
+<section class="grid grid-3">
+<div class="card"><div class="muted">Ставка</div><div class="n" data-rate="" style="font-size:22px;font-weight:700">—</div></div>
+<div class="card"><div class="muted">Капитал (расч.)</div><div class="n" data-cap="" style="font-size:22px;font-weight:700">—</div></div>
+<div class="card"><div class="muted">Рефералы</div><div class="n" data-refs="" style="font-size:22px;font-weight:700">0</div></div>
+</section>
+<section class="grid grid-2">
+<div class="card">
+<h2>Просмотр видео</h2>
+
+<div class="video">
+  <video id="promoVid"
+         class="video"
+         preload="metadata"
+         playsinline
+         webkit-playsinline
+         controls
+         style="width:100%;height:auto">
+    <!-- Стартовый src можно оставить любым, JS будет подменять -->
+    <source id="promoSource" src="/assets/videos/ad1.mp4" type="video/mp4">
+    Ваш браузер не поддерживает видео тег.
+  </video>
+</div>
+
+<div class="progress" style="margin:14px 0 8px">
+  <div id="progressFill" style="width:0%"></div>
+</div>
+<div class="muted" id="progressText">Прогресс…</div>
+
+<div class="flex" style="margin-top:14px">
+  <button class="btn" id="startBtn">Заработать за просмотр</button>
+  <a class="btn" href="deposit_single.html">Пополнить</a>
+</div>
+
+</div>
+<div class="card">
+<h2>Реферальная панель</h2>
+<div class="flex" style="gap:10px;flex-wrap:wrap">
+<input class="input" id="refLink" readonly="" style="flex:1;min-width:240px;height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text)" value=""/>
+<button class="btn" id="copyRef">Скопировать</button>
+<!-- removed daily views limit line -->
+</div>
+<div class="grid grid-3" style="margin-top:12px">
+<div class="card"><div class="muted" data-i18n="gen1"> 1 поколение</div><div id="gen1Count" style="font-size:22px;font-weight:700">0</div></div>
+<div class="card"><div class="muted" data-i18n="gen2"> 2 поколение</div><div id="gen2Count" style="font-size:22px;font-weight:700">0</div></div>
+<div class="card"><div class="muted" data-i18n="gen3"> 3 поколение</div><div id="gen3Count" style="font-size:22px;font-weight:700">0</div></div>
+</div>
+<div style="margin-top:12px">
+<table class="table">
+<thead><tr><th>Поколение</th><th>Email</th><th>Капитал</th><th>Уровень</th><th>Дата</th></tr></thead>
+<tbody id="refTree"><tr><td class="muted" colspan="5">Нет данных</td></tr></tbody>
+</table>
+</div>
+</div>
+</section>
+<section class="card">
+<h2>Информационная таблица</h2>
+<table class="table">
+<thead><tr><th data-i18n="indicator">Показатель</th><th data-i18n="value">Значение</th><th data-i18n="comment">Комментарий</th></tr></thead>
+<tbody id="infoRows">
+  <tr>
+    <td>Уровень</td>
+    <td><span data-level-name>—</span></td>
+    <td>Starter / Advanced / Pro Elite / Titanium</td>
+  </tr>
+
+  <tr>
+    <td>Процент</td>
+    <td><span data-rate="">—</span></td>
+    <td>Начисляется от базового капитала уровня</td>
+  </tr>
+
+  <tr>
+    <td>База уровня</td>
+    <td><span id="baseCapCell">—</span></td>
+    <td>min(капитал, потолок уровня)</td>
+  </tr>
+
+  <tr>
+    <td>За 1 просмотр</td>
+    <td>
+      <span id="perViewCell">
+        <span data-reward-per-view>$0.00</span>
+      </span>
+    </td>
+    <td>5 просмотров = полный дневной %</td>
+  </tr>
+
+  <tr>
+    <td>За 5 просмотров (сегодня)</td>
+    <td><span data-daily-reward>$0.00</span></td>
+    <td>Сумма за сутки по уровню</td>
+  </tr>
+
+  
+
+  <tr>
+    <td>Цель следующего уровня</td>
+    <td colspan="2"><span id="nextTargetCell">—</span></td>
+  </tr>
+</tbody>
+</table>
+</section>
+<section class="grid grid-2">
+<div class="card">
+<h2 data-i18n="ref_income_title">Реферальный доход</h2>
+<table class="table">
+<thead><tr><th>Поколение</th><th>Сумма</th></tr></thead>
+<tbody id="refRows">
+<tr><td>1-е поколение (13%)</td><td id="gen1Cell">$0.00</td></tr>
+<tr><td>2-е поколение (5%)</td><td id="gen2Cell">$0.00</td></tr>
+<tr><td>3-е поколение (1%)</td><td id="gen3Cell">$0.00</td></tr>
+<tr><td><b>Итого</b></td><td id="refTotalCell"><b>$0.00</b></td></tr>
+</tbody>
+</table>
+</div>
+<div class="card">
+<h2 data-i18n="ref_recent_title">Последние реферальные начисления</h2>
+<table class="table">
+<thead><tr><th>Дата</th><th>Поколение</th><th>Сумма</th><th>Источник</th></tr></thead>
+<tbody id="refList"><tr><td class="muted" colspan="4">Нет данных</td></tr></tbody>
+</table>
+</div>
+</section>
+</main>
+<footer class="footer">
+<div class="container">© 2025 Litcash. Все права защищены.</div>
+</footer>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="supabaseConfig.js"></script>
+<script defer src="assets/js/i18n.js"></script>
+<script defer src="app_supabase.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  try{ if(window.LC && typeof LC.initVideoWatch==='function') LC.initVideoWatch(); }catch(_){}
+});
+</script>
+<script defer src="assets/js/lang-switcher.js"></script>
+<script id="lc-lang-script-inline" type="text/plain">
+(function(){
+  if (!window.LC_I18N) {
+    const DEFAULT_LANG='ru', KEY='litcash_lang';
+    const dict={ru:{}, en:{}}; // fill later as needed
+    function getLang(){ try{ return localStorage.getItem(KEY)||DEFAULT_LANG }catch(e){ return DEFAULT_LANG } }
+    function setLang(l){ try{ localStorage.setItem(KEY,l) }catch(e){} }
+    function t(key,lang){ lang=lang||getLang(); if(dict[lang]&&key in dict[lang]) return dict[lang][key]; if(dict[DEFAULT_LANG]&&key in dict[DEFAULT_LANG]) return dict[DEFAULT_LANG][key]; return null }
+    function apply(root=document){
+      const lang=getLang();
+      document.documentElement&&document.documentElement.setAttribute('lang',lang);
+      const nodes=root.querySelectorAll('[data-i18n]');
+      nodes.forEach(n=>{
+        const key=n.getAttribute('data-i18n'); const val=t(key,lang);
+        if(val!==null){ if(!n.firstElementChild) n.textContent=val; else n.innerHTML=val; }
+        const attrs=(n.getAttribute('data-i18n-attr')||'').split(',').map(s=>s.trim()).filter(Boolean);
+        attrs.forEach(a=>{ const v=t(key+':'+a,lang); if(v!==null) n.setAttribute(a,v); });
+      });
+    }
+    window.LC_I18N={getLang,setLang,apply,t,dict};
+    document.addEventListener('DOMContentLoaded',()=>apply());
+  }
+  // Bind globe
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  ready(function(){
+    var root = document.querySelector('#lc-inline-lang') || document.querySelector('.lc-lang');
+    if (!root) return;
+    var btn = root.querySelector('.lc-lang__btn');
+    var menu = root.querySelector('.lc-lang__menu');
+    if(!btn||!menu) return;
+    function open(){ btn.setAttribute('aria-expanded','true'); root.classList.add('is-open'); menu.focus(); }
+    function close(){ btn.setAttribute('aria-expanded','false'); root.classList.remove('is-open'); }
+    btn.addEventListener('click', function(e){ e.preventDefault(); root.classList.contains('is-open')?close():open(); });
+    document.addEventListener('click', function(e){ if(!root.contains(e.target)) close(); });
+    menu.addEventListener('click', function(e){ var li=e.target.closest('[data-lang]'); if(!li) return; var lang=li.getAttribute('data-lang'); if(!lang) return; if(window.LC_I18N){ LC_I18N.setLang(lang); LC_I18N.apply(); } try{ localStorage.setItem('litcash_lang',lang) }catch(_){ } close(); });
+    menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+  });
+})();
+</script><script id="lc-lang-inline-script" type="text/plain">(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  function getLang(){ try{return localStorage.getItem('litcash_lang')||'en'}catch(e){return 'en'} }
+  function setLang(l){ try{localStorage.setItem('litcash_lang',l)}catch(e){} }
+  ready(function(){
+    var c=document.querySelector('.lc-lang'); if(!c) return;
+    var btn=c.querySelector('.lc-lang__btn'), menu=c.querySelector('.lc-lang__menu'), label=c.querySelector('.lc-lang__label');
+    if(!btn||!menu) return;
+    function apply(){
+      var lang=getLang();
+      if(window.LC_I18N){ try{ LC_I18N.setLang(lang); LC_I18N.apply(); }catch(_){ } }
+      if(label){ label.textContent = (lang==='ru'?'RU':'EN'); }
+      try{ document.documentElement.setAttribute('lang', lang); }catch(_){}
+    }
+    function open(){ btn.setAttribute('aria-expanded','true'); c.classList.add('is-open'); menu.focus(); }
+    function close(){ btn.setAttribute('aria-expanded','false'); c.classList.remove('is-open'); }
+    btn.addEventListener('click', function(e){ e.preventDefault(); c.classList.contains('is-open')?close():open(); });
+    document.addEventListener('click', function(e){ if(!c.contains(e.target)) close(); });
+    menu.addEventListener('click', function(e){ var li=e.target.closest('[data-lang]'); if(!li) return; var lang=li.getAttribute('data-lang'); if(!lang) return; setLang(lang); apply(); close(); });
+    menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+    apply();
+  });
+})();</script><script id="lang-select-inline" type="text/plain">
+(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  ready(function(){
+    var sel = document.querySelector('.lang-select') || document.getElementById('langSelect');
+    if(!sel) return;
+    // init value from storage
+    try{
+      var cur = localStorage.getItem('litcash_lang') || 'ru';
+      if ([].some.call(sel.options, o => o.value === cur)) sel.value = cur;
+    }catch(_){}
+    function apply(l){
+      try{ localStorage.setItem('litcash_lang', l); }catch(_){}
+      if (window.LC_I18N) { try{ LC_I18N.setLang(l); LC_I18N.apply(); }catch(_){ } }
+      try{ document.documentElement.setAttribute('lang', l); }catch(_){}
+    }
+    sel.addEventListener('change', function(){ apply(this.value); });
+    // Also apply on load
+    apply(sel.value);
+  });
+})();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', async function(){
+  try{
+    const sb = window._supabase;
+    if(!sb) return;
+    const cta = document.querySelector('.nav-cta');
+    const { data } = await sb.auth.getUser();
+    const isAuth = !!(data && data.user);
+    if(isAuth && cta){
+      cta.innerHTML = '<button id="nav-logout" class="btn danger" data-i18n="nav_logout">Выйти</button>';
+      const btn = document.getElementById('nav-logout');
+      if(btn){ btn.addEventListener('click', function(e){ e.preventDefault(); if(window.logout){ logout(); } }); }
+      // Apply i18n if available
+      if(window.LC_I18N){ try{ LC_I18N.apply(); }catch(_){} }
+    }
+  }catch(_){}
+});
+</script>
+
+
+<div class="lc-drawer" id="lc-drawer" aria-hidden="true">
+  <div class="lc-drawer__panel">
+    <nav id="lc-drawer-links"></nav>
+    <div style="margin-top:12px" id="lc-drawer-cta"></div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var burger=document.getElementById('lc-burger');
+  var drawer=document.getElementById('lc-drawer');
+  if(!burger||!drawer) return;
+  var links=document.querySelector('.nav-links');
+  var cta=document.querySelector('.nav-cta');
+  var dl=document.getElementById('lc-drawer-links');
+  var dc=document.getElementById('lc-drawer-cta');
+  function open(){ drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden','false'); }
+  function close(){ drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden','true'); }
+  burger.addEventListener('click', function(e){ e.preventDefault(); open(); });
+  drawer.addEventListener('click', function(e){ if(e.target===drawer) close(); });
+  // Clone links/cta
+  if(links && dl){ dl.innerHTML = links.outerHTML; }
+  if(cta && dc){ dc.innerHTML = cta.outerHTML; }
+});
+</script>
+
+<script>window.LC_TOAST=(function(){let box;function ensure(){if(!box){box=document.createElement('div');box.className='lc-toast';document.body.appendChild(box);}}function show(msg){ensure();const item=document.createElement('div');item.className='lc-toast__item';item.textContent=msg;box.appendChild(item);setTimeout(()=>{item.remove();},1700);}return{ok:show,err:show};})();</script>
+<div id="refLinkWrap" style="display:none;margin:1rem 0;">
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.LC || !window.sb) return;
+
+  // маленький хелпер чтобы ставить текст сразу во все совпадения
+  function setTextAll(selector, text) {
+    document.querySelectorAll(selector).forEach(el => { el.textContent = text; });
+  }
+
+  
+
+
+});
+</script>
+
+<script defer src="assets/js/guard.js"></script>
+
+
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 1) Гарантируем объекты и единый alias для Supabase
+  window.LC = window.LC || {};
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
+
+  // 2) Создаём/переопределяем функцию загрузки и прорисовки данных уровня/баланса
+  window.LC.loadLevelInfo = async function () {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await sb.rpc('get_level_info_v2');
+      if (error) { console.error(error); return; }
+      const info = Array.isArray(data) ? data[0] : data;
+      if (!info) return;
+
+      // Хелпер для USDT-формата: поддержка "в центах" и "в целых"
+      const toUsdText = (v) => {
+        const n = Number(v || 0);
+        const asCents = Math.abs(n) >= 100 && Number.isInteger(n);
+        const usd = asCents ? n / 100 : n;
+        return '$' + usd.toFixed(2);
+      };
+
+      // === Баланс ===
+      const balanceSrc =
+        (info.balance_cents ??
+         info.balance_usd_cents ??
+         (info.balance_usd !== undefined ? info.balance_usd * 100 : undefined) ??
+         info.balance);
+
+      const balEl = document.querySelector('[data-balance]');
+      if (balEl) balEl.textContent = toUsdText(balanceSrc);
+
+      // === Уровень ===
+      const lvlName = info.level_name || info.lvl_name || info.level_key || '—';
+      document.querySelectorAll('[data-level],[data-level-name]').forEach(n => n.textContent = lvlName);
+
+      // === Процент (bps → %) ===
+      const bp = Number(info.reward_percent_bp ?? info.pct_bp ?? info.percent_bp ?? 0);
+      const percent = (bp / 100).toFixed(2) + ' %';
+      document.querySelectorAll('[data-rate]').forEach(n => n.textContent = percent);
+
+      // === За 1 просмотр ===
+      const perViewCents = Number(info.reward_per_view_cents ?? info.per_view_cents ?? 0);
+      const pvText = toUsdText(perViewCents);
+      const pvSpan = document.querySelector('[data-reward-per-view]');
+      if (pvSpan) pvSpan.textContent = pvText;
+      const pvBadge = document.getElementById('perViewBadge');
+      if (pvBadge) pvBadge.textContent = `+${pvText} за просмотр`;
+
+      // === За 5 просмотров (сегодня) ===
+      const daily = info.daily_reward_cents ?? info.daily_reward ?? 0;
+      document.querySelectorAll('[data-daily-reward]').forEach(n => n.textContent = toUsdText(daily));
+
+      // === Осталось просмотров сегодня ===
+      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+      document.querySelectorAll('[data-views-left]').forEach(n => n.textContent = String(Math.max(left, 0)));
+
+      // === База уровня / Капитал (расч.) ===
+      const baseCents = Number(info.base_amount_cents ?? info.base_cap_cents ?? 0);
+      const bcEl = document.getElementById('baseCapCell');
+      if (bcEl) bcEl.textContent = toUsdText(baseCents);
+      const capEl = document.querySelector('[data-cap]');
+      if (capEl) capEl.textContent = toUsdText(baseCents);
+
+      // === (Опционально) Всего просмотров ===
+      const viewsEl = document.querySelector('[data-views]');
+      if (viewsEl) {
+        const used = Number(info.views_used_today ?? ((info.daily_limit ?? 5) - (info.views_left_today ?? 0)) ?? info.views_total ?? info.views_today ?? info.views ?? 0);
+        viewsEl.textContent = used;
+      }
+
+      // === Рефералы ===
+      const refsEl = document.querySelector('[data-refs]');
+      if (refsEl) refsEl.textContent = Number(info.refs_total ?? info.active_refs ?? 0);
+
+      // === Индикация активности ===
+      const warn = document.getElementById('notActiveWarn');
+      if (warn) warn.style.display = (info.is_active === false) ? '' : 'none';
+
+      // === Цель следующего уровня ===
+      const ntEl = document.getElementById('nextTargetCell');
+      if (ntEl && info.next_target) ntEl.textContent = String(info.next_target);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // 3) Первый прогон
+  window.LC.loadLevelInfo();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
+
+  const toUsdText = (cents) => {
+    const n = Number(cents || 0);
+    const usd = n / 100;
+    return '$' + usd.toFixed(2);
+  };
+  const setBalance = (cents) => {
+    const balEl = document.querySelector('[data-balance]');
+    if (balEl) balEl.textContent = toUsdText(cents);
+  };
+
+  // первичная подстановка
+  try {
+    const { data } = await sb.rpc('get_level_info_v2');
+    const cents = (data?.balance_cents ?? data?.balance_usd_cents ?? (data?.balance_usd != null ? data.balance_usd*100 : data?.balance) ?? 0);
+    setBalance(cents);
+  } catch (e) { console.error(e); }
+
+  // realtime подписка на wallets по user_id
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (user?.id) {
+      sb.channel('wallet-balance')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'wallets',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const cents = payload?.new?.balance_cents ?? 0;
+          setBalance(cents);
+        })
+        .subscribe();
+    }
+  } catch (e) {
+    console.error('wallet realtime error', e);
+  }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  // --- 3.1 Redirect authenticated users from index to dashboard ---
+  try {
+    if (sb) {
+      const { data: { session } } = await sb.auth.getSession();
+      const onIndex = /(^|\/)index(\.html)?(\?|#|$)/i.test(location.pathname) || location.pathname === '/';
+      if (session && onIndex) {
+        // change to your dashboard route if different
+        window.location.replace('/dashboard_single.html');
+        return;
+      }
+      // --- 3.2 Update "Главная" link to dashboard when logged in ---
+      if (session) {
+        const homeLinks = Array.from(document.querySelectorAll('a')).filter(a => /главн|home|index/i.test(a.textContent) || /index(\.html)?$/i.test(a.getAttribute('href')||''));
+        homeLinks.forEach(a => a.setAttribute('href', '/dashboard_single.html'));
+      }
+    }
+  } catch(e){ console.warn('redirect/home patch error', e); }
+
+  // --- 3.3 Burger enhancer ---
+  try {
+    let burger = document.querySelector('.burger-btn');
+    let menu = document.getElementById('mobileMenu');
+    if (!burger) {
+      burger = document.createElement('button');
+      burger.className = 'burger-btn';
+      burger.setAttribute('aria-label','Menu');
+      burger.innerHTML = '<span>☰</span>';
+      const header = document.querySelector('header') || document.body;
+      header.insertBefore(burger, header.firstChild);
+    }
+    if (!menu) {
+      menu = document.createElement('nav');
+      menu.id = 'mobileMenu';
+      // try to reuse an existing nav list
+      const existing = document.querySelector('nav ul, header nav, .nav ul');
+      if (existing) menu.appendChild(existing.cloneNode(true));
+      document.body.insertBefore(menu, document.body.firstChild);
+    }
+    burger.addEventListener('click', () => menu.classList.toggle('open'));
+  } catch(e){ console.warn('burger init error', e); }
+});
+</script>
+
+<script>
+(function(){
+  if (window.__lcJoyInit) return; window.__lcJoyInit = true;
+
+  const sb = window.sb || window._supabase;
+
+  function ensureJoy(){
+    if (window.innerWidth > 768) return; // mobile only
+    if (document.getElementById('lcJoy')) return;
+
+    const joy = document.createElement('div');
+    joy.id = 'lcJoy';
+    joy.innerHTML = '<div class="base"><div class="knob"></div></div>';
+    document.body.appendChild(joy);
+
+    const base = joy.querySelector('.base');
+    const knob = joy.querySelector('.knob');
+
+    const radius = 26; // movement radius for knob
+    let dragging = false;
+    let startX = 0, startY = 0;
+    let joyStartX = 0, joyStartY = 0;
+    let moved = false;
+
+    // Drag the whole joystick around by long-pressing outside the knob
+    let dragJoy = false;
+    let joyBox = joy.getBoundingClientRect();
+
+    function centerKnob(){ knob.style.transform = 'translate(0,0)'; }
+
+    function toggleMenu(){
+      // try mobileMenu first
+      const menu = document.getElementById('mobileMenu');
+      if (menu) { menu.classList.toggle('open'); return; }
+      // fallback: find nav
+      const nav = document.querySelector('nav'); if (nav) nav.classList.toggle('open');
+    }
+
+    function onPointerDown(e){
+      const t = e.target;
+      const isKnob = t === knob;
+      dragging = true; moved = false;
+      dragJoy = !isKnob && e.pointerType !== 'touch'; // desktop drag with mouse outside knob
+      const p = e.touches ? e.touches[0] : e;
+      startX = p.clientX; startY = p.clientY;
+      joyBox = joy.getBoundingClientRect();
+      joyStartX = joyBox.left; joyStartY = joyBox.top;
+      joy.classList.add('hint');
+      e.preventDefault();
+    }
+
+    function onPointerMove(e){
+      if (!dragging) return;
+      const p = e.touches ? e.touches[0] : e;
+      const dx = p.clientX - startX;
+      const dy = p.clientY - startY;
+
+      if (dragJoy){
+        // move entire joystick
+        let nx = joyStartX + dx;
+        let ny = joyStartY + dy;
+        // keep inside viewport
+        nx = Math.min(window.innerWidth - joy.offsetWidth - 4, Math.max(4, nx));
+        ny = Math.min(window.innerHeight - joy.offsetHeight - 4, Math.max(4, ny));
+        joy.style.left = nx + 'px';
+        joy.style.top  = ny + 'px';
+        joy.style.right = 'auto'; joy.style.bottom = 'auto';
+        moved = true;
+        return;
+      }
+
+      // move knob within radius
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist > radius ? radius / dist : 1;
+      const kx = dx * ratio;
+      const ky = dy * ratio;
+      knob.style.transform = 'translate(' + kx + 'px,' + ky + 'px)';
+      if (dist > 6) moved = true;
+    }
+
+    function onPointerUp(e){
+      if (!dragging) return;
+      dragging = false; joy.classList.remove('hint');
+
+      // if moved enough, interpret direction
+      const style = getComputedStyle(knob);
+      const matrix = new DOMMatrixReadOnly(style.transform);
+      const kx = matrix.m41, ky = matrix.m42;
+      const dist = Math.hypot(kx, ky);
+
+      centerKnob();
+
+      const TH = 14;
+      if (!moved || dist < TH){
+        // tap -> toggle menu
+        toggleMenu();
+        return;
+      }
+
+      // determine direction
+      if (Math.abs(kx) > Math.abs(ky)){
+        if (kx > 0){
+          // RIGHT -> toggle menu
+          toggleMenu();
+        } else {
+          // LEFT -> scroll to top
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        if (ky < 0){
+          // UP -> scroll up a bit
+          window.scrollBy({ top: -Math.round(window.innerHeight * 0.6), behavior: 'smooth' });
+        } else {
+          // DOWN -> scroll down a bit
+          window.scrollBy({ top: Math.round(window.innerHeight * 0.6), behavior: 'smooth' });
+        }
+      }
+    }
+
+    // Pointer events
+    joy.addEventListener('pointerdown', onPointerDown, { passive:false });
+    window.addEventListener('pointermove', onPointerMove, { passive:false });
+    window.addEventListener('pointerup', onPointerUp, { passive:true });
+    // Touch events
+    joy.addEventListener('touchstart', onPointerDown, { passive:false });
+    window.addEventListener('touchmove', onPointerMove, { passive:false });
+    window.addEventListener('touchend', onPointerUp, { passive:true });
+
+    // Reposition when orientation changes
+    window.addEventListener('orientationchange', () => { joy.style.right = '14px'; joy.style.bottom = '14px'; });
+
+  }
+
+  document.addEventListener('DOMContentLoaded', ensureJoy);
+  window.addEventListener('resize', () => {
+    const el = document.getElementById('lcJoy');
+    if (window.innerWidth <= 768){
+      if (!el) ensureJoy();
+    } else {
+      if (el) el.remove();
+    }
+  });
+})();
+</script>
+
+<script id="wrap-tables-mobile">
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('table.table').forEach(function(tbl){
+    if (!tbl.parentElement || !tbl.parentElement.classList || !tbl.parentElement.classList.contains('table-wrap')){
+      var wrap = document.createElement('div');
+      wrap.className = 'table-wrap';
+      tbl.parentNode.insertBefore(wrap, tbl);
+      wrap.appendChild(tbl);
+    }
+  });
+});
+</script>
+
+
+
+<script>
+// ensure drawerLinks container exists to avoid null error in mobile-nav script
+(function(){
+  try{
+    var d = document;
+    var drawer = d.querySelector('#lc-drawer');
+    if(!drawer) return;
+    if(!drawer.querySelector('.drawer-links')){
+      var div = d.createElement('div');
+      div.className = 'drawer-links';
+      drawer.appendChild(div);
+    }
+  }catch(e){}
+})();
+</script>
+<script id="mobile-nav-dedupe">
+(function(){
+  const qs = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+  const burger = qs('#lc-burger');
+  const drawer = qs('#lc-drawer');
+  if(!burger || !drawer) return;
+
+  const drawerLinks = drawer.querySelector('.drawer-links');
+  let source = qs('header .nav-links') || qs('header nav .nav-links') || qs('header nav ul') || qs('header .nav ul') || qs('header nav');
+  if(!source){ return; }
+
+  const originalParent = source;
+
+  function moveChildren(from, to){
+    const children = Array.from(from.children);
+    children.forEach(node => {
+      if(node.contains(burger) || burger.contains(node)) return;
+      to.appendChild(node);
+    });
+  }
+
+  function moveBack(to, from){
+    const items = Array.from(to.children);
+    items.forEach(node => {
+      from.appendChild(node);
+    });
+  }
+
+  function adapt(){
+    if(window.innerWidth <= 900){
+      if(drawerLinks.childElementCount === 0 && originalParent.childElementCount > 0){
+        moveChildren(originalParent, drawerLinks);
+      }
+    }else{
+      if(drawerLinks.childElementCount > 0){
+        moveBack(drawerLinks, originalParent);
+      }
+      drawer.setAttribute('hidden','');
+      burger.setAttribute('aria-expanded','false');
+      document.documentElement.classList.remove('drawer-open');
+    }
+  }
+
+  // Remove duplicate buttons/links inside header only
+  function dedupeHeaderButtons(){
+    const header = qs('header');
+    if(!header) return;
+    const map = new Map();
+    qsa('header button, header a.btn, header .btn').forEach(el => {
+      const key = (el.id || el.getAttribute('data-action') || el.textContent || '').trim().toLowerCase();
+      if(!key) return;
+      if(map.has(key)){
+        el.remove();
+      }else{
+        map.set(key, el);
+      }
+    });
+  }
+
+  function openDrawer(){ drawer.removeAttribute('hidden'); burger.setAttribute('aria-expanded','true'); document.documentElement.classList.add('drawer-open'); }
+  function closeDrawer(){ drawer.setAttribute('hidden',''); burger.setAttribute('aria-expanded','false'); document.documentElement.classList.remove('drawer-open'); }
+
+  burger.addEventListener('click', () => {
+    if(drawer.hasAttribute('hidden')) openDrawer(); else closeDrawer();
+  });
+  drawer.addEventListener('click', (e) => {
+    if(e.target.matches('[data-close]') || e.target.classList.contains('drawer-backdrop')) closeDrawer();
+  });
+
+  const style = document.createElement('style');
+  style.textContent = `.drawer-open body{ overflow:hidden !important; }`;
+  document.head.appendChild(style);
+
+  dedupeHeaderButtons();
+  adapt();
+  window.addEventListener('resize', adapt);
+  window.addEventListener('orientationchange', adapt);
+})();
+</script>
+
+
+<script>
+// Referrals widgets (robust): totals + recent with fallback
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb) return;
+
+    async function loadRows(){
+      // Preferred view (RLS-scoped)
+      try {
+        const r = await sb.from('v_referral_payouts')
+          .select('created_at,level,reward_usdt,source_type')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if(!r.error && Array.isArray(r.data)) return r.data;
+      } catch(_) {}
+      // Fallback to base table (scoped by referrer_user_id RLS)
+      try {
+        const { data: au } = await sb.auth.getUser();
+        const uid = au?.user?.id;
+        if(!uid) return [];
+        const r2 = await sb.from('referral_rewards')
+           .select('created_at,level,reward_usdt,source')
+           .eq('referrer_user_id', uid)
+           .order('created_at', { ascending: false })
+           .limit(50);
+        if(!r2.error && Array.isArray(r2.data)){
+          return r2.data.map(x => ({created_at:x.created_at, level:x.level, reward_usdt:x.reward_usdt, source_type:x.source||'view'}));
+        }
+      } catch(e){ console.warn('fallback referral_rewards error', e); }
+      return [];
+    }
+
+    const rows = await loadRows();
+    const sum = {1:0,2:0,3:0};
+    rows.forEach(r => { const L=Number(r.level||0), A=Number(r.reward_usdt||0); if(L>=1 && L<=3) sum[L]+=A; });
+    const fmt = n => '$'+(Math.round(Number(n||0)*100)/100).toFixed(2);
+
+    const g1 = document.getElementById('gen1Cell');
+    const g2 = document.getElementById('gen2Cell');
+    const g3 = document.getElementById('gen3Cell');
+    const total = document.getElementById('refTotalCell');
+    if (g1) g1.textContent = fmt(sum[1]);
+    if (g2) g2.textContent = fmt(sum[2]);
+    if (g3) g3.textContent = fmt(sum[3]);
+    if (total) total.textContent = fmt(sum[1]+sum[2]+sum[3]);
+
+    const list = document.getElementById('refList');
+    if (list) {
+      list.innerHTML = '';
+      if (!rows.length) {
+        list.innerHTML = '<tr><td class="muted" colspan="4">Нет данных</td></tr>';
+      } else {
+        rows.slice(0, 12).forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date(r.created_at).toLocaleString()}</td>
+            <td>${r.level}</td>
+            <td style="text-align:right">${fmt(r.reward_usdt)}</td>
+            <td>${r.source_type || 'доход'}</td>`;
+          list.appendChild(tr);
+        });
+      }
+    }
+  } catch(e){ console.warn('ref widgets error', e); }
+});
+</script>
+<!-- removed duplicate supabase includes -->
+
+
+
+<!-- removed broken duplicate script block (patched) -->
+
+
+<script id="watch-video" defer>
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  const video = document.getElementById('promoVid') || document.querySelector('video');
+  const startBtn = document.getElementById('startBtn') || document.querySelector('[data-start]');
+  const fill = document.getElementById('progressFill') || document.querySelector('[data-progress-fill]');
+  const progressText = document.getElementById('progressText') || document.querySelector('[data-progress-text]');
+  if (!sb || !startBtn) return;
+
+  const MIN_SEC = 10;
+  let played = 0, awarding = false;
+
+  const toast = (msg, ok=false) => {
+    let t = document.getElementById('watchToast');
+    if (!t) { t = document.createElement('div'); t.id='watchToast';
+      Object.assign(t.style, {position:'fixed', right:'16px', bottom:'16px', zIndex:9999, padding:'10px 14px', borderRadius:'10px', background:'#222', color:'#fff', boxShadow:'0 6px 20px rgba(0,0,0,.3)', fontSize:'14px'});
+      document.body.appendChild(t);
+    }
+    t.textContent = String(msg || '');
+    t.style.background = ok ? '#135d2d' : '#5d1313';
+    t.style.display = 'block';
+    clearTimeout(t._to); t._to = setTimeout(()=>{ t.style.display='none'; }, 3000);
+  };
+
+  // overlay
+  let overlay = document.getElementById('limitOverlay');
+  if (!overlay && video && video.parentElement){
+    overlay = document.createElement('div'); overlay.id = 'limitOverlay';
+    Object.assign(overlay.style, {position:'absolute', inset:'0', display:'none', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,.35)', color:'#fff', fontWeight:'600'});
+    const wrap = video.parentElement; if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative'; wrap.appendChild(overlay);
+  }
+
+  const pct = s => Math.min(100, Math.max(0, (s / MIN_SEC) * 100));
+  const setProgress = s => { if (fill) { fill.style.transition='width .4s ease'; fill.style.width = pct(s) + '%'; } };
+  const labelLeft = n => `Доступно просмотров сегодня: ${Math.max(0, n|0)}`;
+  const setBlocked = on => {
+    if (overlay) overlay.style.display = on ? 'flex' : 'none';
+    if (startBtn) { startBtn.disabled = !!on; startBtn.setAttribute('aria-disabled', on ? 'true' : 'false'); }
+    try{ if (on && video) video.pause(); }catch(_){}
+  };
+
+  async function getLeftToday() {
+    try {
+      const { data } = await sb.rpc('get_level_info_v2');
+      const info = Array.isArray(data) ? data[0] : (data || {});
+      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+      if (progressText) progressText.textContent = labelLeft(left);
+      if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
+      return left;
+    } catch (e) { console.error(e); return 0; }
+  }
+
+  async function ensureSession() {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      return session || null;
+    } catch(e) { console.error(e); return null; }
+  }
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.supabase;
+  const video = document.getElementById('promoVid');
+  const startBtn = document.getElementById('startBtn');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+
+  const MIN_SEC = 10;
+  let played = 0;
+  let awarding = false;
+  let alreadyAwardedForThisPlay = false;
+
+  function toast(msg, ok=false){
+    try{ window.LC?.toast?.(msg, ok); }catch(_){ alert(msg); }
+  }
+
+  function setProgress(sec){
+    const p = Math.min(100, Math.floor(sec / MIN_SEC * 100));
+    progressFill && (progressFill.style.width = p + '%');
+  }
+
+  function parseMoney(txt){ return Number(String(txt||'').replace(/[^0-9.]/g,'')) || 0; }
+  function formatMoney(v){ return '$' + Number(v||0).toFixed(2); }
+
+  function bumpBalance(delta){
+    const el = document.querySelector('[data-balance]');
+    if (!el) return;
+    const cur = parseMoney(el.textContent);
+    el.textContent = formatMoney(cur + Number(delta||0));
+  }
+  function bumpViews(n=1){
+    const el = document.querySelector('[data-views]');
+    if (!el) return;
+    const cur = parseInt(el.textContent||'0',10) || 0;
+    el.textContent = String(cur + n);
+  }
+
+  async function ensureSession(){
+    const { data:{ session } } = await sb.auth.getSession();
+    return session;
+  }
+
+  async function getLeftToday(){
+    const { data, error } = await sb.rpc('get_left_today_views');
+    if (error) return 0;
+    return Array.isArray(data) ? Number(data[0]?.get_left_today_views||0) : Number(data||0);
+  }
+
+  function setBlocked(blocked){
+    startBtn.disabled = !!blocked;
+    startBtn.style.opacity = blocked ? .6 : 1;
+  }
+
+  async function checkAccessAndInit(){
+    try{
+      const session = await ensureSession(); if(!session){ toast('Нужно войти'); return 0; }
+      const { data, error } = await sb.rpc('get_video_access_state');
+      const active = !error && (Array.isArray(data) ? data[0]?.get_video_access_state : data);
+      if (!active) {
+        setBlocked(true);
+        progressText && (progressText.textContent = 'Доступ закрыт');
+        return 0;
+      }
+    }catch(e){ console.error(e); }
+    const left = await getLeftToday();
+    setBlocked(left <= 0);
+    progressText && (progressText.textContent = `Доступно просмотров сегодня: ${left}`);
+    return left;
+  }
+
+  async function awardOnce(){
+    if (awarding || alreadyAwardedForThisPlay) return;
+    if (played < MIN_SEC) return;
+
+    awarding = true;
+    try{
+      const session = await ensureSession(); if(!session){ awarding=false; return; }
+
+      // duration_sec для БД — хватит 10–12 сек (неважно, проиграл ли пользователь дальше)
+      const { data, error } = await sb.rpc('award_view_v2', { duration_sec: Math.min(played, 12) });
+      if (error) { toast('Ошибка начисления: ' + (error.message || 'unknown')); return; }
+
+      const res = Array.isArray(data) ? data[0] : (data || {});
+      const left = Number(res?.views_left_today ?? res?.views_left ?? 0);
+      const credited = Number(res?.credited ?? res?.reward_per_view ?? 0);
+
+      // Оптимистично обновляем UI сразу
+      if (credited > 0){
+        bumpBalance(credited);
+        bumpViews(1);
+        toast(`Зачислено ✅ +${credited.toFixed(2)}`, true);
+      }
+      progressText && (progressText.textContent = `Доступно просмотров сегодня: ${left}`);
+      setBlocked(left <= 0);
+
+      // Чтобы не дать доначислить по событию ended()
+      alreadyAwardedForThisPlay = true;
+
+      // Дадим БД/триггерам время применить транзакцию и только потом обновим показатели
+      setTimeout(() => { try{ window.LC?.loadLevelInfo?.(); }catch(_){ } }, 1200);
+
+    } finally {
+      // Сбрасываем плеер и прогресс
+      try{ video && (video.pause(), video.currentTime = 0); }catch(_){}
+      setProgress(0); played = 0; awarding = false;
+      // Разрешим новое начисление только после следующего клика "Старт"
+    }
+  }
+
+  function bindVideo(){
+    if (!video) return;
+    video.addEventListener('timeupdate', () => {
+      played = Math.floor(video.currentTime || 0);
+      setProgress(played);
+      if (played >= MIN_SEC) awardOnce();
+    });
+    // На всякий случай, если досмотрели до конца
+    video.addEventListener('ended', awardOnce);
+  }
+
+  function start(){
+    if (startBtn.disabled) return;
+    // Новая сессия просмотра — позволяем одно начисление
+    alreadyAwardedForThisPlay = false;
+    played = 0; setProgress(0);
+    try{ video && (video.currentTime = 0, video.play()); }catch(_){}
+  }
+
+  startBtn.addEventListener('click', start);
+  bindVideo();
+  await checkAccessAndInit();
+});
+<script>
+
+<!-- Patch: referral link + 3-gen counters, safe & idempotent -->
+<script id="lc-referrals-patch">
+(function(){
+  if (window.__lcRefPatchApplied) return; window.__lcRefPatchApplied = true;
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  const fmtUSD = (n)=>'$'+(+n||0).toFixed(2);
+  function shortCodeFromUUID(id){
+    try{
+      // Make a short 8-char code from UUID (fallback)
+      const hex = String(id||'').replace(/-/g,'').slice(-8);
+      return parseInt(hex,16).toString(36).toUpperCase().padStart(6,'0').slice(0,8);
+    }catch(_){ return 'REF'; }
+  }
+  ready(async function(){
+    const sb = window.sb || window._supabase || window.supabase;
+    if(!sb) return;
+    // 1) Fill referral link
+    try{
+      const { data: { user } } = await sb.auth.getUser();
+      if(user){
+        let code = null;
+        try{
+          // try profiles_u.ref_code or profiles.ref_code
+          let q = await sb.from('profiles_u').select('ref_code').eq('user_id', user.id).maybeSingle();
+          if(q && q.data && q.data.ref_code) code = q.data.ref_code;
+        }catch(_){}
+        if(!code){
+          try{
+            let q2 = await sb.from('profiles').select('ref_code').eq('user_id', user.id).maybeSingle();
+            if(q2 && q2.data && q2.data.ref_code) code = q2.data.ref_code;
+          }catch(_){}
+        }
+        if(!code) code = shortCodeFromUUID(user.id);
+        const link = (location.origin||'') + '/register_single.html?ref=' + code;
+        const refInput = document.getElementById('refLink');
+        if(refInput && !refInput.value) refInput.value = link;
+        const copyBtn = document.getElementById('copyRef');
+        if(copyBtn){
+          copyBtn.addEventListener('click', async ()=>{
+            try{ await navigator.clipboard.writeText(refInput.value); }catch(_){}
+            if(window.LC_TOAST) LC_TOAST.ok('Ссылка скопирована');
+          });
+        }
+      }
+    }catch(e){ console.warn('ref link patch error', e); }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb) return;
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String((val ?? 0) | 0);
+    };
+
+    // ---- 1) основной путь: RPC (обходит RLS) ----
+    try {
+      if (typeof sb.rpc === 'function') {
+        const { data, error } = await sb.rpc('get_referral_counts_active', { p_min_cents: 2900 });
+        if (!error && data) {
+          const row = Array.isArray(data) ? data[0] : data;
+          set('gen1Count', row?.gen1 ?? 0);
+          set('gen2Count', row?.gen2 ?? 0);
+          set('gen3Count', row?.gen3 ?? 0);
+          return; // успех, дальше не идём
+        }
+        console.warn('get_referral_counts_active (active>=29) RPC error:', error);
+      }
+    } catch (e) {
+      console.warn('get_referral_counts_active (active>=29) RPC exception:', e);
+    }
+
+    // ---- 2) запасной путь: читаем вью напрямую (может упереться в RLS) ----
+    try {
+      if (!sb.auth?.getUser) return;
+      const { data: auth } = await sb.auth.getUser();
+      const user = auth?.user;
+      if (!user?.id) return;
+
+      let q = sb.from('v_referral_counts')
+                .select('gen1, gen2, gen3')
+                .eq('user_id', user.id);
+
+      let resp;
+      if (typeof q.maybeSingle === 'function') resp = await q.maybeSingle();
+      else resp = await q.single();
+
+      if (resp?.data) {
+        set('gen1Count', resp.data.gen1 ?? resp.data.g1 ?? 0);
+        set('gen2Count', resp.data.gen2 ?? resp.data.g2 ?? 0);
+        set('gen3Count', resp.data.gen3 ?? resp.data.g3 ?? 0);
+      } else {
+        console.warn('v_referral_counts fallback error:', resp?.error);
+      }
+    } catch (e) {
+      console.warn('v_referral_counts fallback exception:', e);
+    }
+  });
+})();
+
+<!-- ==== REF COUNTS (1/2/3 generations) — DB-first (RPC), fallback to view ==== -->
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb) return;
+
+    const $ = (sel) => document.querySelector(sel);
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val|0); };
+
+    function applyCounts(row) {
+      if (!row) return false;
+      const g1 = Number(row.gen1 ?? row.g1 ?? 0) | 0;
+      const g2 = Number(row.gen2 ?? row.g2 ?? 0) | 0;
+      const g3 = Number(row.gen3 ?? row.g3 ?? 0) | 0;
+      set('gen1Count', g1);
+      set('gen2Count', g2);
+      set('gen3Count', g3);
+      // If main "Рефералы" is empty/zero, fill it with total
+      const refsEl = document.querySelector('[data-refs]');
+      if (refsEl) {
+        const cur = parseInt((refsEl.textContent || '0').replace(/\D+/g,'')) || 0;
+        const total = g1 + g2 + g3;
+        if (cur === 0 && total > 0) refsEl.textContent = String(total);
+      }
+      return true;
+    }
+
+    // 1) Try RPC: get_referral_counts_active (active>=29)() (returns gen1, gen2, gen3 for auth.uid())
+    try {
+      const rpc = await sb.rpc('get_referral_counts_active', { p_min_cents: 2900 });
+      if (!rpc.error && rpc.data) {
+        const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+        if (applyCounts(row)) return;
+      }
+    } catch(e) { console.warn('get_referral_counts_active (active>=29) RPC error', e); }
+
+    // 2) Fallback to view v_referral_counts (RLS-scoped to user_id)
+    try {
+      let q = sb.from('v_referral_counts').select('gen1,gen2,gen3');
+      let res;
+      if (typeof q.maybeSingle === 'function') {
+        res = await q.maybeSingle();
+      } else {
+        res = await q.limit(1);
+        res = { data: (res.data && res.data[0]) || null, error: res.error };
+      }
+      if (!res.error && res.data) {
+        if (applyCounts(res.data)) return;
+      }
+    } catch(e) { console.warn('v_referral_counts view error', e); }
+
+    // 3) As a last resort, read from the admin/all view if available (no RLS)
+    try {
+      const { data: me } = await sb.auth.getUser();
+      const uid = me && me.user && me.user.id;
+      if (uid) {
+        let q2 = sb.from('v_referral_counts_all').select('gen1,gen2,gen3').eq('user_id', uid);
+        let r2;
+        if (typeof q2.maybeSingle === 'function') {
+          r2 = await q2.maybeSingle();
+        } else {
+          r2 = await q2.limit(1);
+          r2 = { data: (r2.data && r2.data[0]) || null, error: r2.error };
+        }
+        if (!r2.error && r2.data) {
+          if (applyCounts(r2.data)) return;
+        }
+      }
+    } catch(e) { console.warn('v_referral_counts_all fallback error', e); }
+
+    // If nothing loaded, leave zeros silently
+  } catch(err) {
+    console.warn('ref-counts-db-patch init error', err);
+  }
+});
+<!-- ===== PATCH: Robust referral fallbacks (counts & payouts) ===== -->
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  if (!sb || !sb.from) return;
+  try {
+    // helper to get current user id
+    let uid = null;
+    try {
+      if (sb.auth?.getUser) {
+        const { data: au } = await sb.auth.getUser();
+        uid = au?.user?.id || null;
+      }
+    } catch(e){ console.warn('auth.getUser fallback err', e); }
+    if (!uid) return;
+
+    // Detect if left widget already filled with non-zero values
+    const g1Cell = document.getElementById('gen1Cell');
+    const g2Cell = document.getElementById('gen2Cell');
+    const g3Cell = document.getElementById('gen3Cell');
+    const refTotalCell = document.getElementById('refTotalCell');
+    const refList = document.getElementById('refList');
+
+    const parseMoney = (txt) => Number(String(txt||'').replace(/[^0-9.\-]/g,'')) || 0;
+    const alreadyFilled = () => {
+      if (!g1Cell || !g2Cell || !g3Cell) return false;
+      const s1 = parseMoney(g1Cell.textContent);
+      const s2 = parseMoney(g2Cell.textContent);
+      const s3 = parseMoney(g3Cell.textContent);
+      return (s1 + s2 + s3) > 0.0001;
+    };
+
+    // ===== 1) Fallback for payouts list & sums (from table referral_rewards) =====
+    if (!alreadyFilled()) {
+      try {
+        // attempt to read from raw table if the view v_referral_payouts is missing
+        const q = sb.from('referral_rewards').select('*')
+          const q = sb.from('referral_rewards').select('*')
+        .eq('referrer_user_id', uid)    // ✅ правильно
+        .order('created_at', { ascending: false })
+        .limit(50);
+        const { data: rows, error } = await q;
+        if (!error && Array.isArray(rows)) {
+          const sums = {1:0,2:0,3:0};
+          const list = refList;
+          if (list) list.innerHTML = '';
+          rows.forEach(r => {
+            const lvl = Number(r.level||0);
+            const amt = Number((r.reward_usdt ?? r.amount) || 0);
+            if (lvl>=1 && lvl<=3) sums[lvl] += amt;
+            if (list) {
+              const tr = document.createElement('tr');
+              const dt = new Date(r.created_at || Date.now());
+              const d = dt.toLocaleString();
+              tr.innerHTML = `<td>${d}</td><td>${lvl||''}</td><td>$${amt.toFixed(2)}</td><td>доход</td>`;
+              list.appendChild(tr);
+            }
+          });
+          const fmt = (n) => '$' + (Math.round(Number(n||0)*100)/100).toFixed(2);
+          if (g1Cell) g1Cell.textContent = fmt(sums[1]);
+          if (g2Cell) g2Cell.textContent = fmt(sums[2]);
+          if (g3Cell) g3Cell.textContent = fmt(sums[3]);
+          if (refTotalCell) refTotalCell.textContent = fmt(sums[1]+sums[2]+sums[3]);
+        }
+      } catch(e) { console.warn('raw referral_rewards fallback error', e); }
+    }
+
+    // ===== 2) Fallback for counts via profiles.referred_by chain =====
+    try {
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = String(v|0); };
+      const { data: g1rows, error: e1 } = await sb.from('profiles').select('user_id').eq('referred_by', uid).limit(1000);
+      const gen1Ids = !e1 && Array.isArray(g1rows) ? g1rows.map(r => r.user_id) : [];
+      set('gen1Count', gen1Ids.length);
+
+      let gen2Ids = [];
+      if (gen1Ids.length) {
+        const { data: g2rows, error: e2 } = await sb.from('profiles').select('user_id').in('referred_by', gen1Ids).limit(2000);
+        gen2Ids = !e2 && Array.isArray(g2rows) ? g2rows.map(r => r.user_id) : [];
+      }
+      set('gen2Count', gen2Ids.length);
+
+      let gen3Ids = [];
+      if (gen2Ids.length) {
+        const { data: g3rows, error: e3 } = await sb.from('profiles').select('user_id').in('referred_by', gen2Ids).limit(4000);
+        gen3Ids = !e3 && Array.isArray(g3rows) ? g3rows.map(r => r.user_id) : [];
+      }
+      set('gen3Count', gen3Ids.length);
+    } catch(e) { console.warn('profiles chain counts fallback error', e); }
+  } catch(e){ console.warn('referral fallback patch error', e); }
+});
+<script>
+<!-- ===== /PATCH ===== -->
+
+
+<!-- LC: recovery bounce guard -->
+<script id="lc-recovery-bounce">
+(function(){
+  try {
+    var p = new URLSearchParams(location.search);
+    var isRecovery = (p.get('type') === 'recovery') || p.has('access_token') || p.has('recovery_token');
+    if (isRecovery) {
+      // перенаправляем на страницу логина, сохраняя токены в query
+      var qs = location.search || '';
+      location.replace('login_single.html' + (location.search||'') + (location.hash||''));
+    }
+  } catch(_) {}
+})();
+</script>
+
+</body>
+</html>
+
 <!-- FIX: disable floating joystick & duplicate burger -->
 <style>#lcJoy{display:none !important}.burger-btn{display:none !important}</style>
 <script>window.__lcJoyInit = true;</script>
