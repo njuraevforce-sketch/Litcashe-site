@@ -1,7 +1,37 @@
 <!DOCTYPE html>
 
 <html lang="ru">
-<head>
+\1
+
+<!-- === LC RECOVERY LOCK (v4) — block any auto-redirects away from recovery === -->
+<script>
+(function(){
+  try {
+    var parts = (location.search || '') + (location.hash || '');
+    var isRecovery = /type=recovery|access_token=|recovery_token=/.test(parts);
+    if (isRecovery) {
+      // Global lock flag
+      window.__LC_RECOVERY_LOCK__ = true;
+      try { sessionStorage.setItem('lc_recovery_lock','1'); } catch(_) {}
+      // Guard against scripts calling location redirects to dashboard
+      var origAssign = location.assign.bind(location);
+      var origReplace = location.replace.bind(location);
+      function blockIfDashboard(url){
+        try {
+          var s = String(url);
+          if (window.__LC_RECOVERY_LOCK__ && /(\/|^)dashboard.*\.html|dashboard/i.test(s)) return true;
+        } catch(_) {}
+        return false;
+      }
+      location.assign = function(url){ if (blockIfDashboard(url)) return; return origAssign(url); };
+      location.replace = function(url){ if (blockIfDashboard(url)) return; return origReplace(url); };
+      // Restore after full load (once recovery UI is shown)
+      window.addEventListener('load', function(){ setTimeout(function(){ window.__LC_RECOVERY_LOCK__ = false; }, 8000); });
+    }
+  } catch(e){}
+})();
+</script>
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Вход — Litcash</title>
@@ -383,14 +413,14 @@ document.addEventListener('DOMContentLoaded', function(){
       if (!sb) return;
 
       // If URL suggests recovery, proactively show UI. We'll still verify session before changing password.
-      if (isRecovery) showRecoveryUI();
+      if (isRecovery) showRecoveryUI(); setTimeout(showRecoveryUI, 50);
 
       // If not clearly recovery yet, listen for auth state changes — Supabase emits PASSWORD_RECOVERY upon token parsing.
       try {
         sb.auth.onAuthStateChange(function(event, session){
           if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
             // For some projects, the event could be SIGNED_IN with recovery tokens
-            showRecoveryUI();
+            showRecoveryUI(); setTimeout(showRecoveryUI, 50);
           }
         });
       } catch(_){}
@@ -428,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function(){
       setTimeout(async function(){
         try {
           var s = await sb.auth.getSession();
-          if (s && s.data && s.data.session) showRecoveryUI();
+          if (s && s.data && s.data.session) showRecoveryUI(); setTimeout(showRecoveryUI, 50);
         } catch(_){}
       }, 400);
 
