@@ -2,74 +2,47 @@
 
 <html lang="ru">
 
-<!-- === LC RECOVERY LOCK (v6) — block any auto-redirects away from recovery === -->
-<script>(function(){
+<!-- === LC RECOVERY LOCK (v4) — block any auto-redirects away from recovery === -->
+<script>
+(function(){
   try {
-    var parts = (location.search||'') + (location.hash||'');
+    var parts = (location.search || '') + (location.hash || '');
     var isRecovery = /type=recovery|access_token=|recovery_token=/.test(parts);
-    var locked = false;
-    try { locked = sessionStorage.getItem('lc_recovery_lock') === '1'; } catch(_){}
-    if (isRecovery || locked) {
+    if (isRecovery) {
+      // Global lock flag
       window.__LC_RECOVERY_LOCK__ = true;
-      try { sessionStorage.setItem('lc_recovery_lock','1'); } catch(_){}
-
-      function urlIsBlocked(u){
-        try { return /dashboard_single\.html/i.test(String(u||'')); } catch(_){ return false; }
+      try { sessionStorage.setItem('lc_recovery_lock','1'); } catch(_) {}
+      // Guard against scripts calling location redirects to dashboard
+      var origAssign = location.assign.bind(location);
+      var origReplace = location.replace.bind(location);
+      function blockIfDashboard(url){
+        try {
+          var s = String(url);
+          if (window.__LC_RECOVERY_LOCK__ && /(\/|^)dashboard.*\.html|dashboard/i.test(s)) return true;
+        } catch(_) {}
+        return false;
       }
-
-      // Intercept programmatic navigations
-      try {
-        var _assign = location.assign.bind(location);
-        var _replace = location.replace.bind(location);
-        location.assign = function(u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return _assign(u); };
-        location.replace = function(u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return _replace(u); };
-      } catch(_){}
-
-      // Intercept href property set
-      try {
-        var hrefDesc = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
-        if (hrefDesc && hrefDesc.set && hrefDesc.get) {
-          Object.defineProperty(window.location, 'href', {
-            configurable: false,
-            enumerable: true,
-            get: function(){ return hrefDesc.get.call(window.location); },
-            set: function(u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return hrefDesc.set.call(window.location, u); }
-          });
-        }
-      } catch(_){}
-
-      // Intercept history API pushes
-      try {
-        var _ps = history.pushState.bind(history), _rs = history.replaceState.bind(history);
-        history.pushState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return _ps(s,t,u); };
-        history.replaceState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return _rs(s,t,u); };
-      } catch(_){}
-
-      // Intercept document.location assignment (fallback)
-      try {
-        Object.defineProperty(document, 'location', {
-          configurable: false,
-          enumerable: true,
-          get: function(){ return window.location; },
-          set: function(u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return location.assign(u); }
-        });
-      } catch(_){}
-
-      // Mark hash to keep us on the recovery page
-      try {
-        if (!/#recovery/.test(location.hash)) {
-          history.replaceState(null, '', location.pathname + location.search + '#recovery');
-        }
-      } catch(_){}
-
-      // Hard timeout to unlock (safety)
-      setTimeout(function(){
-        window.__LC_RECOVERY_LOCK__ = false;
-        try { sessionStorage.removeItem('lc_recovery_lock'); } catch(_){}
-      }, 120000);
+      location.assign = function(url){ if (blockIfDashboard(url)) return; return origAssign(url); };
+      location.replace = function(url){ if (blockIfDashboard(url)) return; return origReplace(url); };
+try { var hrefDesc = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
+  if (hrefDesc && hrefDesc.set && hrefDesc.get) {
+    Object.defineProperty(window.location, 'href', {
+      configurable: false, enumerable: true,
+      get: function(){ return hrefDesc.get.call(window.location); },
+      set: function(u){ if (window.__LC_RECOVERY_LOCK__ && /dashboard_single\.html/i.test(String(u||''))) return; return hrefDesc.set.call(window.location,u); }
+    });
+  }
+} catch(_){};
+try { var _ps = history.pushState.bind(history), _rs = history.replaceState.bind(history);
+  history.pushState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && /dashboard_single\.html/i.test(String(u||''))) return; return _ps(s,t,u); };
+  history.replaceState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && /dashboard_single\.html/i.test(String(u||''))) return; return _rs(s,t,u); };
+} catch(_){};
+      // Restore after full load (once recovery UI is shown)
+      window.addEventListener('load', function(){ setTimeout(function(){ window.__LC_RECOVERY_LOCK__ = false; }, 8000); });
     }
   } catch(e){}
-})();</script>
+})();
+</script>
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Вход — Litcash</title>
@@ -431,7 +404,25 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   ready(async function(){
-    try{
+      // Force recovery UI if link contains recovery tokens
+  var _lcHash = (location.hash||'');
+  var _lcMap = new URLSearchParams(_lcHash.replace(/^#/,''));
+  var _lcIsRecovery = /recovery/i.test(String(_lcMap.get('type')||'')) || _lcMap.has('access_token') || _lcMap.has('recovery_token');
+  if (_lcIsRecovery) { try{ showRecoveryUI(); setTimeout(showRecoveryUI, 50); }catch(_){} }
+
+  // After Supabase parses tokens, clean the hash to '#recovery' (so tokens disappear from URL)
+  try {
+    var _lcWait = 0;
+    while (_lcIsRecovery && _lcWait < 40) { // up to ~2s
+      var _s = await sb.auth.getSession();
+      if (_s && _s.data && _s.data.session) {
+        try { history.replaceState(null,'', location.pathname + location.search + '#recovery'); } catch(_) {}
+        break;
+      }
+      await new Promise(r=>setTimeout(r,50)); _lcWait++;
+    }
+  } catch(_){}
+try{
       var params = readParams();
       var isRecovery = (String(params.get('type')||'').toLowerCase() === 'recovery') || params.has('access_token') || params.has('recovery_token');
 
