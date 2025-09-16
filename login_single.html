@@ -440,11 +440,9 @@ document.addEventListener('DOMContentLoaded', function(){
           }
           var r = await sb.auth.updateUser({ password: p1.value });
           if (r && r.error) throw r.error;
-          // End the temporary session and return to clean login
-          try { await sb.auth.signOut(); } catch(_){}
-          alert('Пароль обновлён. Войдите с новым паролем.');
-          // Remove tokens from URL
-          location.href = 'login_single.html';
+          alert('Пароль обновлён. Входим в кабинет…');
+try{ window.__LC_RECOVERY_LOCK__ = false; sessionStorage.removeItem('lc_recovery_lock'); }catch(_){ }
+location.replace('dashboard_single.html');
         }catch(err){
           alert('Ошибка: ' + (err && err.message ? err.message : err));
         }finally{
