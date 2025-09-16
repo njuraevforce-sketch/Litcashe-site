@@ -327,18 +327,12 @@ document.addEventListener('DOMContentLoaded', function(){
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
 
-  // Merge params from both ?query and #hash (Supabase often uses the hash for access_token/type)
   function readParams(){
     var map = new Map();
-    try {
-      var q = new URLSearchParams(location.search||'');
-      q.forEach((v,k)=>map.set(k,v));
-    } catch(_){}
+    try { new URLSearchParams(location.search||'').forEach((v,k)=>map.set(k,v)); } catch(_){}
     try {
       var h = location.hash ? location.hash.replace(/^#/, '') : '';
-      // If hash is something like "#access_token=...&type=recovery"
-      var hp = new URLSearchParams(h);
-      hp.forEach((v,k)=>map.set(k,v));
+      new URLSearchParams(h).forEach((v,k)=>map.set(k,v));
     } catch(_){}
     return map;
   }
@@ -352,77 +346,80 @@ document.addEventListener('DOMContentLoaded', function(){
     if (rec) rec.style.display = 'block';
   }
 
-  ready(async function(){
+  ready(function(){
+    var params = readParams();
+    var isRecovery = (String(params.get('type')||'').toLowerCase() === 'recovery') || params.has('access_token') || params.has('recovery_token');
+    if (isRecovery) showRecoveryUI(); // show immediately if URL looks like recovery
+
+    // Always wire the button, regardless of Supabase init state
+    var p1 = document.getElementById('recoverPass1');
+    var p2 = document.getElementById('recoverPass2');
+    var btn = document.getElementById('applyNewPass');
+    if (!btn) return;
+
+    // Also listen for auth state changes to reveal UI when Supabase parses tokens
     try{
-      var params = readParams();
-      var isRecovery = (String(params.get('type')||'').toLowerCase() === 'recovery') || params.has('access_token') || params.has('recovery_token');
-
-      // Reuse or create Supabase client
-      var sb = (function(){
-        try{
-          if (window.sb && window.sb.auth) return window.sb;
-          if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-            return (window.sb = window.supabase.createClient(
-              window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
-              { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
-            ));
-          }
-        }catch(_){}
-        return null;
-      })();
-      if (!sb) return;
-
-      // If URL suggests recovery, proactively show UI. We'll still verify session before changing password.
-      if (isRecovery) showRecoveryUI();
-
-      // If not clearly recovery yet, listen for auth state changes — Supabase emits PASSWORD_RECOVERY upon token parsing.
-      try {
-        sb.auth.onAuthStateChange(function(event, session){
-          if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-            // For some projects, the event could be SIGNED_IN with recovery tokens
-            showRecoveryUI();
-          }
+      if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+        var tmpClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+        tmpClient.auth.onAuthStateChange(function(event, session){
+          if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') showRecoveryUI();
         });
-      } catch(_){}
+      }
+    }catch(_){}
 
-      // Wire up "save new password" handler
-      var p1 = document.getElementById('recoverPass1');
-      var p2 = document.getElementById('recoverPass2');
-      var btn = document.getElementById('applyNewPass');
-      if (!btn) return;
-      btn.addEventListener('click', async function(){
+    btn.addEventListener('click', async function(){
+      try{
         if ((p1.value||'').length < 6){ alert('Минимум 6 символов'); return; }
         if (p1.value !== p2.value){ alert('Пароли не совпадают'); return; }
+
+        // (Re)create or reuse client lazily
+        var sb = (function(){
+          try{
+            if (window.sb && window.sb.auth) return window.sb;
+            if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+              return (window.sb = window.supabase.createClient(
+                window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
+                { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
+              ));
+            }
+          }catch(_){}
+          return null;
+        })();
+
+        if (!sb){ alert('Supabase не инициализирован'); return; }
+
         btn.disabled = true;
-        try{
-          // Ensure we actually have a session from the recovery link
-          var s = await sb.auth.getSession();
-          if (!s || !s.data || !s.data.session) {
-            throw new Error('Нет активной сессии восстановления. Откройте ссылку из письма ещё раз.');
-          }
-          var r = await sb.auth.updateUser({ password: p1.value });
-          if (r && r.error) throw r.error;
-          // End the temporary session and return to clean login
-          try { await sb.auth.signOut(); } catch(_){}
-          alert('Пароль обновлён. Войдите с новым паролем.');
-          // Remove tokens from URL
-          location.href = 'login_single.html';
-        }catch(err){
-          alert('Ошибка: ' + (err && err.message ? err.message : err));
-        }finally{
-          btn.disabled = false;
+
+        // Ensure we have a recovery session
+        var s = await sb.auth.getSession();
+        if (!s || !s.data || !s.data.session) {
+          alert('Нет активной сессии восстановления. Откройте ссылку из письма ещё раз.'); 
+          return;
         }
-      });
 
-      // Fallback: if UI not shown yet but session exists (token parsed), show it shortly after
-      setTimeout(async function(){
-        try {
-          var s = await sb.auth.getSession();
+        var r = await sb.auth.updateUser({ password: p1.value });
+        if (r && r.error) throw r.error;
+
+        try { await sb.auth.signOut(); } catch(_){}
+        alert('Пароль обновлён. Войдите с новым паролем.');
+        location.href = 'login_single.html';
+      }catch(err){
+        alert('Ошибка: ' + (err && err.message ? err.message : err));
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    // Fallback: after a short delay, if session exists (token parsed), ensure UI is visible
+    setTimeout(async function(){
+      try {
+        if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+          var tmp = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+          var s = await tmp.auth.getSession();
           if (s && s.data && s.data.session) showRecoveryUI();
-        } catch(_){}
-      }, 400);
-
-    }catch(_){}
+        }
+      } catch(_){}
+    }, 500);
   });
 })();
 </script>
