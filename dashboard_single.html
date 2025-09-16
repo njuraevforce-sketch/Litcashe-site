@@ -1424,7 +1424,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindVideo();
   await checkAccessAndInit();
 });
-</script>
+
 <!-- Patch: referral link + 3-gen counters, safe & idempotent -->
 <script id="lc-referrals-patch">
 (function(){
@@ -1636,7 +1636,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         // attempt to read from raw table if the view v_referral_payouts is missing
         const q = sb.from('referral_rewards').select('*')
-          const q = sb.from('referral_rewards').select('*')
         .eq('referrer_user_id', uid)    // ✅ правильно
         .order('created_at', { ascending: false })
         .limit(50);
