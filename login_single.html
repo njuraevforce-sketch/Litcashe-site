@@ -2,34 +2,74 @@
 
 <html lang="ru">
 
-<!-- === LC RECOVERY LOCK (v4) — block any auto-redirects away from recovery === -->
-<script>
-(function(){
+<!-- === LC RECOVERY LOCK (v6) — block any auto-redirects away from recovery === -->
+<script>(function(){
   try {
-    var parts = (location.search || '') + (location.hash || '');
+    var parts = (location.search||'') + (location.hash||'');
     var isRecovery = /type=recovery|access_token=|recovery_token=/.test(parts);
-    if (isRecovery) {
-      // Global lock flag
+    var locked = false;
+    try { locked = sessionStorage.getItem('lc_recovery_lock') === '1'; } catch(_){}
+    if (isRecovery || locked) {
       window.__LC_RECOVERY_LOCK__ = true;
-      try { sessionStorage.setItem('lc_recovery_lock','1'); } catch(_) {}
-      // Guard against scripts calling location redirects to dashboard
-      var origAssign = location.assign.bind(location);
-      var origReplace = location.replace.bind(location);
-      function blockIfDashboard(url){
-        try {
-          var s = String(url);
-          if (window.__LC_RECOVERY_LOCK__ && /(\/|^)dashboard.*\.html|dashboard/i.test(s)) return true;
-        } catch(_) {}
-        return false;
+      try { sessionStorage.setItem('lc_recovery_lock','1'); } catch(_){}
+
+      function urlIsBlocked(u){
+        try { return /dashboard_single\.html/i.test(String(u||'')); } catch(_){ return false; }
       }
-      location.assign = function(url){ if (blockIfDashboard(url)) return; return origAssign(url); };
-      location.replace = function(url){ if (blockIfDashboard(url)) return; return origReplace(url); };
-      // Restore after full load (once recovery UI is shown)
-      window.addEventListener('load', function(){ setTimeout(function(){ window.__LC_RECOVERY_LOCK__ = false; }, 8000); });
+
+      // Intercept programmatic navigations
+      try {
+        var _assign = location.assign.bind(location);
+        var _replace = location.replace.bind(location);
+        location.assign = function(u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return _assign(u); };
+        location.replace = function(u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return _replace(u); };
+      } catch(_){}
+
+      // Intercept href property set
+      try {
+        var hrefDesc = Object.getOwnPropertyDescriptor(Location.prototype, 'href');
+        if (hrefDesc && hrefDesc.set && hrefDesc.get) {
+          Object.defineProperty(window.location, 'href', {
+            configurable: false,
+            enumerable: true,
+            get: function(){ return hrefDesc.get.call(window.location); },
+            set: function(u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return hrefDesc.set.call(window.location, u); }
+          });
+        }
+      } catch(_){}
+
+      // Intercept history API pushes
+      try {
+        var _ps = history.pushState.bind(history), _rs = history.replaceState.bind(history);
+        history.pushState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return _ps(s,t,u); };
+        history.replaceState = function(s,t,u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return _rs(s,t,u); };
+      } catch(_){}
+
+      // Intercept document.location assignment (fallback)
+      try {
+        Object.defineProperty(document, 'location', {
+          configurable: false,
+          enumerable: true,
+          get: function(){ return window.location; },
+          set: function(u){ if (window.__LC_RECOVERY_LOCK__ && urlIsBlocked(u)) return; return location.assign(u); }
+        });
+      } catch(_){}
+
+      // Mark hash to keep us on the recovery page
+      try {
+        if (!/#recovery/.test(location.hash)) {
+          history.replaceState(null, '', location.pathname + location.search + '#recovery');
+        }
+      } catch(_){}
+
+      // Hard timeout to unlock (safety)
+      setTimeout(function(){
+        window.__LC_RECOVERY_LOCK__ = false;
+        try { sessionStorage.removeItem('lc_recovery_lock'); } catch(_){}
+      }, 120000);
     }
   } catch(e){}
-})();
-</script>
+})();</script>
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Вход — Litcash</title>
@@ -440,8 +480,9 @@ document.addEventListener('DOMContentLoaded', function(){
           }
           var r = await sb.auth.updateUser({ password: p1.value });
           if (r && r.error) throw r.error;
-          alert('Пароль обновлён. Входим в кабинет…');
-try{ window.__LC_RECOVERY_LOCK__ = false; sessionStorage.removeItem('lc_recovery_lock'); }catch(_){ }
+          // End the temporary session and return to clean login
+          try{ window.__LC_RECOVERY_LOCK__ = false; sessionStorage.removeItem('lc_recovery_lock'); }catch(_){ }
+alert('Пароль обновлён. Входим в кабинет…');
 location.replace('dashboard_single.html');
         }catch(err){
           alert('Ошибка: ' + (err && err.message ? err.message : err));
