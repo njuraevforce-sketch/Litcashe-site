@@ -172,7 +172,7 @@ img,video{max-width:100%;height:auto}
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script defer src="assets/js/i18n.js"></script>
-<script defer src="app_supabase.js"></script>
+
 <script defer src="assets/js/lang-switcher.js"></script>
 <script id="lc-lang-script-inline" type="text/plain">
 (function(){
@@ -345,6 +345,52 @@ document.addEventListener('DOMContentLoaded', function(){
     window.getSb = function(){ return window.sb || (window.supabase && window.supabase.createClient()); };
   })();
 </script>
+
+<script id="lc-login-inline">
+(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  ready(function(){
+    var form = document.getElementById('loginForm');
+    if (!form) return;
+    var emailEl = document.getElementById('loginEmail');
+    var phoneEl = document.getElementById('loginPhone');
+    var passEl  = document.getElementById('loginPass');
+    var btn = form.querySelector('button[type="submit"]');
+
+    function getClient(){ return (window.getSb ? window.getSb() : (window.sb || null)); }
+
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      var sb = getClient();
+      if (!sb){ alert('Supabase не инициализирован'); return; }
+      var email = (emailEl && emailEl.value || '').trim();
+      var phone = (phoneEl && phoneEl.value || '').trim();
+      var password = (passEl && passEl.value || '').trim();
+      if (!password){ alert('Введите пароль'); return; }
+
+      btn.disabled = true;
+      try{
+        let res;
+        if (email) {
+          res = await sb.auth.signInWithPassword({ email, password });
+        } else if (phone) {
+          res = await sb.auth.signInWithPassword({ phone, password });
+        } else {
+          alert('Введите email или телефон'); return;
+        }
+        if (res && res.error) throw res.error;
+        // success -> to dashboard
+        location.href = 'dashboard_single.html';
+      }catch(err){
+        alert('Ошибка входа: ' + (err && err.message ? err.message : err));
+      }finally{
+        btn.disabled = false;
+      }
+    });
+  });
+})();
+</script>
+
 <script id="lc-recovery-inline">
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
