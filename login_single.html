@@ -137,9 +137,9 @@ img,video{max-width:100%;height:auto}
 <div class="card">
 <h1 data-i18n="login_title">Вход</h1>
 <form class="grid" id="loginForm">
-<input class="input" id="loginEmail" placeholder="Email (или оставьте пустым)" type="email"/ data-i18n-attr="placeholder:ph_email">
-<input class="input" id="loginPhone" placeholder="Телефон (с кодом страны)" type="tel"/ data-i18n-attr="placeholder:ph_phone">
-<input class="input" id="loginPass" placeholder="Пароль" required="" type="password"/ data-i18n-attr="placeholder:ph_password">
+<input class="input" id="loginEmail" placeholder="Email (или оставьте пустым)" type="email" data-i18n-attr="placeholder:ph_email">
+<input class="input" id="loginPhone" placeholder="Телефон (с кодом страны)" type="tel" data-i18n-attr="placeholder:ph_phone">
+<input class="input" id="loginPass" placeholder="Пароль" required="" type="password" data-i18n-attr="placeholder:ph_password">
 <button class="btn" type="submit">Войти</button>
 </form>
 <!-- LC: Forgot password (email) -->
@@ -170,7 +170,7 @@ img,video{max-width:100%;height:auto}
 </main>
 <footer class="footer"><div class="container">© 2025 Litcash</div></footer>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="supabaseConfig.js"></script>
+
 <script defer src="assets/js/i18n.js"></script>
 <script defer src="app_supabase.js"></script>
 <script defer src="assets/js/lang-switcher.js"></script>
@@ -323,6 +323,28 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
+
+<!-- Inline Supabase init (injected) -->
+<script>
+  window.SUPABASE_URL = "https://einpfuegfsilnoiareco.supabase.co";
+  window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w";
+  // Create a global client early so inline handlers can reuse it
+  window.sb = null;
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      if (window.supabase && !window.sb) {
+        window.sb = window.supabase.createClient(
+          window.SUPABASE_URL,
+          window.SUPABASE_ANON_KEY,
+          { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
+        );
+      }
+    } catch(_){
+      console.warn('Supabase init failed', _);
+    }
+  });
+</script>
+
 <script id="lc-recovery-inline">
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
@@ -367,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }catch(_){}
 
-    btn.addEventListener('click', async function(){
+    btn.addEventListener('click', async function(){ console.log('[recovery] click');
       try{
         if ((p1.value||'').length < 6){ alert('Минимум 6 символов'); return; }
         if (p1.value !== p2.value){ alert('Пароли не совпадают'); return; }
@@ -393,10 +415,20 @@ document.addEventListener('DOMContentLoaded', function(){
         // Ensure we have a recovery session
         var s = await sb.auth.getSession();
         if (!s || !s.data || !s.data.session) {
-          alert('Нет активной сессии восстановления. Откройте ссылку из письма ещё раз.'); 
+          // Try to set session from URL hash params (access_token + refresh_token)
+          var map = new Map();
+          try { new URLSearchParams((location.hash||'').replace(/^#/, '')).forEach((v,k)=>map.set(k,v)); } catch(_){}
+          var at = map.get('access_token');
+          var rt = map.get('refresh_token');
+          if (at && rt) {
+            try { await sb.auth.setSession({ access_token: at, refresh_token: rt }); } catch(_){}
+            s = await sb.auth.getSession();
+          }
+        }
+        if (!s || !s.data || !s.data.session) {
+          alert('Нет активной сессии восстановления. Откройте ссылку из письма ещё раз.');
           return;
         }
-
         var r = await sb.auth.updateUser({ password: p1.value });
         if (r && r.error) throw r.error;
 
