@@ -359,6 +359,23 @@ document.addEventListener('DOMContentLoaded', function(){
 
     function getClient(){ return (window.getSb ? window.getSb() : (window.sb || null)); }
 
+    async function tryEmail(sb, email, password){
+      if (!email) return { ok:false, err:{ message: 'email is empty' } };
+      try{
+        var r = await sb.auth.signInWithPassword({ email: email, password: password });
+        if (r && r.error) throw r.error;
+        return { ok:true, data:r.data };
+      }catch(e){ return { ok:false, err:e }; }
+    }
+    async function tryPhone(sb, phone, password){
+      if (!phone) return { ok:false, err:{ message: 'phone is empty' } };
+      try{
+        var r = await sb.auth.signInWithPassword({ phone: phone, password: password });
+        if (r && r.error) throw r.error;
+        return { ok:true, data:r.data };
+      }catch(e){ return { ok:false, err:e }; }
+    }
+
     form.addEventListener('submit', async function(e){
       e.preventDefault();
       var sb = getClient();
@@ -367,19 +384,30 @@ document.addEventListener('DOMContentLoaded', function(){
       var phone = (phoneEl && phoneEl.value || '').trim();
       var password = (passEl && passEl.value || '').trim();
       if (!password){ alert('Введите пароль'); return; }
+      if (!email && !phone){ alert('Введите email или телефон'); return; }
 
       btn.disabled = true;
       try{
         let res;
         if (email) {
-          res = await sb.auth.signInWithPassword({ email, password });
-        } else if (phone) {
-          res = await sb.auth.signInWithPassword({ phone, password });
+          res = await tryEmail(sb, email, password);
+          if (!res.ok && phone) {
+            // Ловим частый кейс: аккаунт создан по телефону, email-логин даёт "Invalid login"
+            res = await tryPhone(sb, phone, password);
+          }
         } else {
-          alert('Введите email или телефон'); return;
+          // email пуст -> пробуем телефон
+          res = await tryPhone(sb, phone, password);
         }
-        if (res && res.error) throw res.error;
-        // success -> to dashboard
+
+        if (!res.ok){
+          var msg = (res.err && res.err.message) ? res.err.message : 'Не удалось войти';
+          // Подсказываем, если сервер требует именно email
+          if (/email is required/i.test(msg)) msg = 'Требуется email. Укажите email аккаунта и попробуйте снова.';
+          alert('Ошибка входа: ' + msg);
+          return;
+        }
+        // success
         location.href = 'dashboard_single.html';
       }catch(err){
         alert('Ошибка входа: ' + (err && err.message ? err.message : err));
