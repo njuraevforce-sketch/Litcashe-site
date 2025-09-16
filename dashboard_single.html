@@ -1426,7 +1426,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 <!-- Patch: referral link + 3-gen counters, safe & idempotent -->
-<script> id="lc-referrals-patch">
 (function(){
   if (window.__lcRefPatchApplied) return; window.__lcRefPatchApplied = true;
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
