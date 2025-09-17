@@ -150,10 +150,10 @@ img,video{max-width:100%;height:auto}
   <div class="table-wrap">
     <table class="table">
       <thead>
-        <tr><th>Дата</th><th>Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th></tr>
+        <tr><th>Дата</th><th>Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
       </thead>
       <tbody id="wd-table-body">
-        <tr><td colspan="5" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
+        <tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
       </tbody>
     </table>
   </div>
@@ -307,6 +307,121 @@ document.addEventListener('DOMContentLoaded', function(){
       if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
     }
   }catch(_){}
+
+<script>
+(function(){
+  // inject minimal CSS for labels and toast
+  try{ var st=document.createElement('style'); st.textContent='.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px}.pill.paid{background:rgba(16,185,129,.15)}.pill.rejected{background:rgba(239,68,68,.15)}.pill.pending{background:rgba(30,136,229,.15)}.right{text-align:right}.small{font-size:12px}.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}'; document.head.appendChild(st);}catch(_){}
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  function $(s, r){ return (r||document).querySelector(s); }
+  function $all(s, r){ return Array.from((r||document).querySelectorAll(s)); }
+  function fmtUSD(c){ return (Number(c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' $'; }
+  function statusLabel(s){
+    s = String(s||'pending').toLowerCase();
+    if (s==='paid') return '<span class="pill paid">подтверждено</span>';
+    if (s==='rejected') return '<span class="pill rejected">отклонено</span>';
+    return '<span class="pill pending">ожидание</span>';
+  }
+  function canCancel(row){
+    if (!row) return false;
+    if (String(row.status||'').toLowerCase()!=='pending') return false;
+    var created = new Date(row.created_at).getTime();
+    return (Date.now() - created) <= 5*3600*1000;
+  }
+  function toast(msg){
+    var t = document.getElementById('toast');
+    if(!t){
+      t = document.createElement('div'); t.id='toast'; t.className='lc-toast';
+      document.body.appendChild(t);
+    }
+    var el = document.createElement('div');
+    el.className = 'lc-toast__item';
+    el.textContent = msg;
+    t.appendChild(el);
+    setTimeout(function(){
+  // inject minimal CSS for labels and toast
+  try{ var st=document.createElement('style'); st.textContent='.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px}.pill.paid{background:rgba(16,185,129,.15)}.pill.rejected{background:rgba(239,68,68,.15)}.pill.pending{background:rgba(30,136,229,.15)}.right{text-align:right}.small{font-size:12px}.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}'; document.head.appendChild(st);}catch(_){} if (el && el.parentNode) el.parentNode.removeChild(el); }, 3200);
+  }
+  async function refreshBalance(sb, uid){
+    try{
+      var r = await sb.from('wallets').select('balance_cents').eq('user_id', uid).maybeSingle();
+      if (!r.error && r.data && typeof r.data.balance_cents === 'number') {
+        var node = document.querySelector('[data-balance]');
+        if (node) node.textContent = (r.data.balance_cents/100).toFixed(2) + ' $';
+      }
+    }catch(e){}
+  }
+  function attachCancelHandler(sb, uid, tbody){
+    tbody.addEventListener('click', async function(e){
+      var btn = e.target.closest('[data-cancel]');
+      if(!btn) return;
+      var id = btn.getAttribute('data-cancel'); if(!id) return;
+      btn.disabled = true;
+      try{
+        var res = await sb.rpc('user_cancel_withdrawal', { p_id: id });
+        if (res.error) throw res.error;
+        toast('Заявка отменена и средства возвращены на баланс');
+      }catch(err){ alert(err.message||err); }
+      finally{
+        await Promise.all([loadHistory(sb, uid), refreshBalance(sb, uid)]);
+        btn.disabled = false;
+      }
+    });
+  }
+  function renderRows(rows){
+    var tbody = document.getElementById('wd-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!rows || !rows.length){
+      tbody.innerHTML = '<tr><td colspan="6" class="muted" style="text-align:center;padding:12px 0;">Пока нет заявок</td></tr>';
+      return;
+    }
+    rows.forEach(function(r){
+      var tr = document.createElement('tr');
+      var total = (r.amount_cents||0) + (r.fee_cents||0);
+      var showCancel = canCancel(r);
+      tr.innerHTML =
+        '<td>' + new Date(r.created_at).toLocaleString() + '</td>' +
+        '<td class="right">' + fmtUSD(total) + '</td>' +
+        '<td>' + (r.network||'—') + '</td>' +
+        '<td>' + statusLabel(r.status) + '</td>' +
+        '<td>' + (r.txid ? ('<code>'+String(r.txid).slice(0,6)+'…'+String(r.txid).slice(-4)+'</code>') : '—') + '</td>' +
+        '<td>' + (showCancel ? ('<button class="btn bad" data-cancel="'+r.id+'">Отменить</button>') : '<span class="small muted">—</span>') + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  async function loadHistory(sb, uid){
+    var tbody = document.getElementById('wd-table-body');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>';
+    var q = sb.from('withdrawals')
+      .select('id, created_at, amount_cents, fee_cents, network, status, txid')
+      .eq('user_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    var r = await q;
+    if (r.error){ if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#ffb4b4">'+(r.error.message||r.error)+'</td></tr>'; return; }
+    renderRows(r.data||[]);
+  }
+  ready(async function(){
+    try{
+      var sb = window._supabase || window.supabaseClient || window.sb || window.supabase;
+      if (!sb || !sb.auth || !sb.from){ console.warn('Supabase client not found'); return; }
+      var u = await sb.auth.getUser();
+      var user = (u && u.data && u.data.user) ? u.data.user : null;
+      if (!user){ try{ location.href='login_single.html'; }catch(_){} return; }
+      var uid = user.id;
+      await Promise.all([loadHistory(sb, uid), refreshBalance(sb, uid)]);
+      // subscribe realtime
+      try{
+        sb.channel('wd-user-'+uid)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawals', filter: 'user_id=eq.'+uid }, function(){ loadHistory(sb, uid); refreshBalance(sb, uid); })
+          .subscribe();
+      }catch(_){}
+      attachCancelHandler(sb, uid, document.getElementById('wd-table-body') || document.body);
+    }catch(e){ console.error(e); }
+  });
+})();
+</script>
 });
 </script>
 
