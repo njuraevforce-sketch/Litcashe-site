@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
@@ -16,7 +15,7 @@
 .input{width:100%;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);padding:0 12px}
 .header{position:sticky;top:0;background:rgba(10,12,18,.6);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0} .nav a{color:#cfe9ff;margin-right:12px;text-decoration:none}
-  </style>
+</style>
 <link href="assets/css/lang-switcher.css" rel="stylesheet"/>
 <style id="lc-lang-style-inline">
 /* LC Globe (inline) */
@@ -35,7 +34,8 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
   #lc-inline-lang .lc-lang__menu{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}
   #lc-inline-lang .lc-lang__menu li:hover{background:rgba(0,0,0,.06)}
 }
-</style><style id="lc-lang-inline">/* LC Globe — forced dark style */
+</style>
+<style id="lc-lang-inline">/* LC Globe — forced dark style */
 .lc-lang{position:relative;display:inline-flex;align-items:center}
 .lc-lang__btn{height:36px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18)!important;background:rgba(255,255,255,.06)!important;color:#eee!important;display:inline-flex;gap:8px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:transform .08s ease,box-shadow .2s ease,background .2s ease}
 .lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)!important}
@@ -45,7 +45,9 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
 .lc-lang__menu{position:absolute;top:calc(100% + 8px);right:0;list-style:none!important;padding-left:0!important;margin:8px 0 0;padding:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96)!important;color:#eee!important;min-width:160px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:10000}
 .lc-lang.is-open .lc-lang__menu{display:block}
 .lc-lang__menu li{padding:8px 12px;cursor:pointer}
-.lc-lang__menu li:hover{background:rgba(255,255,255,.08)}</style><style id="lang-select-inline">
+.lc-lang__menu li:hover{background:rgba(255,255,255,.08)}
+</style>
+<style id="lang-select-inline">
 /* Styled <select> pill with globe */
 .lang-select{
   -webkit-appearance:none; -moz-appearance:none; appearance:none;
@@ -104,151 +106,77 @@ img,video{max-width:100%;height:auto}
 <style>/* toast */.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}/* skeleton */.skel{position:relative;overflow:hidden;background:rgba(255,255,255,.06);border-radius:10px}.skel:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:sh 1.2s infinite}@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}</style>
 </head>
 <body data-balance-container>
-<div style="position:sticky;top:0;background:#fff;padding:.5rem;border-bottom:1px solid #eee">Баланс: <strong data-balance>0.00 $</strong></div><header class="header noscript-header">
-<div class="container nav">
-<a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
-<nav class="nav-links">
-<a href="index.html" data-i18n="home_nav" data-i18n="nav_home">Главная</a>
-<a href="dashboard_single.html" data-i18n="dashboard_nav" data-i18n="nav_dashboard">Личный кабинет</a>
-<a href="deposit_single.html" data-i18n="deposit_nav" data-i18n="deposit_title">Пополнение</a>
-<a href="withdraw_single.html" data-i18n="withdraw_nav" data-i18n="withdraw_title">Вывод</a>
-<a href="faq_single.html" data-i18n="faq_nav" data-i18n="faq_title">FAQ</a>
-<a href="settings_single.html" data-i18n="settings_nav" data-i18n="settings_title">Настройки</a>
-</nav>
-<div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
-<div class="lang"><div class="lc-lang">
-<button aria-expanded="false" aria-haspopup="listbox" class="lc-lang__btn">
-<svg aria-hidden="true" class="lc-lang__icon" viewbox="0 0 24 24">
-<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
-</svg>
-<span class="lc-lang__label">EN</span>
-</button>
-<ul class="lc-lang__menu" role="listbox" tabindex="-1">
-<li data-lang="ru" role="option">RU Русский</li>
-<li data-lang="en" role="option">GB English</li>
-</ul>
-</div></div><div class="nav-cta">
-        <!-- Login/Register buttons support i18n -->
-        <a class="btn ghost" href="login_single.html" data-i18n="nav_login" data-i18n="login_title">Вход</a>
-        <a class="btn primary" href="register_single.html" data-i18n="nav_register" data-i18n="register_title">Регистрация</a>
-</div>
-</div>
-</header>
-<main class="container">
-<div class="card">
-<h1 data-i18n="withdraw_title">Заявка на вывод</h1>
-<div class="grid">
-<input class="input" id="wallet" data-i18n="withdraw_wallet_placeholder" data-i18n-attr="placeholder" placeholder="TRC20-кошелёк" type="text"/>
-<input class="input" id="withAmount" data-i18n="withdraw_amount_placeholder" data-i18n-attr="placeholder" placeholder="Сумма к выводу, USDT" step="0.01" type="number"/>
-<button class="btn" id="withSubmit" data-i18n="withdraw_submit_button">Отправить заявку</button>
-<p class="muted" data-i18n="withdraw_notice">Первый вывод — через 5 дней после активации. Далее — не чаще 1 раза в 24 часа.</p>
-</div>
-</div>
-
-<div class="card" id="wd-history-card">
-  <h2 class="section-title">История заявок</h2>
-  <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr><th>Дата</th><th>Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
-      </thead>
-      <tbody id="wd-table-body">
-        <tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
-      </tbody>
-    </table>
+<div style="position:sticky;top:0;background:#fff;padding:.5rem;border-bottom:1px solid #eee">Баланс: <strong data-balance>0.00 $</strong></div>
+<header class="header noscript-header">
+  <div class="container nav">
+    <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
+    <nav class="nav-links">
+      <a href="index.html" data-i18n="nav_home">Главная</a>
+      <a href="dashboard_single.html" data-i18n="nav_dashboard">Личный кабинет</a>
+      <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
+      <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
+      <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
+      <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
+    </nav>
+    <div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
+    <div class="lang">
+      <div class="lc-lang">
+        <button aria-expanded="false" aria-haspopup="listbox" class="lc-lang__btn">
+          <svg aria-hidden="true" class="lc-lang__icon" viewBox="0 0 24 24">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+          </svg>
+          <span class="lc-lang__label">EN</span>
+        </button>
+        <ul class="lc-lang__menu" role="listbox" tabindex="-1">
+          <li data-lang="ru" role="option">RU Русский</li>
+          <li data-lang="en" role="option">GB English</li>
+        </ul>
+      </div>
+    </div>
+    <div class="nav-cta">
+      <!-- Login/Register buttons support i18n -->
+      <a class="btn ghost" href="login_single.html" data-i18n="nav_login">Вход</a>
+      <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
+    </div>
   </div>
-</div>
+</header>
 
+<main class="container">
+  <div class="card">
+    <h1 data-i18n="withdraw_title">Заявка на вывод</h1>
+    <div class="grid">
+      <input class="input" id="wallet" data-i18n="withdraw_wallet_placeholder" data-i18n-attr="placeholder" placeholder="TRC20-кошелёк" type="text"/>
+      <input class="input" id="withAmount" data-i18n="withdraw_amount_placeholder" data-i18n-attr="placeholder" placeholder="Сумма к выводу, USDT" step="0.01" type="number"/>
+      <button class="btn" id="withSubmit" data-i18n="withdraw_submit_button">Отправить заявку</button>
+      <p class="muted" data-i18n="withdraw_notice">Первый вывод — через 5 дней после активации. Далее — не чаще 1 раза в 24 часа.</p>
+    </div>
+  </div>
+
+  <div class="card" id="wd-history-card">
+    <h2 class="section-title">История заявок</h2>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>Дата</th><th>Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
+        </thead>
+        <tbody id="wd-table-body">
+          <tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </main>
+
 <footer class="footer"><div class="container">© 2025 Litcash</div></footer>
+
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
 <script defer src="assets/js/i18n.js"></script>
 <script defer src="app_supabase.js"></script>
 <script defer src="assets/js/lang-switcher.js"></script>
-<script id="lc-lang-script-inline" type="text/plain">
-(function(){
-  if (!window.LC_I18N) {
-    const DEFAULT_LANG='ru', KEY='litcash_lang';
-    const dict={ru:{}, en:{}}; // fill later as needed
-    function getLang(){ try{ return localStorage.getItem(KEY)||DEFAULT_LANG }catch(e){ return DEFAULT_LANG } }
-    function setLang(l){ try{ localStorage.setItem(KEY,l) }catch(e){} }
-    function t(key,lang){ lang=lang||getLang(); if(dict[lang]&&key in dict[lang]) return dict[lang][key]; if(dict[DEFAULT_LANG]&&key in dict[DEFAULT_LANG]) return dict[DEFAULT_LANG][key]; return null }
-    function apply(root=document){
-      const lang=getLang();
-      document.documentElement&&document.documentElement.setAttribute('lang',lang);
-      const nodes=root.querySelectorAll('[data-i18n]');
-      nodes.forEach(n=>{
-        const key=n.getAttribute('data-i18n'); const val=t(key,lang);
-        if(val!==null){ if(!n.firstElementChild) n.textContent=val; else n.innerHTML=val; }
-        const attrs=(n.getAttribute('data-i18n-attr')||'').split(',').map(s=>s.trim()).filter(Boolean);
-        attrs.forEach(a=>{ const v=t(key+':'+a,lang); if(v!==null) n.setAttribute(a,v); });
-      });
-    }
-    window.LC_I18N={getLang,setLang,apply,t,dict};
-    document.addEventListener('DOMContentLoaded',()=>apply());
-  }
-  // Bind globe
-  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
-  ready(function(){
-    var root = document.querySelector('#lc-inline-lang') || document.querySelector('.lc-lang');
-    if (!root) return;
-    var btn = root.querySelector('.lc-lang__btn');
-    var menu = root.querySelector('.lc-lang__menu');
-    if(!btn||!menu) return;
-    function open(){ btn.setAttribute('aria-expanded','true'); root.classList.add('is-open'); menu.focus(); }
-    function close(){ btn.setAttribute('aria-expanded','false'); root.classList.remove('is-open'); }
-    btn.addEventListener('click', function(e){ e.preventDefault(); root.classList.contains('is-open')?close():open(); });
-    document.addEventListener('click', function(e){ if(!root.contains(e.target)) close(); });
-    menu.addEventListener('click', function(e){ var li=e.target.closest('[data-lang]'); if(!li) return; var lang=li.getAttribute('data-lang'); if(!lang) return; if(window.LC_I18N){ LC_I18N.setLang(lang); LC_I18N.apply(); } try{ localStorage.setItem('litcash_lang',lang) }catch(_){ } close(); });
-    menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-  });
-})();
-</script><script id="lc-lang-inline" type="text/plain">(function(){
-  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
-  function getLang(){ try{return localStorage.getItem('litcash_lang')||'en'}catch(e){return 'en'} }
-  function setLang(l){ try{localStorage.setItem('litcash_lang',l)}catch(e){} }
-  ready(function(){
-    var c=document.querySelector('.lc-lang'); if(!c) return;
-    var btn=c.querySelector('.lc-lang__btn'), menu=c.querySelector('.lc-lang__menu'), label=c.querySelector('.lc-lang__label');
-    if(!btn||!menu) return;
-    function apply(){
-      var lang=getLang();
-      if(window.LC_I18N){ try{ LC_I18N.setLang(lang); LC_I18N.apply(); }catch(_){ } }
-      if(label){ label.textContent = (lang==='ru'?'RU':'EN'); }
-      try{ document.documentElement.setAttribute('lang', lang); }catch(_){}
-    }
-    function open(){ btn.setAttribute('aria-expanded','true'); c.classList.add('is-open'); menu.focus(); }
-    function close(){ btn.setAttribute('aria-expanded','false'); c.classList.remove('is-open'); }
-    btn.addEventListener('click', function(e){ e.preventDefault(); c.classList.contains('is-open')?close():open(); });
-    document.addEventListener('click', function(e){ if(!c.contains(e.target)) close(); });
-    menu.addEventListener('click', function(e){ var li=e.target.closest('[data-lang]'); if(!li) return; var lang=li.getAttribute('data-lang'); if(!lang) return; setLang(lang); apply(); close(); });
-    menu.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
-    apply();
-  });
-})();</script><script id="lang-select-inline" type="text/plain">
-(function(){
-  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
-  ready(function(){
-    var sel = document.querySelector('.lang-select') || document.getElementById('langSelect');
-    if(!sel) return;
-    // init value from storage
-    try{
-      var cur = localStorage.getItem('litcash_lang') || 'ru';
-      if ([].some.call(sel.options, o => o.value === cur)) sel.value = cur;
-    }catch(_){}
-    function apply(l){
-      try{ localStorage.setItem('litcash_lang', l); }catch(_){}
-      if (window.LC_I18N) { try{ LC_I18N.setLang(l); LC_I18N.apply(); }catch(_){ } }
-      try{ document.documentElement.setAttribute('lang', l); }catch(_){}
-    }
-    sel.addEventListener('change', function(){ apply(this.value); });
-    // Also apply on load
-    apply(sel.value);
-  });
-})();
-</script>
+
 <script>
+// Top-right auth CTA (unchanged behavior)
 document.addEventListener('DOMContentLoaded', async function(){
   try{
     const sb = window._supabase;
@@ -267,7 +195,6 @@ document.addEventListener('DOMContentLoaded', async function(){
 });
 </script>
 
-
 <div class="lc-drawer" id="lc-drawer" aria-hidden="true">
   <div class="lc-drawer__panel">
     <nav id="lc-drawer-links"></nav>
@@ -275,6 +202,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   </div>
 </div>
 <script>
+// Mobile drawer (unchanged behavior)
 document.addEventListener('DOMContentLoaded', function(){
   var burger=document.getElementById('lc-burger');
   var drawer=document.getElementById('lc-drawer');
@@ -293,12 +221,8 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 
-
-
-
-
-  
 <script>
+// Keep existing LC hooks if present
 document.addEventListener('DOMContentLoaded', function(){
   try{
     if (window.LC){
@@ -307,14 +231,21 @@ document.addEventListener('DOMContentLoaded', function(){
       if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
     }
   }catch(_){}
+});
+</script>
 
 <script>
+// Cancel button + realtime refresh (syntax tidy only; logic preserved)
 (function(){
-  // inject minimal CSS for labels and toast
-  try{ var st=document.createElement('style'); st.textContent='.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px}.pill.paid{background:rgba(16,185,129,.15)}.pill.rejected{background:rgba(239,68,68,.15)}.pill.pending{background:rgba(30,136,229,.15)}.right{text-align:right}.small{font-size:12px}.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}'; document.head.appendChild(st);}catch(_){}
+  // inject minimal CSS for labels and toast (idempotent)
+  try{
+    var st=document.createElement('style');
+    st.textContent='.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px}.pill.paid{background:rgba(16,185,129,.15)}.pill.rejected{background:rgba(239,68,68,.15)}.pill.pending{background:rgba(30,136,229,.15)}.right{text-align:right}.small{font-size:12px}.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}';
+    document.head && document.head.appendChild(st);
+  }catch(_){}
+
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
   function $(s, r){ return (r||document).querySelector(s); }
-  function $all(s, r){ return Array.from((r||document).querySelectorAll(s)); }
   function fmtUSD(c){ return (Number(c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' $'; }
   function statusLabel(s){
     s = String(s||'pending').toLowerCase();
@@ -338,9 +269,7 @@ document.addEventListener('DOMContentLoaded', function(){
     el.className = 'lc-toast__item';
     el.textContent = msg;
     t.appendChild(el);
-    setTimeout(function(){
-  // inject minimal CSS for labels and toast
-  try{ var st=document.createElement('style'); st.textContent='.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px}.pill.paid{background:rgba(16,185,129,.15)}.pill.rejected{background:rgba(239,68,68,.15)}.pill.pending{background:rgba(30,136,229,.15)}.right{text-align:right}.small{font-size:12px}.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}'; document.head.appendChild(st);}catch(_){} if (el && el.parentNode) el.parentNode.removeChild(el); }, 3200);
+    setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 3200);
   }
   async function refreshBalance(sb, uid){
     try{
@@ -402,6 +331,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (r.error){ if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#ffb4b4">'+(r.error.message||r.error)+'</td></tr>'; return; }
     renderRows(r.data||[]);
   }
+
   ready(async function(){
     try{
       var sb = window._supabase || window.supabaseClient || window.sb || window.supabase;
@@ -422,8 +352,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 })();
 </script>
-});
-</script>
 
-  <script defer src="assets/js/guard.js"></script>
-</body></html>
+<script defer src="assets/js/guard.js"></script>
+</body>
+</html>
