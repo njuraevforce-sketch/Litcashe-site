@@ -11,7 +11,8 @@
 .container{width:min(1100px,92vw);margin:0 auto;padding:24px 0}
 .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:20px}
 .grid{display:grid;gap:16px} .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))} @media (max-width:900px){.grid-2{grid-template-columns:1fr}}
-.btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18));color:white;font-weight:700;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18));color:#fff;font-weight:700;cursor:pointer}
+.btn.bad{background:linear-gradient(180deg, rgba(220,20,60,.25), rgba(255,99,71,.25));border-color:rgba(255,99,71,.35)}
 .input{width:100%;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);padding:0 12px}
 .header{position:sticky;top:0;background:rgba(10,12,18,.6);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0} .nav a{color:#cfe9ff;margin-right:12px;text-decoration:none}
@@ -134,7 +135,6 @@ img,video{max-width:100%;height:auto}
       </div>
     </div>
     <div class="nav-cta">
-      <!-- Login/Register buttons support i18n -->
       <a class="btn ghost" href="login_single.html" data-i18n="nav_login">Вход</a>
       <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
     </div>
@@ -157,7 +157,7 @@ img,video{max-width:100%;height:auto}
     <div class="table-wrap">
       <table class="table">
         <thead>
-          <tr><th>Дата</th><th>Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
+          <tr><th>Дата</th><th class="right">Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
         </thead>
         <tbody id="wd-table-body">
           <tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
@@ -188,7 +188,6 @@ document.addEventListener('DOMContentLoaded', async function(){
       cta.innerHTML = '<button id="nav-logout" class="btn danger" data-i18n="nav_logout">Выйти</button>';
       const btn = document.getElementById('nav-logout');
       if(btn){ btn.addEventListener('click', function(e){ e.preventDefault(); if(window.logout){ logout(); } }); }
-      // Apply i18n if available
       if(window.LC_I18N){ try{ LC_I18N.apply(); }catch(_){} }
     }
   }catch(_){}
@@ -202,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   </div>
 </div>
 <script>
-// Mobile drawer (unchanged behavior)
+// Mobile drawer
 document.addEventListener('DOMContentLoaded', function(){
   var burger=document.getElementById('lc-burger');
   var drawer=document.getElementById('lc-drawer');
@@ -215,29 +214,14 @@ document.addEventListener('DOMContentLoaded', function(){
   function close(){ drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden','true'); }
   burger.addEventListener('click', function(e){ e.preventDefault(); open(); });
   drawer.addEventListener('click', function(e){ if(e.target===drawer) close(); });
-  // Clone links/cta
   if(links && dl){ dl.innerHTML = links.outerHTML; }
   if(cta && dc){ dc.innerHTML = cta.outerHTML; }
 });
 </script>
 
 <script>
-// Keep existing LC hooks if present
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    if (window.LC){
-      if (typeof LC.bindWithdrawControls === 'function') LC.bindWithdrawControls();
-      if (typeof LC.subscribeWithdrawalStatus === 'function') LC.subscribeWithdrawalStatus();
-      if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
-    }
-  }catch(_){}
-});
-</script>
-
-<script>
-// Cancel button + realtime refresh (syntax tidy only; logic preserved)
+// Our withdraw history renderer + cancel logic
 (function(){
-  // inject minimal CSS for labels and toast (idempotent)
   try{
     var st=document.createElement('style');
     st.textContent='.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px}.pill.paid{background:rgba(16,185,129,.15)}.pill.rejected{background:rgba(239,68,68,.15)}.pill.pending{background:rgba(30,136,229,.15)}.right{text-align:right}.small{font-size:12px}.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}';
@@ -261,10 +245,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function toast(msg){
     var t = document.getElementById('toast');
-    if(!t){
-      t = document.createElement('div'); t.id='toast'; t.className='lc-toast';
-      document.body.appendChild(t);
-    }
+    if(!t){ t = document.createElement('div'); t.id='toast'; t.className='lc-toast'; document.body.appendChild(t); }
     var el = document.createElement('div');
     el.className = 'lc-toast__item';
     el.textContent = msg;
@@ -279,23 +260,6 @@ document.addEventListener('DOMContentLoaded', function(){
         if (node) node.textContent = (r.data.balance_cents/100).toFixed(2) + ' $';
       }
     }catch(e){}
-  }
-  function attachCancelHandler(sb, uid, tbody){
-    tbody.addEventListener('click', async function(e){
-      var btn = e.target.closest('[data-cancel]');
-      if(!btn) return;
-      var id = btn.getAttribute('data-cancel'); if(!id) return;
-      btn.disabled = true;
-      try{
-        var res = await sb.rpc('user_cancel_withdrawal', { p_id: id });
-        if (res.error) throw res.error;
-        toast('Заявка отменена и средства возвращены на баланс');
-      }catch(err){ alert(err.message||err); }
-      finally{
-        await Promise.all([loadHistory(sb, uid), refreshBalance(sb, uid)]);
-        btn.disabled = false;
-      }
-    });
   }
   function renderRows(rows){
     var tbody = document.getElementById('wd-table-body');
@@ -322,14 +286,51 @@ document.addEventListener('DOMContentLoaded', function(){
   async function loadHistory(sb, uid){
     var tbody = document.getElementById('wd-table-body');
     if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>';
-    var q = sb.from('withdrawals')
+    var r = await sb
+      .from('withdrawals')
       .select('id, created_at, amount_cents, fee_cents, network, status, txid')
       .eq('user_id', uid)
       .order('created_at', { ascending: false })
       .limit(200);
-    var r = await q;
     if (r.error){ if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#ffb4b4">'+(r.error.message||r.error)+'</td></tr>'; return; }
     renderRows(r.data||[]);
+  }
+  function attachCancelHandler(sb, uid){
+    var tbody = document.getElementById('wd-table-body') || document.body;
+    tbody.addEventListener('click', async function(e){
+      var btn = e.target.closest('[data-cancel]');
+      if(!btn) return;
+      var id = btn.getAttribute('data-cancel'); if(!id) return;
+      btn.disabled = true;
+      try{
+        var res = await sb.rpc('user_cancel_withdrawal', { p_id: id });
+        if (res.error) throw res.error;
+        toast('Заявка отменена и средства возвращены на баланс');
+      }catch(err){ alert(err.message||err); }
+      finally{
+        await Promise.all([loadHistory(sb, uid), refreshBalance(sb, uid)]);
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // Make our rendering the "last word": if another script rewrites the table,
+  // we re-apply our column. This prevents the cancel button from disappearing.
+  function installObserver(sb, uid){
+    var target = document.getElementById('wd-history-card');
+    if (!target) return;
+    var obs = new MutationObserver(function(){
+      var thead = document.querySelector('table thead tr');
+      if (thead && thead.children.length < 6){
+        // Ensure header has our 6th column
+        var th = document.createElement('th');
+        th.textContent = 'Действие';
+        thead.appendChild(th);
+      }
+      // Re-render rows using our source of truth
+      loadHistory(sb, uid);
+    });
+    obs.observe(target, { childList:true, subtree:true });
   }
 
   ready(async function(){
@@ -340,14 +341,34 @@ document.addEventListener('DOMContentLoaded', function(){
       var user = (u && u.data && u.data.user) ? u.data.user : null;
       if (!user){ try{ location.href='login_single.html'; }catch(_){} return; }
       var uid = user.id;
+
+      // Neutralize site re-render that wipes our "Действие" column
+      try{
+        if (window.LC){
+          if (typeof LC.loadWithdrawalsList === 'function'){
+            const orig = LC.loadWithdrawalsList;
+            LC.loadWithdrawalsList = async function(){
+              try{ await orig.apply(this, arguments); }catch(_){}
+              await loadHistory(sb, uid);
+            };
+          }
+          if (typeof LC.subscribeWithdrawalStatus === 'function'){
+            const origSub = LC.subscribeWithdrawalStatus;
+            LC.subscribeWithdrawalStatus = function(){
+              try{ return origSub.apply(this, arguments); }catch(_){} // keep their subscription if needed
+            };
+          }
+        }
+      }catch(_){}
+
       await Promise.all([loadHistory(sb, uid), refreshBalance(sb, uid)]);
-      // subscribe realtime
       try{
         sb.channel('wd-user-'+uid)
           .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawals', filter: 'user_id=eq.'+uid }, function(){ loadHistory(sb, uid); refreshBalance(sb, uid); })
           .subscribe();
       }catch(_){}
-      attachCancelHandler(sb, uid, document.getElementById('wd-table-body') || document.body);
+      attachCancelHandler(sb, uid);
+      installObserver(sb, uid);
     }catch(e){ console.error(e); }
   });
 })();
