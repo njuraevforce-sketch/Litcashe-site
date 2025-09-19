@@ -313,16 +313,29 @@ try {
     } catch(e) { console.warn('[LC] refreshBalance', e?.message||e); }
   };
 
+  // 🟢 ГЛАВНЫЕ RPC, которые точно есть по новой схеме:
+  // - get_level_info()
+  // - credit_view(video_id text, watched_seconds int)
+  // - views_left_today()
+
   LC.getLevelInfo = async function() {
     try {
-      const r2 = await sb.rpc('get_level_info_v2');
-      if (!r2.error && r2.data) return Array.isArray(r2.data) ? r2.data[0] : r2.data;
-    } catch(_){}
-    try {
-      const r1 = await sb.rpc('get_level_info');
-      if (!r1.error && r1.data) return Array.isArray(r1.data) ? r1.data[0] : r1.data;
+      const r = await sb.rpc('get_level_info');
+      if (!r.error && r.data) return Array.isArray(r.data) ? r.data[0] : r.data;
     } catch(_){}
     return null;
+  };
+
+  LC.getViewsLeft = async function() {
+    try {
+      const r = await sb.rpc('views_left_today');
+      if (!r.error && r.data) {
+        const row = Array.isArray(r.data) ? r.data[0] : r.data;
+        const n = Number(row?.views_left ?? 0);
+        return Number.isFinite(n) ? n : 0;
+      }
+    } catch(_){}
+    return 0;
   };
 
   // --- помощник: проставить текст цели куда угодно, не меняя верстку
@@ -364,14 +377,13 @@ try {
       const info = await LC.getLevelInfo(); if (!info) return;
       const set = (sel, val) => { const el = $(sel); if (el) el.textContent = String(val); };
 
-      const perView = pickNum(info.reward_per_view_cents)/100;
+      const perView = pickNum(info.per_view_reward_cents)/100;
       const daily   = pickNum(info.daily_reward_cents)/100;
       const base    = pickNum(info.base_amount_cents ?? info.level_base_cents ?? info.base_cents)/100;
       const bp      = pickNum(info.reward_percent_bp ?? info.level_percent_bp ?? info.rate_bp);
       const rate    = bp ? (bp/100) : pickNum(info.level_percent ?? info.rate_percent);
 
       set('[data-level-name]', info.level_name ?? '');
-      set('[data-views-left]', info.views_left_today ?? 0);
       set('[data-reward-per-view]', `${perView.toFixed(2)} USDT`);
       set('[data-daily-reward]',    `${daily.toFixed(2)} USDT`);
       set('[data-level-base]',      `$${base.toFixed(2)}`);
@@ -379,7 +391,7 @@ try {
 
       const badge = $('#perViewBadge'); if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
 
-      // Цель следующего уровня — из RPC next_level_goal()
+      // Цель следующего уровня — если у вас будет RPC next_level_goal(), используем. Иначе — тире.
       try {
         const r = await sb.rpc('next_level_goal');
         if (!r.error && r.data) {
@@ -402,8 +414,7 @@ try {
     const row = Array.isArray(data) ? data[0] : data;
     if (!row?.ok) { alert(row?.message || 'Начисление отклонено'); return null; }
     // (removed optimistic bump to avoid flicker)
-    // if (typeof row.reward_per_view_cents === 'number') { /* bumpBalanceByCents(row.reward_per_view_cents); */ }
-if (typeof row.views_left === 'number') {
+    if (typeof row.views_left === 'number') {
       const el = document.querySelector('[data-views-left]');
       if (el) el.textContent = String(row.views_left);
     }
@@ -416,39 +427,46 @@ if (typeof row.views_left === 'number') {
 
   // ===== Вывод / Депозит =====================================================
   LC.requestWithdrawal = async function(amountCents, method='TRC20', address='') {
+    // Оставлено как было; если RPC нет — будет просто алерт ошибки и ничего не сломается
     const user = await getUser(); if (!user) { alert('Войдите в аккаунт'); return; }
-    const { data, error } = await sb.rpc('request_withdrawal', {
-      p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
-      p_network: String(method), p_address: String(address||''), p_currency: 'USDT'
-    });
-    if (error) { console.error(error); alert(error.message || 'Ошибка запроса вывода'); return; }
-    const row = Array.isArray(data) ? data[0] : data;
-    if (!row?.ok) { alert(row?.reason || 'Заявка отклонена'); return; }
-    await LC.refreshBalance();
-    alert('Заявка на вывод создана');
-    return row;
+    try {
+      const { data, error } = await sb.rpc('request_withdrawal', {
+        p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
+        p_network: String(method), p_address: String(address||''), p_currency: 'USDT'
+      });
+      if (error) { console.error(error); alert(error.message || 'Ошибка запроса вывода'); return; }
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row?.ok) { alert(row?.reason || 'Заявка отклонена'); return; }
+      await LC.refreshBalance();
+      alert('Заявка на вывод создана');
+      return row;
+    } catch(e){ console.warn('[LC] requestWithdrawal', e?.message||e); alert('Функция вывода не настроена'); }
   };
 
   LC.createDeposit = async function(amountCents, network='TRC20', currency='USDT', address='') {
     const user = await getUser(); if (!user) { alert('Войдите в аккаунт'); return; }
-    const { data, error } = await sb.rpc('create_deposit', {
-      p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
-      p_network: String(network), p_currency: String(currency), p_address: String(address||'')
-    });
-    if (error) { console.error(error); alert(error.message || 'Ошибка создания заявки'); return; }
-    const rec = Array.isArray(data) ? data[0] : data;
-    if (rec?.address) { const a = $('#depositAddress'); if (a) a.textContent = rec.address; }
-    if (rec?.id)      { const i = $('#createdDepositId'); if (i) i.textContent = rec.id; }
-    return rec;
+    try {
+      const { data, error } = await sb.rpc('create_deposit', {
+        p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
+        p_network: String(network), p_currency: String(currency), p_address: String(address||'')
+      });
+      if (error) { console.error(error); alert(error.message || 'Ошибка создания заявки'); return; }
+      const rec = Array.isArray(data) ? data[0] : data;
+      if (rec?.address) { const a = $('#depositAddress'); if (a) a.textContent = rec.address; }
+      if (rec?.id)      { const i = $('#createdDepositId'); if (i) i.textContent = rec.id; }
+      return rec;
+    } catch(e){ console.warn('[LC] createDeposit', e?.message||e); alert('Функция депозита не настроена'); }
   };
 
   LC.attachTxToDeposit = async function(depositId, txHash) {
     const user = await getUser(); if (!user) { alert('Войдите в аккаунт'); return; }
-    const { data, error } = await sb.rpc('attach_tx_to_deposit', {
-      p_deposit_id: String(depositId), p_tx_hash: String(txHash)
-    });
-    if (error) { console.error(error); alert(error.message || 'Ошибка сохранения TX'); return; }
-    return Array.isArray(data) ? data[0] : data;
+    try {
+      const { data, error } = await sb.rpc('attach_tx_to_deposit', {
+        p_deposit_id: String(depositId), p_tx_hash: String(txHash)
+      });
+      if (error) { console.error(error); alert(error.message || 'Ошибка сохранения TX'); return; }
+      return Array.isArray(data) ? data[0] : data;
+    } catch(e){ console.warn('[LC] attachTxToDeposit', e?.message||e); alert('Функция привязки TX не настроена'); }
   };
 
   LC.logout = async function() { try { await sb.auth.signOut(); } finally { location.href = '/'; } };
@@ -478,14 +496,16 @@ LC.initVideoWatch = function () {
   async function refreshState(){
     try {
       const info = await LC.getLevelInfo(); if (!info) throw new Error('no level');
-      const left = Number(info.views_left_today ?? 0);
-      const isActive = (info.level_key && info.level_key !== 'guest') ||
-                       Number(info.reward_percent_bp || 0) > 0;
+      const left = await LC.getViewsLeft();
+      const isActive = (info.level_name && info.level_name !== '—') ||
+                       Number(info.reward_percent_bp || 0) > 0 ||
+                       Number(info.per_view_reward_cents || 0) > 0;
       allowed = isActive && left > 0;
       startBtn.disabled = !allowed;
       if (!isActive) ui('Аккаунт не активен. Пополните баланс/рефералов.');
       else if (left <= 0) ui('Лимит на сегодня исчерпан.');
       else ui(`Доступно просмотров сегодня: ${left}`);
+      const el = document.querySelector('[data-views-left]'); if (el) el.textContent = String(left);
     } catch {
       startBtn.disabled = true;
       ui('Не удалось получить лимит.');
@@ -507,9 +527,10 @@ LC.initVideoWatch = function () {
           ui(`Зачислено +${usdt} USDT`);
           setBar(100);
 
-          // Обновляем «остаток просмотров» на странице, если есть такой элемент
+          // Обновляем «остаток просмотров» на странице
+          const leftNow = await LC.getViewsLeft();
           const el = document.querySelector('[data-views-left]');
-          if (el && typeof row.views_left === 'number') el.textContent = String(row.views_left);
+          if (el) el.textContent = String(leftNow);
 
           // При наличии хелпера — обновить хедер/баланс без перезагрузки
           if (typeof LC.refreshHeader === 'function') LC.refreshHeader();
@@ -554,9 +575,10 @@ LC.initVideoWatch = function () {
   LC.refreshDashboardCards = async function() {
     try {
       const user = await getUser(); if (!user) return;
-      const [info, wal] = await Promise.all([
+      const [info, wal, left] = await Promise.all([
         LC.getLevelInfo(),
-        sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle()
+        sb.from('wallets').select('balance_cents').eq('user_id', user.id).maybeSingle(),
+        LC.getViewsLeft()
       ]);
       if (!info) return;
 
@@ -573,16 +595,15 @@ LC.initVideoWatch = function () {
         }
       }
 
-      const baseCents = info.level_base_cents ?? info.base_cents ??
-        Math.min(Number(balanceCents||0), Number(info.level_cap_cents||balanceCents||0));
-      const perViewUSDT = Number(info.reward_per_view_cents||0)/100;
+      const baseCents = info.base_amount_cents ?? info.level_base_cents ?? info.base_cents ?? 0;
+      const perViewUSDT = Number(info.per_view_reward_cents||0)/100;
       const dailyUSDT   = Number(info.daily_reward_cents||0)/100;
       const baseUSDT    = Number(baseCents||0)/100;
       const bp          = pickNum(info.reward_percent_bp ?? info.level_percent_bp ?? info.rate_bp);
       const ratePct     = bp ? (bp/100) : pickNum(info.level_percent ?? info.rate_percent);
       const totalPerDay = Number(info.views_total_per_day ?? 5);
-      const left        = Number(info.views_left_today ?? totalPerDay);
-      const done        = Math.max(0, totalPerDay - left);
+      const leftToday   = Number(left ?? totalPerDay);
+      const done        = Math.max(0, totalPerDay - leftToday);
 
       const set = (sel, v) => { const el = document.querySelector(sel); if (el) el.textContent = v; };
       const byLabel = (label, value)=>{
@@ -621,8 +642,9 @@ LC.initVideoWatch = function () {
       set('[data-daily-reward]',    `${dailyUSDT.toFixed(2)} USDT`);
       set('[data-level-base]',      `$${baseUSDT.toFixed(2)}`);
       const badge = $('#perViewBadge'); if (badge) badge.textContent = `+${perViewUSDT.toFixed(2)} USDT за просмотр`;
+      const leftEl = document.querySelector('[data-views-left]'); if (leftEl) leftEl.textContent = String(leftToday);
 
-      // Реф-панель: счётчики
+      // Реф-панель: счётчики (оставлено как опциональные RPC)
       try {
         const r = await sb.rpc('ref_counts', { p_user: user.id });
         if (!r.error) {
@@ -636,79 +658,21 @@ LC.initVideoWatch = function () {
         }
       } catch(_) {}
 
-      // Реф-панель: суммы
-      let sumsRows=null, eS=null;
+      // Реф-панель: суммы (опциональные таблицы/вью)
       try {
-        const resp = await sb.from('referral_payouts')
-          .select('level,reward_usdt')
-          .eq('referrer_user_id', user.id);
-        sumsRows = resp.data; eS = resp.error;
-      } catch(e){ eS=e; }
-      if (eS || !Array.isArray(sumsRows)) {
-        try {
-          // ФОЛБЭК — правильные поля в твоей схеме: reward_usdt
-          const resp2 = await sb.from('referral_rewards')
-            .select('level,reward_usdt')
-            .eq('referrer_user_id', user.id);
-          if (!resp2.error) {
-            sumsRows = (resp2.data||[]).map(r=>({
-              level: r.level,
-              reward_usdt: Number(r.reward_usdt || 0)
-            }));
-          }
-        } catch(_){}
-      }
-      const sumBy = {1:0,2:0,3:0};
-      (sumsRows||[]).forEach(r=>{
-        const lvl = Number(r.level);
-        if (lvl===1||lvl===2||lvl===3) sumBy[lvl] += Number(r.reward_usdt||0);
-      });
-      $('#ref-sum-l1')&&($('#ref-sum-l1').textContent=fmtMoney(sumBy[1]));
-      $('#ref-sum-l2')&&($('#ref-sum-l2').textContent=fmtMoney(sumBy[2]));
-      $('#ref-sum-l3')&&($('#ref-sum-l3').textContent=fmtMoney(sumBy[3]));
-      $('#ref-sum-total')&&($('#ref-sum-total').textContent=fmtMoney(sumBy[1]+sumBy[2]+sumBy[3]));
-
-      // Реф-панель: последние выплаты
-      const tbody = $('#ref-last-tbody');
-      if (tbody) {
-        let lastRows=null, eL=null;
-        try {
-          const resp = await sb.from('v_referral_payouts')
-            .select('created_at, level, reward_usdt, source_type')
-            .eq('referrer_user_id', user.id)
-            .order('created_at',{ascending:false})
-            .limit(10);
-          lastRows = resp.data; eL = resp.error;
-        } catch(e){ eL=e; }
-        if (eL || !Array.isArray(lastRows) || !lastRows.length) {
-          try {
-            // ФОЛБЭК — правильные поля: reward_usdt (+ source в твоей схеме)
-            const resp2 = await sb.from('referral_rewards')
-              .select('created_at, level, reward_usdt, source')
-              .eq('referrer_user_id', user.id)
-              .order('created_at',{ascending:false})
-              .limit(10);
-            if (!resp2.error) {
-              lastRows = (resp2.data||[]).map(r=>({
-                created_at: r.created_at,
-                level: r.level,
-                reward_usdt: Number(r.reward_usdt || 0),
-                source_type: r.source || 'доход'
-              }));
-            }
-          } catch(_){}
-        }
-        tbody.innerHTML = '';
-        if (!lastRows || !lastRows.length) {
-          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px 0;">Нет данных</td></tr>`;
-        } else {
-          lastRows.forEach(r=>{
-            const tr=document.createElement('tr');
-            tr.innerHTML = `<td>${fmtDate(r.created_at)}</td><td>${r.level??''}</td><td>${fmtMoney(r.reward_usdt)}</td><td>${r.source_type||'доход'}</td>`;
-            tbody.appendChild(tr);
-          });
-        }
-      }
+        const resp = await sb.from('v_referral_payouts')
+          .select('created_at, level, reward_usdt, source_type')
+          .eq('referrer_user_id', user.id)
+          .order('created_at',{ascending:false})
+          .limit(10);
+        const rows = Array.isArray(resp.data) ? resp.data : [];
+        const sumBy = {1:0,2:0,3:0};
+        rows.forEach(r=>{ const lvl=Number(r.level); if(lvl===1||lvl===2||lvl===3) sumBy[lvl]+=Number(r.reward_usdt||0); });
+        $('#ref-sum-l1')&&($('#ref-sum-l1').textContent=fmtMoney(sumBy[1]));
+        $('#ref-sum-l2')&&($('#ref-sum-l2').textContent=fmtMoney(sumBy[2]));
+        $('#ref-sum-l3')&&($('#ref-sum-l3').textContent=fmtMoney(sumBy[3]));
+        $('#ref-sum-total')&&($('#ref-sum-total').textContent=fmtMoney(sumBy[1]+sumBy[2]+sumBy[3]));
+      } catch(_){ /* опционально */ }
     } catch(e) { console.error('[LC] refreshDashboardCards', e); }
   };
 
