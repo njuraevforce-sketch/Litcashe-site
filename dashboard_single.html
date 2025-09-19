@@ -353,7 +353,7 @@ header .container, .container { padding-left:12px; padding-right:12px; }
 @media (max-width: 900px){
   .grid-3, .grid-2, .dashboard-grid, .cards, .cards-grid { grid-template-columns:1fr !important; }
 }
-.card .n, [data-balance], [data-views-left], #gen1Cell, #gen2Cell, #gen3Cell {
+.card .n, [data-balance], [data-views], #gen1Cell, #gen2Cell, #gen3Cell {
   font-size: clamp(18px, 5.2vw, 28px) !important;
   line-height:1.15;
 }
@@ -425,7 +425,7 @@ header { overflow: visible; }
 <section class="grid grid-3">
 <div class="card" id="notActiveWarn" style="display:none;background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.25)"><strong data-i18n="not_active_warning">Аккаунт не активен...</strong></div>
 <div class="card"><div class="muted" data-i18n="balance">Баланс</div><div class="n" data-balance="" style="font-size:28px;font-weight:800">$0.00</div></div>
-<div class="card"><div class="muted" data-i18n="views">Просмотры</div><div class="n" data-views-left="" style="font-size:28px;font-weight:800">0</div></div>
+<div class="card"><div class="muted" data-i18n="views">Просмотры</div><div class="n" data-views="" style="font-size:28px;font-weight:800">0</div></div>
 <div class="card"><div class="muted">Уровень</div><div class="n" style="font-size:20px;font-weight:700"><span data-level data-level-name="">—</span> <span class="badge" id="perViewBadge">+$0.00 за просмотр</span></div></div>
 </section>
 <section class="grid grid-3">
@@ -755,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // === Уровень ===
       const lvlName = info.level_name || info.lvl_name || info.level_key || '—';
-      document.querySelectorAll('[data-level data-level-name],[data-level-name]').forEach(n => n.textContent = lvlName);
+      document.querySelectorAll('[data-level],[data-level-name]').forEach(n => n.textContent = lvlName);
 
       // === Процент (bps → %) ===
       const bp = Number(info.reward_percent_bp ?? info.pct_bp ?? info.percent_bp ?? 0);
@@ -776,7 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // === Осталось просмотров сегодня ===
       const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
-      document.querySelectorAll('[data-views-left-left]').forEach(n => n.textContent = String(Math.max(left, 0)));
+      document.querySelectorAll('[data-views-left]').forEach(n => n.textContent = String(Math.max(left, 0)));
 
       // === База уровня / Капитал (расч.) ===
       const baseCents = Number(info.base_amount_cents ?? info.base_cap_cents ?? 0);
@@ -786,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (capEl) capEl.textContent = toUsdText(baseCents);
 
       // === (Опционально) Всего просмотров ===
-      const viewsEl = document.querySelector('[data-views-left]');
+      const viewsEl = document.querySelector('[data-views]');
       if (viewsEl) {
         const used = Number(info.views_used_today ?? ((info.daily_limit ?? 5) - (info.views_left_today ?? 0)) ?? info.views_total ?? info.views_today ?? info.views ?? 0);
         viewsEl.textContent = used;
@@ -1276,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function getLeftToday() {
     try {
-      const { data } = await sb.rpc('get_level_info');
+      const { data } = await sb.rpc('get_level_info_v2');
       const info = Array.isArray(data) ? data[0] : (data || {});
       const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
       if (progressText) progressText.textContent = labelLeft(left);
@@ -1323,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     el.textContent = formatMoney(cur + Number(delta||0));
   }
   function bumpViews(n=1){
-    const el = document.querySelector('[data-views-left]');
+    const el = document.querySelector('[data-views]');
     if (!el) return;
     const cur = parseInt(el.textContent||'0',10) || 0;
     el.textContent = String(cur + n);
