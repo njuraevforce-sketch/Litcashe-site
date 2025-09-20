@@ -11,16 +11,18 @@
     }
   }catch(_){}
 })();
+
 // app_supabase.full.js — единый файл для дашборда
 // Требует: window.SUPABASE_URL / window.SUPABASE_ANON_KEY, supabase-js v2
 ;(function () {
-    // === Singleton guard (main app) ===
+  // === Singleton guard (main app) ===
   if (window.__LC_SINGLETON__) {
     try { console.warn('[LC] main app already initialized:', window.__LC_SINGLETON__); } catch(_){}
     return;
   }
   window.__LC_SINGLETON__ = 'app_supabase@2025-09-20';
-// 0) Конфиг + клиент
+
+  // 0) Конфиг + клиент
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
     console.error('[LC] Supabase config missing.');
     return;
@@ -68,253 +70,235 @@
   // Глобальный объект
   const LC = window.LC = window.LC || {};
 
-/* =========================  WITHDRAWALS — FRONTEND  =========================
-   Ненавязчивые добавления: подписка на статус, фолбэки для разных id полей,
-   и рендер истории заявок — только если на странице есть соответствующие узлы.
-   Ничего существующего не ломает.
-=============================================================================*/
+  /* =========================  WITHDRAWALS — FRONTEND  =========================
+     Ненавязчивые добавления: подписка на статус, фолбэки для разных id полей,
+     и рендер истории заявок — только если на странице есть соответствующие узлы.
+     Ничего существующего не ломает.
+  =============================================================================*/
 
-// Подписка на обновления статуса заявок для текущего пользователя
-LC.subscribeWithdrawalStatus = async function () {
-  try {
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user || LC._wdSub) return;
-    LC._wdSub = sb.channel('wd-status-' + user.id)
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'withdrawals',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
+  // Подписка на обновления статуса заявок для текущего пользователя
+  LC.subscribeWithdrawalStatus = async function () {
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user || LC._wdSub) return;
+      LC._wdSub = sb.channel('wd-status-' + user.id)
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'withdrawals',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          try {
+            const st = String(payload?.new?.status || '').toLowerCase();
+            if (st === 'paid') {
+              alert('Вывод подтверждён ✅');
+            } else if (st === 'rejected') {
+              alert('Заявка отклонена, средства возвращены ↩︎');
+              if (typeof LC.refreshBalance === 'function') LC.refreshBalance();
+            }
+            // Обновим список, если он смонтирован
+            if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
+          } catch(_){}
+        })
+        .subscribe();
+    } catch(_){}
+  };
+
+  // Универсальный сабмит формы вывода (поддерживает разные id полей)
+  LC.bindWithdrawControls = function () {
+    // Вариант 1: полноценная форма с id="withdrawForm"
+    const form = document.getElementById('withdrawForm');
+    if (form && !form.dataset.lcInit) {
+      form.dataset.lcInit = '1';
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const get = (sel, def='') => (document.querySelector(sel)?.value ?? def);
+        const amount  = parseFloat(get('#amount','0'));
+        const method  = get('#method','TRC20') || 'TRC20';
+        const address = get('#address','');
+        await LC.requestWithdrawal(Math.round((Number.isFinite(amount)?amount:0) * 100), method, address);
+      });
+    }
+
+    // Вариант 2: кнопка + поля c id="withAmount" и id="wallet", как на старой странице
+    const btn = document.getElementById('withSubmit');
+    if (btn && !btn.dataset.lcInit) {
+      btn.dataset.lcInit = '1';
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        btn.disabled = true;
+        const amount  = parseFloat(document.getElementById('withAmount')?.value || '0');
+        const address = document.getElementById('wallet')?.value || '';
         try {
-          const st = String(payload?.new?.status || '').toLowerCase();
-          if (st === 'paid') {
-            alert('Вывод подтверждён ✅');
-          } else if (st === 'rejected') {
-            alert('Заявка отклонена, средства возвращены ↩︎');
-            if (typeof LC.refreshBalance === 'function') LC.refreshBalance();
-          }
-          // Обновим список, если он смонтирован
-          if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
-        } catch(_){}
-      })
-      .subscribe();
-  } catch(_){}
-};
-
-// Универсальный сабмит формы вывода (поддерживает разные id полей)
-LC.bindWithdrawControls = function () {
-  // Вариант 1: полноценная форма с id="withdrawForm"
-  const form = document.getElementById('withdrawForm');
-  if (form && !form.dataset.lcInit) {
-    form.dataset.lcInit = '1';
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const get = (sel, def='') => (document.querySelector(sel)?.value ?? def);
-      const amount  = parseFloat(get('#amount','0'));
-      const method  = get('#method','TRC20') || 'TRC20';
-      const address = get('#address','');
-      await LC.requestWithdrawal(Math.round((Number.isFinite(amount)?amount:0) * 100), method, address);
-    });
-  }
-
-  // Вариант 2: кнопка + поля c id="withAmount" и id="wallet", как на старой странице
-  const btn = document.getElementById('withSubmit');
-  if (btn && !btn.dataset.lcInit) {
-    btn.dataset.lcInit = '1';
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      btn.disabled = true;
-      const amount  = parseFloat(document.getElementById('withAmount')?.value || '0');
-      const address = document.getElementById('wallet')?.value || '';
-      try {
-        const row = await LC.requestWithdrawal(Math.round((Number.isFinite(amount)?amount:0) * 100), 'TRC20', address);
-        if (row?.ok) { btn.textContent = 'Заявка создана — ожидание'; }
-      } catch(e) {
-        console.warn(e);
-      } finally {
-        setTimeout(()=>{ try{ btn.disabled = false; btn.textContent = 'Отправить заявку'; }catch(_){} }, 1200);
-      }
-    });
-  }
-};
-
-// Рендерим историю заявок пользователя, если на странице есть место под неё
-LC.loadWithdrawalsList = async function () {
-  const tbody = document.getElementById('wd-table-body');
-  const list  = document.getElementById('wdList');
-  if (!tbody && !list) return;
-
-  try {
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await sb
-      .from('withdrawals')
-      .select('id, created_at, amount_cents, status, txid, network, address')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) throw error;
-    const rows = Array.isArray(data) ? data : [];
-
-    const renderStatus = (s) => {
-      s = String(s||'').toLowerCase();
-      if (s === 'paid') return 'подтверждено';
-      if (s === 'rejected') return 'отменено';
-      return 'ожидание';
-    };
-    const fmtAmt = (c) => (Number(c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits: 0, maximumFractionDigits: 2});
-
-    if (tbody) {
-      tbody.innerHTML = '';
-      if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Пока нет заявок</td></tr>`;
-      } else {
-        rows.forEach(r => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${new Date(r.created_at).toLocaleString()}</td>
-                          <td>${fmtAmt(r.amount_cents)} USDT</td>
-                          <td>${(r.network||'TRC20')}</td>
-                          <td>${renderStatus(r.status)}</td>
-                          <td>${r.txid? `<code>${r.txid}</code>` : '—'}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
+          const row = await LC.requestWithdrawal(Math.round((Number.isFinite(amount)?amount:0) * 100), 'TRC20', address);
+          if (row?.ok) { btn.textContent = 'Заявка создана — ожидание'; }
+        } catch(e) {
+          console.warn(e);
+        } finally {
+          setTimeout(()=>{ try{ btn.disabled = false; btn.textContent = 'Отправить заявку'; }catch(_){} }, 1200);
+        }
+      });
     }
+  };
 
-    if (list) {
-      list.innerHTML = '';
-      if (!rows.length) {
-        list.innerHTML = `<div class="empty">Пока нет заявок</div>`;
-      } else {
-        rows.forEach(r => {
-          const item = document.createElement('div');
-          item.className = 'wd-item';
-          item.innerHTML = `<div class="wd-row">
-                              <div class="wd-date">${new Date(r.created_at).toLocaleString()}</div>
-                              <div class="wd-amount">${fmtAmt(r.amount_cents)} USDT</div>
-                              <div class="wd-status">${renderStatus(r.status)}</div>
-                              <div class="wd-tx">${r.txid? `<code>${r.txid}</code>` : ''}</div>
-                            </div>`;
-          list.appendChild(item);
-        });
+  // Рендерим историю заявок пользователя, если на странице есть место под неё
+  LC.loadWithdrawalsList = async function () {
+    const tbody = document.getElementById('wd-table-body');
+    const list  = document.getElementById('wdList');
+    if (!tbody && !list) return;
+
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await sb
+        .from('withdrawals')
+        .select('id, created_at, amount_cents, status, txid, network, address')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      const rows = Array.isArray(data) ? data : [];
+
+      const renderStatus = (s) => {
+        s = String(s||'').toLowerCase();
+        if (s === 'paid') return 'подтверждено';
+        if (s === 'rejected') return 'отменено';
+        return 'ожидание';
+      };
+      const fmtAmt = (c) => (Number(c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+
+      if (tbody) {
+        tbody.innerHTML = '';
+        if (!rows.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Пока нет заявок</td></tr>`;
+        } else {
+          rows.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${new Date(r.created_at).toLocaleString()}</td>
+                            <td>${fmtAmt(r.amount_cents)} USDT</td>
+                            <td>${(r.network||'TRC20')}</td>
+                            <td>${renderStatus(r.status)}</td>
+                            <td>${r.txid? `<code>${r.txid}</code>` : '—'}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
       }
-    }
-  } catch (e) {
-    console.warn('[LC] loadWithdrawalsList', e?.message || e);
-  }
-};
 
+      if (list) {
+        list.innerHTML = '';
+        if (!rows.length) {
+          list.innerHTML = `<div class="empty">Пока нет заявок</div>`;
+        } else {
+          rows.forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'wd-item';
+            item.innerHTML = `<div class="wd-row">
+                                <div class="wd-date">${new Date(r.created_at).toLocaleString()}</div>
+                                <div class="wd-amount">${fmtAmt(r.amount_cents)} USDT</div>
+                                <div class="wd-status">${renderStatus(r.status)}</div>
+                                <div class="wd-tx">${r.txid? `<code>${r.txid}</code>` : ''}</div>
+                              </div>`;
+            list.appendChild(item);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[LC] loadWithdrawalsList', e?.message || e);
+    }
+  };
 
   // ===== Профиль + Реф-код ====================================================
   LC.ensureProfile = async function() {
-try {
-  const { data, error } = await sb.auth.getUser();
-  const user = data?.user; if (!user) return;
+    try {
+      const { data, error } = await sb.auth.getUser();
+      const user = data?.user; if (!user) return;
 
-  const { data: row } = await sb
-    .from('profiles')
-    .select('user_id, ref_code')
-    .eq('user_id', user.id)
-    .maybeSingle();
-  if (row) return;
+      const { data: row } = await sb
+        .from('profiles')
+        .select('user_id, ref_code')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (row) return;
 
-  const ins = await sb.from('profiles').insert({ user_id: user.id });
-  if (ins.error && ins.error.code !== '23505') {
-    console.warn('[LC] ensureProfile insert error', ins.error);
-  }
-} catch(e) { console.warn('[LC] ensureProfile', e?.message||e); }
-
-
-};
+      const ins = await sb.from('profiles').insert({ user_id: user.id });
+      if (ins.error && ins.error.code !== '23505') {
+        console.warn('[LC] ensureProfile insert error', ins.error);
+      }
+    } catch(e) { console.warn('[LC] ensureProfile', e?.message||e); }
+  };
 
   LC.applyReferral = async function() {
-try {
-  const params = new URLSearchParams(location.search);
-  const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
-  if (!refParam) return;
-  localStorage.setItem('lc_ref_code', refParam);
+    try {
+      const params = new URLSearchParams(location.search);
+      const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
+      if (!refParam) return;
+      localStorage.setItem('lc_ref_code', refParam);
 
-  const { data, error } = await sb.auth.getUser();
-  const user = data?.user; if (error || !user) return;
+      const { data, error } = await sb.auth.getUser();
+      const user = data?.user; if (error || !user) return;
 
-  // Server-side will ensure profile via trigger, and apply referral safely
-  await sb.rpc('apply_referral', { p_ref_code: refParam });
-} catch(e) {
-  console.warn('[LC] applyReferral', e?.message||e);
-}
+      // Server-side will ensure profile via trigger, and apply referral safely
+      await sb.rpc('apply_referral', { p_ref_code: refParam });
+    } catch(e) {
+      console.warn('[LC] applyReferral', e?.message||e);
+    }
+  };
 
-
-
-};
-
+  // >>>>>>>>>>>>>>>>>>>> ПРАВКА: единый корректный mountReferral <<<<<<<<<<<<<<<<
   LC.mountReferral = async function() {
-try {
-  const wrap = document.querySelector('#refLinkWrap');
-  const input = document.querySelector('#refLink');
-  if (!wrap || !input) return;
-    // Bind copy handler early so the button works even if profile fetch fails
-  try {
-    const btnEarly = document.querySelector('#btnCopyRef');
-    if (btnEarly) {
-      if (!btnEarly.type) btnEarly.type = 'button';
-      if (!btnEarly.dataset.lcInit) {
-        btnEarly.dataset.lcInit = '1';
-        btnEarly.addEventListener('click', async (e) => {
-          try { if (e && e.preventDefault) e.preventDefault(); } catch(_) {}
-          let copied = false;
-          try { await navigator.clipboard.writeText(input.value || ''); copied = true; } catch(_) {}
-          if (!copied) {
-            try {
-              const ta = document.createElement('textarea');
-              ta.value = input.value || '';
-              ta.style.position='fixed'; ta.style.opacity='0';
-              document.body.appendChild(ta); ta.focus(); ta.select();
-              try { document.execCommand('copy'); copied = true; } catch(_) {}
-              document.body.removeChild(ta);
-            } catch(_) {}
-          }
-          try { if (copied) { btnEarly.textContent='Скопировано'; setTimeout(()=>btnEarly.textContent='Скопировать', 1200); } } catch(_) {}
-        });
-      }
-    }
-  } catch(_) {}
-const { data, error } = await sb.auth.getUser();
-  const user = data?.user; if (!user) return;
-  const { data: row, error: e1 } = await sb
-    .from('profiles')
-    .select('ref_code')
-    .eq('user_id', user.id)
-    .maybeSingle();
-  if (e1 || !row?.ref_code) return;
-  const url = new URL(location.origin + '/register_single.html');
-  url.searchParams.set('ref', row.ref_code);
-  input.value = url.toString();
-  wrap.style.display = 'block';
-  const btn = document.querySelector('#btnCopyRef');
-if (btn) {
-  try { if (!btn.type) btn.type = 'button'; } catch(_) {}
-  btn.addEventListener('click', async (e) => {
-    try { if (e && e.preventDefault) e.preventDefault(); } catch(_) {}
-    let copied = false;
-    try { await navigator.clipboard.writeText(input.value); copied = true; } catch(_) {}
-    if (!copied) {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = input.value; ta.style.position='fixed'; ta.style.opacity='0';
-        document.body.appendChild(ta); ta.focus(); ta.select();
-        try { document.execCommand('copy'); copied = true; } catch(_) {}
-        document.body.removeChild(ta);
-      } catch(_) {}
-    }
-    if (copied) {
-      try { btn.textContent = 'Скопировано'; setTimeout(()=> btn.textContent = 'Скопировать', 1200); } catch(_) {}
-    }
-  });
-}
-} catch(e) { console.error('[LC] mountReferral', e?.message||e); }
+    try {
+      const wrap  = document.querySelector('#refLinkWrap');
+      const input = document.querySelector('#refLink');
+      if (!wrap || !input) return;
 
-};
+      // КНОПКА «СКОПИРОВАТЬ»: один корректный обработчик, без дублей
+      try {
+        const btn = document.querySelector('#btnCopyRef');
+        if (btn && !btn.dataset.lcInit) {
+          btn.dataset.lcInit = '1';
+          try { if (!btn.type) btn.type = 'button'; } catch(_) {}
+          btn.addEventListener('click', async (e) => {
+            try { if (e && e.preventDefault) e.preventDefault(); } catch(_) {}
+            let copied = false;
+            // 1) Clipboard API
+            try { await navigator.clipboard.writeText(input.value || ''); copied = true; } catch(_) {}
+            // 2) Фолбэк
+            if (!copied) {
+              try {
+                const ta = document.createElement('textarea');
+                ta.value = input.value || '';
+                ta.style.position='fixed'; ta.style.opacity='0';
+                document.body.appendChild(ta); ta.focus(); ta.select();
+                try { document.execCommand('copy'); copied = true; } catch(_) {}
+                document.body.removeChild(ta);
+              } catch(_) {}
+            }
+            if (copied) {
+              try { btn.textContent = 'Скопировано'; setTimeout(()=> btn.textContent = 'Скопировать', 1200); } catch(_) {}
+            }
+          });
+        }
+      } catch(_) {}
+
+      // Достаём реф.код и показываем ссылку
+      const { data, error } = await sb.auth.getUser();
+      const user = data?.user; if (!user) return;
+
+      const { data: row, error: e1 } = await sb
+        .from('profiles')
+        .select('ref_code')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (e1 || !row?.ref_code) return;
+
+      const url = new URL(location.origin + '/register_single.html');
+      url.searchParams.set('ref', row.ref_code);
+      input.value = url.toString();
+      wrap.style.display = 'block';
+    } catch(e) { console.error('[LC] mountReferral', e?.message||e); }
+  };
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   // ===== Активные рефералы (фильтр по балансу) ===============================
   // Активным считаем пользователя, у которого balance_cents >= minCents (по умолчанию 2900 = 29 USDT)
@@ -452,7 +436,7 @@ if (btn) {
     if (!row?.ok) { alert(row?.message || 'Начисление отклонено'); return null; }
     // (removed optimistic bump to avoid flicker)
     // if (typeof row.reward_per_view_cents === 'number') { /* bumpBalanceByCents(row.reward_per_view_cents); */ }
-if (typeof row.views_left === 'number') {
+    if (typeof row.views_left === 'number') {
       const el = document.querySelector('[data-views-left]');
       if (el) el.textContent = String(row.views_left);
     }
@@ -501,103 +485,103 @@ if (typeof row.views_left === 'number') {
   };
 
   LC.logout = async function() { try { await sb.auth.signOut(); } finally { location.href = '/'; } };
-// ===== Виджет «Видео» ======================================================
-const LC_VIDEO_LIST = ['/assets/videos/ad1.mp4','/assets/videos/ad2.mp4','/assets/videos/ad3.mp4'];
-const LC_MIN_SECONDS = 10;
 
-LC.initVideoWatch = function () {
-  const video    = document.getElementById('promoVid');
-  const startBtn = document.getElementById('startBtn');
-  const bar      = document.getElementById('progressFill');
-  const txt      = document.getElementById('progressText');
-  if (!video || !startBtn) return;
+  // ===== Виджет «Видео» ======================================================
+  const LC_VIDEO_LIST = ['/assets/videos/ad1.mp4','/assets/videos/ad2.mp4','/assets/videos/ad3.mp4'];
+  const LC_MIN_SECONDS = 10;
 
-  // ⚑ Идемпотентная инициализация (не даём навесить события повторно)
-  if (video.dataset.lcInit === '1') return;
-  video.dataset.lcInit = '1';
+  LC.initVideoWatch = function () {
+    const video    = document.getElementById('promoVid');
+    const startBtn = document.getElementById('startBtn');
+    const bar      = document.getElementById('progressFill');
+    const txt      = document.getElementById('progressText');
+    if (!video || !startBtn) return;
 
-  let allowed = false, credited = false, acc = 0, lastT = 0;
-  let creditPromise = null; // single-flight: не позволяем второй одновременный вызов
+    // ⚑ Идемпотентная инициализация (не даём навесить события повторно)
+    if (video.dataset.lcInit === '1') return;
+    video.dataset.lcInit = '1';
 
-  const ui = (m)=> { if (txt) txt.textContent = m; };
-  const setBar = (p)=> { if (bar) bar.style.width = Math.max(0, Math.min(100, p)) + '%'; };
-  const pickVideo = ()=> LC_VIDEO_LIST[Math.floor(Math.random()*LC_VIDEO_LIST.length)];
-  const reset = ()=> { credited=false; acc=0; lastT=0; setBar(0); ui('Прогресс…'); };
+    let allowed = false, credited = false, acc = 0, lastT = 0;
+    let creditPromise = null; // single-flight: не позволяем второй одновременный вызов
 
-  async function refreshState(){
-    try {
-      const info = await LC.getLevelInfo(); if (!info) throw new Error('no level');
-      const left = Number(info.views_left_today ?? 0);
-      const isActive = (info.level_key && info.level_key !== 'guest') ||
-                       Number(info.reward_percent_bp || 0) > 0;
-      allowed = isActive && left > 0;
-      startBtn.disabled = !allowed;
-      if (!isActive) ui('Аккаунт не активен. Пополните баланс/рефералов.');
-      else if (left <= 0) ui('Лимит на сегодня исчерпан.');
-      else ui(`Доступно просмотров сегодня: ${left}`);
-    } catch {
-      startBtn.disabled = true;
-      ui('Не удалось получить лимит.');
-    }
-  }
+    const ui = (m)=> { if (txt) txt.textContent = m; };
+    const setBar = (p)=> { if (bar) bar.style.width = Math.max(0, Math.min(100, p)) + '%'; };
+    const pickVideo = ()=> LC_VIDEO_LIST[Math.floor(Math.random()*LC_VIDEO_LIST.length)];
+    const reset = ()=> { credited=false; acc=0; lastT=0; setBar(0); ui('Прогресс…'); };
 
-  function creditOnce(){
-    if (creditPromise) return creditPromise; // уже в работе — повтор не нужен
-    creditPromise = (async () => {
+    async function refreshState(){
       try {
-        credited = true;
+        const info = await LC.getLevelInfo(); if (!info) throw new Error('no level');
+        const left = Number(info.views_left_today ?? 0);
+        const isActive = (info.level_key && info.level_key !== 'guest') ||
+                         Number(info.reward_percent_bp || 0) > 0;
+        allowed = isActive && left > 0;
+        startBtn.disabled = !allowed;
+        if (!isActive) ui('Аккаунт не активен. Пополните баланс/рефералов.');
+        else if (left <= 0) ui('Лимит на сегодня исчерпан.');
+        else ui(`Доступно просмотров сегодня: ${left}`);
+      } catch {
         startBtn.disabled = true;
-        const vidId = (video.currentSrc || '').split('/').pop() || 'video';
-        const row = await LC.creditView(vidId, Math.round(acc));
-
-        if (row) {
-          const cents = Number(row.reward_per_view_cents ?? row.reward_cents ?? 0);
-          const usdt = (cents / 100).toFixed(2);
-          ui(`Зачислено +${usdt} USDT`);
-          setBar(100);
-
-          // Обновляем «остаток просмотров» на странице, если есть такой элемент
-          const el = document.querySelector('[data-views-left]');
-          if (el && typeof row.views_left === 'number') el.textContent = String(row.views_left);
-
-          // При наличии хелпера — обновить хедер/баланс без перезагрузки
-          if (typeof LC.refreshHeader === 'function') LC.refreshHeader();
-        }
-      } catch (e) {
-        console.warn('[LC] creditView muted:', e); // глушим системные сплывашки
-      } finally {
-        setTimeout(() => { startBtn.disabled = false; creditPromise = null; }, 800);
+        ui('Не удалось получить лимит.');
       }
-      return true;
-    })();
-    return creditPromise;
-  }
+    }
 
-  // Считаем секунды и триггерим кредит ровно один раз
-  video.addEventListener('timeupdate', () => {
-    const t = Math.max(0, video.currentTime || 0);
-    if (t > lastT) { acc += (t - lastT); lastT = t; setBar(Math.round((acc / LC_MIN_SECONDS) * 100)); }
-    else { lastT = t; }
-    if (!credited && acc >= LC_MIN_SECONDS) creditOnce();
-  }, { passive: true });
+    function creditOnce(){
+      if (creditPromise) return creditPromise; // уже в работе — повтор не нужен
+      creditPromise = (async () => {
+        try {
+          credited = true;
+          startBtn.disabled = true;
+          const vidId = (video.currentSrc || '').split('/').pop() || 'video';
+          const row = await LC.creditView(vidId, Math.round(acc));
 
-  video.addEventListener('ended', () => {
-    if (!credited && acc >= LC_MIN_SECONDS) creditOnce();
-  }, { passive: true });
+          if (row) {
+            const cents = Number(row.reward_per_view_cents ?? row.reward_cents ?? 0);
+            const usdt = (cents / 100).toFixed(2);
+            ui(`Зачислено +${usdt} USDT`);
+            setBar(100);
 
-  startBtn.addEventListener('click', async () => {
-    await refreshState();
-    if (!allowed) return;
-    reset();
-    video.src = pickVideo();
-    video.currentTime = 0;
-    video.muted = true;
-    video.play().catch(()=>{});
-  });
+            // Обновляем «остаток просмотров» на странице, если есть такой элемент
+            const el = document.querySelector('[data-views-left]');
+            if (el && typeof row.views_left === 'number') el.textContent = String(row.views_left);
 
-  refreshState();
-};
+            // При наличии хелпера — обновить хедер/баланс без перезагрузки
+            if (typeof LC.refreshHeader === 'function') LC.refreshHeader();
+          }
+        } catch (e) {
+          console.warn('[LC] creditView muted:', e); // глушим системные сплывашки
+        } finally {
+          setTimeout(() => { startBtn.disabled = false; creditPromise = null; }, 800);
+        }
+        return true;
+      })();
+      return creditPromise;
+    }
 
+    // Считаем секунды и триггерим кредит ровно один раз
+    video.addEventListener('timeupdate', () => {
+      const t = Math.max(0, video.currentTime || 0);
+      if (t > lastT) { acc += (t - lastT); lastT = t; setBar(Math.round((acc / LC_MIN_SECONDS) * 100)); }
+      else { lastT = t; }
+      if (!credited && acc >= LC_MIN_SECONDS) creditOnce();
+    }, { passive: true });
+
+    video.addEventListener('ended', () => {
+      if (!credited && acc >= LC_MIN_SECONDS) creditOnce();
+    }, { passive: true });
+
+    startBtn.addEventListener('click', async () => {
+      await refreshState();
+      if (!allowed) return;
+      reset();
+      video.src = pickVideo();
+      video.currentTime = 0;
+      video.muted = true;
+      video.play().catch(()=>{});
+    });
+
+    refreshState();
+  };
 
   // ===== Карточки дашборда + Реф-панель ======================================
   LC.refreshDashboardCards = async function() {
@@ -785,7 +769,10 @@ LC.initVideoWatch = function () {
   document.addEventListener('DOMContentLoaded', async ()=>{
     // Чтобы «0» не мигал до загрузки — заменим на тире, потом обновим точным значением
     const balEl = document.querySelector('[data-balance]');
-    if (balEl && /^\$?\s*0([.,]0+)?$/.test(balEl.textContent.trim())) balEl.textContent = '—';
+    if (balEl) {
+      const t = (balEl.textContent || '').trim();
+      if (!t || /^\$?\s*0([.,]0+)?$/.test(t)) balEl.textContent = '—';
+    }
 
     LC.initVideoWatch();
 
