@@ -1,11 +1,5 @@
 ;(function(){
-  
-  // === Singleton guard (prevents double init / double subscriptions) ===
-  if (window.__LC_SINGLETON__) {
-    try { console.warn('[LC] app_supabase already initialized:', window.__LC_SINGLETON__); } catch(_){}
-    return;
-  }
-  window.__LC_SINGLETON__ = 'app_supabase@2025-09-20';
+  // (singleton guard moved to main IIFE)
 try{
     if (!window.sb || typeof window.sb.from !== 'function') {
       if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
@@ -19,9 +13,14 @@ try{
   }catch(_){}
 })();
 // app_supabase.full.js — единый файл для дашборда
-// Требует: window.SUPABASE_URL / window.SUPABASE_ANON_KEY, supabase-js v2
-;(function () {
-  // 0) Конфиг + клиент
+// Требует: window.SUPABASE_URL / window.SUPABASE_ANON_KEY, supabase-js v2\1
+  // === Singleton guard (main app) ===
+  if (window.__LC_SINGLETON__) {
+    try { console.warn('[LC] main app already initialized:', window.__LC_SINGLETON__); } catch(_){}
+    return;
+  }
+  window.__LC_SINGLETON__ = 'app_supabase@2025-09-20';
+// 0) Конфиг + клиент
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
     console.error('[LC] Supabase config missing.');
     return;
@@ -267,8 +266,25 @@ try {
   input.value = url.toString();
   wrap.style.display = 'block';
   const btn = document.querySelector('#btnCopyRef');
-  if (btn) btn.addEventListener('click', async ()=>{
-    try { await navigator.clipboard.writeText(input.value); btn.textContent='Скопировано'; setTimeout(()=>btn.textContent='Скопировать', 1200); } catch(_){}
+  if (btn) {
+    try { if (!btn.type) btn.type = 'button'; } catch(_) {}
+    btn.addEventListener('click', async (e) => {
+      try { if (e && e.preventDefault) e.preventDefault(); } catch(_) {}
+      let copied = false;
+      try { await navigator.clipboard.writeText(input.value); copied = true; } catch(_) {}
+      if (!copied) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = input.value; ta.style.position='fixed'; ta.style.opacity='0';
+          document.body.appendChild(ta); ta.focus(); ta.select();
+          try { document.execCommand('copy'); copied = true; } catch(_) {}
+          document.body.removeChild(ta);
+        } catch(_) {}
+      }
+      if (copied) { try { btn.textContent='Скопировано'; setTimeout(()=>btn.textContent='Скопировать',1200); } catch(_) {} }
+    });
+  }
+try { await navigator.clipboard.writeText(input.value); btn.textContent='Скопировано'; setTimeout(()=>btn.textContent='Скопировать', 1200); } catch(_){}
   });
 } catch(e) { console.error('[LC] mountReferral', e?.message||e); }
 
