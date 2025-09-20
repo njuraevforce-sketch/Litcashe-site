@@ -1,5 +1,12 @@
 ;(function(){
-  try{
+  
+  // === Singleton guard (prevents double init / double subscriptions) ===
+  if (window.__LC_SINGLETON__) {
+    try { console.warn('[LC] app_supabase already initialized:', window.__LC_SINGLETON__); } catch(_){}
+    return;
+  }
+  window.__LC_SINGLETON__ = 'app_supabase@2025-09-20';
+try{
     if (!window.sb || typeof window.sb.from !== 'function') {
       if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
         window.sb = window.supabase.createClient(
