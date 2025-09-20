@@ -733,7 +733,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data, error } = await sb.rpc('get_level_info_v2');
       if (error) { console.error(error); return; }
       const info = Array.isArray(data) ? data[0] : data;
-      window.LC = window.LC || {}; window.LC._levelInfo = info;
+      window.LC._levelInfo = info;
+
       if (!info) return;
 
       // Хелпер для USDT-формата: поддержка "в центах" и "в целых"
@@ -828,15 +829,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const balEl = document.querySelector('[data-balance]');
     if (balEl) balEl.textContent = toUsdText(cents);
   };
-
-  // первичная подстановка
-  try {
-    const cached = (window.LC && window.LC._levelInfo) ? window.LC._levelInfo : null;
-      let info = cached;
-      if (!info) { const { data } = await sb.rpc('get_level_info_v2'); info = Array.isArray(data) ? data[0] : (data || {}); try{ window.LC = window.LC || {}; window.LC._levelInfo = info; }catch(_){ } }
-    const cents = (data?.balance_cents ?? data?.balance_usd_cents ?? (data?.balance_usd != null ? data.balance_usd*100 : data?.balance) ?? 0);
-    setBalance(cents);
-  } catch (e) { console.error(e); }
 
   // realtime подписка на wallets по user_id
   try {
@@ -1277,17 +1269,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     try{ if (on && video) video.pause(); }catch(_){}
   };
 
-  async function getLeftToday() {
+  async function getLeftToday(){
     try {
-      const cached = (window.LC && window.LC._levelInfo) ? window.LC._levelInfo : null;
-      let info = cached;
-      if (!info) { const { data } = await sb.rpc('get_level_info_v2'); info = Array.isArray(data) ? data[0] : (data || {}); try{ window.LC = window.LC || {}; window.LC._levelInfo = info; }catch(_){ } }
-      /* info taken from cache or RPC above */
-      const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
-      if (progressText) progressText.textContent = labelLeft(left);
-      // removed duplicate refresh
-      return left;
-    } catch (e) { console.error(e); return 0; }
+      const info = (window.LC && window.LC._levelInfo) ? window.LC._levelInfo : null;
+      if (info) {
+        const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+        if (progressText) progressText.textContent = labelLeft(left);
+        return left;
+      } else {
+        // one-time fallback if cache not ready yet
+        const { data } = await sb.rpc('get_level_info_v2');
+        const i2 = Array.isArray(data) ? data[0] : (data || {});
+        const left = Number(i2.views_left_today ?? ((i2.daily_limit ?? 5) - (i2.views_used_today ?? 0)) ?? 0);
+        if (progressText) progressText.textContent = labelLeft(left);
+        // cache it for future
+        if (!window.LC) window.LC = {};
+        window.LC._levelInfo = i2;
+        return left;
+      }
+    } catch(e) { console.error(e); return 0; }
   }
 
   async function ensureSession() {
@@ -1464,29 +1464,70 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!code) code = shortCodeFromUUID(user.id);
         const link = (location.origin||'') + '/register_single.html?ref=' + code;
         const refInput = document.getElementById('refLink');
-if(refInput && !refInput.value) refInput.value = link;
-const copyBtn = document.getElementById('copyRef');
-if(copyBtn && !copyBtn.dataset.lcBind){
-  copyBtn.dataset.lcBind = '1';
-  try{ if(!copyBtn.type) copyBtn.type='button'; }catch(_){ }
-  copyBtn.addEventListener('click', async (e)=>{
-    try{ e && e.preventDefault && e.preventDefault(); }catch(_){ }
-    const text = (refInput && refInput.value) ? refInput.value : '';
-    let ok = false;
-    try{ await navigator.clipboard.writeText(text); ok = true; }catch(_){ }
-    if(!ok){
-      try{ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
-           document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand('copy'); ok=true; }catch(_){ }
-           document.body.removeChild(ta); }catch(_){ }
-    }
-    if(ok){ if(window.LC_TOAST) LC_TOAST.ok('Ссылка скопирована'); try{ const prev=copyBtn.textContent; copyBtn.textContent='Скопировано'; setTimeout(()=>copyBtn.textContent=prev, 1200);}catch(_){ } }
-    else { if(window.LC_TOAST && LC_TOAST.err) LC_TOAST.err('Не удалось скопировать'); }
-  });
-}
+        if(refInput && !refInput.value) refInput.value = link;
+        const copyBtn = document.getElementById('copyRef');
+        if(copyBtn){
+          copyBtn.addEventListener('click', async ()=>{
+            try{ await navigator.clipboard.writeText(refInput.value); }catch(_){}
+            if(window.LC_TOAST) LC_TOAST.ok('Ссылка скопирована');
+          });
+        }
       }
     }catch(e){ console.warn('ref link patch error', e); }
 
-  ;
+  document.addEventListener('DOMContentLoaded', async () => {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb) return;
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String((val ?? 0) | 0);
+    };
+
+    // ---- 1) основной путь: RPC (обходит RLS) ----
+    try {
+      if (typeof sb.rpc === 'function') {
+        const { data, error } = await sb.rpc('get_referral_counts_active', { p_min_cents: 2900 });
+        if (!error && data) {
+          const row = Array.isArray(data) ? data[0] : data;
+          set('gen1Count', row?.gen1 ?? 0);
+          set('gen2Count', row?.gen2 ?? 0);
+          set('gen3Count', row?.gen3 ?? 0);
+          return; // успех, дальше не идём
+        }
+        console.warn('get_referral_counts_active (active>=29) RPC error:', error);
+      }
+    } catch (e) {
+      console.warn('get_referral_counts_active (active>=29) RPC exception:', e);
+    }
+
+    // ---- 2) запасной путь: читаем вью напрямую (может упереться в RLS) ----
+    try {
+      if (!sb.auth?.getUser) return;
+      const { data: auth } = await sb.auth.getUser();
+      const user = auth?.user;
+      if (!user?.id) return;
+
+      let q = sb.from('v_referral_counts')
+                .select('gen1, gen2, gen3')
+                .eq('user_id', user.id);
+
+      let resp;
+      if (typeof q.maybeSingle === 'function') resp = await q.maybeSingle();
+      else resp = await q.single();
+
+      if (resp?.data) {
+        set('gen1Count', resp.data.gen1 ?? resp.data.g1 ?? 0);
+        set('gen2Count', resp.data.gen2 ?? resp.data.g2 ?? 0);
+        set('gen3Count', resp.data.gen3 ?? resp.data.g3 ?? 0);
+      } else {
+        console.warn('v_referral_counts fallback error:', resp?.error);
+      }
+    } catch (e) {
+      console.warn('v_referral_counts fallback exception:', e);
+    }
+  });
+})();
 
 <!-- ==== REF COUNTS (1/2/3 generations) — DB-first (RPC), fallback to view ==== -->
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1673,34 +1714,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-<!-- LC dedupe/debounce (fixed) -->
+<!-- copy & dedupe: minimal, no text errors -->
 <script>
 (function(){
   try{
     const W = window; W.LC = W.LC || {};
+    // Debounce for LC.loadLevelInfo
     function wrap(fn){
-      if (!fn || fn.__lc_wrapped__) return fn;
-      let busy = false, last = 0; const GAP = 1200;
-      const w = async function(){
-        const now = Date.now();
-        if (busy || (now - last) < GAP) return;
-        busy = true;
-        try { await fn.apply(this, arguments); } finally { busy = false; last = Date.now(); }
-      };
-      w.__lc_wrapped__ = true;
-      return w;
+      if(!fn || fn.__lc_wrapped__) return fn;
+      let busy=false,last=0; const GAP=1200;
+      const f = async function(){ const now=Date.now(); if(busy || (now-last)<GAP) return; busy=true; try{ await fn.apply(this, arguments);} finally{ busy=false; last=Date.now(); } };
+      f.__lc_wrapped__ = true; return f;
     }
-    if (typeof W.LC.loadLevelInfo === 'function'){
-      W.LC.loadLevelInfo = wrap(W.LC.loadLevelInfo);
-    } else {
-      Object.defineProperty(W.LC, 'loadLevelInfo', {
-        configurable: true,
-        enumerable: true,
+    if (typeof W.LC.loadLevelInfo === 'function') { W.LC.loadLevelInfo = wrap(W.LC.loadLevelInfo); }
+    else {
+      Object.defineProperty(W.LC,'loadLevelInfo',{
+        configurable:true, enumerable:true,
         set(v){ this.__loadLevelInfo = wrap(v); },
         get(){ return this.__loadLevelInfo; }
       });
     }
   }catch(_){}
+
+  function bindCopy(){
+    const input = document.getElementById('refLink');
+    const btn = document.getElementById('btnCopyRef') || document.getElementById('copyRef');
+    if(!btn || !input || btn.dataset.lcBind) return;
+    btn.dataset.lcBind = '1';
+    if(!btn.type) try{ btn.type='button'; }catch(_){}
+    btn.addEventListener('click', async function(e){
+      try{ e && e.preventDefault && e.preventDefault(); }catch(_){}
+      const text = input.value || '';
+      let ok = false;
+      try{ await navigator.clipboard.writeText(text); ok = true; }catch(_){}
+      if(!ok){
+        try{
+          const ta = document.createElement('textarea');
+          ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+          document.body.appendChild(ta); ta.focus(); ta.select();
+          try{ document.execCommand('copy'); ok = true; }catch(_){}
+          document.body.removeChild(ta);
+        }catch(_){}
+      }
+      if(ok){
+        const prev = btn.textContent;
+        try{ btn.textContent = 'Скопировано'; setTimeout(()=>{ btn.textContent = prev; }, 1200); }catch(_){}
+        if (window.LC_TOAST && LC_TOAST.ok) LC_TOAST.ok('Ссылка скопирована');
+      } else {
+        if (window.LC_TOAST && LC_TOAST.err) LC_TOAST.err('Не удалось скопировать');
+      }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindCopy, { once:true });
+  else bindCopy();
 })();
 </script>
 
