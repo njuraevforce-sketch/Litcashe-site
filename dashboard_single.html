@@ -1280,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const info = Array.isArray(data) ? data[0] : (data || {});
       const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
       if (progressText) progressText.textContent = labelLeft(left);
-      // removed duplicate call to loadLevelInfo()
+      if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
       return left;
     } catch (e) { console.error(e); return 0; }
   }
@@ -1424,6 +1424,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindVideo();
   await checkAccessAndInit();
 });
+
+<!-- Patch: referral link + 3-gen counters, safe & idempotent -->
+(function(){
+  if (window.__lcRefPatchApplied) return; window.__lcRefPatchApplied = true;
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
+  const fmtUSD = (n)=>'$'+(+n||0).toFixed(2);
+  function shortCodeFromUUID(id){
+    try{
+      // Make a short 8-char code from UUID (fallback)
+      const hex = String(id||'').replace(/-/g,'').slice(-8);
+      return parseInt(hex,16).toString(36).toUpperCase().padStart(6,'0').slice(0,8);
+    }catch(_){ return 'REF'; }
+  }
+  ready(async function(){
+    const sb = window.sb || window._supabase || window.supabase;
+    if(!sb) return;
+    // 1) Fill referral link
+    try{
+      const { data: { user } } = await sb.auth.getUser();
+      if(user){
+        let code = null;
+        try{
+          // try profiles_u.ref_code or profiles.ref_code
+          let q = await sb.from('profiles_u').select('ref_code').eq('user_id', user.id).maybeSingle();
+          if(q && q.data && q.data.ref_code) code = q.data.ref_code;
+        }catch(_){}
+        if(!code){
+          try{
+            let q2 = await sb.from('profiles').select('ref_code').eq('user_id', user.id).maybeSingle();
+            if(q2 && q2.data && q2.data.ref_code) code = q2.data.ref_code;
+          }catch(_){}
+        }
+        if(!code) code = shortCodeFromUUID(user.id);
+        const link = (location.origin||'') + '/register_single.html?ref=' + code;
+        const refInput = document.getElementById('refLink');
+        if(refInput && !refInput.value) refInput.value = link;
+        const copyBtn = document.getElementById('copyRef');
+        if(copyBtn){
+          copyBtn.addEventListener('click', async ()=>{
+            try{ await navigator.clipboard.writeText(refInput.value); }catch(_){}
+            if(window.LC_TOAST) LC_TOAST.ok('Ссылка скопирована');
+          });
+        }
+      }
+    }catch(e){ console.warn('ref link patch error', e); }
 
   document.addEventListener('DOMContentLoaded', async () => {
     const sb = window.sb || window._supabase || window.supabase;
@@ -1659,6 +1704,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(_) {}
 })();
 <script>
+
+
+<!-- === LC precise fixes (keep app_supabase.js) === -->
+<script>
+(function(){
+  // Debounce for LC.loadLevelInfo to avoid rapid duplicate calls
+  try{
+    const WIN = window;
+    if(!WIN.LC) WIN.LC = {};
+    function wrap(fn){
+      if (!fn || fn.__lc_wrapped__) return fn;
+      let busy=false, last=0; const GAP=1200;
+      const w=async function(){ const n=Date.now(); if(busy || (n-last)<GAP) return; busy=true; try{ await fn.apply(this, arguments);}finally{ busy=false; last=Date.now(); } };
+      w.__lc_wrapped__ = true; return w;
+    }
+    // If already present, wrap now; if defined later, wrap then
+    if (typeof WIN.LC.loadLevelInfo === 'function') {
+      WIN.LC.loadLevelInfo = wrap(WIN.LC.loadLevelInfo);
+    } else {
+      Object.defineProperty(WIN.LC, 'loadLevelInfo', {
+        configurable:true, enumerable:true,
+        set(v){ this.__loadLevelInfo = wrap(v); },
+        get(){ return this.__loadLevelInfo; }
+      });
+    }
+  }catch(_){}
+
+  // Safety copy binding (in case the app script didn't bind)
+  function bindCopyOnce(){
+    try{
+      const btn = document.getElementById('btnCopyRef');
+      const input = document.getElementById('refLink');
+      if (!btn || !input || btn.dataset.lcBind) return;
+      btn.dataset.lcBind='1';
+      btn.addEventListener('click', async function(e){
+        try{ e && e.preventDefault && e.preventDefault(); }catch(_){}
+        const text = input.value || ''; let ok=false;
+        try{ await navigator.clipboard.writeText(text); ok=true;}catch(_){}
+        if(!ok){
+          try{ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+               document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand('copy'); ok=true;}catch(_){}
+               document.body.removeChild(ta);}catch(_){}
+        }
+        if(ok){ try{ const prev=btn.textContent; btn.textContent='Скопировано'; setTimeout(()=>btn.textContent=prev, 1200);}catch(_){} }
+      });
+    }catch(_){}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindCopyOnce, {once:true});
+  else bindCopyOnce();
+})();
+</script>
 
 </body>
 </html>
