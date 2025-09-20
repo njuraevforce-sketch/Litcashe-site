@@ -730,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) return;
 
-      const { data, error } = await sb.rpc('get_level_info');
+      const { data, error } = await sb.rpc('get_level_info_v2');
       if (error) { console.error(error); return; }
       const info = Array.isArray(data) ? data[0] : data;
       if (!info) return;
@@ -827,13 +827,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const balEl = document.querySelector('[data-balance]');
     if (balEl) balEl.textContent = toUsdText(cents);
   };
-
-  // первичная подстановка
-  try {
-    const { data } = await sb.rpc('get_level_info');
-    const cents = (data?.balance_cents ?? data?.balance_usd_cents ?? (data?.balance_usd != null ? data.balance_usd*100 : data?.balance) ?? 0);
-    setBalance(cents);
-  } catch (e) { console.error(e); }
 
   // realtime подписка на wallets по user_id
   try {
@@ -1280,7 +1273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const info = Array.isArray(data) ? data[0] : (data || {});
       const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
       if (progressText) progressText.textContent = labelLeft(left);
-      if (window.LC?.loadLevelInfo) window.LC.loadLevelInfo();
+      // removed duplicate refresh call to avoid extra DB load
       return left;
     } catch (e) { console.error(e); return 0; }
   }
@@ -1704,6 +1697,64 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(_) {}
 })();
 <script>
+
+
+<!-- precise: debounce LC.loadLevelInfo and bind copy button -->
+<script>
+(function(){
+  try{
+    const WIN = window; WIN.LC = WIN.LC || {};
+    function wrapDebounce(fn){
+      if (!fn || fn.__lc_wrapped__) return fn;
+      let busy=false, last=0; const GAP=1200;
+      const w=async function(){ const n=Date.now(); if(busy || (n-last)<GAP) return; busy=true; try{ await fn.apply(this, arguments);}finally{ busy=false; last=Date.now(); } };
+      w.__lc_wrapped__ = true; return w;
+    }
+    if (typeof WIN.LC.loadLevelInfo === 'function'){
+      WIN.LC.loadLevelInfo = wrapDebounce(WIN.LC.loadLevelInfo);
+    } else {
+      Object.defineProperty(WIN.LC, 'loadLevelInfo', {
+        configurable:true, enumerable:true,
+        set(v){ this.__loadLevelInfo = wrapDebounce(v); },
+        get(){ return this.__loadLevelInfo; }
+      });
+    }
+  }catch(_){}
+
+  // Robust copy: supports either #btnCopyRef or legacy #copyRef
+  function bindCopy(){
+    try{
+      const input = document.getElementById('refLink');
+      const btn = document.getElementById('btnCopyRef') || document.getElementById('copyRef');
+      if (!btn || !input || btn.dataset.lcBind) return;
+      btn.dataset.lcBind = '1';
+      btn.addEventListener('click', async function(e){
+        try{ e && e.preventDefault && e.preventDefault(); }catch(_){}
+        const text = input.value || '';
+        let ok=false;
+        try{ await navigator.clipboard.writeText(text); ok=true; }catch(_){}
+        if(!ok){
+          try{
+            const ta=document.createElement('textarea');
+            ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            try{ document.execCommand('copy'); ok=true; }catch(_){}
+            document.body.removeChild(ta);
+          }catch(_){}
+        }
+        if(ok){
+          try{ const prev=btn.textContent; btn.textContent='Скопировано'; setTimeout(()=>btn.textContent=prev, 1200);}catch(_){}
+          if (window.LC_TOAST && LC_TOAST.ok) LC_TOAST.ok('Ссылка скопирована');
+        } else {
+          if (window.LC_TOAST && LC_TOAST.err) LC_TOAST.err('Не удалось скопировать');
+        }
+      });
+    }catch(_){}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindCopy, {once:true});
+  else bindCopy();
+})();
+</script>
 
 </body>
 </html>
