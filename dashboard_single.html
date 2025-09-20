@@ -353,7 +353,7 @@ header .container, .container { padding-left:12px; padding-right:12px; }
 @media (max-width: 900px){
   .grid-3, .grid-2, .dashboard-grid, .cards, .cards-grid { grid-template-columns:1fr !important; }
 }
-.card .n, [data-balance], [data-views-left], #gen1Cell, #gen2Cell, #gen3Cell {
+.card .n, [data-balance], [data-views], #gen1Cell, #gen2Cell, #gen3Cell {
   font-size: clamp(18px, 5.2vw, 28px) !important;
   line-height:1.15;
 }
@@ -425,7 +425,7 @@ header { overflow: visible; }
 <section class="grid grid-3">
 <div class="card" id="notActiveWarn" style="display:none;background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.25)"><strong data-i18n="not_active_warning">Аккаунт не активен...</strong></div>
 <div class="card"><div class="muted" data-i18n="balance">Баланс</div><div class="n" data-balance="" style="font-size:28px;font-weight:800">$0.00</div></div>
-<div class="card"><div class="muted" data-i18n="views">Просмотры</div><div class="n" data-views-left="" style="font-size:28px;font-weight:800">0</div></div>
+<div class="card"><div class="muted" data-i18n="views">Просмотры</div><div class="n" data-views="" style="font-size:28px;font-weight:800">0</div></div>
 <div class="card"><div class="muted">Уровень</div><div class="n" style="font-size:20px;font-weight:700"><span data-level data-level-name="">—</span> <span class="badge" id="perViewBadge">+$0.00 за просмотр</span></div></div>
 </section>
 <section class="grid grid-3">
@@ -466,7 +466,7 @@ header { overflow: visible; }
 <h2>Реферальная панель</h2>
 <div class="flex" style="gap:10px;flex-wrap:wrap">
 <input class="input" id="refLink" readonly="" style="flex:1;min-width:240px;height:44px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text)" value=""/>
-<button class="btn" id="btnCopyRef">Скопировать</button>
+<button class="btn" id="copyRef">Скопировать</button>
 <!-- removed daily views limit line -->
 </div>
 <div class="grid grid-3" style="margin-top:12px">
@@ -755,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // === Уровень ===
       const lvlName = info.level_name || info.lvl_name || info.level_key || '—';
-      document.querySelectorAll('[data-level data-level-name],[data-level-name]').forEach(n => n.textContent = lvlName);
+      document.querySelectorAll('[data-level],[data-level-name]').forEach(n => n.textContent = lvlName);
 
       // === Процент (bps → %) ===
       const bp = Number(info.reward_percent_bp ?? info.pct_bp ?? info.percent_bp ?? 0);
@@ -776,7 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // === Осталось просмотров сегодня ===
       const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
-      document.querySelectorAll('[data-views-left-left]').forEach(n => n.textContent = String(Math.max(left, 0)));
+      document.querySelectorAll('[data-views-left]').forEach(n => n.textContent = String(Math.max(left, 0)));
 
       // === База уровня / Капитал (расч.) ===
       const baseCents = Number(info.base_amount_cents ?? info.base_cap_cents ?? 0);
@@ -786,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (capEl) capEl.textContent = toUsdText(baseCents);
 
       // === (Опционально) Всего просмотров ===
-      const viewsEl = document.querySelector('[data-views-left]');
+      const viewsEl = document.querySelector('[data-views]');
       if (viewsEl) {
         const used = Number(info.views_used_today ?? ((info.daily_limit ?? 5) - (info.views_left_today ?? 0)) ?? info.views_total ?? info.views_today ?? info.views ?? 0);
         viewsEl.textContent = used;
@@ -1276,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function getLeftToday() {
     try {
-      const { data } = await sb.rpc('get_level_info');
+      const { data } = await sb.rpc('get_level_info_v2');
       const info = Array.isArray(data) ? data[0] : (data || {});
       const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
       if (progressText) progressText.textContent = labelLeft(left);
@@ -1323,7 +1323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     el.textContent = formatMoney(cur + Number(delta||0));
   }
   function bumpViews(n=1){
-    const el = document.querySelector('[data-views-left]');
+    const el = document.querySelector('[data-views]');
     if (!el) return;
     const cur = parseInt(el.textContent||'0',10) || 0;
     el.textContent = String(cur + n);
@@ -1704,57 +1704,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(_) {}
 })();
 <script>
-
-
-<!-- === LC precise fixes (keep app_supabase.js) === -->
-<script>
-(function(){
-  // Debounce for LC.loadLevelInfo to avoid rapid duplicate calls
-  try{
-    const WIN = window;
-    if(!WIN.LC) WIN.LC = {};
-    function wrap(fn){
-      if (!fn || fn.__lc_wrapped__) return fn;
-      let busy=false, last=0; const GAP=1200;
-      const w=async function(){ const n=Date.now(); if(busy || (n-last)<GAP) return; busy=true; try{ await fn.apply(this, arguments);}finally{ busy=false; last=Date.now(); } };
-      w.__lc_wrapped__ = true; return w;
-    }
-    // If already present, wrap now; if defined later, wrap then
-    if (typeof WIN.LC.loadLevelInfo === 'function') {
-      WIN.LC.loadLevelInfo = wrap(WIN.LC.loadLevelInfo);
-    } else {
-      Object.defineProperty(WIN.LC, 'loadLevelInfo', {
-        configurable:true, enumerable:true,
-        set(v){ this.__loadLevelInfo = wrap(v); },
-        get(){ return this.__loadLevelInfo; }
-      });
-    }
-  }catch(_){}
-
-  // Safety copy binding (in case the app script didn't bind)
-  function bindCopyOnce(){
-    try{
-      const btn = document.getElementById('btnCopyRef');
-      const input = document.getElementById('refLink');
-      if (!btn || !input || btn.dataset.lcBind) return;
-      btn.dataset.lcBind='1';
-      btn.addEventListener('click', async function(e){
-        try{ e && e.preventDefault && e.preventDefault(); }catch(_){}
-        const text = input.value || ''; let ok=false;
-        try{ await navigator.clipboard.writeText(text); ok=true;}catch(_){}
-        if(!ok){
-          try{ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
-               document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand('copy'); ok=true;}catch(_){}
-               document.body.removeChild(ta);}catch(_){}
-        }
-        if(ok){ try{ const prev=btn.textContent; btn.textContent='Скопировано'; setTimeout(()=>btn.textContent=prev, 1200);}catch(_){} }
-      });
-    }catch(_){}
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindCopyOnce, {once:true});
-  else bindCopyOnce();
-})();
-</script>
 
 </body>
 </html>
