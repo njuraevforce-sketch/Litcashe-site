@@ -809,15 +809,6 @@
       await LC.creditView(vid, 35);
     });
 
-    const wForm = document.getElementById('withdrawForm');
-    if (wForm) wForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const amount  = parseFloat($('#amount')?.value || '0');
-      const method  = $('#method')?.value || 'TRC20';
-      const address = $('#address')?.value || '';
-      await LC.requestWithdrawal(Math.round(amount*100), method, address);
-    });
-
     const dForm = document.getElementById('depositForm');
     if (dForm) dForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
