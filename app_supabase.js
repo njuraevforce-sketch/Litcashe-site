@@ -197,8 +197,7 @@ LC.bindWithdrawControls = function () {
           setTimeout(()=>{ try{ btn.disabled = false; btn.textContent = 'Отправить заявку'; }catch(_){} }, 1200);
         }
       });
-    }
-  };
+  
 
   // Рендер истории заявок пользователя (без экшн-кнопок, чтобы не ломать вёрстку)
   LC.loadWithdrawalsList = async function () {
