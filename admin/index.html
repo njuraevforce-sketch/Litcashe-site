@@ -89,6 +89,7 @@
     <button class="tab" data-tab="users">Пользователи</button>
     <button class="tab" data-tab="refs">Рефералы</button>
     <button class="tab" data-tab="rewards">Начисления</button>
+    <button class="tab" data-tab="deposits">Пополнения</button>
     <button class="tab" data-tab="about">Справка</button>
   </div>
 
@@ -815,6 +816,44 @@
   })();
 
 })();
+
+  // ===== Deposits =====
+  let dRowsCache=[];
+  async function loadDeposits(){
+    if(!isAdmin) return;
+    const tbody = $('#dTable tbody'); if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="muted small">Загрузка…</td></tr>';
+    const r = await sb.from('v_admin_deposits')
+      .select('id, created_at, user_id, user_email, user_phone, amount_cents, currency, network, txid, status, note')
+      .order('created_at', {ascending:false}).limit(300);
+    if(r.error){ tbody.innerHTML = '<tr><td colspan="7" class="err">'+(r.error.message||'error')+'</td></tr>'; return; }
+    dRowsCache = r.data||[];
+    const s = ($('#dSearch')?.value||'').toLowerCase().trim();
+    let rows = dRowsCache;
+    if(s){
+      rows = rows.filter(x => (x.user_email||'').toLowerCase().includes(s) || (x.user_phone||'').toLowerCase().includes(s) || (x.txid||'').toLowerCase().includes(s) || (x.note||'').toLowerCase().includes(s) );
+    }
+    const fmtAmt = v => (v/100).toFixed(2);
+    const renderUser = x => (x.user_email||x.user_phone||x.user_id||'—');
+    const renderTx = x => x.txid ? ('<a href="https://tronscan.org/#/transaction/'+x.txid+'" target="_blank">'+x.txid.slice(0,10)+'…</a>') : '—';
+    tbody.innerHTML = rows.map(x => `
+      <tr>
+        <td>${new Date(x.created_at).toLocaleString()}</td>
+        <td>${renderUser(x)}</td>
+        <td>${(x.network||'')+' '+(x.currency||'')}</td>
+        <td>${fmtAmt(x.amount_cents)}</td>
+        <td>${renderTx(x)}</td>
+        <td>${x.status}</td>
+        <td>${x.note||''}</td>
+      </tr>`).join('');
+    $('#dCount').textContent = String(rows.length);
+    const sum = rows.reduce((a,x)=>a+(x.amount_cents||0),0);
+    $('#dSum').textContent = fmtAmt(sum);
+  }
+  $('#dRefresh')?.addEventListener('click', loadDeposits);
+  $('#dExport')?.addEventListener('click', ()=> exportCSV('deposits.csv', dRowsCache||[]));
+  $('#dSearch')?.addEventListener('input', ()=> loadDeposits());
+  try{ sb.channel('adm-dep').on('postgres_changes', {event:'*', schema:'public', table:'deposits'}, ()=>{ if(activePage==='deposits'){ loadDeposits(); }}).subscribe(); }catch(_){}
 </script>
 </body>
 </html>
