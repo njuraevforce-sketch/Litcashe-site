@@ -215,5 +215,45 @@
 </script>
 
 <script defer src="assets/js/guard.js"></script>
+
+<script>
+// === Wire up Withdraw submit to LC.requestWithdrawal (CORE-aligned) ===
+(function(){
+  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+  ready(function(){
+    try{
+      var btn = document.getElementById('withSubmit');
+      var amt = document.getElementById('withAmount');
+      var wal = document.getElementById('wallet');
+      var sb  = window.sb || window.supabaseClient || window._supabase || window.supabase;
+      if(!btn || !amt || !wal || !sb) return;
+
+      function toCents(x){ var n = parseFloat(String(x).replace(',', '.')); if(!isFinite(n) || n<=0) return 0; return Math.round(n*100); }
+
+      btn.addEventListener('click', async function(){
+        btn.disabled = true;
+        try{
+          var cents = toCents(amt.value);
+          var address = (wal.value||'').trim();
+          if(!cents){ alert('Введите сумму вывода'); return; }
+          if(!address){ alert('Укажите TRC20-кошелёк'); return; }
+          if (!window.LC || typeof window.LC.requestWithdrawal !== 'function'){
+            alert('Функция вывода не инициализирована'); return;
+          }
+          var res = await window.LC.requestWithdrawal(cents, 'TRC20', address);
+          if(res){ try{ alert('Заявка создана'); }catch(_){}
+            // refresh history + balance (helpers defined on this page)
+            try{ if (typeof refreshBalance==='function'){ const { data: ud } = await sb.auth.getUser(); await refreshBalance(sb, ud?.user?.id); } }catch(_){}
+            try{ if (typeof debouncedLoad==='function'){ const { data: ud } = await sb.auth.getUser(); await debouncedLoad(sb, ud?.user?.id); } }catch(_){}
+            // clear inputs
+            amt.value = ''; wal.value = '';
+          }
+        }catch(e){ alert(e.message||e); }
+        finally{ btn.disabled = false; }
+      });
+    }catch(e){ console.warn('[withdraw-submit-wireup]', e); }
+  });
+})();
+</script>
 </body>
 </html>
