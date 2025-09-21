@@ -116,19 +116,68 @@
   };
 
   // Универсальный сабмит формы вывода (поддерживает разные id полей)
-  LC.bindWithdrawControls = function () {
-    const form = document.getElementById('withdrawForm');
-    if (form && !form.dataset.lcInit) {
-      form.dataset.lcInit = '1';
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const get = (sel, def='') => (document.querySelector(sel)?.value ?? def);
-        const amount  = parseFloat(get('#amount','0'));
-        const method  = get('#method','TRC20') || 'TRC20';
-        const address = get('#address','');
-        await LC.requestWithdrawal(Math.round((Number.isFinite(amount)?amount:0) * 100), method, address);
-      });
-    }
+LC.bindWithdrawControls = function () {
+  // 1) Форма с полями #amount / #method / #address
+  const form = document.getElementById('withdrawForm');
+  if (form && !form.dataset.lcInit) {
+    form.dataset.lcInit = '1';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (form.dataset.lcBusy === '1') return;   // анти-дубль
+      form.dataset.lcBusy = '1';
+      try {
+        const amountEl  = document.getElementById('amount');
+        const methodEl  = document.getElementById('method');
+        const addressEl = document.getElementById('address');
+
+        const amount  = parseFloat(amountEl?.value || '0');
+        const method  = (methodEl?.value || 'TRC20') || 'TRC20';
+        const address = addressEl?.value || '';
+
+        await LC.requestWithdrawal(
+          Math.round((Number.isFinite(amount) ? amount : 0) * 100),
+          method,
+          address
+        );
+      } finally {
+        // чуть позже разрешаем повторный сабмит
+        setTimeout(() => { form.dataset.lcBusy = ''; }, 600);
+      }
+    });
+  }
+
+  // 2) Альтернативная верстка: кнопка + поля #withAmount / #wallet
+  const btn = document.getElementById('withSubmit');
+  if (btn && !btn.dataset.lcInit) {
+    btn.dataset.lcInit = '1';
+    try { if (!btn.type) btn.type = 'button'; } catch(_) {} // чтобы не отправляла форму
+
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (btn.dataset.lcBusy === '1') return;    // анти-дубль
+      btn.dataset.lcBusy = '1';
+      btn.disabled = true;
+
+      try {
+        const amount  = parseFloat(document.getElementById('withAmount')?.value || '0');
+        const address = document.getElementById('wallet')?.value || '';
+
+        await LC.requestWithdrawal(
+          Math.round((Number.isFinite(amount) ? amount : 0) * 100),
+          'TRC20',
+          address
+        );
+      } finally {
+        setTimeout(() => {
+          btn.dataset.lcBusy = '';
+          btn.disabled = false;
+          try { btn.textContent = 'Отправить заявку'; } catch(_) {}
+        }, 800);
+      }
+    });
+  }
+};
+
 
     // Вариант 2: кнопка + поля c id="withAmount" и id="wallet", как на старой странице
     const btn = document.getElementById('withSubmit');
