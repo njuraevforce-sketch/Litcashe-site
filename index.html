@@ -106,6 +106,11 @@
 
     img, video, canvas { max-width:100%; height:auto }
 
+    /* ==== Hourly Rotator Styles ==== */
+    .hero-rotator{ display:grid; place-items:center; padding:14px; min-height:260px; overflow:hidden }
+    .rotator-img{ width:100%; max-height:320px; aspect-ratio:16/10; object-fit:contain; opacity:1; transition:opacity .35s ease }
+    @media (max-width:960px){ .rotator-img{ max-height:260px }}
+
     .lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}
     .lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
   </style>
@@ -143,7 +148,7 @@
       <div>
         <span class="badge">USDT • TRC20 • 13%/5%/1%</span>
         <!-- Новый слоган (можете заменить на любой из вариантов ниже)-->
-        <h1 class="title" data-i18n="hero_title">Заряжайся и побеждай!вместе с LITCASH!</h1>
+        <h1 class="title" data-i18n="hero_title">Смотри короткие ролики — получай USDT каждый день</h1>
         <p class="subtitle muted" data-i18n="hero_sub">Активируй аккаунт пополнением от 29 USDT и начинай зарабатывать. Реферальные уровни: 13% / 5% / 1%.</p>
         <div class="flex" style="margin-top:16px">
           <a class="btn" data-i18n="get_started" href="register_single.html">Начать</a>
@@ -155,9 +160,8 @@
           <div class="kpi"><div class="n" id="kpiApr">~36%</div><div class="muted" data-i18n="kpi_apr">Потенциальный APR</div></div>
         </div>
       </div>
-      <div class="card">
-        <h3 data-i18n="earnings_heading">Доход</h3>
-        <canvas id="heroSpark" height="160"></canvas>
+      <div class="card hero-rotator">
+        <img id="brandRotator" class="rotator-img" src="assets/rotator/lit-1.webp" alt="Lit Energy — бренд" loading="eager" decoding="async"/>
       </div>
     </section>
 
@@ -175,24 +179,50 @@
     </section>
   </main>
 
-  <!-- Sparkline (остаётся, подстраивается под ширину) -->
+  <!-- Hourly image rotator (меняет картинку каждый час) -->
   <script>
     (function(){
-      const canvas=document.getElementById("heroSpark");
-      if(!canvas) return;
-      const ctx=canvas.getContext("2d");
-      const points=[0,.6,1.3,.9,1.8,2.4,2.1,3.2,3.0,3.8];
-      function draw(){
-        canvas.width=canvas.parentElement.clientWidth-40;
-        canvas.height=160;
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.lineWidth=2; ctx.strokeStyle="rgba(30,136,229,.9)";
-        ctx.beginPath();
-        const step=canvas.width/Math.max(1,points.length-1);
-        points.forEach((v,i)=>{ const x=i*step; const y=canvas.height-v*40-20; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
-        ctx.stroke();
+      const el = document.getElementById('brandRotator');
+      if(!el) return;
+
+      // Положите файлы по путям ниже (или измените список на свои пути)
+      const IMAGES = [
+        'assets/rotator/lit-1.webp',
+        'assets/rotator/lit-2.webp',
+        'assets/rotator/lit-3.jpg',
+        'assets/rotator/lit-4.jpg',
+        'assets/rotator/lit-5.webp'
+      ];
+
+      const HOUR = 60 * 60 * 1000;
+      function hourIndex(t = Date.now()){ return Math.floor(t / HOUR) % IMAGES.length; }
+
+      // Плавная смена с предзагрузкой
+      function swapTo(idx){
+        const next = IMAGES[idx % IMAGES.length];
+        if(el.dataset.src === next) return;
+        el.style.opacity = 0;
+        const img = new Image();
+        img.decoding = 'async';
+        img.onload = () => {
+          el.src = next; el.dataset.src = next; el.alt = 'Lit Energy — ' + (idx+1);
+          requestAnimationFrame(()=>{ el.style.opacity = 1; });
+        };
+        img.src = next;
       }
-      draw(); window.addEventListener("resize", draw);
+
+      // Предзагрузка
+      IMAGES.forEach(src => { const i = new Image(); i.src = src; });
+
+      // Стартовое изображение по текущему часу
+      swapTo(hourIndex());
+
+      // Переключение ровно на границе часа
+      const msToNextHour = HOUR - (Date.now() % HOUR) + 50;
+      setTimeout(function tick(){
+        swapTo(hourIndex());
+        setInterval(() => swapTo(hourIndex()), HOUR);
+      }, msToNextHour);
     })();
   </script>
 
@@ -205,10 +235,10 @@
 
       // Настраиваемые параметры
       const START_DATE = new Date('2025-01-01T00:00:00Z'); // базовая точка отсчёта
-      const BASE_USERS = 1248;     // стартовое число пользователей
-      const BASE_PAYOUTS = 582000;  // стартовые выплаты в USD (182k)
-      const USERS_PER_DAY_MIN = 1, USERS_PER_DAY_MAX = 99;      // ежедневный прирост пользователей
-      const PAYOUTS_PER_DAY_MIN = 51, PAYOUTS_PER_DAY_MAX = 3599; // ежедневный прирост выплат (USD)
+      const BASE_USERS = 12480;     // стартовое число пользователей
+      const BASE_PAYOUTS = 182000;  // стартовые выплаты в USD (182k)
+      const USERS_PER_DAY_MIN = 40, USERS_PER_DAY_MAX = 120;      // ежедневный прирост пользователей
+      const PAYOUTS_PER_DAY_MIN = 500, PAYOUTS_PER_DAY_MAX = 3500; // ежедневный прирост выплат (USD)
 
       // Простая детерминированная "случайность" по номеру дня —
       // чтобы цифры каждый день менялись, но не скакали при перезагрузке.
