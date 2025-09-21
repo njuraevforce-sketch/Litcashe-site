@@ -22,26 +22,15 @@
     body{
       min-height:100vh; margin:0; display:flex; flex-direction:column; color:var(--text);
       font:15px/1.6 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-
-      /* === ФОН БЕЗ ГРАДИЕНТОВ И ЗАТЕМНЕНИЙ ===
-         Картинки положите в /assets/bg/lit-hero.webp и (опц.) /assets/bg/lit-hero-2560.webp */
-      background: url('assets/bg/lit-hero.webp') top center / 100% auto repeat-y;
+      background:
+        radial-gradient(1200px 600px at -10% -30%, rgba(30,136,229,.15), transparent 55%),
+        radial-gradient(900px 400px at 110% 10%, rgba(0,234,255,.15), transparent 60%),
+        /* затемняющий слой для читабельности текста */
+        linear-gradient(180deg, rgba(10,12,18,.82), rgba(15,17,21,.94)),
+        /* фото-фон: положите файл в /assets/bg/lit-hero.jpg */
+        url('assets/bg/lit-hero.jpg') center / cover no-repeat;
       -webkit-text-size-adjust:100%;
     }
-
-    /* Используем ретина-версию, если браузер поддерживает image-set */
-    @supports (background-image: image-set(url('x') 1x)){
-      body{
-        background-image: image-set(
-          url('assets/bg/lit-hero.webp') 1x,
-          url('assets/bg/lit-hero-2560.webp') 2x
-        );
-        background-position: top center;
-        background-size: 100% auto;
-        background-repeat: repeat-y;
-      }
-    }
-
     a{color:var(--text); text-decoration:none}
     .container{width:min(1100px,92vw); margin:0 auto; padding:20px 0}
     .card{
@@ -161,6 +150,7 @@
     <section class="hero">
       <div>
         <span class="badge">USDT • TRC20 • 13%/5%/1%</span>
+        <!-- Новый слоган (исправлена опечатка) -->
         <h1 class="title" data-i18n="hero_title">Заряжайся и побеждай! LITCASH‑заработок, которому доверяют!</h1>
         <div class="flex" style="margin-top:16px">
           <a class="btn" data-i18n="get_started" href="register_single.html">Начать</a>
@@ -197,6 +187,7 @@
       const el = document.getElementById('brandRotator');
       if(!el) return;
 
+      // Положите файлы по путям ниже (или измените список на свои пути)
       const IMAGES = [
         'assets/rotator/lit-1.webp',
         'assets/rotator/lit-2.webp',
@@ -208,6 +199,7 @@
       const HOUR = 60 * 60 * 1000;
       function hourIndex(t = Date.now()){ return Math.floor(t / HOUR) % IMAGES.length; }
 
+      // Плавная смена с предзагрузкой
       function swapTo(idx){
         const next = IMAGES[idx % IMAGES.length];
         if(el.dataset.src === next) return;
@@ -221,8 +213,13 @@
         img.src = next;
       }
 
+      // Предзагрузка
       IMAGES.forEach(src => { const i = new Image(); i.src = src; });
+
+      // Стартовое изображение по текущему часу
       swapTo(hourIndex());
+
+      // Переключение ровно на границе часа
       const msToNextHour = HOUR - (Date.now() % HOUR) + 50;
       setTimeout(function tick(){
         swapTo(hourIndex());
@@ -238,16 +235,21 @@
       const elPayouts = document.getElementById('kpiPayouts');
       if(!elUsers || !elPayouts) return;
 
-      const START_DATE = new Date('2025-01-01T00:00:00Z');
-      const BASE_USERS = 1248;
-      const BASE_PAYOUTS = 504339;
-      const USERS_PER_DAY_MIN = 4, USERS_PER_DAY_MAX = 89;
-      const PAYOUTS_PER_DAY_MIN = 50, PAYOUTS_PER_DAY_MAX = 3500;
+      // Настраиваемые параметры
+      const START_DATE = new Date('2025-01-01T00:00:00Z'); // базовая точка отсчёта
+      const BASE_USERS = 1248;     // стартовое число пользователей
+      const BASE_PAYOUTS = 504339;  // стартовые выплаты в USD (182k)
+      const USERS_PER_DAY_MIN = 4, USERS_PER_DAY_MAX = 89;      // ежедневный прирост пользователей
+      const PAYOUTS_PER_DAY_MIN = 50, PAYOUTS_PER_DAY_MAX = 3500; // ежедневный прирост выплат (USD)
 
+      // Простая детерминированная "случайность" по номеру дня —
+      // чтобы цифры каждый день менялись, но не скакали при перезагрузке.
       const MS_DAY = 86_400_000;
       const todayUTC = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
       const days = Math.max(0, Math.floor((todayUTC - START_DATE.getTime()) / MS_DAY));
-      function rand01(n){ const x = (n * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff; }
+      function rand01(n){ // 0..1, зависит только от n
+        const x = (n * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff;
+      }
       function incForDay(day, min, max){ return Math.round(min + rand01(day+1)*(max-min)); }
       function sumIncs(days, min, max){ let s=0; for(let d=0; d<days; d++) s += incForDay(d, min, max); return s; }
 
@@ -257,6 +259,7 @@
       const fmtInt = n => new Intl.NumberFormat('ru-RU').format(n);
       const fmtMoneyK = n => '$' + Math.round(n/1000) + 'k';
 
+      // Плавная анимация к текущему значению
       function tween(el, from, to, fmt, dur=900){
         const start = performance.now();
         function frame(t){
@@ -268,6 +271,7 @@
         requestAnimationFrame(frame);
       }
 
+      // Стартуем анимацию от последнего показанного к сегодняшнему
       const prev = JSON.parse(localStorage.getItem('lc_kpis')||'{}');
       const prevUsers   = typeof prev.users==='number'   ? prev.users   : usersToday - 25;
       const prevPayouts = typeof prev.payouts==='number' ? prev.payouts : payoutsToday - 1500;
@@ -278,7 +282,7 @@
     })();
   </script>
 
-  <!-- External libs -->
+  <!-- External libs (оставлены как в исходнике) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="supabaseConfig.js"></script>
   <script defer src="app_supabase.js"></script>
