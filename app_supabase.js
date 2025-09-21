@@ -887,7 +887,6 @@ LC.bindWithdrawControls = function () {
     if (typeof LC.subscribeWithdrawalStatus === 'function') LC.subscribeWithdrawalStatus();
     if (typeof LC.loadWithdrawalsList === 'function') LC.loadWithdrawalsList();
   });
-})();
 
 // Hotfix: alias legacy loader to new implementation (avoids bad selector in old HTML)
 try { window.LC = window.LC || {}; if (!window.LC.loadLevelInfo) { window.LC.loadLevelInfo = window.LC.refreshLevelInfo; } } catch(_) {}
