@@ -167,8 +167,8 @@
 
     <section class="grid grid-3" id="how">
       <div class="card"><h3>1. Активация</h3><p class="muted">Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.</p></div>
-      <div class="card"><h3>2. Просмотры</h3><p class="muted">Смотри короткие ролики. Каждые 5 просмотров дают +1% к доходу.</p></div>
-      <div class="card"><h3>3. Рефералы</h3><p class="muted">Когда твои рефералы зарабатывают — ты получаешь 13% / 5% / 1%.</p></div>
+      <div class="card"><h3>2. Просмотры</h3><p class="muted">Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.</p></div>
+      <div class="card"><h3>3. Рефералы</h3><p class="muted">Создай команду инвесторов — ты получаешь 13% / 5% / 1%.</p></div>
     </section>
 
     <section class="card">
@@ -235,10 +235,10 @@
 
       // Настраиваемые параметры
       const START_DATE = new Date('2025-01-01T00:00:00Z'); // базовая точка отсчёта
-      const BASE_USERS = 12480;     // стартовое число пользователей
-      const BASE_PAYOUTS = 182000;  // стартовые выплаты в USD (182k)
-      const USERS_PER_DAY_MIN = 40, USERS_PER_DAY_MAX = 120;      // ежедневный прирост пользователей
-      const PAYOUTS_PER_DAY_MIN = 500, PAYOUTS_PER_DAY_MAX = 3500; // ежедневный прирост выплат (USD)
+      const BASE_USERS = 1248;     // стартовое число пользователей
+      const BASE_PAYOUTS = 504339;  // стартовые выплаты в USD (182k)
+      const USERS_PER_DAY_MIN = 4, USERS_PER_DAY_MAX = 89;      // ежедневный прирост пользователей
+      const PAYOUTS_PER_DAY_MIN = 50, PAYOUTS_PER_DAY_MAX = 3500; // ежедневный прирост выплат (USD)
 
       // Простая детерминированная "случайность" по номеру дня —
       // чтобы цифры каждый день менялись, но не скакали при перезагрузке.
