@@ -1690,28 +1690,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 <script>
 (function(){
   try{
-    function fill(el){
-      try {
-        var v = null; try { v = localStorage.getItem('lc_balance_ui'); } catch(_){}
-        el.textContent = v || '—';
-        el.style.visibility = 'visible';
-      } catch(_){}
-    }
     var el = document.querySelector('[data-balance]');
-    if (el) {
-      fill(el);
-    } else {
-      try {
-        var mo = new MutationObserver(function(){
-          var el2 = document.querySelector('[data-balance]');
-          if (el2) { fill(el2); try { mo.disconnect(); } catch(_){}} 
-        });
-        mo.observe(document.documentElement, { childList:true, subtree:true });
-        setTimeout(function(){ try { mo.disconnect(); } catch(_){} }, 5000);
-      } catch(_){}
-    }
-  } finally {
-    var guard = document.getElementById('lc-balance-guard'); if (guard) guard.remove();
-  }
+    if(!el) return;
+    var v=null; try{ v = localStorage.getItem('lc_balance_ui'); }catch(_){}
+    el.textContent = v || '—';
+    el.style.visibility = 'visible';
+    var guard = document.getElementById('lc-balance-guard'); if(guard) guard.remove();
+  }catch(_){}
 })();
 </script>
