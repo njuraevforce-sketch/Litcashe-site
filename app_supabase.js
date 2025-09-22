@@ -10,7 +10,42 @@
       }
     }
   }catch(_){}
-})();
+})()
+// --- Patch: ensure phone is saved into user metadata on signUp (non-breaking) ---
+;(function(){
+  try {
+    var sb = window && window.sb;
+    if (sb && sb.auth && typeof sb.auth.signUp === 'function' && !sb._signUpPatched) {
+      var _origSignUp = sb.auth.signUp.bind(sb.auth);
+      sb.auth.signUp = async function(params){
+        try {
+          var p = params || {};
+          var options = p.options || {};
+          var meta = options.data || {};
+          // Try to read phone from multiple places if not explicitly passed
+          var phone = (meta && (meta.phone || meta.phone_number || meta.tel)) || null;
+          if (!phone && typeof document !== 'undefined') {
+            var el = document.querySelector('input[name="phone"], input#phone, input[data-phone]');
+            if (el && el.value) phone = (''+el.value).trim();
+          }
+          if (!phone && typeof localStorage !== 'undefined') {
+            var lp = localStorage.getItem('reg_phone');
+            if (lp) phone = (''+lp).trim();
+          }
+          if (phone) {
+            options = Object.assign({}, options, { data: Object.assign({}, meta, { phone: phone }) });
+          }
+          return await _origSignUp(Object.assign({}, p, { options: options }));
+        } catch (e) {
+          return await _origSignUp(params);
+        }
+      };
+      sb._signUpPatched = true;
+    }
+  } catch (e) {}
+})(); 
+// --- End patch ---
+;
 // app_supabase.full.js — единый файл для дашборда
 // Требует: window.SUPABASE_URL / window.SUPABASE_ANON_KEY, supabase-js v2
 ;(function () {
@@ -519,9 +554,9 @@
   LC.logout = async function() { try { await sb.auth.signOut(); } finally { location.href = '/'; } };
 
   // ===== Виджет «Видео» ======================================================
- 
+  const LC_VIDEO_LIST = ['/assets/videos/ad1.mp4','/assets/videos/ad2.mp4','/assets/videos/ad3.mp4'];
   const LC_MIN_SECONDS = 10;
-  const LC_VIDEO_LIST = ['/assets/videos/ad1.MP4','/assets/videos/ad2.MP4','/assets/videos/ad3.MP4','/assets/videos/ad4.MP4','/assets/videos/ad5.MP4','/assets/videos/ad6.MP4','/assets/videos/ad7.MP4','/assets/videos/ad8.MP4','/assets/videos/ad9.MP4','/assets/videos/ad10.MP4','/assets/videos/ad11.MP4','/assets/videos/ad12.MP4','/assets/videos/ad13.mp4','/assets/videos/ad14.mp4','/assets/videos/ad15.mp4','/assets/videos/ad16.mp4','/assets/videos/ad17.mp4','/assets/videos/ad18.MP4','/assets/videos/ad19.MP4','/assets/videos/ad20.MP4'];
+
   LC.initVideoWatch = function () {
     const video    = document.getElementById('promoVid');
     const startBtn = document.getElementById('startBtn');
