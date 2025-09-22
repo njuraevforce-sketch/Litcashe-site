@@ -10,7 +10,42 @@
       }
     }
   }catch(_){}
-})();
+})()
+// --- Patch: ensure phone is saved into user metadata on signUp (non-breaking) ---
+;(function(){
+  try {
+    var sb = window && window.sb;
+    if (sb && sb.auth && typeof sb.auth.signUp === 'function' && !sb._signUpPatched) {
+      var _origSignUp = sb.auth.signUp.bind(sb.auth);
+      sb.auth.signUp = async function(params){
+        try {
+          var p = params || {};
+          var options = p.options || {};
+          var meta = options.data || {};
+          // Try to read phone from multiple places if not explicitly passed
+          var phone = (meta && (meta.phone || meta.phone_number || meta.tel)) || null;
+          if (!phone && typeof document !== 'undefined') {
+            var el = document.querySelector('input[name="phone"], input#phone, input[data-phone]');
+            if (el && el.value) phone = (''+el.value).trim();
+          }
+          if (!phone && typeof localStorage !== 'undefined') {
+            var lp = localStorage.getItem('reg_phone');
+            if (lp) phone = (''+lp).trim();
+          }
+          if (phone) {
+            options = Object.assign({}, options, { data: Object.assign({}, meta, { phone: phone }) });
+          }
+          return await _origSignUp(Object.assign({}, p, { options: options }));
+        } catch (e) {
+          return await _origSignUp(params);
+        }
+      };
+      sb._signUpPatched = true;
+    }
+  } catch (e) {}
+})(); 
+// --- End patch ---
+;
 // app_supabase.full.js — единый файл для дашборда
 // Требует: window.SUPABASE_URL / window.SUPABASE_ANON_KEY, supabase-js v2
 ;(function () {
@@ -42,56 +77,6 @@
   const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
   const fmtDate = (iso) => { try { return new Date(iso).toLocaleString(); } catch { return iso || ''; } };
   const pickNum = (v, d=0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
-  // Persist phone: capture from DOM/localStorage and save to auth metadata and profiles
-  LC.tryPersistPhone = async function() {
-    try {
-      if (!window.sb || !sb.auth) return;
-      const { data } = await sb.auth.getUser();
-      const user = data?.user; if (!user) return;
-
-      // find phone value
-      const candidates = [];
-      try {
-        const selList = [
-          'input[name="phone"]',
-          'input[type="tel"]',
-          '#phone',
-          '[data-phone]'
-        ];
-        for (const s of selList) {
-          const el = document.querySelector(s);
-          if (el && el.value) candidates.push(el.value.trim());
-        }
-      } catch(_) {}
-
-      try {
-        const lsKeys = ['reg_phone','lc_last_phone','signup_phone','phone'];
-        for (const k of lsKeys) {
-          const v = localStorage.getItem(k);
-          if (v) candidates.push(v.trim());
-        }
-      } catch(_) {}
-
-      let phone = candidates.find(v => /[0-9]{5,}/.test(v)) || null;
-      if (!phone) return;
-
-      // normalize: remove spaces, allow leading '+'
-      phone = phone.replace(/[^0-9+]/g,'').replace(/(?!^)\+/g,'');
-
-      // if profile already has phone, skip heavy ops
-      const { data: p } = await sb.from('profiles').select('phone').eq('user_id', user.id).maybeSingle();
-      if (p?.phone) return;
-
-      // write to auth metadata (raw_user_meta_data)
-      try { await sb.auth.updateUser({ data: { phone } }); } catch(_){}
-
-      // write to profiles
-      await sb.from('profiles').update({ phone }).eq('user_id', user.id);
-    } catch(e) {
-      console.warn('[LC] tryPersistPhone', e?.message || e);
-    }
-  };
-
 
   function parseMoneyTextToNumber(txt) {
     if (!txt) return null;
@@ -889,7 +874,6 @@
     });
 
     await LC.ensureProfile();
-    await LC.tryPersistPhone();
     await LC.applyReferral();
     await LC.refreshBalance();
     await LC.mountReferral();
