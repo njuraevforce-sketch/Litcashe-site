@@ -404,6 +404,8 @@
             minimumFractionDigits: 0, maximumFractionDigits: 2
           });
           el.textContent = formatted;
+          try { localStorage.setItem('lc_balance_ui', el.textContent); } catch(_) {}
+          try { el.style.visibility = 'visible'; } catch(_) {}
         }
       }
     } catch(e) { console.warn('[LC] refreshBalance', e?.message||e); }
@@ -666,6 +668,8 @@
             minimumFractionDigits: 0, maximumFractionDigits: 2
           });
           el.textContent = formatted;
+          try { localStorage.setItem('lc_balance_ui', el.textContent); } catch(_) {}
+          try { el.style.visibility = 'visible'; } catch(_) {}
         }
       }
 
