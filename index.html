@@ -113,6 +113,24 @@
 
     .lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}
     .lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+  
+    /* Contact (Telegram) floating button */
+    .contact-fab{
+      position:fixed; right:22px; bottom:22px; z-index:70;
+      width:56px; height:56px; border-radius:50%;
+      display:inline-flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg, var(--accent), var(--accent-2));
+      color:#fff; border:1px solid rgba(255,255,255,.16);
+      box-shadow:0 10px 30px rgba(0,234,255,.40);
+      transition:transform .15s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    .contact-fab:hover{ transform:translateY(-2px) scale(1.03); box-shadow:0 14px 34px rgba(0,234,255,.50) }
+    .contact-fab:active{ transform:translateY(0) scale(.98) }
+    .contact-fab svg{ width:26px; height:26px; display:block }
+    @media (max-width:680px){
+      .contact-fab{ width:54px; height:54px; right:16px; bottom:16px }
+    }
+
   </style>
 
   <!-- ======= JS (App + Toast) ======= -->
@@ -283,5 +301,15 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="supabaseConfig.js"></script>
   <script defer src="app_supabase.js"></script>
+
+  <!-- Floating contact button -->
+  <a class="contact-fab" href="https://t.me/litcash_investment" target="_blank"
+     rel="noopener" aria-label="Связь с оператором в Telegram" title="Связь с оператором">
+    <!-- generic paper-plane icon (SVG) -->
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M21.6 3.2L2.8 10.4c-.9.34-.86 1.66.06 1.94l5.68 1.79a1 1 0 01.66.66l1.79 5.68c.28.92 1.6.96 1.94.06L21.6 3.2z" fill="currentColor"/>
+      <path d="M9.5 14.5l5.6-5.6" stroke="#ffffff" stroke-opacity=".9" stroke-width="1.7" stroke-linecap="round"/>
+    </svg>
+  </a>
 </body>
 </html>
