@@ -521,7 +521,7 @@
   // ===== Виджет «Видео» ======================================================
  
   const LC_MIN_SECONDS = 10;
-
+  const LC_VIDEO_LIST = ['/assets/videos/ad1.mp4','/assets/videos/ad2.mp4','/assets/videos/ad3.mp4','/assets/videos/ad4.mp4','/assets/videos/ad5.mp4','/assets/videos/ad6.mp4','/assets/videos/ad7.mp4','/assets/videos/ad8.mp4','/assets/videos/ad9.mp4','/assets/videos/ad10.mp4','/assets/videos/ad11.mp4','/assets/videos/ad12.mp4','/assets/videos/ad13.mp4','/assets/videos/ad14.mp4','/assets/videos/ad15.mp4','/assets/videos/ad16.mp4','/assets/videos/ad17.mp4','/assets/videos/ad18.mp4','/assets/videos/ad19.mp4','/assets/videos/ad20.mp4'];
   LC.initVideoWatch = function () {
     const video    = document.getElementById('promoVid');
     const startBtn = document.getElementById('startBtn');
