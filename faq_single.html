@@ -76,7 +76,6 @@ body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:9999
 .video{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;aspect-ratio:16/9;background:#0b0e13}
 .section-title{margin:10px 0 12px;font-size:20px}
 </style>
-
 <style>
 /* ideal-mobile */
 html,body{overflow-x:hidden}
@@ -107,14 +106,14 @@ img,video{max-width:100%;height:auto}
 <div class="container nav">
 <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
 <nav class="nav-links">
-<a href="index.html" data-i18n="home_nav" data-i18n="nav_home">Главная</a>
-<a href="dashboard_single.html" data-i18n="dashboard_nav" data-i18n="nav_dashboard">Личный кабинет</a>
-<a href="deposit_single.html" data-i18n="deposit_nav" data-i18n="deposit_title">Пополнение</a>
-<a href="withdraw_single.html" data-i18n="withdraw_nav" data-i18n="withdraw_title">Вывод</a>
-<a href="faq_single.html" data-i18n="faq_nav" data-i18n="faq_title">FAQ</a>
-<a href="settings_single.html" data-i18n="settings_nav" data-i18n="settings_title">Настройки</a>
+<a data-i18n="nav_home" href="index.html">Главная</a>
+<a data-i18n="nav_dashboard" href="dashboard_single.html">Личный кабинет</a>
+<a data-i18n="deposit_title" href="deposit_single.html">Пополнение</a>
+<a data-i18n="withdraw_title" href="withdraw_single.html">Вывод</a>
+<a data-i18n="faq_title" href="faq_single.html">FAQ</a>
+<a data-i18n="settings_title" href="settings_single.html">Настройки</a>
 </nav>
-<div class="burger" id="lc-burger" aria-label="Menu"><span></span></div>
+<div aria-label="Menu" class="burger" id="lc-burger"><span></span></div>
 <div class="lang"><div class="lc-lang">
 <button aria-expanded="false" aria-haspopup="listbox" class="lc-lang__btn">
 <svg aria-hidden="true" class="lc-lang__icon" viewbox="0 0 24 24">
@@ -127,27 +126,97 @@ img,video{max-width:100%;height:auto}
 <li data-lang="en" role="option">GB English</li>
 </ul>
 </div></div><div class="nav-cta">
-        <!-- Login/Register buttons support i18n -->
-        <a class="btn ghost" href="login_single.html" data-i18n="nav_login" data-i18n="login_title">Вход</a>
-        <a class="btn primary" href="register_single.html" data-i18n="nav_register" data-i18n="register_title">Регистрация</a>
+<!-- Login/Register buttons support i18n -->
+<a class="btn ghost" data-i18n="login_title" href="login_single.html">Вход</a>
+<a class="btn primary" data-i18n="register_title" href="register_single.html">Регистрация</a>
 </div>
 </div>
 </header>
 <main class="container">
 <div class="card">
-<h1 data-i18n="faq_title">FAQ</h1>
-<h3>Минимальный активный баланс</h3>
-<p class="muted">От 29 USDT и подтверждённый email — чтобы начать просмотры и участвовать в реферальной программе.</p>
-<h3>Реферальные уровни</h3>
-<p class="muted">1 поколение 13%, 2 поколение 5%, 3 поколение 1% — начисляется при каждом просмотре реферала.</p>
+<h1>FAQ — Litcash</h1>
+<h2>1) Основы</h2>
+<h3>Что такое Litcash?</h3>
+<p>Litcash — платформа, где пользователи инвестируют в развитие компании, ежедневно смотрят 5 рекламных видео и получают вознаграждение на баланс в соответствии со своим уровнем и условиями программы.</p>
+<h3>Как начать?</h3>
+<p>Зарегистрируйтесь, активируйте уровень и выполните ежедневную активность (просмотр 5 роликов в сутки). Все статусы и начисления отображаются в личном кабинете.</p>
+<h3>Из чего формируются выплаты?</h3>
+<p>Вознаграждения зависят от объёма рекламных бюджетов и правил программы. Часть выручки распределяется между участниками согласно их уровню и активности.</p>
+<h2>2) Уровни и требования</h2>
+<h3>Какие есть уровни и ставки?</h3>
+<ul>
+<li><strong>Starter</strong> — 2,5% (активация $29).</li>
+<li><strong>Advanced</strong> — 3% (вклад $300 и 5 рефералов).</li>
+<li><strong>Pro Elite</strong> — 4% (вклад $1 000 и 10 рефералов).</li>
+<li><strong>Titanium</strong> — 5% (вклад $3 000 и 30 рефералов).</li>
+</ul>
+<h3>Нужны ли рефералы для входа?</h3>
+<p>Для Starter — нет. Для Advanced, Pro Elite и Titanium нужны вложения и команда указанного размера.</p>
+<h3>Как повысить уровень?</h3>
+<p>Пополните баланс до требуемой суммы и выполните условие по количеству рефералов. Статус обновится после проверки условий системой.</p>
+<h2>3) Начисления и активность</h2>
+<h3>Зачем смотреть 5 видео в день?</h3>
+<p>Ежедневная активность — обязательное условие начислений. Это подтверждает вовлечённость и влияет на расчёт вознаграждений по вашему уровню.</p>
+<h3>Что будет, если не выполнить дневную норму?</h3>
+<p>Если 5 роликов не просмотрены, начисления за соответствующий период могут быть уменьшены или не начислены — смотрите точные правила в кабинете/оферте.</p>
+<h3>Как часто происходят начисления?</h3>
+<p>Периодичность и формула зависят от внутренних правил и могут корректироваться. Актуальная информация — в личном кабинете.</p>
+<h2>4) Реферальная программа (3 поколения)</h2>
+<h3>Как работают реферальные уровни?</h3>
+<p>Вы получаете процент от дохода ваших рефералов:</p>
+<ul>
+<li>1-е поколение — <strong>13%</strong></li>
+<li>2-е поколение — <strong>5%</strong></li>
+<li>3-е поколение — <strong>1%</strong></li>
+</ul>
+<h3>Пример расчёта</h3>
+<p>Если реферал 1-го уровня получил $100 дохода по программе, вы получите $13. Для 2-го уровня — $5 с каждых $100 его дохода, для 3-го — $1.</p>
+<h3>Можно ли зарабатывать без приглашений?</h3>
+<p>Да, на уровне Starter возможно участвовать без команды. Более высокие уровни требуют и вклад, и рефералов.</p>
+<h2>5) Пополнение и вывод</h2>
+<h3>Какие способы ввода/вывода доступны?</h3>
+<p>Доступные методы и комиссии отображаются в личном кабинете и могут зависеть от региона пользователя.</p>
+<h3>Есть ли комиссии?</h3>
+<p>Комиссии за пополнение/вывод и возможные лимиты по операциям указываются в интерфейсе до подтверждения транзакции.</p>
+<h3>В какой валюте происходит учёт?</h3>
+<p>Базовая валюта баланса — в долларах США (USD). При конвертации возможна разница из-за курсов и комиссий платёжных систем.</p>
+<h2>6) Безопасность и соответствие правилам</h2>
+<h3>Какие меры против накрутки?</h3>
+<p>Используются анти-фрод алгоритмы. Автоматические просмотры, боты, VPN-фермы и любая имитация активности запрещены и ведут к блокировке начислений или аккаунта.</p>
+<h3>Нужна ли верификация (KYC)?</h3>
+<p>В отдельных случаях может потребоваться подтверждение личности в рамках требований по AML/KYC и для безопасности выплат.</p>
+<h3>Как защитить аккаунт?</h3>
+<p>Включите двухфакторную аутентификацию, используйте уникальный пароль, не передавайте доступ третьим лицам.</p>
+<h2>7) Юридические и риск-дисклеймеры</h2>
+<h3>Есть ли гарантии дохода?</h3>
+<p>Нет. Доходность не гарантируется и зависит от выполнения условий программы, объёма рекламных бюджетов и рыночных факторов. Инвестиции связаны с риском потерь.</p>
+<h3>Есть ли ограничения по странам и возрасту?</h3>
+<p>Участие может быть ограничено законодательством вашей юрисдикции. Платформа предназначена для совершеннолетних пользователей.</p>
+<h3>Налоги</h3>
+<p>Участник самостоятельно исполняет требования местного законодательства, связанных с декларированием и уплатой налогов.</p>
+<h2>8) Поддержка и решения проблем</h2>
+<h3>Не засчитался просмотр видео — что делать?</h3>
+<p>Перезагрузите страницу/приложение и убедитесь, что ролик досмотрен до конца без перемотки, адблок отключён. Если проблема повторяется — обратитесь в поддержку.</p>
+<h3>Начисления не пришли вовремя</h3>
+<p>Проверьте, выполнены ли условия уровня и дневная активность. Посмотрите статус в кабинете. Если данных нет — напишите в поддержку с ID аккаунта и датой.</p>
+<h3>Как связаться с поддержкой?</h3>
+<p>Канал связи указан в личном кабинете (чат/почта/телеграм). При обращении указывайте ID, скриншоты и время проблемы — так мы быстрее поможем.</p>
+<h2>9) Краткая памятка</h2>
+<ul>
+<li>Выполняйте <strong>5 просмотров в день</strong> — это влияет на начисления.</li>
+<li>Для высоких уровней нужны и вклад, и команда.</li>
+<li>Реферальные выплаты: <strong>13% / 5% / 1%</strong> от дохода 1–3 поколений.</li>
+<li>Доходность не гарантируется; читайте оферту и правила в кабинете.</li>
+<li>Анти-фрод действует: накрутка запрещена и карается блокировкой.</li>
+</ul>
 </div>
 </main>
 <footer class="footer"><div class="container">© 2025 Litcash</div></footer>
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="supabaseConfig.js"></script>
-<script defer src="assets/js/i18n.js"></script>
-<script defer src="app_supabase.js"></script>
-<script defer src="assets/js/lang-switcher.js"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer="" src="supabaseConfig.js"></script>
+<script defer="" src="assets/js/i18n.js"></script>
+<script defer="" src="app_supabase.js"></script>
+<script defer="" src="assets/js/lang-switcher.js"></script>
 <script id="lc-lang-script-inline" type="text/plain">
 (function(){
   if (!window.LC_I18N) {
@@ -248,13 +317,11 @@ document.addEventListener('DOMContentLoaded', async function(){
   }catch(_){}
 });
 </script>
-
-
-<div class="lc-drawer" id="lc-drawer" aria-hidden="true">
-  <div class="lc-drawer__panel">
-    <nav id="lc-drawer-links"></nav>
-    <div style="margin-top:12px" id="lc-drawer-cta"></div>
-  </div>
+<div aria-hidden="true" class="lc-drawer" id="lc-drawer">
+<div class="lc-drawer__panel">
+<nav id="lc-drawer-links"></nav>
+<div id="lc-drawer-cta" style="margin-top:12px"></div>
+</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
@@ -274,5 +341,4 @@ document.addEventListener('DOMContentLoaded', function(){
   if(cta && dc){ dc.innerHTML = cta.outerHTML; }
 });
 </script>
-
 </body></html>
