@@ -16,18 +16,24 @@
 <body>
 <!-- === LC RECOVERY GUARD (v3) — catch both ?query and #hash tokens before anything else runs === -->
 <script>
-(function(){
+(function () {
   try {
+    // не выполняем редирект уже на странице логина (защита от петли)
+    if (location.pathname.endsWith('/login_single.html')) return;
+
     var parts = (location.search || '') + (location.hash || '');
-    if (/type=recovery|access_token=|recovery_token=/.test(parts)) {
-      var qs = '?' + parts.replace(/^\?|^#/, '').replace('#','&');
-      var loginURL = new URL('login_single.html', location.origin).href + qs;
-      // Use replace to avoid polluting history
-      location.replace(loginURL);
+    // если есть нужные токены — перенаправляем на login_single.html, объединяя ? и # в один querystring
+    if (/(type=recovery|access_token|recovery_token)/i.test(parts)) {
+      var qs = '?' + parts.replace(/^[?#]/, '').replace('#','&');
+      var url = new URL('login_single.html', location.origin).href + qs;
+      location.replace(url); // без добавления в history
     }
-  } catch(e){}
+  } catch (e) {
+    console.error('recovery-guard', e);
+  }
 })();
 </script>
+
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/><!-- FIX: disable floating joystick & duplicate burger -->
 <style>#lcJoy{display:none !important}.burger-btn{display:none !important}</style>
