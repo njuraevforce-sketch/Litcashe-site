@@ -1,0 +1,38 @@
+{
+  "name": "Litcash",
+  "short_name": "Litcash",
+  "description": "Инвестируй и зарабатывай вместе с Litcash.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#09141d",
+  "theme_color": "#0a2436",
+  "icons": [
+    {
+      "src": "/icons/litcash-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/litcash-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/litcash-384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/litcash-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/litcash-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
