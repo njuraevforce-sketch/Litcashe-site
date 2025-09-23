@@ -253,33 +253,7 @@ try {
   const wrap = document.querySelector('#refLinkWrap');
   const input = document.querySelector('#refLink');
   if (!wrap || !input) return;
-    // Bind copy handler early so the button works even if profile fetch fails
-  try {
-    const btnEarly = document.querySelector('#btnCopyRef');
-    if (btnEarly) {
-      if (!btnEarly.type) btnEarly.type = 'button';
-      if (!btnEarly.dataset.lcInit) {
-        btnEarly.dataset.lcInit = '1';
-        btnEarly.addEventListener('click', async (e) => {
-          try { if (e && e.preventDefault) e.preventDefault(); } catch(_) {}
-          let copied = false;
-          try { await navigator.clipboard.writeText(input.value || ''); copied = true; } catch(_) {}
-          if (!copied) {
-            try {
-              const ta = document.createElement('textarea');
-              ta.value = input.value || '';
-              ta.style.position='fixed'; ta.style.opacity='0';
-              document.body.appendChild(ta); ta.focus(); ta.select();
-              try { document.execCommand('copy'); copied = true; } catch(_) {}
-              document.body.removeChild(ta);
-            } catch(_) {}
-          }
-          try { if (copied) { btnEarly.textContent='Скопировано'; setTimeout(()=>btnEarly.textContent='Скопировать', 1200); } } catch(_) {}
-        });
-      }
-    }
-  } catch(_) {}
-const { data, error } = await sb.auth.getUser();
+  const { data, error } = await sb.auth.getUser();
   const user = data?.user; if (!user) return;
   const { data: row, error: e1 } = await sb
     .from('profiles')
