@@ -1,7 +1,19 @@
 <!DOCTYPE html>
 
 <html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Litcash</title>
 
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#09141d">
+
+  <!-- iOS -->
+  <link rel="apple-touch-icon" href="/icons/litcash-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
 <!-- === LC RECOVERY HARDLOCK (v8) — prevent any auto-redirect to dashboard until password is updated === -->
 <script>(function(){
   try {
@@ -532,5 +544,11 @@ location.replace('dashboard_single.html');
   });
 })();
 </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+  }
+</script>
+<script src="/app-install.js" defer></script>
 
 </body></html>
