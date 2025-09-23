@@ -258,8 +258,8 @@ try {
     const btnEarly = document.querySelector('#btnCopyRef');
     if (btnEarly) {
       if (!btnEarly.type) btnEarly.type = 'button';
-      if (!btnEarly.dataset.lcInit && !btnEarly.dataset.lcCopyBound) {
-        btnEarly.dataset.lcInit = '1'; btnEarly.dataset.lcCopyBound = '1';
+      if (!btnEarly.dataset.lcInit) {
+        btnEarly.dataset.lcInit = '1';
         btnEarly.addEventListener('click', async (e) => {
           try { if (e && e.preventDefault) e.preventDefault(); } catch(_) {}
           let copied = false;
@@ -292,7 +292,7 @@ const { data, error } = await sb.auth.getUser();
   input.value = url.toString();
   wrap.style.display = 'block';
   const btn = document.querySelector('#btnCopyRef');
-if (btn && !btn.dataset.lcCopyBound) { btn.dataset.lcCopyBound='1';
+if (btn) {
   try { if (!btn.type) btn.type = 'button'; } catch(_) {}
   btn.addEventListener('click', async (e) => {
     try { if (e && e.preventDefault) e.preventDefault(); } catch(_) {}
