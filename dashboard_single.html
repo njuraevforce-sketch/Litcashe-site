@@ -680,25 +680,84 @@ document.addEventListener('DOMContentLoaded', async function(){
     <nav id="lc-drawer-links"></nav>
     <div style="margin-top:12px" id="lc-drawer-cta"></div>
   </div>
-</div>
+<style>
+  #lc-drawer .lc-drawer__panel{display:flex;flex-direction:column;gap:12px}
+  #lc-drawer-links{display:flex;flex-direction:column;gap:10px}
+  #lc-drawer-links a{
+    display:block;padding:12px;border-radius:12px;
+    border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(0,234,255,.12), rgba(30,136,229,.12));
+    color:#cfe9ff;text-decoration:none;
+  }
+  #lc-drawer-cta{margin-top:auto}
+  #lc-drawer-cta .btn{width:100%}
+</style>
+
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-  var burger=document.getElementById('lc-burger');
-  var drawer=document.getElementById('lc-drawer');
-  if(!burger||!drawer) return;
-  var links=document.querySelector('.nav-links');
-  var cta=document.querySelector('.nav-cta');
-  var dl=document.getElementById('lc-drawer-links');
-  var dc=document.getElementById('lc-drawer-cta');
-  function open(){ drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden','false'); }
-  function close(){ drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden','true'); }
-  burger.addEventListener('click', function(e){ e.preventDefault(); open(); });
-  drawer.addEventListener('click', function(e){ if(e.target===drawer) close(); });
-  // Clone links/cta
-  if(links && dl){ dl.innerHTML = links.outerHTML; }
-  if(cta && dc){ dc.innerHTML = cta.outerHTML; }
+document.addEventListener('DOMContentLoaded', async function(){
+  const qs = s => document.querySelector(s);
+  const drawer = qs('#lc-drawer');
+  const linksBox = qs('#lc-drawer-links');
+  const ctaBox = qs('#lc-drawer-cta');
+  const burger = qs('#lc-burger');
+  if(!drawer || !burger || !linksBox || !ctaBox) return;
+
+  function buildItems(){
+    const headerLinks = Array.from(document.querySelectorAll('header .nav-links a')).map(a => ({
+      href: a.getAttribute('href'),
+      text: (a.textContent||'').trim(),
+      i18n: a.getAttribute('data-i18n')
+    })).filter(x => x.href && x.text);
+    const items = headerLinks.length ? headerLinks : [
+      {href:'index.html',            text:'Главная',          i18n:'nav_home'},
+      {href:'dashboard_single.html', text:'Личный кабинет',   i18n:'nav_dashboard'},
+      {href:'deposit_single.html',   text:'Пополнение',       i18n:'deposit_title'},
+      {href:'withdraw_single.html',  text:'Вывод',            i18n:'withdraw_title'},
+      {href:'faq_single.html',       text:'FAQ',              i18n:'faq_title'},
+      {href:'settings_single.html',  text:'Настройки',        i18n:'settings_title'}
+    ];
+    linksBox.innerHTML = '';
+    items.forEach(it => {
+      const a = document.createElement('a');
+      a.href = it.href; a.textContent = it.text;
+      if (it.i18n) a.setAttribute('data-i18n', it.i18n);
+      linksBox.appendChild(a);
+    });
+  }
+
+  async function buildCTA(){
+    const sb = window.sb || window._supabase || window.supabase;
+    let isAuth = false;
+    try { const { data: { session } } = await sb.auth.getSession(); isAuth = !!session; } catch(_){}
+    ctaBox.innerHTML = '';
+    if(isAuth){
+      const btn = document.createElement('button');
+      btn.className = 'btn danger';
+      btn.textContent = 'Выход';
+      btn.addEventListener('click', (e) => { e.preventDefault(); if(window.logout) logout(); });
+      ctaBox.appendChild(btn);
+    }else{
+      const wrap = document.createElement('div');
+      wrap.style.display='grid'; wrap.style.gap='10px';
+      wrap.innerHTML = '<a class="btn ghost" href="login_single.html" data-i18n="login_title">Вход</a>\
+                        <a class="btn primary" href="register_single.html" data-i18n="register_title">Регистрация</a>';
+      ctaBox.appendChild(wrap);
+    }
+  }
+
+  function openDrawer(){ drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden','false'); }
+  function closeDrawer(){ drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden','true'); }
+  burger.addEventListener('click', (e)=>{ e.preventDefault(); openDrawer(); });
+  drawer.addEventListener('click', (e)=>{ if(e.target===drawer) closeDrawer(); });
+
+  buildItems();
+  await buildCTA();
+  if(window.LC_I18N){ try{ LC_I18N.apply(drawer); }catch(_){} }
 });
 </script>
+
+</div>
+
 
 <script>window.LC_TOAST=(function(){let box;function ensure(){if(!box){box=document.createElement('div');box.className='lc-toast';document.body.appendChild(box);}}function show(msg){ensure();const item=document.createElement('div');item.className='lc-toast__item';item.textContent=msg;box.appendChild(item);setTimeout(()=>{item.remove();},1700);}return{ok:show,err:show};})();</script>
 <div id="refLinkWrap" style="display:none;margin:1rem 0;">
@@ -1080,86 +1139,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }catch(e){}
 })();
 </script>
-<script id="mobile-nav-dedupe">
-(function(){
-  const qs = s => document.querySelector(s);
-  const qsa = s => Array.from(document.querySelectorAll(s));
-  const burger = qs('#lc-burger');
-  const drawer = qs('#lc-drawer');
-  if(!burger || !drawer) return;
 
-  const drawerLinks = drawer.querySelector('.drawer-links');
-  let source = qs('header .nav-links') || qs('header nav .nav-links') || qs('header nav ul') || qs('header .nav ul') || qs('header nav');
-  if(!source){ return; }
-
-  const originalParent = source;
-
-  function moveChildren(from, to){
-    const children = Array.from(from.children);
-    children.forEach(node => {
-      if(node.contains(burger) || burger.contains(node)) return;
-      to.appendChild(node);
-    });
-  }
-
-  function moveBack(to, from){
-    const items = Array.from(to.children);
-    items.forEach(node => {
-      from.appendChild(node);
-    });
-  }
-
-  function adapt(){
-    if(window.innerWidth <= 900){
-      if(drawerLinks.childElementCount === 0 && originalParent.childElementCount > 0){
-        moveChildren(originalParent, drawerLinks);
-      }
-    }else{
-      if(drawerLinks.childElementCount > 0){
-        moveBack(drawerLinks, originalParent);
-      }
-      drawer.setAttribute('hidden','');
-      burger.setAttribute('aria-expanded','false');
-      document.documentElement.classList.remove('drawer-open');
-    }
-  }
-
-  // Remove duplicate buttons/links inside header only
-  function dedupeHeaderButtons(){
-    const header = qs('header');
-    if(!header) return;
-    const map = new Map();
-    qsa('header button, header a.btn, header .btn').forEach(el => {
-      const key = (el.id || el.getAttribute('data-action') || el.textContent || '').trim().toLowerCase();
-      if(!key) return;
-      if(map.has(key)){
-        el.remove();
-      }else{
-        map.set(key, el);
-      }
-    });
-  }
-
-  function openDrawer(){ drawer.removeAttribute('hidden'); burger.setAttribute('aria-expanded','true'); document.documentElement.classList.add('drawer-open'); }
-  function closeDrawer(){ drawer.setAttribute('hidden',''); burger.setAttribute('aria-expanded','false'); document.documentElement.classList.remove('drawer-open'); }
-
-  burger.addEventListener('click', () => {
-    if(drawer.hasAttribute('hidden')) openDrawer(); else closeDrawer();
-  });
-  drawer.addEventListener('click', (e) => {
-    if(e.target.matches('[data-close]') || e.target.classList.contains('drawer-backdrop')) closeDrawer();
-  });
-
-  const style = document.createElement('style');
-  style.textContent = `.drawer-open body{ overflow:hidden !important; }`;
-  document.head.appendChild(style);
-
-  dedupeHeaderButtons();
-  adapt();
-  window.addEventListener('resize', adapt);
-  window.addEventListener('orientationchange', adapt);
-})();
-</script>
 
 
 <script>
