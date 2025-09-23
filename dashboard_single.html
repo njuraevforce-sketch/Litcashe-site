@@ -1674,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(_) {}
 })();
 
-<script>
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
