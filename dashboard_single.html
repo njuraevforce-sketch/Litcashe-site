@@ -1669,9 +1669,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     var p = new URLSearchParams(location.search);
     var isRecovery = (p.get('type') === 'recovery') || p.has('access_token') || p.has('recovery_token');
     if (isRecovery) {
-      // перенаправляем на страницу логина, сохраняя токены в query
-      var qs = location.search || '';
-      location.replace('login_single.html' + (location.search||'') + (location.hash||''));
+      location.replace(new URL('login_single.html', location.origin).href + (location.search || '') + (location.hash || ''));
     }
   } catch(_) {}
 })();
@@ -1679,12 +1677,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 <script>
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
+    });
   }
 </script>
 
-<script src="/app-install.js" defer></script>
-
+<script src="/assets/app-install.js" defer></script>
 </body>
 </html>
 
