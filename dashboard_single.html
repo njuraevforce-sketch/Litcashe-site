@@ -1679,6 +1679,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
     });
-  }
- </body>
+  }...
+    </script>
+<script src="/app-install.js"></script>
+<script>
+  (function () {
+    if (!('serviceWorker' in navigator)) return;
+    // если SW уже активен — повторно не регистрируем
+    if (navigator.serviceWorker.controller) return;
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
+  })();
+</script>
+</body>
 </html>
+
