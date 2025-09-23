@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ru">
 <head>
   <meta charset="utf-8">
@@ -33,6 +32,7 @@
   }
 })();
 </script>
+
 
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/><!-- FIX: disable floating joystick & duplicate burger -->
@@ -1663,7 +1663,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 <!-- LC: recovery bounce guard -->
- id="lc-recovery-bounce">
+<script id="lc-recovery-bounce">
 (function(){
   try {
     var p = new URLSearchParams(location.search);
@@ -1675,13 +1675,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch(_) {}
 })();
+</script>
 
-
+<script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
   }
+</script>
 
 <script src="/app-install.js" defer></script>
 
 </body>
 </html>
+
