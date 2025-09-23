@@ -1658,32 +1658,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       set('gen3Count', gen3Ids.length);
     } catch(e) { console.warn('profiles chain counts fallback error', e); }
   } catch(e){ console.warn('referral fallback patch error', e); }
-});
-<!-- ===== /PATCH ===== -->
+});                /* последний закрывающий блок твоего кода */
+</script>           <!-- ← ЭТО ДОБАВИТЬ -->
 
- <script>
-  <!-- LC: recovery bounce guard -->
-  <script id="lc-recovery-bounce">
-  (function(){
-    try {
-      var p = new URLSearchParams(location.search);
-      var isRecovery = (p.get('type') === 'recovery') || p.has('access_token') || p.has('recovery_token');
-      if (isRecovery) {
-        location.replace(new URL('login_single.html', location.origin).href + (location.search || '') + (location.hash || ''));
-      }
-    } catch(_) {}
-  })();
-  </script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
-      });
+<!-- LC: recovery bounce guard -->
+<script id="lc-recovery-bounce">
+(function(){
+  try {
+    var p = new URLSearchParams(location.search);
+    var isRecovery = (p.get('type') === 'recovery') || p.has('access_token') || p.has('recovery_token');
+    if (isRecovery) {
+      location.replace(new URL('login_single.html', location.origin).href + (location.search || '') + (location.hash || ''));
     }
-  </script>
+  } catch(_) {}
+})();
+</script>
 
-  <script src="/app-install.js" defer></script>
-</body>
-</html>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
+    });
+  }
+</script>
+
+<script src="/app-install.js" defer></script>
 
