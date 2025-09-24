@@ -30,7 +30,8 @@
   </script>
 
   <title>Кабинет — Litcash</title>
-  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2300eaff'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230b0e13' font-family='Arial' font-weight='700'>LC</text></svg>'"/>
+  <!-- убрана лишняя одинарная кавычка в конце -->
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2300eaff'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230b0e13' font-family='Arial' font-weight='700'>LC</text></svg>'">
 
   <!-- FIX: disable floating joystick & duplicate burger -->
   <style>#lcJoy{display:none !important}.burger-btn{display:none !important}</style>
@@ -123,7 +124,27 @@
     .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
   }
   </style>
+
+  <!-- PWA-only safe area fix (iOS standalone) -->
+  <style id="ios-standalone-fix">
+    html.standalone body{
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+    html.standalone .header{ padding-top: calc(12px + env(safe-area-inset-top)); }
+  </style>
 </head>
+
+<body>
+  <!-- ставит класс .standalone только в режиме PWA -->
+  <script>
+    (function () {
+      var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (isStandalone) document.documentElement.classList.add('standalone');
+    })();
+  </script>
 
 <body> 
 
