@@ -1745,7 +1745,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(_) {}
 })();
 
-<script>
+  <script>
+(function(){
+  var card = document.getElementById('pwa-install-card');
+  var btn = document.getElementById('pwa-install-btn');
+  var iosHint = document.getElementById('pwa-ios-hint');
+  if (!card || !btn) return;
+
+  // Уже установлено? Ничего не показываем.
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isStandalone) return;
+
+  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var deferred;
+
+  // Chromium/Android: показываем кнопку, когда доступен beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    iosHint.style.display = 'none';
+    btn.style.display = '';
+    card.style.display = '';
+  });
+
+  // iOS: нет beforeinstallprompt — показываем подсказку
+  if (isIos && !window.navigator.standalone) {
+    btn.style.display = 'none';
+    iosHint.style.display = '';
+    card.style.display = '';
+  }
+
+  btn.addEventListener('click', async function () {
+    try {
+      if (!deferred) return;
+      deferred.prompt();
+      var choice = await deferred.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        card.style.display = 'none';
+        deferred = null;
+      }
+    } catch(_) {}
+  });
+
+  window.addEventListener('appinstalled', function () {
+    card.style.display = 'none';
+    deferred = null;
+  });
+})();
+</script>
+
 </body>
 </html>
 
