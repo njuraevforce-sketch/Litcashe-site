@@ -164,17 +164,6 @@
   })();
 </script>
 
-</head>
-
-<body>
-<!-- ставит класс .standalone только в режиме PWA -->
-<script>
-  (function () {
-    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    if (isStandalone) document.documentElement.classList.add('standalone');
-  })();
-</script>
-
 <body> 
 
   <!-- === LC RECOVERY GUARD (v3) — catch both ?query and #hash tokens before anything else runs === -->
