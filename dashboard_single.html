@@ -123,32 +123,44 @@
   @media (prefers-color-scheme:light){
     .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
   }
-<!--  -->
+<!-- -->
 <style id="ios-standalone-fix">
   :root{
     --pwa-top-extra: -10px;
     --pwa-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
   }
-  html.standalone body{padding-top:0!important}
-  html.standalone .header{padding-top:var(--pwa-top)!important}
 
-  /* Бургер-меню */
-  html.standalone #mobileMenu.open{
-    top:var(--pwa-top)!important;
-    margin-top:var(--pwa-top)!important;
-    padding-top:8px!important;
-  }
-  html.standalone #mobileMenu.open::before{
-    content:"";display:block;height:var(--pwa-top);
+  /* В PWA не поднимаем весь body */
+  html.standalone body { padding-top: 0 !important; }
+
+  /* Шапка */
+  html.standalone .header { padding-top: var(--pwa-top) !important; }
+
+  /* ===== ВЫЕЗЖАЮЩЕЕ МЕНЮ =====
+     Двигаем именно когда оно открыто (класс .open из твоего кода) */
+  html.standalone #mobileMenu.open {
+    top: var(--pwa-top) !important;            /* если fixed/absolute */
+    margin-top: var(--pwa-top) !important;     /* если static/relative */
+    padding-top: 8px !important;
   }
 
-  /* Дровер, если используется */
-  html.standalone #lc-drawer .lc-drawer__panel{
-    top:var(--pwa-top)!important;
-    height:calc(100% - var(--pwa-top))!important;
-    box-sizing:border-box;
+  /* На случай transform-анимаций: «прокладка» сверху у открытого меню */
+  html.standalone #mobileMenu.open::before {
+    content: "";
+    display: block;
+    height: var(--pwa-top);
   }
 </style>
+</head>
+
+<body>
+<!-- ставит класс .standalone только в режиме PWA -->
+<script>
+  (function () {
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    if (isStandalone) document.documentElement.classList.add('standalone');
+  })();
+</script>
 
 </head>
 
