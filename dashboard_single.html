@@ -125,32 +125,41 @@
   }
   </style>
 
-  <!-- PWA-only safe area fix (iOS standalone) -->
+<!-- PWA-only safe area fix (iOS standalone) -->
 <style id="ios-standalone-fix">
-  /* тонкая настройка: доп.смещение сверху (оставь 0 или поставь отрицательное -2px/-4px) */
   :root { --pwa-top-extra: -10px; }
 
   /* в PWA НЕ добавляем общий padding к body */
   html.standalone body { padding-top: 0 !important; }
 
-  /* шапка поднимается ровно на высоту выреза (чуть можно поджать через --pwa-top-extra) */
+  /* шапка учитывает вырез */
   html.standalone .header {
     padding-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
   }
 
-  /* если меню/дровер фиксированный — тоже учтём вырез */
+  /* ↓↓↓ выезжающее меню (добавил top/margin-top — подойдёт и для fixed, и для обычного блока) */
   html.standalone .side-menu,
   html.standalone .drawer,
-  html.standalone .menu-panel {
-    padding-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
+  html.standalone .menu-panel,
+  html.standalone .nav-menu,
+  html.standalone .mobile-menu {
+    /* если меню position: fixed/absolute */
+    top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
+    /* если меню без top (static/relative) */
+    margin-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
+    /* лёгкий внутренний отступ, можно убрать */
+    padding-top: 8px;
   }
+
+  /* явные fixed-варианты */
   html.standalone .side-menu.fixed,
   html.standalone .drawer.fixed,
-  html.standalone .menu-panel.fixed {
+  html.standalone .menu-panel.fixed,
+  html.standalone .nav-menu.fixed,
+  html.standalone .mobile-menu.fixed {
     top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
   }
 </style>
-
 </head>
 
 <body>
