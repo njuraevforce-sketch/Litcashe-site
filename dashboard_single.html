@@ -6,136 +6,145 @@
 
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#09141d">
-<!-- PWA init -->
-<script defer src="/app-install.js"></script>
-<script defer>
-(function () {
-  if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', function () {
-    // не регистрируем повторно, если уже есть SW на корне
-    navigator.serviceWorker.getRegistration('/')
-      .then(function (reg) {
-        if (!reg) {
-          return navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        }
-      })
-      .catch(console.error);
-  });
-})();
-</script>
 
   <!-- iOS -->
   <link rel="apple-touch-icon" href="/icons/litcash-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-</head>
-<body>
-<!-- === LC RECOVERY GUARD (v3) — catch both ?query and #hash tokens before anything else runs === -->
-<script>
-(function () {
-  try {
-    // не выполняем редирект уже на странице логина (защита от петли)
-    if (location.pathname.endsWith('/login_single.html')) return;
 
-    var parts = (location.search || '') + (location.hash || '');
-    // если есть нужные токены — перенаправляем на login_single.html, объединяя ? и # в один querystring
-    if (/(type=recovery|access_token|recovery_token)/i.test(parts)) {
-      var qs = '?' + parts.replace(/^[?#]/, '').replace('#','&');
-      var url = new URL('login_single.html', location.origin).href + qs;
-      location.replace(url); // без добавления в history
-    }
-  } catch (e) {
-    console.error('recovery-guard', e);
+  <!-- PWA init -->
+  <script defer src="/app-install.js"></script>
+  <script defer>
+  (function () {
+    if (!('serviceWorker' in navigator)) return;
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.getRegistration('/')
+        .then(function (reg) {
+          if (!reg) {
+            return navigator.serviceWorker.register('/sw.js', { scope: '/' });
+          }
+        })
+        .catch(console.error);
+    });
+  })();
+  </script>
+
+  <title>Кабинет — Litcash</title>
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2300eaff'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230b0e13' font-family='Arial' font-weight='700'>LC</text></svg>'"/>
+
+  <!-- FIX: disable floating joystick & duplicate burger -->
+  <style>#lcJoy{display:none !important}.burger-btn{display:none !important}</style>
+  <script>window.__lcJoyInit = true;</script>
+
+  <!-- Styles -->
+  <style>
+  :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
+  *{box-sizing:border-box}
+  html,body{display:flex;flex-direction:column;min-height:100vh;height:100%}
+  body{margin:0;background:
+    radial-gradient(1200px 600px at -10% -30%, rgba(30,136,229,.15), transparent 55%),
+    radial-gradient(900px 400px at 110% 10%, rgba(0,234,255,.15), transparent 60%),
+    linear-gradient(180deg, var(--bg-2), var(--bg));color:var(--text);
+    font:15px/1.6 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;}
+  a{color:var(--text);text-decoration:none}
+  .container{width:min(1200px,92vw);margin:0 auto;padding:24px 0}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:20px;backdrop-filter:blur(6px)}
+  .grid{display:grid;gap:18px}
+  .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media (max-width:980px){.grid-3,.grid-2{grid-template-columns:1fr}}
+  .muted{color:var(--muted)}
+  .badge{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 10px;font-size:12px;border-radius:999px;background:rgba(0,234,255,.12);color:#cfe9ff;border:1px solid rgba(0,234,255,.25)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 24px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18));color:white;font-weight:700;letter-spacing:.2px;cursor:pointer;transition:transform .15s ease, box-shadow .2s ease;box-shadow:0 8px 22px rgba(30,136,229,.35)}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(30,136,229,.45)}
+  .btn.start{height:64px;font-size:18px;border-radius:18px}
+  .table{width:100%;border-collapse:separate;border-spacing:0 10px}
+  .table th,.table td{padding:12px 14px;text-align:left}
+  .table tr{background:rgba(255,255,255,.03);border-radius:12px}
+  .table tr:hover{background:rgba(255,255,255,.06)}
+  .progress{height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
+  #progressFill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+  .video{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;aspect-ratio:16/9;background:#0b0e13}
+  .header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(180%) blur(8px);background:rgba(10,12,18,.6);border-bottom:1px solid rgba(255,255,255,.08)}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;color:white}
+  .brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 6px 18px rgba(0,234,255,.45)}
+  .nav-links{display:flex;align-items:center;gap:14px}
+  .nav-cta{display:flex;align-items:center;gap:10px}
+  </style>
+
+  <link href="/assets/css/lang-switcher.css" rel="stylesheet"/>
+  <style id="lc-lang-style-inline">
+  /* LC Globe (inline) */
+  #lc-inline-lang{position:relative;display:inline-flex;align-items:center}
+  #lc-inline-lang .lc-lang__btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#eee;cursor:pointer;transition:transform .08s ease,box-shadow .2s ease,background .2s ease;backdrop-filter:blur(6px)}
+  #lc-inline-lang .lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)}
+  #lc-inline-lang .lc-lang__btn:active{transform:translateY(1px)}
+  #lc-inline-lang .lc-lang__icon{width:18px;height:18px}
+  #lc-inline-lang .lc-lang__menu{list-style:none;margin:8px 0 0;padding:6px 0;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96);color:#eee;position:absolute;right:0;min-width:140px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:99999}
+  #lc-inline-lang.is-open .lc-lang__menu{display:block}
+  #lc-inline-lang .lc-lang__menu li{padding:8px 12px;cursor:pointer}
+  #lc-inline-lang .lc-lang__menu li:hover{background:rgba(255,255,255,.08)}
+  body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:99999}
+  @media (prefers-color-scheme:light){
+    #lc-inline-lang .lc-lang__btn{border-color:rgba(0,0,0,.12);background:rgba(255,255,255,.85);color:#111}
+    #lc-inline-lang .lc-lang__menu{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}
+    #lc-inline-lang .lc-lang__menu li:hover{background:rgba(0,0,0,.06)}
   }
-})();
-</script>
+  </style>
 
+  <style id="lc-lang-inline">/* LC Globe — forced dark style */
+  .lc-lang{position:relative;display:inline-flex;align-items:center}
+  .lc-lang__btn{height:36px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18)!important;background:rgba(255,255,255,.06)!important;color:#eee!important;display:inline-flex;gap:8px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:transform .08s ease,box-shadow .2s ease,background .2s ease}
+  .lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)!important}
+  .lc-lang__btn:active{transform:translateY(1px)}
+  .lc-lang__icon{width:16px;height:16px}
+  .lc-lang__label{font-size:12px;line-height:1}
+  .lc-lang__menu{position:absolute;top:calc(100% + 8px);right:0;list-style:none!important;padding-left:0!important;margin:8px 0 0;padding:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96)!important;color:#eee!important;min-width:160px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:10000}
+  .lc-lang.is-open .lc-lang__menu{display:block}
+  .lc-lang__menu li{padding:8px 12px;cursor:pointer}
+  .lc-lang__menu li:hover{background:rgba(255,255,255,.08)}
+  </style>
 
+  <style id="lang-select-inline">
+  /* Styled <select> pill with globe */
+  .lang-select{
+    -webkit-appearance:none; -moz-appearance:none; appearance:none;
+    background: rgba(255,255,255,.06) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="white" stroke-width="1.4"/></svg>') no-repeat 10px 50%;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px;
+    padding: 8px 28px 8px 34px;
+    color: #eee; font-size: 12px; line-height: 1; cursor: pointer;
+    backdrop-filter: blur(6px);
+  }
+  .lang-select:focus{ outline:none; box-shadow:0 2px 12px rgba(0,0,0,.35); }
+  .lang-select option{ color:#111; }
+  @media (prefers-color-scheme:light){
+    .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
+  }
+  </style>
+</head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/><!-- FIX: disable floating joystick & duplicate burger -->
-<style>#lcJoy{display:none !important}.burger-btn{display:none !important}</style>
-<script>window.__lcJoyInit = true;</script>
+<body>
+  <!-- === LC RECOVERY GUARD (v3) — catch both ?query and #hash tokens before anything else runs === -->
+  <script>
+  (function () {
+    try {
+      if (location.pathname.endsWith('/login_single.html')) return;
+      var parts = (location.search || '') + (location.hash || '');
+      if (/(type=recovery|access_token|recovery_token)/i.test(parts)) {
+        var qs = '?' + parts.replace(/^[?#]/, '').replace('#','&');
+        var url = new URL('login_single.html', location.origin).href + qs;
+        location.replace(url);
+      }
+    } catch (e) {
+      console.error('recovery-guard', e);
+    }
+  })();
+  </script>
 
-<meta charset="utf-8"/>
-<title>Кабинет — Litcash</title>
-<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2300eaff'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230b0e13' font-family='Arial' font-weight='700'>LC</text></svg>"/>
-<style>
-:root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
-*{box-sizing:border-box}
-html,body{display:flex;flex-direction:column;min-height:100vh;height:100%}
-body{margin:0;background:
-  radial-gradient(1200px 600px at -10% -30%, rgba(30,136,229,.15), transparent 55%),
-  radial-gradient(900px 400px at 110% 10%, rgba(0,234,255,.15), transparent 60%),
-  linear-gradient(180deg, var(--bg-2), var(--bg));color:var(--text);
-  font:15px/1.6 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;}
-a{color:var(--text);text-decoration:none}
-.container{width:min(1200px,92vw);margin:0 auto;padding:24px 0}
-.card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:20px;backdrop-filter:blur(6px)}
-.grid{display:grid;gap:18px}
-.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media (max-width:980px){.grid-3,.grid-2{grid-template-columns:1fr}}
-.muted{color:var(--muted)}
-.badge{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 10px;font-size:12px;border-radius:999px;background:rgba(0,234,255,.12);color:#cfe9ff;border:1px solid rgba(0,234,255,.25)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:48px;padding:0 24px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18));color:white;font-weight:700;letter-spacing:.2px;cursor:pointer;transition:transform .15s ease, box-shadow .2s ease;box-shadow:0 8px 22px rgba(30,136,229,.35)}
-.btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(30,136,229,.45)}
-.btn.start{height:64px;font-size:18px;border-radius:18px}
-.table{width:100%;border-collapse:separate;border-spacing:0 10px}
-.table th,.table td{padding:12px 14px;text-align:left}
-.table tr{background:rgba(255,255,255,.03);border-radius:12px}
-.table tr:hover{background:rgba(255,255,255,.06)}
-.progress{height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
-#progressFill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
-.video{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08);overflow:hidden;aspect-ratio:16/9;background:#0b0e13}
-.header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(180%) blur(8px);background:rgba(10,12,18,.6);border-bottom:1px solid rgba(255,255,255,.08)}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;color:white}
-.brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 6px 18px rgba(0,234,255,.45)}
-.nav-links{display:flex;align-items:center;gap:14px}
-.nav-cta{display:flex;align-items:center;gap:10px}</style>
-<link href="assets/css/lang-switcher.css" rel="stylesheet"/>
-<style id="lc-lang-style-inline">
-/* LC Globe (inline) */
-#lc-inline-lang{position:relative;display:inline-flex;align-items:center}
-#lc-inline-lang .lc-lang__btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#eee;cursor:pointer;transition:transform .08s ease,box-shadow .2s ease,background .2s ease;backdrop-filter:blur(6px)}
-#lc-inline-lang .lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)}
-#lc-inline-lang .lc-lang__btn:active{transform:translateY(1px)}
-#lc-inline-lang .lc-lang__icon{width:18px;height:18px}
-#lc-inline-lang .lc-lang__menu{list-style:none;margin:8px 0 0;padding:6px 0;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96);color:#eee;position:absolute;right:0;min-width:140px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:99999}
-#lc-inline-lang.is-open .lc-lang__menu{display:block}
-#lc-inline-lang .lc-lang__menu li{padding:8px 12px;cursor:pointer}
-#lc-inline-lang .lc-lang__menu li:hover{background:rgba(255,255,255,.08)}
-body>#lc-inline-lang.lc-floating{position:fixed;right:16px;top:16px;z-index:99999}
-@media (prefers-color-scheme:light){
-  #lc-inline-lang .lc-lang__btn{border-color:rgba(0,0,0,.12);background:rgba(255,255,255,.85);color:#111}
-  #lc-inline-lang .lc-lang__menu{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}
-  #lc-inline-lang .lc-lang__menu li:hover{background:rgba(0,0,0,.06)}
-}</style><style id="lc-lang-inline">/* LC Globe — forced dark style */
-.lc-lang{position:relative;display:inline-flex;align-items:center}
-.lc-lang__btn{height:36px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.18)!important;background:rgba(255,255,255,.06)!important;color:#eee!important;display:inline-flex;gap:8px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:transform .08s ease,box-shadow .2s ease,background .2s ease}
-.lc-lang__btn:hover{box-shadow:0 2px 12px rgba(0,0,0,.35);background:rgba(255,255,255,.12)!important}
-.lc-lang__btn:active{transform:translateY(1px)}
-.lc-lang__icon{width:16px;height:16px}
-.lc-lang__label{font-size:12px;line-height:1}
-.lc-lang__menu{position:absolute;top:calc(100% + 8px);right:0;list-style:none!important;padding-left:0!important;margin:8px 0 0;padding:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,20,20,.96)!important;color:#eee!important;min-width:160px;box-shadow:0 12px 24px rgba(0,0,0,.35);display:none;z-index:10000}
-.lc-lang.is-open .lc-lang__menu{display:block}
-.lc-lang__menu li{padding:8px 12px;cursor:pointer}
-.lc-lang__menu li:hover{background:rgba(255,255,255,.08)}</style><style id="lang-select-inline">
-/* Styled <select> pill with globe */
-.lang-select{
-  -webkit-appearance:none; -moz-appearance:none; appearance:none;
-  background: rgba(255,255,255,.06) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="white" stroke-width="1.4"/></svg>') no-repeat 10px 50%;
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 999px;
-  padding: 8px 28px 8px 34px;
-  color: #eee; font-size: 12px; line-height: 1; cursor: pointer;
-  backdrop-filter: blur(6px);
-}
-.lang-select:focus{ outline:none; box-shadow:0 2px 12px rgba(0,0,0,.35); }
-.lang-select option{ color:#111; }
-@media (prefers-color-scheme:light){
-  .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
-}</style>
+  <!-- ...дальше твоя разметка дашборда... -->
+
 <style>
 /* tidy utils */
 .container{width:min(1100px,92vw);margin:0 auto;padding:20px 0}
