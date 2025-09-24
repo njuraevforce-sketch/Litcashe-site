@@ -127,20 +127,30 @@
 
   <!-- PWA-only safe area fix (iOS standalone) -->
 <style id="ios-standalone-fix">
-  :root { --pwa-top-extra: -6px; } /* было 10px — убрали доп.зазор */
+  /* тонкая настройка: доп.смещение сверху (оставь 0 или поставь отрицательное -2px/-4px) */
+  :root { --pwa-top-extra: -10px; }
 
-  html.standalone body{
+  /* в PWA НЕ добавляем общий padding к body */
+  html.standalone body { padding-top: 0 !important; }
+
+  /* шапка поднимается ровно на высоту выреза (чуть можно поджать через --pwa-top-extra) */
+  html.standalone .header {
     padding-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
   }
 
-  /* шапку тоже делаем компактнее: было +12px, ставим +6px */
-  html.standalone .header{
-    padding-top: calc(6px + env(safe-area-inset-top) + var(--pwa-top-extra));
+  /* если меню/дровер фиксированный — тоже учтём вырез */
+  html.standalone .side-menu,
+  html.standalone .drawer,
+  html.standalone .menu-panel {
+    padding-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
+  }
+  html.standalone .side-menu.fixed,
+  html.standalone .drawer.fixed,
+  html.standalone .menu-panel.fixed {
+    top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
   }
 </style>
+
 </head>
 
 <body>
