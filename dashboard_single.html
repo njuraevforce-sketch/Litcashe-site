@@ -1673,12 +1673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch(_) {}
 })();
-
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(console.error);
-    </script>
+</script>
 <script src="/app-install.js"></script>
 <script>
   (function () {
