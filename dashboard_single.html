@@ -123,20 +123,25 @@
   @media (prefers-color-scheme:light){
     .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
   }
+  @media (prefers-color-scheme:light){
+    .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
+  }
+</style> <!-- ← ЗАКРЫВАЕМ lang-select -->
+
+<!-- iOS PWA safe-area fix -->
 <style id="ios-standalone-fix">
-  /* PWA-only safe area fix (iOS standalone) */
   :root{
     --pwa-top-extra: -10px;
     --pwa-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
   }
 
-  /* В PWA не поднимаем весь body */
+  /* в PWA не поднимаем весь body */
   html.standalone body { padding-top: 0 !important; }
 
-  /* Шапка */
+  /* шапка */
   html.standalone .header { padding-top: var(--pwa-top) !important; }
 
-  /* Бургер-меню (#mobileMenu) — когда открыто */
+  /* бургер-меню (#mobileMenu) — когда открыто */
   html.standalone #mobileMenu.open{
     top: var(--pwa-top) !important;           /* fixed/absolute */
     margin-top: var(--pwa-top) !important;    /* static/relative */
@@ -146,14 +151,13 @@
     content: ""; display: block; height: var(--pwa-top);
   }
 
-  /* Дровер (если используется) */
+  /* дровер (если используется) */
   html.standalone #lc-drawer .lc-drawer__panel{
     top: var(--pwa-top) !important;
     height: calc(100% - var(--pwa-top)) !important;
     box-sizing: border-box;
   }
 </style>
-
 </head>
 
 <body>
