@@ -126,15 +126,21 @@
   </style>
 
   <!-- PWA-only safe area fix (iOS standalone) -->
-  <style id="ios-standalone-fix">
-    html.standalone body{
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
-    }
-    html.standalone .header{ padding-top: calc(12px + env(safe-area-inset-top)); }
-  </style>
+<style id="ios-standalone-fix">
+  :root { --pwa-top-extra: 0px; } /* было 10px — убрали доп.зазор */
+
+  html.standalone body{
+    padding-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* шапку тоже делаем компактнее: было +12px, ставим +6px */
+  html.standalone .header{
+    padding-top: calc(6px + env(safe-area-inset-top) + var(--pwa-top-extra));
+  }
+</style>
 </head>
 
 <body>
