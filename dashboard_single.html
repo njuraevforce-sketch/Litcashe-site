@@ -126,8 +126,9 @@
   </style>
 
 <!-- PWA-only safe area fix (iOS standalone) -->
+<!-- PWA-only safe area fix (iOS standalone) -->
 <style id="ios-standalone-fix">
-  :root { --pwa-top-extra: -10px; }
+  :root { --pwa-top-extra: -10px; } /* как ты подобрал */
 
   /* в PWA НЕ добавляем общий padding к body */
   html.standalone body { padding-top: 0 !important; }
@@ -137,29 +138,21 @@
     padding-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
   }
 
-  /* ↓↓↓ выезжающее меню (добавил top/margin-top — подойдёт и для fixed, и для обычного блока) */
-  html.standalone .side-menu,
-  html.standalone .drawer,
-  html.standalone .menu-panel,
-  html.standalone .nav-menu,
-  html.standalone .mobile-menu {
+  /* выезжающее меню — ровно по твоему id */
+  html.standalone #mobileMenu {
     /* если меню position: fixed/absolute */
     top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
-    /* если меню без top (static/relative) */
+    /* если меню обычный блок — подстраховка */
     margin-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
-    /* лёгкий внутренний отступ, можно убрать */
-    padding-top: 8px;
+    padding-top: 8px; /* по желанию, можно убрать/изменить */
   }
 
-  /* явные fixed-варианты */
-  html.standalone .side-menu.fixed,
-  html.standalone .drawer.fixed,
-  html.standalone .menu-panel.fixed,
-  html.standalone .nav-menu.fixed,
-  html.standalone .mobile-menu.fixed {
+  /* явный fixed-вариант */
+  html.standalone #mobileMenu.fixed {
     top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
   }
 </style>
+
 </head>
 
 <body>
