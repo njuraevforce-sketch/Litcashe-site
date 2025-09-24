@@ -123,10 +123,10 @@
   @media (prefers-color-scheme:light){
     .lang-select{ background-color:#fff; color:#111; border-color:rgba(0,0,0,.12); }
   }
-<!-- PWA-only safe area fix (iOS standalone) -->
 <style id="ios-standalone-fix">
+  /* PWA-only safe area fix (iOS standalone) */
   :root{
-    --pwa-top-extra: -10px;                                     /* твоя подгонка */
+    --pwa-top-extra: -10px;
     --pwa-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
   }
 
@@ -136,20 +136,21 @@
   /* Шапка */
   html.standalone .header { padding-top: var(--pwa-top) !important; }
 
-  /* ===== ВЫЕЗЖАЮЩЕЕ МЕНЮ =====
-     Двигаем именно когда оно открыто (класс .open из твоего кода)
-     Работает независимо от position / transform. */
-  html.standalone #mobileMenu.open {
-    top: var(--pwa-top) !important;            /* если fixed/absolute */
-    margin-top: var(--pwa-top) !important;     /* если static/relative */
-    padding-top: 8px !important;               /* чтобы пункты не упирались в край */
+  /* Бургер-меню (#mobileMenu) — когда открыто */
+  html.standalone #mobileMenu.open{
+    top: var(--pwa-top) !important;           /* fixed/absolute */
+    margin-top: var(--pwa-top) !important;    /* static/relative */
+    padding-top: 8px !important;
+  }
+  html.standalone #mobileMenu.open::before{
+    content: ""; display: block; height: var(--pwa-top);
   }
 
-  /* На случай трансформаций: создаём «прокладку» сверху у открытого меню */
-  html.standalone #mobileMenu.open::before {
-    content: "";
-    display: block;
-    height: var(--pwa-top);
+  /* Дровер (если используется) */
+  html.standalone #lc-drawer .lc-drawer__panel{
+    top: var(--pwa-top) !important;
+    height: calc(100% - var(--pwa-top)) !important;
+    box-sizing: border-box;
   }
 </style>
 
