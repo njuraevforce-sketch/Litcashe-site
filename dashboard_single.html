@@ -6,6 +6,23 @@
 
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#09141d">
+<!-- PWA init -->
+<script defer src="/app-install.js"></script>
+<script defer>
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', function () {
+    // не регистрируем повторно, если уже есть SW на корне
+    navigator.serviceWorker.getRegistration('/')
+      .then(function (reg) {
+        if (!reg) {
+          return navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        }
+      })
+      .catch(console.error);
+  });
+})();
+</script>
 
   <!-- iOS -->
   <link rel="apple-touch-icon" href="/icons/litcash-180.png">
