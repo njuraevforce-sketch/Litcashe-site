@@ -127,7 +127,7 @@
 
   <!-- PWA-only safe area fix (iOS standalone) -->
 <style id="ios-standalone-fix">
-  :root { --pwa-top-extra: 2px; } /* было 10px — убрали доп.зазор */
+  :root { --pwa-top-extra: -6px; } /* было 10px — убрали доп.зазор */
 
   html.standalone body{
     padding-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
