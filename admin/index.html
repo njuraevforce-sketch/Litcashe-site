@@ -384,19 +384,33 @@
     const min = $('#wAmtMin').value ? toCents($('#wAmtMin').value) : null;
     const max = $('#wAmtMax').value ? toCents($('#wAmtMax').value) : null;
 
-    let q = sb.from('withdrawals')
-      .select('id, created_at, user_id, amount_cents, fee_cents, status, txid, note, network, address', { count:'exact' })
-      .order('created_at', { ascending:false })
-      .range(wPage*wLimit, wPage*wLimit + wLimit - 1);
+   // --- заменить участок запроса на это (внутри loadWithdrawals) ---
+try {
+  const r = await sb.rpc('admin_list_withdrawals', {
+    p_status: status || null,
+    p_search: s || null,
+    p_from: from ? from.toISOString() : null,
+    p_to: to ? to.toISOString() : null,
+    p_min: min,
+    p_max: max,
+    p_offset: wPage * wLimit,
+    p_limit: wLimit
+  });
+  if (r.error) {
+    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (r.error.message || r.error) + '</td></tr>';
+    return;
+  }
+  const data = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+  wRowsCache = data;
+  // NOTE: RPC не возвращает count; можно отдельно сделать simple count RPC или вернуть +meta, но для простоты:
+  wLastCount = data.length + wPage * wLimit; // приблизительно — лучше добавить count в RPC если нужно точное пагинирование
+  $('#wDiag').textContent = 'Страница '+(wPage+1)+' · '+(wLastCount||data.length)+' записей';
+  // далее используйте существующую логику рендера (такая же как в текущем коде)
+} catch (err) {
+  tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(err.message||err)+'</td></tr>';
+  return;
+}
 
-    if (status) q = q.eq('status', status);
-    if (from) q = q.gte('created_at', from.toISOString());
-    if (to) q = q.lte('created_at', to.toISOString());
-    if (min!=null) q = q.gte('amount_cents', min);
-    if (max!=null) q = q.lte('amount_cents', max);
-    if (s) {
-      const like = qlike(s);
-      q = q.or('id.ilike.'+like+',address.ilike.'+like+',txid.ilike.'+like+',note.ilike.'+like);
     }
     const { data, error, count } = await q;
     if (error) { tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(error.message||error)+'</td></tr>'; return; }
