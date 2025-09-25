@@ -371,60 +371,104 @@
     }catch(_){ hasAdjust=false; }
   }
 
-  // ===================== WITHDRAWALS =====================
-  let wPage=0, wLimit=25, wLastCount=0, wRowsCache=[];
-  async function loadWithdrawals(resetPage){
-    if (!isAdmin) return;
-    if (resetPage) wPage = 0;
-    const tbody = $('#wTable tbody'); tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
-    const status = $('#wStatus').value || null;
-    const s = $('#wSearch').value.trim();
-    const from = $('#wFrom').value ? new Date($('#wFrom').value) : null;
-    const to = $('#wTo').value ? new Date($('#wTo').value) : null;
-    const min = $('#wAmtMin').value ? toCents($('#wAmtMin').value) : null;
-    const max = $('#wAmtMax').value ? toCents($('#wAmtMax').value) : null;
+// ===================== WITHDRAWALS =====================
+let wPage = 0, wLimit = 25, wLastCount = 0, wRowsCache = [];
+async function loadWithdrawals(resetPage){
+  if (!isAdmin) return;
+  if (resetPage) wPage = 0;
 
-   // --- заменить участок запроса на это (внутри loadWithdrawals) ---
-try {
-  const r = await sb.rpc('admin_list_withdrawals', {
-    p_status: status || null,
-    p_search: s || null,
-    p_from: from ? from.toISOString() : null,
-    p_to: to ? to.toISOString() : null,
-    p_min: min,
-    p_max: max,
-    p_offset: wPage * wLimit,
-    p_limit: wLimit
-  });
-  if (r.error) {
-    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (r.error.message || r.error) + '</td></tr>';
+  const tbody = $('#wTable tbody');
+  tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
+
+  const status = $('#wStatus').value || null;
+  const s = $('#wSearch').value.trim() || null;
+  const from = $('#wFrom').value ? new Date($('#wFrom').value) : null;
+  const to = $('#wTo').value ? new Date($('#wTo').value) : null;
+  const min = $('#wAmtMin').value ? toCents($('#wAmtMin').value) : null;
+  const max = $('#wAmtMax').value ? toCents($('#wAmtMax').value) : null;
+
+  let data = [];
+  try {
+    const params = {
+      p_status: status || null,
+      p_search: s || null,
+      p_from: from ? from.toISOString() : null,
+      p_to: to ? to.toISOString() : null,
+      p_min: min,
+      p_max: max,
+      p_offset: wPage * wLimit,
+      p_limit: wLimit
+    };
+
+    // Вызов RPC
+    const { data: rows, error } = await sb.rpc('admin_list_withdrawals', params);
+    if (error) {
+      tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (error.message || error) + '</td></tr>';
+      return;
+    }
+
+    data = Array.isArray(rows) ? rows : (rows ? [rows] : []);
+    wRowsCache = data;
+
+    // Эвристика для count: если вернулось меньше, чем лимит — это последний набор (точно известно),
+    // иначе показываем примерное значение (можно добавить точный count RPC отдельно).
+    if (data.length < wLimit) {
+      wLastCount = wPage * wLimit + data.length;
+    } else {
+      // неизвестно точное число дальше; показываем минимум (следующая страница возможна)
+      wLastCount = (wPage + 1) * wLimit + 1;
+    }
+
+    $('#wDiag').textContent = 'Страница '+(wPage+1)+' · '+wLastCount+' записей';
+
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(err.message||err)+'</td></tr>';
     return;
   }
-  const data = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
-  wRowsCache = data;
-  // NOTE: RPC не возвращает count; можно отдельно сделать simple count RPC или вернуть +meta, но для простоты:
-  wLastCount = data.length + wPage * wLimit; // приблизительно — лучше добавить count в RPC если нужно точное пагинирование
-  $('#wDiag').textContent = 'Страница '+(wPage+1)+' · '+(wLastCount||data.length)+' записей';
-  // далее используйте существующую логику рендера (такая же как в текущем коде)
-} catch (err) {
-  tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(err.message||err)+'</td></tr>';
-  return;
-}
 
+  // --- далее используйте существующую логику рендера таблицы, которая ожидала `data` ---
+  // если у вас есть функция renderWithdrawalsRows(data) — вызовите её.
+  // Иначе, ниже пример простого рендера (адаптируйте под ваш код):
+  try {
+    if (!data || !data.length) {
+      tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
+    } else {
+      tbody.innerHTML = '';
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        // Пример колонок — замените/дополните под ваши поля:
+        tr.innerHTML = `
+          <td class="small">${row.id || ''}</td>
+          <td class="small">${row.created_at ? new Date(row.created_at).toLocaleString() : ''}</td>
+          <td class="small">${row.user_id || ''}</td>
+          <td class="small">${row.amount_cents != null ? (row.amount_cents/100).toFixed(2) : ''}</td>
+          <td class="small">${row.status || ''}</td>
+          <td class="small">${row.txid || ''}</td>
+          <td class="small">${row.address || ''}</td>
+          <td class="small">${row.network || ''}</td>
+          <td class="small">${row.note || ''}</td>
+          <td class="small"><button class="btn-sm" data-id="${row.id}" onclick="openWithdrawal(${JSON.stringify(row.id)})">Открыть</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
-    const { data, error, count } = await q;
-    if (error) { tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(error.message||error)+'</td></tr>'; return; }
-    wLastCount = count || 0; wRowsCache = data||[]; $('#wDiag').textContent = 'Страница '+(wPage+1)+' · '+wLastCount+' записей';
+  } catch(e){
+    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(e.message||e)+'</td></tr>';
+    return;
+  }
 
-    // mini-lookup профилей
-    const emailByUser={}, phoneByUser={};
-    try {
-      const ids = (data||[]).map(r=>r.user_id).filter(Boolean);
-      if (ids.length) {
-        const { data: profs } = await sb.from('profiles').select('user_id, email, phone').in('user_id', ids);
+  // mini-lookup профилей (оставлено ваше существующее поведение — работает с `data`)
+  const emailByUser = {}, phoneByUser = {};
+  try {
+    const ids = (data||[]).map(r=>r.user_id).filter(Boolean);
+    if (ids.length) {
+      const { data: profs, error: profErr } = await sb.from('profiles').select('user_id, email, phone').in('user_id', ids);
+      if (!profErr && profs && profs.length) {
         (profs||[]).forEach(p=>{ emailByUser[p.user_id]=p.email; phoneByUser[p.user_id]=p.phone; });
       }
-    }catch(_){}
+    }
+  } catch(_) {}
+}
 
     // своды
     let sAmt=0, sFee=0;
