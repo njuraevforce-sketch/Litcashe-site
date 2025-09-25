@@ -425,23 +425,35 @@ async function loadWithdrawals(resetPage){
     tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(err.message||err)+'</td></tr>';
     return;
   }
-
-  // --- далее используйте существующую логику рендера таблицы, которая ожидала `data` ---
-  // если у вас есть функция renderWithdrawalsRows(data) — вызовите её.
-  // Иначе, ниже пример простого рендера (адаптируйте под ваш код):
+  // --- точечная замена: сначала подтягиваем профили, потом рендерим строки ---
   try {
-    if (!data || !data.length) {
+    // выбираем источник данных (поддерживаем старые имена переменных)
+    const rowsToRender = (typeof rows !== 'undefined' && rows) ? rows : ((typeof data !== 'undefined' && data) ? data : []);
+    if (!rowsToRender || !rowsToRender.length) {
       tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
     } else {
+      // mini-lookup профилей (email/phone) — выполняем до рендера, чтобы иметь данные
+      const emailByUser = {}, phoneByUser = {};
+      const ids = Array.from(new Set(rowsToRender.map(r => r.user_id).filter(Boolean)));
+      if (ids.length) {
+        try {
+          const { data: profs, error: profErr } = await sb.from('profiles').select('user_id, email, phone').in('user_id', ids);
+          if (!profErr && profs && profs.length) {
+            profs.forEach(p => { emailByUser[p.user_id] = p.email; phoneByUser[p.user_id] = p.phone; });
+          }
+        } catch(_) { /* silently ignore profile lookup errors */ }
+      }
+
+      // Рендер таблицы
       tbody.innerHTML = '';
-      data.forEach(row => {
+      rowsToRender.forEach(row => {
         const tr = document.createElement('tr');
-        // Пример колонок — замените/дополните под ваши поля:
         tr.innerHTML = `
           <td class="small">${row.id || ''}</td>
           <td class="small">${row.created_at ? new Date(row.created_at).toLocaleString() : ''}</td>
-          <td class="small">${row.user_id || ''}</td>
-          <td class="small">${row.amount_cents != null ? (row.amount_cents/100).toFixed(2) : ''}</td>
+          <td class="small">${ emailByUser[row.user_id] ? ('<div class="small muted">'+short(row.user_id)+'</div><div>'+ (emailByUser[row.user_id] || '—') +'</div>') : (short(row.user_id) || '—') }</td>
+          <td class="small">${phoneByUser[row.user_id] || '—'}</td>
+          <td class="small">${row.amount_cents != null ? (Number(row.amount_cents)/100).toFixed(2) : ''}</td>
           <td class="small">${row.status || ''}</td>
           <td class="small">${row.txid || ''}</td>
           <td class="small">${row.address || ''}</td>
@@ -452,23 +464,11 @@ async function loadWithdrawals(resetPage){
         tbody.appendChild(tr);
       });
     }
-  } catch(e){
+  } catch (e) {
     tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(e.message||e)+'</td></tr>';
     return;
   }
 
-  // mini-lookup профилей (оставлено ваше существующее поведение — работает с `data`)
-  const emailByUser = {}, phoneByUser = {};
-  try {
-    const ids = (data||[]).map(r=>r.user_id).filter(Boolean);
-    if (ids.length) {
-      const { data: profs, error: profErr } = await sb.from('profiles').select('user_id, email, phone').in('user_id', ids);
-      if (!profErr && profs && profs.length) {
-        (profs||[]).forEach(p=>{ emailByUser[p.user_id]=p.email; phoneByUser[p.user_id]=p.phone; });
-      }
-    }
-  } catch(_) {}
-}
 
     // своды
     let sAmt=0, sFee=0;
