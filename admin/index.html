@@ -292,47 +292,12 @@
   const $$ = s => Array.from(document.querySelectorAll(s));
   const sb = window.sb;
   if (!sb) { alert('Supabase не инициализирован'); }
-  const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w';
   const fmtCents = c => ((+c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2}) + ' USDT';
   const pill = s => '<span class="pill '+s+'">'+(s==='paid'?'оплачено':s==='rejected'?'отклонено':'ожидание')+'</span>';
   const short = s => (s ? String(s).slice(0,6)+'…'+String(s).slice(-4) : '');
   const toCents = v => Math.round((Number(v)||0) * 100);
   const qlike = v => v? '%' + String(v).toLowerCase().trim() + '%' : null;
   const isUUID = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(s||''));
-
-  // Универсальный fetch RPC, возвращает JS-объект или бросает Error с body
-  async function callRpcFetch(name, params){
-    const url = new URL('/rest/v1/rpc/' + encodeURIComponent(name), location.origin.replace(/https?:\/\/[^/]+/, 'https://einpfuegfsilnoiareco.supabase.co'));
-    // build full url from supabase URL explicitly to avoid relative issues
-    const fullUrl = 'https://einpfuegfsilnoiareco.supabase.co/rest/v1/rpc/' + encodeURIComponent(name);
-    const headers = {
-      'Content-Type': 'application/json',
-      'apikey': ANON_KEY,
-      'Authorization': 'Bearer ' + ANON_KEY,
-      'Accept': 'application/json'
-    };
-    let body = {};
-    if (params && typeof params === 'object') body = params;
-    try {
-      const res = await fetch(fullUrl, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'omit' });
-      const text = await res.text();
-      // try parse json
-      let data = null;
-      try { data = text ? JSON.parse(text) : null; } catch(e){}
-      if (!res.ok) {
-        // show more detail to user for debugging
-        const message = (data && data.message) ? data.message : text || res.statusText;
-        // show in console and alert so admin sees it
-        console.error('RPC ' + name + ' failed', res.status, text, data);
-        alert('RPC ' + name + ' error: ' + message);
-        throw new Error(message);
-      }
-      return data;
-    } catch (e) {
-      console.error('callRpcFetch error', e);
-      throw e;
-    }
-  }
 
   let sessionUser = null, isAdmin = false, hasAdjust=false;
 
@@ -528,7 +493,6 @@ async function loadWithdrawals(resetPage){
         try {
           const btn = ev.target && ev.target.closest ? ev.target.closest('button[data-act]') : null;
           if (!btn) return;
-          // предотвращаем стандартную обработку если нужно
           ev.preventDefault();
           const act = (btn.getAttribute('data-act') || '').trim();
           const id = btn.getAttribute('data-id') || null;
@@ -546,11 +510,9 @@ async function loadWithdrawals(resetPage){
 
           if (act === 'pay' || act === 'reject') {
             if (!id) { alert('Неизвестный ID заявки'); return; }
-            // подтверждение
             const confirmed = confirm(act === 'pay' ? 'Отметить заявку как оплаченную?' : 'Отклонить заявку?');
             if (!confirmed) return;
 
-            // сначала пытаемся вызвать существующую функцию markWithdrawal (сохранение поведения)
             if (typeof markWithdrawal === 'function') {
               try {
                 await markWithdrawal(id, act === 'pay' ? 'paid' : 'rejected');
@@ -561,19 +523,22 @@ async function loadWithdrawals(resetPage){
               }
             }
 
-            // fallback — вызываем RPC-функции (через fetch, чтобы видеть текст ошибки)
             try {
               if (act === 'pay') {
                 const tx = prompt('Введите TXID (опционально):') || null;
-                await callRpcFetch('admin_pay_withdrawal', { p_id: id, p_txid: tx });
+                if (sb && sb.rpc) {
+                  await sb.rpc('admin_pay_withdrawal', { p_id: id, p_txid: tx });
+                } else throw new Error('RPC client not available');
               } else {
                 const note = prompt('Причина отклонения (опционально):') || null;
-                await callRpcFetch('admin_reject_withdrawal', { p_id: id, p_note: note });
+                if (sb && sb.rpc) {
+                  await sb.rpc('admin_reject_withdrawal', { p_id: id, p_note: note });
+                } else throw new Error('RPC client not available');
               }
               if (typeof loadWithdrawals === 'function') loadWithdrawals(false);
             } catch (rpcErr) {
               console.error('RPC error', rpcErr);
-              // callRpcFetch уже покажет alert с телом ошибки
+              alert('Ошибка при обновлении заявки: ' + (rpcErr?.message || String(rpcErr)));
             }
             return;
           }
@@ -669,7 +634,7 @@ async function loadWithdrawals(resetPage){
     const from = $('#rwFrom').value ? new Date($('#rwFrom').value) : null;
     const to = $('#rwTo').value ? new Date($('#rwTo').value) : null;
 
-    // УБРАЛ amount_usd и reward_usdt — чтобы избежать 400 если этих колонок нет
+    // NOTE: Убрал amount_usd и reward_usdt из запроса — если в вашей базе они есть, можно вернуть.
     let q = sb.from('v_admin_rewards').select('created_at, level, target_user_id, source_user_id, amount_cents, note').order('created_at', {ascending:false}).limit(1000);
     if (s) { const like=qlike(s); q = q.or('target_user_id.ilike.'+like+',source_user_id.ilike.'+like+',note.ilike.'+like); }
     if (lvl!=='') q = q.eq('level', Number(lvl));
@@ -679,10 +644,11 @@ async function loadWithdrawals(resetPage){
     const r = await q;
     if (r.error){ tbody.innerHTML='<tr><td colspan="6" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
 
-    // нормализация amount — теперь только amount_cents
+    // нормализация amount
     let rows = (r.data||[]).map(x=>{
-      let amount = x.amount_cents || 0;
-      return { created_at:x.created_at, level:x.level, target_user_id:x.target_user_id, source_user_id:x.source_user_id, amount_cents:amount, note:x.note };
+      let amount = x.amount_cents;
+      // Если amount_cents может быть null, оставим 0
+      return { created_at:x.created_at, level:x.level, target_user_id:x.target_user_id, source_user_id:x.source_user_id, amount_cents:amount||0, note:x.note };
     });
 
     rwRowsCache = rows||[];
@@ -728,7 +694,6 @@ async function loadWithdrawals(resetPage){
     key = (key||'').trim();
     if(!key){ tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
 
-    // Если пришёл ref_code → найдём его user_id
     let rootId = key;
     if(!isUUID(key)){
       try{
@@ -798,7 +763,6 @@ async function loadWithdrawals(resetPage){
     if (tree && tree.length){
       rows = tree.map(x=>({ level:x.gen, user_id:x.user_id }));
     } else {
-      // Фолбэк: послойно через v_admin_profiles
       let parents=[{user_id:rootId, ref_code:null}];
       try { const p = await sb.from('v_admin_profiles').select('ref_code').eq('user_id', rootId).maybeSingle();
             parents[0].ref_code = p?.data?.ref_code || null; } catch(_){}
@@ -862,8 +826,7 @@ async function loadWithdrawals(resetPage){
       sb.from('profiles').select('user_id, created_at, email, phone, ref_code').eq('user_id', uid).maybeSingle(),
       sb.from('wallets').select('user_id, balance_cents').eq('user_id', uid).maybeSingle(),
       sb.from('withdrawals').select('created_at, amount_cents, status, txid').eq('user_id', uid).order('created_at', {ascending:false}).limit(20),
-      // УБРАЛ amount_usd и reward_usdt — как в loadRewards
-      sb.from('v_admin_rewards').select('created_at, level, amount_cents, source_user_id, note, target_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(300)
+      sb.from('v_admin_rewards').select('created_at, level, amount_cents, note, source_user_id, target_user_id').eq('target_user_id', uid).order('created_at', {ascending:false}).limit(300)
     ]);
     $('#dCreated').value = prof?.data?.created_at ? new Date(prof.data.created_at).toLocaleString() : '—';
     $('#dEmail').value = prof?.data?.email || '';
@@ -878,7 +841,7 @@ async function loadWithdrawals(resetPage){
     const rtbody = $('#dRTable tbody'); rtbody.innerHTML='';
     let dL1=0,dL2=0,dL3=0, dAll=0;
     (rrs?.data||[]).forEach(r=>{
-      const amt = r.amount_cents || 0;
+      const amt = r.amount_cents ?? 0;
       dAll += (amt||0);
       if (+r.level===1) dL1+=(amt||0);
       if (+r.level===2) dL2+=(amt||0);
@@ -926,9 +889,8 @@ async function loadWithdrawals(resetPage){
     setTimeout(loadRewards,300);
   })();
 
-})();
-
   // ===== Deposits =====
+  // Перенёс этот блок внутрь IIFE — чтобы не было " $ is not defined " и чтобы иметь доступ к isAdmin
   let dRowsCache=[];
   async function loadDeposits(){
     if(!isAdmin) return;
@@ -964,7 +926,9 @@ async function loadWithdrawals(resetPage){
   $('#dRefresh')?.addEventListener('click', loadDeposits);
   $('#dExport')?.addEventListener('click', ()=> exportCSV('deposits.csv', dRowsCache||[]));
   $('#dSearch')?.addEventListener('input', ()=> loadDeposits());
-  try{ sb.channel('adm-dep').on('postgres_changes', {event:'*', schema:'public', table:'deposits'}, ()=>{ if(activePage==='deposits'){ loadDeposits(); }}).subscribe(); }catch(_){}
+  try{ sb.channel('adm-dep').on('postgres_changes', {event:'*', schema:'public', table:'deposits'}, ()=>{ if($('.tab.active')?.dataset.tab==='deposits'){ loadDeposits(); }}).subscribe(); }catch(_){}
+
+})();
 </script>
 </body>
 </html>
