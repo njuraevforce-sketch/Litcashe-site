@@ -378,6 +378,7 @@ async function loadWithdrawals(resetPage){
   if (resetPage) wPage = 0;
 
   const tbody = $('#wTable tbody');
+  if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
 
   const status = $('#wStatus').value || null;
@@ -387,7 +388,6 @@ async function loadWithdrawals(resetPage){
   const min = $('#wAmtMin').value ? toCents($('#wAmtMin').value) : null;
   const max = $('#wAmtMax').value ? toCents($('#wAmtMax').value) : null;
 
-  // параметры для RPC
   const params = {
     p_status: status || null,
     p_search: s || null,
@@ -399,7 +399,6 @@ async function loadWithdrawals(resetPage){
     p_limit: wLimit
   };
 
-  // получаем данные
   let rows = [];
   try {
     const r = await sb.rpc('admin_list_withdrawals', params);
@@ -410,7 +409,7 @@ async function loadWithdrawals(resetPage){
     rows = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
     wRowsCache = rows;
 
-    // попытка точного count (если есть RPC)
+    // try count
     try {
       const c = await sb.rpc('admin_list_withdrawals_count', {
         p_status: status || null, p_search: s || null,
@@ -421,42 +420,37 @@ async function loadWithdrawals(resetPage){
         const cnt = (typeof c.data === 'number') ? c.data : (Array.isArray(c.data) ? Number(c.data[0]) : Number(c.data));
         if (!Number.isNaN(cnt)) wLastCount = cnt;
       }
-    } catch(_) {
-      // fallback: эвристика ниже
-    }
+    } catch(_) {}
 
     if (!wLastCount) {
       if (rows.length < wLimit) wLastCount = wPage * wLimit + rows.length;
       else wLastCount = (wPage + 1) * wLimit + 1;
     }
-
     $('#wDiag').textContent = 'Страница ' + (wPage + 1) + ' · ' + wLastCount + ' записей';
 
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(err.message||String(err))+'</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (err?.message || String(err)) + '</td></tr>';
     return;
   }
 
-  // подтягиваем профили (email/phone) — заранее, перед рендером
+  // preload profiles (email/phone)
   const emailByUser = {}, phoneByUser = {};
   try {
     const ids = Array.from(new Set(rows.map(r => r.user_id).filter(Boolean)));
     if (ids.length) {
-      const profRes = await sb.from('profiles').select('user_id, email, phone').in('user_id', ids);
+      const profRes = await sb.from('profiles').select('user_id,email,phone').in('user_id', ids);
       if (!profRes.error && profRes.data && profRes.data.length) {
         profRes.data.forEach(p => { emailByUser[p.user_id] = p.email; phoneByUser[p.user_id] = p.phone; });
       }
     }
   } catch (e) {
-    // не критично — рендерим без email/phone
     console.warn('profiles lookup failed', e);
   }
 
-  // рендерим таблицу (один проход)
+  // render table
   try {
     if (!rows || !rows.length) {
       tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
-      // обновляем сводные карточки
       $('#wCount').textContent = '0';
       $('#wSum').textContent = fmtCents(0);
       $('#wFee').textContent = fmtCents(0);
@@ -493,7 +487,6 @@ async function loadWithdrawals(resetPage){
       tbody.appendChild(tr);
     }
 
-    // обновляем сводные карточки
     $('#wCount').textContent = String(rows.length);
     $('#wSum').textContent = fmtCents(sumAmt);
     $('#wFee').textContent = fmtCents(sumFee);
