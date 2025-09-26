@@ -409,7 +409,7 @@ async function loadWithdrawals(resetPage){
     rows = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
     wRowsCache = rows;
 
-    // try count
+    // Попытка получить точный count (если есть RPC)
     try {
       const c = await sb.rpc('admin_list_withdrawals_count', {
         p_status: status || null, p_search: s || null,
@@ -420,7 +420,7 @@ async function loadWithdrawals(resetPage){
         const cnt = (typeof c.data === 'number') ? c.data : (Array.isArray(c.data) ? Number(c.data[0]) : Number(c.data));
         if (!Number.isNaN(cnt)) wLastCount = cnt;
       }
-    } catch(_) {}
+    } catch(_) { /* ignore */ }
 
     if (!wLastCount) {
       if (rows.length < wLimit) wLastCount = wPage * wLimit + rows.length;
@@ -433,7 +433,7 @@ async function loadWithdrawals(resetPage){
     return;
   }
 
-  // preload profiles (email/phone)
+  // Подгружаем профили (email/phone) — заранее
   const emailByUser = {}, phoneByUser = {};
   try {
     const ids = Array.from(new Set(rows.map(r => r.user_id).filter(Boolean)));
@@ -447,7 +447,7 @@ async function loadWithdrawals(resetPage){
     console.warn('profiles lookup failed', e);
   }
 
-  // render table
+  // Рендер таблицы
   try {
     if (!rows || !rows.length) {
       tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
@@ -497,33 +497,6 @@ async function loadWithdrawals(resetPage){
     return;
   }
 }
-
-      // Рендер таблицы
-      tbody.innerHTML = '';
-      rowsToRender.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="small">${row.id || ''}</td>
-          <td class="small">${row.created_at ? new Date(row.created_at).toLocaleString() : ''}</td>
-          <td class="small">${ emailByUser[row.user_id] ? ('<div class="small muted">'+short(row.user_id)+'</div><div>'+ (emailByUser[row.user_id] || '—') +'</div>') : (short(row.user_id) || '—') }</td>
-          <td class="small">${phoneByUser[row.user_id] || '—'}</td>
-          <td class="small">${row.amount_cents != null ? (Number(row.amount_cents)/100).toFixed(2) : ''}</td>
-          <td class="small">${row.status || ''}</td>
-          <td class="small">${row.txid || ''}</td>
-          <td class="small">${row.address || ''}</td>
-          <td class="small">${row.network || ''}</td>
-          <td class="small">${row.note || ''}</td>
-          <td class="small"><button class="btn-sm" data-id="${row.id}" onclick="openWithdrawal(${JSON.stringify(row.id)})">Открыть</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-  } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(e.message||e)+'</td></tr>';
-    return;
-  }
-
-
     // своды
     let sAmt=0, sFee=0;
     (data||[]).forEach(r=>{ sAmt+=(+r.amount_cents||0); sFee+=(+r.fee_cents||0); });
