@@ -371,202 +371,131 @@
     }catch(_){ hasAdjust=false; }
   }
 
-// ===================== WITHDRAWALS =====================
 let wPage = 0, wLimit = 25, wLastCount = 0, wRowsCache = [];
 async function loadWithdrawals(resetPage){
-  if (!isAdmin) return;
-  if (resetPage) wPage = 0;
+if (!isAdmin) return;
+if (resetPage) wPage = 0;
 
-  const tbody = $('#wTable tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
+const tbody = $('#wTable tbody');
+if (!tbody) return;
+tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
 
-  const status = $('#wStatus').value || null;
-  const s = ($('#wSearch').value || '').trim() || null;
-  const from = $('#wFrom').value ? new Date($('#wFrom').value) : null;
-  const to = $('#wTo').value ? new Date($('#wTo').value) : null;
-  const min = $('#wAmtMin').value ? toCents($('#wAmtMin').value) : null;
-  const max = $('#wAmtMax').value ? toCents($('#wAmtMax').value) : null;
+const status = $('#wStatus').value || null;
+const s = ($('#wSearch').value || '').trim() || null;
+const from = $('#wFrom').value ? new Date($('#wFrom').value) : null;
+const to = $('#wTo').value ? new Date($('#wTo').value) : null;
+const min = $('#wAmtMin').value ? toCents($('#wAmtMin').value) : null;
+const max = $('#wAmtMax').value ? toCents($('#wAmtMax').value) : null;
 
-  const params = {
-    p_status: status || null,
-    p_search: s || null,
-    p_from: from ? from.toISOString() : null,
-    p_to: to ? to.toISOString() : null,
-    p_min: min,
-    p_max: max,
-    p_offset: wPage * wLimit,
-    p_limit: wLimit
-  };
+const params = {
+ p_status: status || null,
+ p_search: s || null,
+ p_from: from ? from.toISOString() : null,
+ p_to: to ? to.toISOString() : null,
+ p_min: min,
+ p_max: max,
+ p_offset: wPage * wLimit,
+ p_limit: wLimit
+};
 
-  let rows = [];
-  try {
-    const r = await sb.rpc('admin_list_withdrawals', params);
-    if (r?.error) {
-      tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (r.error.message || JSON.stringify(r.error)) + '</td></tr>';
-      return;
-    }
-    rows = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
-    wRowsCache = rows;
+let rows = [];
+try {
+ const r = await sb.rpc('admin_list_withdrawals', params);
+ if (r?.error) {
+   tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (r.error.message || JSON.stringify(r.error)) + '</td></tr>';
+   return;
+ }
+ rows = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+ wRowsCache = rows;
 
-    // Попытка получить точный count (если есть RPC)
-    try {
-      const c = await sb.rpc('admin_list_withdrawals_count', {
-        p_status: status || null, p_search: s || null,
-        p_from: from ? from.toISOString() : null, p_to: to ? to.toISOString() : null,
-        p_min: min, p_max: max
-      });
-      if (!c?.error) {
-        const cnt = (typeof c.data === 'number') ? c.data : (Array.isArray(c.data) ? Number(c.data[0]) : Number(c.data));
-        if (!Number.isNaN(cnt)) wLastCount = cnt;
-      }
-    } catch(_) { /* ignore */ }
+ // Попытка получить точный count (если есть RPC)
+ try {
+   const c = await sb.rpc('admin_list_withdrawals_count', {
+     p_status: status || null, p_search: s || null,
+     p_from: from ? from.toISOString() : null, p_to: to ? to.toISOString() : null,
+     p_min: min, p_max: max
+   });
+   if (!c?.error) {
+     const cnt = (typeof c.data === 'number') ? c.data : (Array.isArray(c.data) ? Number(c.data[0]) : Number(c.data));
+     if (!Number.isNaN(cnt)) wLastCount = cnt;
+   }
+ } catch(_) { /* ignore */ }
 
-    if (!wLastCount) {
-      if (rows.length < wLimit) wLastCount = wPage * wLimit + rows.length;
-      else wLastCount = (wPage + 1) * wLimit + 1;
-    }
-    $('#wDiag').textContent = 'Страница ' + (wPage + 1) + ' · ' + wLastCount + ' записей';
+ if (!wLastCount) {
+   if (rows.length < wLimit) wLastCount = wPage * wLimit + rows.length;
+   else wLastCount = (wPage + 1) * wLimit + 1;
+ }
+ $('#wDiag').textContent = 'Страница ' + (wPage + 1) + ' · ' + wLastCount + ' записей';
 
-  } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (err?.message || String(err)) + '</td></tr>';
-    return;
-  }
-
-  // Подгружаем профили (email/phone) — заранее
-  const emailByUser = {}, phoneByUser = {};
-  try {
-    const ids = Array.from(new Set(rows.map(r => r.user_id).filter(Boolean)));
-    if (ids.length) {
-      const profRes = await sb.from('profiles').select('user_id,email,phone').in('user_id', ids);
-      if (!profRes.error && profRes.data && profRes.data.length) {
-        profRes.data.forEach(p => { emailByUser[p.user_id] = p.email; phoneByUser[p.user_id] = p.phone; });
-      }
-    }
-  } catch (e) {
-    console.warn('profiles lookup failed', e);
-  }
-
-  // Рендер таблицы
-  try {
-    if (!rows || !rows.length) {
-      tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
-      $('#wCount').textContent = '0';
-      $('#wSum').textContent = fmtCents(0);
-      $('#wFee').textContent = fmtCents(0);
-      $('#wTotal').textContent = fmtCents(0);
-      return;
-    }
-
-    tbody.innerHTML = '';
-    let sumAmt = 0, sumFee = 0;
-    for (const r of rows) {
-      const amount = Number(r.amount_cents || 0);
-      const fee = Number(r.fee_cents || 0);
-      const total = amount + fee;
-      sumAmt += amount; sumFee += fee;
-
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td class="nowrap small">' + (r.id || '') + '</td>' +
-        '<td class="nowrap small">' + (r.created_at ? new Date(r.created_at).toLocaleString() : '') + '</td>' +
-        '<td class="small">' + (emailByUser[r.user_id] || short(r.user_id) || '—') + '</td>' +
-        '<td class="small">' + (phoneByUser[r.user_id] || '—') + '</td>' +
-        '<td class="right small">' + fmtCents(amount) + '</td>' +
-        '<td class="right small">' + fmtCents(fee) + '</td>' +
-        '<td class="right small">' + fmtCents(total) + '</td>' +
-        '<td class="small">' + (r.network || '—') + '</td>' +
-        '<td class="small nowrap">' + (r.address ? ('<code>' + r.address + '</code>') : '—') + '</td>' +
-        '<td class="small">' + (r.status ? pill(String(r.status).toLowerCase()) : pill('pending')) + '</td>' +
-        '<td class="small">' + (r.txid ? ('<code>' + short(r.txid) + '</code>') : (r.note ? ('<div class="small muted">' + r.note + '</div>') : '—')) + '</td>' +
-        '<td class="nowrap small">' +
-          '<button class="btn ok small" data-act="pay" data-id="'+r.id+'">Оплатить</button> ' +
-          '<button class="btn bad small" data-act="reject" data-id="'+r.id+'">Отклонить</button> ' +
-          '<button class="btn ghost small" data-act="view" data-user="'+r.user_id+'">Профиль</button>' +
-        '</td>';
-      tbody.appendChild(tr);
-    }
-
-    $('#wCount').textContent = String(rows.length);
-    $('#wSum').textContent = fmtCents(sumAmt);
-    $('#wFee').textContent = fmtCents(sumFee);
-    $('#wTotal').textContent = fmtCents(sumAmt + sumFee);
-
-  } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (e?.message || String(e)) + '</td></tr>';
-    return;
-  }
+} catch (err) {
+ tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (err?.message || String(err)) + '</td></tr>';
+ return;
 }
-    // своды
-    let sAmt=0, sFee=0;
-    (data||[]).forEach(r=>{ sAmt+=(+r.amount_cents||0); sFee+=(+r.fee_cents||0); });
-    $('#wCount').textContent = data?.length ?? 0;
-    $('#wSum').textContent = fmtCents(sAmt);
-    $('#wFee').textContent = fmtCents(sFee);
-    $('#wTotal').textContent = fmtCents(sAmt+sFee);
 
-    tbody.innerHTML='';
-    if (!data || !data.length) { tbody.innerHTML = '<tr><td colspan="12" class="muted small">Пусто</td></tr>'; return; }
-    for (const r of data) {
-      const amount = r.amount_cents||0, fee=r.fee_cents||0, total=amount+fee;
-      const tr = document.createElement('tr');
-      tr.innerHTML = '<td class="nowrap">'+r.id+'</td>'
-        + '<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td>'
-        + '<td>'+(emailByUser[r.user_id]||'—')+'</td>'
-        + '<td>'+(phoneByUser[r.user_id]||'—')+'</td>'
-        + '<td class="right">'+fmtCents(amount)+'</td>'
-        + '<td class="right">'+fmtCents(fee)+'</td>'
-        + '<td class="right">'+fmtCents(total)+'</td>'
-        + '<td>'+(r.network||'—')+'</td>'
-        + '<td class="nowrap">'+(r.address?('<code>'+r.address+'</code>'):'—')+'</td>'
-        + '<td>'+pill(String(r.status||'pending').toLowerCase())+'</td>'
-        + '<td class="nowrap">'+(r.txid?('<code>'+short(r.txid)+'</code>'):'—')+(r.note?('<div class="small muted">'+r.note+'</div>'):'')+'</td>'
-        + '<td class="nowrap">'
-          + '<button class="btn ok small" data-act="pay" data-id="'+r.id+'">Оплатить</button> '
-          + '<button class="btn bad small" data-act="reject" data-id="'+r.id+'">Отклонить</button> '
-          + '<button class="btn ghost small" data-act="view" data-user="'+r.user_id+'">Профиль</button>'
-        + '</td>';
-      tbody.appendChild(tr);
-    }
-  }
-  $('#wReload').addEventListener('click', ()=>{ loadWithdrawals(true); });
-  $('#wPrev').addEventListener('click', ()=>{ if (wPage>0){ wPage--; loadWithdrawals(false); } });
-  $('#wNext').addEventListener('click', ()=>{ if ((wPage+1)*wLimit < wLastCount){ wPage++; loadWithdrawals(false); } });
-  $('#wTable').addEventListener('click', async (e)=>{ const btn=e.target.closest('button[data-act]'); if(!btn) return;
-    const id=btn.dataset.id, act=btn.dataset.act;
-    if(act==='view'){ openUserDrawer(btn.dataset.user); return; }
-    if(act==='pay'){ await markWithdrawal(id, 'paid'); }
-    if(act==='reject'){ await markWithdrawal(id, 'rejected'); }
-  });
-  $('#wExport').addEventListener('click', ()=>{ exportCSV('withdrawals.csv', (wRowsCache||[])); });
+// Подгружаем профили (email/phone) — заранее
+const emailByUser = {}, phoneByUser = {};
+try {
+ const ids = Array.from(new Set(rows.map(r => r.user_id).filter(Boolean)));
+ if (ids.length) {
+   const profRes = await sb.from('profiles').select('user_id,email,phone').in('user_id', ids);
+   if (!profRes.error && profRes.data && profRes.data.length) {
+     profRes.data.forEach(p => { emailByUser[p.user_id] = p.email; phoneByUser[p.user_id] = p.phone; });
+   }
+ }
+} catch (e) {
+ console.warn('profiles lookup failed', e);
+}
 
-  // realtime
-  try{ sb.channel('adm-wd').on('postgres_changes', { event:'*', schema:'public', table:'withdrawals' }, ()=>{ if($('.tab.active')?.dataset.tab==='withdrawals') loadWithdrawals(); }).subscribe(); }catch(_){}
+// Рендер таблицы
+try {
+ if (!rows || !rows.length) {
+   tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
+   $('#wCount').textContent = '0';
+   $('#wSum').textContent = fmtCents(0);
+   $('#wFee').textContent = fmtCents(0);
+   $('#wTotal').textContent = fmtCents(0);
+   return;
+ }
 
-  async function markWithdrawal(id, status){
-    const isPaid = status==='paid';
-    const msg = isPaid ? 'TX/комментарий для "Оплачено":' : 'Причина "Отклонено":';
-    const txt = prompt(msg); if(!txt && isPaid) return; // для paid требуем текст/TX
-    const payload = { p_id:id, p_status:status, p_txid: isPaid? txt : null, p_note: txt||null };
+ tbody.innerHTML = '';
+ let sumAmt = 0, sumFee = 0;
+ for (const r of rows) {
+   const amount = Number(r.amount_cents || 0);
+   const fee = Number(r.fee_cents || 0);
+   const total = amount + fee;
+   sumAmt += amount; sumFee += fee;
 
-    // 1) Пытаемся RPC
-    let ok=false, err=null;
-    try{
-      const r = await sb.rpc('admin_update_withdrawal', payload);
-      if (!r?.error) ok=true; else err = r.error;
-    }catch(e){ err=e; }
+   const tr = document.createElement('tr');
+   tr.innerHTML =
+     '<td class="nowrap small">' + (r.id || '') + '</td>' +
+     '<td class="nowrap small">' + (r.created_at ? new Date(r.created_at).toLocaleString() : '') + '</td>' +
+     '<td class="small">' + (emailByUser[r.user_id] || short(r.user_id) || '—') + '</td>' +
+     '<td class="small">' + (phoneByUser[r.user_id] || '—') + '</td>' +
+     '<td class="right small">' + fmtCents(amount) + '</td>' +
+     '<td class="right small">' + fmtCents(fee) + '</td>' +
+     '<td class="right small">' + fmtCents(total) + '</td>' +
+     '<td class="small">' + (r.network || '—') + '</td>' +
+     '<td class="small nowrap">' + (r.address ? ('<code>' + r.address + '</code>') : '—') + '</td>' +
+     '<td class="small">' + (r.status ? pill(String(r.status).toLowerCase()) : pill('pending')) + '</td>' +
+     '<td class="small">' + (r.txid ? ('<code>' + short(r.txid) + '</code>') : (r.note ? ('<div class="small muted">' + r.note + '</div>') : '—')) + '</td>' +
+     '<td class="nowrap small">' +
+       '<button class="btn ok small" data-act="pay" data-id="'+r.id+'">Оплатить</button> ' +
+       '<button class="btn bad small" data-act="reject" data-id="'+r.id+'">Отклонить</button> ' +
+       '<button class="btn ghost small" data-act="view" data-user="'+r.user_id+'">Профиль</button>' +
+     '</td>';
+   tbody.appendChild(tr);
+ }
 
-    // 2) Фолбэк: прямое обновление таблицы (балансы не трогаем)
-    if (!ok){
-      try{
-        const upd = await sb.from('withdrawals').update({ status, txid: payload.p_txid, note: payload.p_note }).eq('id', id).select().maybeSingle();
-        if (!upd.error) ok=true; else err=upd.error;
-      }catch(e){ err=e; }
-    }
+ $('#wCount').textContent = String(rows.length);
+ $('#wSum').textContent = fmtCents(sumAmt);
+ $('#wFee').textContent = fmtCents(sumFee);
+ $('#wTotal').textContent = fmtCents(sumAmt + sumFee);
 
-    if (!ok){ alert('Не удалось обновить: ' + (err?.message||err||'unknown')); return; }
-    loadWithdrawals();
-  }
+} catch (e) {
+ tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (e?.message || String(e)) + '</td></tr>';
+ return;
+}
+}
 
   // ===================== USERS =====================
   let uRowsCache=[];
