@@ -261,9 +261,9 @@
       // Настраиваемые параметры
       const START_DATE = new Date('2025-01-01T00:00:00Z'); // базовая точка отсчёта
       const BASE_USERS = 1248;     // стартовое число пользователей
-      const BASE_PAYOUTS = 504339;  // стартовые выплаты в USD (182k)
+      const BASE_PAYOUTS = 935128;  // стартовые выплаты в USD (182k)
       const USERS_PER_DAY_MIN = 15, USERS_PER_DAY_MAX = 99;      // ежедневный прирост пользователей
-      const PAYOUTS_PER_DAY_MIN = 199, PAYOUTS_PER_DAY_MAX = 35000; // ежедневный прирост выплат (USD)
+      const PAYOUTS_PER_DAY_MIN = 1199, PAYOUTS_PER_DAY_MAX = 35000; // ежедневный прирост выплат (USD)
 
       // Простая детерминированная "случайность" по номеру дня —
       // чтобы цифры каждый день менялись, но не скакали при перезагрузке.
@@ -271,7 +271,7 @@
       const todayUTC = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
       const days = Math.max(0, Math.floor((todayUTC - START_DATE.getTime()) / MS_DAY));
       function rand01(n){ // 0..1, зависит только от n
-        const x = (n * 1103515245 + 1234) & 0x7fffffff; return x / 0x7fffffff;
+        const x = (n * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff;
       }
       function incForDay(day, min, max){ return Math.round(min + rand01(day+1)*(max-min)); }
       function sumIncs(days, min, max){ let s=0; for(let d=0; d<days; d++) s += incForDay(d, min, max); return s; }
