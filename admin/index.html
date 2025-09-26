@@ -381,68 +381,129 @@ async function loadWithdrawals(resetPage){
   tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
 
   const status = $('#wStatus').value || null;
-  const s = $('#wSearch').value.trim() || null;
+  const s = ($('#wSearch').value || '').trim() || null;
   const from = $('#wFrom').value ? new Date($('#wFrom').value) : null;
   const to = $('#wTo').value ? new Date($('#wTo').value) : null;
   const min = $('#wAmtMin').value ? toCents($('#wAmtMin').value) : null;
   const max = $('#wAmtMax').value ? toCents($('#wAmtMax').value) : null;
 
-  let data = [];
-  try {
-    const params = {
-      p_status: status || null,
-      p_search: s || null,
-      p_from: from ? from.toISOString() : null,
-      p_to: to ? to.toISOString() : null,
-      p_min: min,
-      p_max: max,
-      p_offset: wPage * wLimit,
-      p_limit: wLimit
-    };
+  // параметры для RPC
+  const params = {
+    p_status: status || null,
+    p_search: s || null,
+    p_from: from ? from.toISOString() : null,
+    p_to: to ? to.toISOString() : null,
+    p_min: min,
+    p_max: max,
+    p_offset: wPage * wLimit,
+    p_limit: wLimit
+  };
 
-    // Вызов RPC
-    const { data: rows, error } = await sb.rpc('admin_list_withdrawals', params);
-    if (error) {
-      tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (error.message || error) + '</td></tr>';
+  // получаем данные
+  let rows = [];
+  try {
+    const r = await sb.rpc('admin_list_withdrawals', params);
+    if (r?.error) {
+      tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (r.error.message || JSON.stringify(r.error)) + '</td></tr>';
+      return;
+    }
+    rows = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
+    wRowsCache = rows;
+
+    // попытка точного count (если есть RPC)
+    try {
+      const c = await sb.rpc('admin_list_withdrawals_count', {
+        p_status: status || null, p_search: s || null,
+        p_from: from ? from.toISOString() : null, p_to: to ? to.toISOString() : null,
+        p_min: min, p_max: max
+      });
+      if (!c?.error) {
+        const cnt = (typeof c.data === 'number') ? c.data : (Array.isArray(c.data) ? Number(c.data[0]) : Number(c.data));
+        if (!Number.isNaN(cnt)) wLastCount = cnt;
+      }
+    } catch(_) {
+      // fallback: эвристика ниже
+    }
+
+    if (!wLastCount) {
+      if (rows.length < wLimit) wLastCount = wPage * wLimit + rows.length;
+      else wLastCount = (wPage + 1) * wLimit + 1;
+    }
+
+    $('#wDiag').textContent = 'Страница ' + (wPage + 1) + ' · ' + wLastCount + ' записей';
+
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(err.message||String(err))+'</td></tr>';
+    return;
+  }
+
+  // подтягиваем профили (email/phone) — заранее, перед рендером
+  const emailByUser = {}, phoneByUser = {};
+  try {
+    const ids = Array.from(new Set(rows.map(r => r.user_id).filter(Boolean)));
+    if (ids.length) {
+      const profRes = await sb.from('profiles').select('user_id, email, phone').in('user_id', ids);
+      if (!profRes.error && profRes.data && profRes.data.length) {
+        profRes.data.forEach(p => { emailByUser[p.user_id] = p.email; phoneByUser[p.user_id] = p.phone; });
+      }
+    }
+  } catch (e) {
+    // не критично — рендерим без email/phone
+    console.warn('profiles lookup failed', e);
+  }
+
+  // рендерим таблицу (один проход)
+  try {
+    if (!rows || !rows.length) {
+      tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
+      // обновляем сводные карточки
+      $('#wCount').textContent = '0';
+      $('#wSum').textContent = fmtCents(0);
+      $('#wFee').textContent = fmtCents(0);
+      $('#wTotal').textContent = fmtCents(0);
       return;
     }
 
-    data = Array.isArray(rows) ? rows : (rows ? [rows] : []);
-    wRowsCache = data;
+    tbody.innerHTML = '';
+    let sumAmt = 0, sumFee = 0;
+    for (const r of rows) {
+      const amount = Number(r.amount_cents || 0);
+      const fee = Number(r.fee_cents || 0);
+      const total = amount + fee;
+      sumAmt += amount; sumFee += fee;
 
-    // Эвристика для count: если вернулось меньше, чем лимит — это последний набор (точно известно),
-    // иначе показываем примерное значение (можно добавить точный count RPC отдельно).
-    if (data.length < wLimit) {
-      wLastCount = wPage * wLimit + data.length;
-    } else {
-      // неизвестно точное число дальше; показываем минимум (следующая страница возможна)
-      wLastCount = (wPage + 1) * wLimit + 1;
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="nowrap small">' + (r.id || '') + '</td>' +
+        '<td class="nowrap small">' + (r.created_at ? new Date(r.created_at).toLocaleString() : '') + '</td>' +
+        '<td class="small">' + (emailByUser[r.user_id] || short(r.user_id) || '—') + '</td>' +
+        '<td class="small">' + (phoneByUser[r.user_id] || '—') + '</td>' +
+        '<td class="right small">' + fmtCents(amount) + '</td>' +
+        '<td class="right small">' + fmtCents(fee) + '</td>' +
+        '<td class="right small">' + fmtCents(total) + '</td>' +
+        '<td class="small">' + (r.network || '—') + '</td>' +
+        '<td class="small nowrap">' + (r.address ? ('<code>' + r.address + '</code>') : '—') + '</td>' +
+        '<td class="small">' + (r.status ? pill(String(r.status).toLowerCase()) : pill('pending')) + '</td>' +
+        '<td class="small">' + (r.txid ? ('<code>' + short(r.txid) + '</code>') : (r.note ? ('<div class="small muted">' + r.note + '</div>') : '—')) + '</td>' +
+        '<td class="nowrap small">' +
+          '<button class="btn ok small" data-act="pay" data-id="'+r.id+'">Оплатить</button> ' +
+          '<button class="btn bad small" data-act="reject" data-id="'+r.id+'">Отклонить</button> ' +
+          '<button class="btn ghost small" data-act="view" data-user="'+r.user_id+'">Профиль</button>' +
+        '</td>';
+      tbody.appendChild(tr);
     }
 
-    $('#wDiag').textContent = 'Страница '+(wPage+1)+' · '+wLastCount+' записей';
+    // обновляем сводные карточки
+    $('#wCount').textContent = String(rows.length);
+    $('#wSum').textContent = fmtCents(sumAmt);
+    $('#wFee').textContent = fmtCents(sumFee);
+    $('#wTotal').textContent = fmtCents(sumAmt + sumFee);
 
-  } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(err.message||err)+'</td></tr>';
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (e?.message || String(e)) + '</td></tr>';
     return;
   }
-  // --- точечная замена: сначала подтягиваем профили, потом рендерим строки ---
-  try {
-    // выбираем источник данных (поддерживаем старые имена переменных)
-    const rowsToRender = (typeof rows !== 'undefined' && rows) ? rows : ((typeof data !== 'undefined' && data) ? data : []);
-    if (!rowsToRender || !rowsToRender.length) {
-      tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
-    } else {
-      // mini-lookup профилей (email/phone) — выполняем до рендера, чтобы иметь данные
-      const emailByUser = {}, phoneByUser = {};
-      const ids = Array.from(new Set(rowsToRender.map(r => r.user_id).filter(Boolean)));
-      if (ids.length) {
-        try {
-          const { data: profs, error: profErr } = await sb.from('profiles').select('user_id, email, phone').in('user_id', ids);
-          if (!profErr && profs && profs.length) {
-            profs.forEach(p => { emailByUser[p.user_id] = p.email; phoneByUser[p.user_id] = p.phone; });
-          }
-        } catch(_) { /* silently ignore profile lookup errors */ }
-      }
+}
 
       // Рендер таблицы
       tbody.innerHTML = '';
