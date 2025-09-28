@@ -518,12 +518,12 @@ document.addEventListener('click', async function(e){
   try {
     if (act === 'pay') {
       const tx = prompt('Введите TXID (если есть):','') || null;
-      const res = await sb.rpc('admin_pay_withdrawal', { p_id: wid, p_txid: tx });
+      const res = await sb.rpc('admin_pay_withdrawal_rpc', { p_id: wid, p_txid: tx });
       if (res?.error) { alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error))); }
       else { alert('Оплачено'); loadWithdrawals(); }
     } else if (act === 'reject') {
       if (!confirm('Отклонить заявку? Баланс вернётся пользователю.')) return;
-      const res = await sb.rpc('admin_reject_withdrawal', { p_id: wid });
+      const res = await sb.rpc('admin_reject_withdrawal_rpc', { p_id: wid });
       if (res?.error) { alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error))); }
       else { alert('Отклонено'); loadWithdrawals(); }
     }
@@ -731,8 +731,8 @@ document.addEventListener('click', async function(e){
     let rootId = key;
     if(!isUUID(key)){
       try{
-        const p = await sb.from('v_admin_profiles').select('user_id').eq('ref_code', key).maybeSingle();
-        if (p?.data?.user_id) rootId = p.data.user_id;
+        const p = await sb.from('v_admin_profiles').select('ref_code').eq('user_id', rootId).maybeSingle();
+        if (p?.data?.ref_code) rootId = rootId;
       }catch(_){}
     }
 
