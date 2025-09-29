@@ -1,3 +1,5 @@
+cp admin.index.html admin.index.html.bak
+cat > admin.index.html <<'EOF'
 <!doctype html>
 <html lang="ru">
 <head>
@@ -316,8 +318,13 @@
 
   // Auth
   async function refreshAuth(){
-    const { data: { session } } = await sb.auth.getSession();
-    sessionUser = session?.user || null;
+    const { data: { session } } await sb.auth.getSession().catch(()=>({data:{session:null}}));
+    try {
+      const sessionResp = await sb.auth.getSession();
+      sessionUser = sessionResp?.data?.session?.user || null;
+    } catch(e) {
+      sessionUser = null;
+    }
     $('#authInfo').textContent = sessionUser ? (sessionUser.email || sessionUser.id) : 'не авторизованы';
     $('#btnLogin').style.display = sessionUser ? 'none':'inline-block';
     $('#btnLogout').style.display = sessionUser ? 'inline-block':'none';
@@ -506,149 +513,137 @@ async function loadWithdrawals(resetPage){
   }
 }
 
-/* ====== Улучшенный делегированный обработчик кликов для действий с заявками ====== */
+/* ====== Исправленный делегированный обработчик кликов для действий с заявками ====== */
 document.addEventListener('click', async function(e){
+  // кнопки оплаты/отклонения
   const btn = e.target.closest && e.target.closest('.js-withdraw-action');
-  if (!btn) return;
-  e.preventDefault();
+  if (btn) {
+    e.preventDefault();
+    const act = btn.dataset.act;
+    const rawWid = btn.dataset.wid;
+    // временно блокируем кнопку, чтобы избежать двойных нажатий
+    btn.disabled = true;
 
-  const act = btn.dataset.act;
-  const rawWid = btn.dataset.wid; // это то, что сейчас записывается в таблице
-  // для надёжности: сохраним user_id / created / amount в data-атрибуты, если они есть на строке
-  // Но т.к. HTML сейчас не содержит их, попытаемся получить их из wRowsCache по совпадению.
-  btn.disabled = true;
-
-  // helper: пробуем вызвать RPC и возвращаем parsed result or thrown error
-  async function callRpcPay(wid, tx){
-    try {
-      const res = await sb.rpc('admin_pay_withdrawal_rpc', { p_id: wid, p_txid: tx });
-      return res;
-    } catch (e) {
-      // sb.rpc может бросать, нормализуем
-      return { error: { message: e?.message || String(e) } };
-    }
-  }
-  async function callRpcReject(wid){
-    try {
-      const res = await sb.rpc('admin_reject_withdrawal_rpc', { p_id: wid });
-      return res;
-    } catch (e) {
-      return { error: { message: e?.message || String(e) } };
-    }
-  }
-
-  // helper: попытка разрешить id заявки по user_id + created_at или по user_id + amount
-  async function resolveWithdrawalIdFromRow(rowCandidate){
-    // rowCandidate может быть объект из admin_list_withdrawals (если у тебя в wRowsCache есть такие)
-    if (!rowCandidate) return null;
-    try {
-      const uid = rowCandidate.user_id || rowCandidate.user || null;
-      const created = rowCandidate.created_at || rowCandidate.created || null;
-      const amount = (rowCandidate.amount_cents != null) ? Number(rowCandidate.amount_cents) : (rowCandidate.amount ? Math.round(Number(rowCandidate.amount) * 100) : null);
-
-      if (uid && created) {
-        const q = await sb.from('withdrawals').select('id, created_at, amount_cents, status').eq('user_id', uid).eq('created_at', created).maybeSingle();
-        if (!q.error && q.data && q.data.id) return q.data.id;
+    // нормализованные RPC вызовы (возвращают объект; supabase может вернуть { data } или throw)
+    async function rpcPay(wid, tx) {
+      try {
+        const res = await sb.rpc('admin_pay_withdrawal_rpc', { p_id: wid, p_txid: tx });
+        return res;
+      } catch (err) {
+        return { error: { message: err?.message || String(err) } };
       }
-      if (uid && amount != null) {
-        const q2 = await sb.from('withdrawals').select('id, created_at, amount_cents, status').eq('user_id', uid).eq('amount_cents', amount).order('created_at', { ascending: false }).limit(5);
-        if (!q2.error && Array.isArray(q2.data) && q2.data.length) {
-          // Возвращаем самый свежий
-          return q2.data[0].id;
+    }
+    async function rpcReject(wid, note) {
+      try {
+        const res = await sb.rpc('admin_reject_withdrawal_rpc', { p_id: wid, p_note: note });
+        return res;
+      } catch (err) {
+        return { error: { message: err?.message || String(err) } };
+      }
+    }
+
+    // Ищем кандидатную строку в кэше (wRowsCache), где могли бы храниться дополнительные поля
+    function findRowCandidateByRawWid(rawId) {
+      if (!rawId || !window.wRowsCache) return null;
+      for (const r of wRowsCache) {
+        if (!r) continue;
+        const candidates = [r.withdrawal_id, r.withdraw_id, r.wid, r.w_id, r.id];
+        for (const c of candidates) {
+          if (c && String(c) === String(rawId)) return r;
+        }
+      }
+      return null;
+    }
+    // Пытаемся разрешить настоящий id заявки по user_id+created_at или по user_id+amount
+    async function resolveWithdrawalIdFromRow(rowCandidate) {
+      if (!rowCandidate) return null;
+      try {
+        const uid = rowCandidate.user_id || rowCandidate.user || null;
+        const created = rowCandidate.created_at || rowCandidate.created || null;
+        const amount = (rowCandidate.amount_cents != null) ? Number(rowCandidate.amount_cents) :
+                       (rowCandidate.amount ? Math.round(Number(rowCandidate.amount) * 100) : null);
+        if (uid && created) {
+          const q = await sb.from('withdrawals').select('id, created_at, amount_cents').eq('user_id', uid).eq('created_at', created).maybeSingle();
+          if (!q.error && q.data && q.data.id) return q.data.id;
+        }
+        if (uid && amount != null) {
+          const q2 = await sb.from('withdrawals').select('id, created_at, amount_cents').eq('user_id', uid).eq('amount_cents', amount).order('created_at', { ascending: false }).limit(5);
+          if (!q2.error && Array.isArray(q2.data) && q2.data.length) return q2.data[0].id;
+        }
+      } catch (err) { console.warn('[admin] resolveWithdrawalIdFromRow error', err); }
+      return null;
+    }
+
+    try {
+      if (act === 'pay') {
+        // Запрашиваем TXID у админа
+        const tx = prompt('Введите TXID (если есть):', '') || null;
+        // Первый вызов — пробуем оплатить тем id, который показан в таблице
+        let res = await rpcPay(rawWid, tx);
+
+        // Если ответ — ошибка "withdrawal not found", пробуем резолвить реальный id и повторить
+        if (res?.error && String(res.error.message || '').toLowerCase().includes('withdrawal not found')) {
+          const candidate = findRowCandidateByRawWid(rawWid) || (wRowsCache || []).find(x => x.user_id && String(x.user_id) === String(rawWid));
+          const realId = await resolveWithdrawalIdFromRow(candidate);
+          if (!realId) {
+            alert('Не удалось автоматически найти запись заявки. Открой DevTools → Network → admin_list_withdrawals и скопируй user_id, created_at и amount_cents для проблемной строки, затем пришли их в чат для диагностики.');
+            return;
+          }
+          // Повторяем с resolved id
+          res = await rpcPay(realId, tx);
+        }
+
+        if (res?.error) {
+          alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error)));
+        } else {
+          alert('Оплата проведена успешно.');
+          await loadWithdrawals();
+        }
+
+      } else if (act === 'reject') {
+        const reason = prompt('Укажите причину отклонения (будет записана в заметку):', '') || null;
+        if (reason === null) { return; } // отмена prompt
+        if (!confirm('Отклонить заявку и вернуть средства пользователю?')) return;
+
+        let res = await rpcReject(rawWid, reason);
+
+        if (res?.error && String(res.error.message || '').toLowerCase().includes('withdrawal not found')) {
+          const candidate = findRowCandidateByRawWid(rawWid) || (wRowsCache || []).find(x => x.user_id && String(x.user_id) === String(rawWid));
+          const realId = await resolveWithdrawalIdFromRow(candidate);
+          if (!realId) {
+            alert('Не удалось автоматически найти запись заявки. Открой DevTools → Network → admin_list_withdrawals и скопируй user_id, created_at и amount_cents для проблемной строки, затем пришли их в чат для диагностики.');
+            return;
+          }
+          res = await rpcReject(realId, reason);
+        }
+
+        if (res?.error) {
+          alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error)));
+        } else {
+          alert('Заявка отклонена и средства возвращены.');
+          await loadWithdrawals();
         }
       }
     } catch (err) {
-      console.warn('[admin] resolveWithdrawalIdFromRow error', err);
+      console.error(err);
+      alert('Ошибка сети/сервера: ' + (err?.message || String(err)));
+    } finally {
+      btn.disabled = false;
     }
-    return null;
+    return;
   }
 
-  // helper: поиск кандидата в кешированных строках (wRowsCache) по rawWid или по user/amount
-  function findRowCandidateByRawWid(rawId) {
-    if (!rawId || !window.wRowsCache) return null;
-    // пробуем прямое совпадение in multiple fields
-    for (const r of wRowsCache) {
-      if (!r) continue;
-      const candidates = [r.withdrawal_id, r.withdraw_id, r.wid, r.w_id, r.id];
-      for (const c of candidates) {
-        if (c && String(c) === String(rawId)) return r;
-      }
-    }
-    return null;
+  // профиль: открыть drawer
+  const viewBtn = e.target.closest && e.target.closest('.js-view-user');
+  if (viewBtn) {
+    const uid = viewBtn.dataset.user;
+    if (uid) openUserDrawer(uid);
+    return;
   }
 
-  try {
-    if (act === 'pay') {
-      const tx = prompt('Введите TXID (если есть):','') || null;
-      // 1) первый вызов с тем id, что пришёл из таблицы
-      let res = await callRpcPay(rawWid, tx);
-      if (res?.error && (String(res.error.message || '').toLowerCase().includes('withdrawal not found') || String(res.error || '').toLowerCase().includes('withdrawal not found'))) {
-        console.warn('[admin] initial pay returned withdrawal not found for id', rawWid, res);
-        // Попытка разрешить корректный id из кеша/по совпадению
-        let candidateRow = findRowCandidateByRawWid(rawWid);
-        if (!candidateRow && window.wRowsCache && wRowsCache.length) {
-          // возможно rawWid это user_id, попробуем найти строку, у которой user_id == rawWid
-          candidateRow = wRowsCache.find(x => x.user_id && String(x.user_id) === String(rawWid));
-        }
-        // если нашли кандидата — попробуем разрешить id через API
-        let realId = await resolveWithdrawalIdFromRow(candidateRow);
-        if (!realId && candidateRow) {
-          // последний шанс — попробуем просмотреть по user_id и amount (если есть)
-          realId = await resolveWithdrawalIdFromRow({ user_id: candidateRow.user_id, amount_cents: candidateRow.amount_cents, created_at: candidateRow.created_at });
-        }
-        if (!realId) {
-          // ещё шанс: если wRowsCache содержит объект с txid/note совпадающим с отображаемым — попробуй найти
-          // (оставим этот шаг лёгким — покажем пользователю инструкцию)
-          alert('Не удалось автоматически найти запись заявки. Откройте DevTools → Network → admin_list_withdrawals и скопируйте поля user_id, created_at и amount_cents для проблемной строки, затем вставьте их сюда в чат для диагностики.');
-          return;
-        }
-        console.info('[admin] resolved real withdrawal id', realId, ' — повторяем оплату');
-        res = await callRpcPay(realId, tx);
-      }
-
-      if (res?.error) {
-        alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error)));
-      } else {
-        alert('Оплачено');
-        loadWithdrawals();
-      }
-    } else if (act === 'reject') {
-      if (!confirm('Отклонить заявку? Баланс вернётся пользователю.')) return;
-      let res = await callRpcReject(rawWid);
-      if (res?.error && (String(res.error.message || '').toLowerCase().includes('withdrawal not found') || String(res.error || '').toLowerCase().includes('withdrawal not found'))) {
-        console.warn('[admin] initial reject returned withdrawal not found for id', rawWid, res);
-        // Попытка разрешить корректный id (как в pay)
-        let candidateRow = findRowCandidateByRawWid(rawWid);
-        if (!candidateRow && window.wRowsCache && wRowsCache.length) {
-          candidateRow = wRowsCache.find(x => x.user_id && String(x.user_id) === String(rawWid));
-        }
-        let realId = await resolveWithdrawalIdFromRow(candidateRow);
-        if (!realId && candidateRow) {
-          realId = await resolveWithdrawalIdFromRow({ user_id: candidateRow.user_id, amount_cents: candidateRow.amount_cents, created_at: candidateRow.created_at });
-        }
-        if (!realId) {
-          alert('Не удалось автоматически найти запись заявки. Откройте DevTools → Network → admin_list_withdrawals и скопируйте поля user_id, created_at и amount_cents для проблемной строки, затем вставьте их сюда в чат для диагностики.');
-          return;
-        }
-        console.info('[admin] resolved real withdrawal id', realId, ' — повторяем отклонение');
-        res = await callRpcReject(realId);
-      }
-
-      if (res?.error) {
-        alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error)));
-      } else {
-        alert('Отклонено');
-        loadWithdrawals();
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Ошибка сети/сервера: ' + (err?.message || String(err)));
-  } finally {
-    btn.disabled = false;
-  }
 });
 
+/* (далее оставлена остальная часть файла без изменений — USERS, REWARDS, REFS, DRAWER и т.д.) */
 
   // ===================== USERS =====================
   let uRowsCache=[];
