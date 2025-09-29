@@ -221,30 +221,6 @@
     </div>
   </section>
 
-  <!-- DEPOSITS (простая версия панели) -->
-  <section class="panel" data-page="deposits" style="display:none">
-    <div class="row" style="margin-bottom:8px">
-      <input id="dSearch" class="grow" placeholder="Поиск: email, телефон, txid, note">
-      <button class="btn" id="dRefresh">Обновить</button>
-      <button class="btn ghost" id="dExport">Экспорт CSV</button>
-      <span class="muted small" id="dDiag">—</span>
-    </div>
-    <div class="cards">
-      <div class="card"><div class="k">Записей</div><div id="dCount" class="v">—</div></div>
-      <div class="card"><div class="k">Сумма</div><div id="dSum" class="v">—</div></div>
-      <div class="card"><div class="k">—</div><div class="v">—</div></div>
-      <div class="card"><div class="k">—</div><div class="v">—</div></div>
-    </div>
-    <div class="table-wrap" style="margin-top:8px">
-      <table id="dTable">
-        <thead><tr>
-          <th>Создано</th><th>Пользователь</th><th>Сеть / Валюта</th><th class="right">Сумма</th><th>TX</th><th>Статус</th><th>Заметка</th>
-        </tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-
   <!-- ABOUT -->
   <section class="panel" data-page="about" style="display:none">
     <h3>Справка</h3>
@@ -324,7 +300,6 @@
   const isUUID = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(s||''));
 
   let sessionUser = null, isAdmin = false, hasAdjust=false;
-  let activePage = 'withdrawals'; // фикс: переменная, используемая в подписках
 
   // Tabs
   $$('#tabs .tab').forEach(btn => {
@@ -332,7 +307,6 @@
       $$('#tabs .tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       const tab = btn.dataset.tab;
-      activePage = tab; // обновляем activePage
       $$('[data-page]').forEach(p => p.style.display = (p.getAttribute('data-page') === tab) ? 'block' : 'none');
       if (tab === 'withdrawals') loadWithdrawals(true);
       if (tab === 'users') loadUsers();
@@ -343,8 +317,6 @@
 
   // Auth
   async function refreshAuth(){
-    // Исправлено: добавлен "=" — раньше была синтаксическая ошибка
-    const { data: { session } } = await sb.auth.getSession().catch(()=>({data:{session:null}}));
     try {
       const sessionResp = await sb.auth.getSession();
       sessionUser = sessionResp?.data?.session?.user || null;
@@ -406,12 +378,13 @@
 
 let wPage = 0, wLimit = 25, wLastCount = 0, wRowsCache = [];
 
-/* ======= Helpers inserted by assistant: isUuid and escapeHtml (safe, minimal) ======= */
+/* helpers */
 function isUuid(v){
   return typeof v === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(v);
 }
 function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+/* loadWithdrawals */
 async function loadWithdrawals(resetPage){
   if (typeof isAdmin !== 'undefined' && !isAdmin) return;
   if (resetPage) wPage = 0;
@@ -452,16 +425,13 @@ async function loadWithdrawals(resetPage){
     return;
   }
 
-  // resolve reliable withdrawal id for each row
+  // resolve reliable withdrawal id for each row (best-effort)
   for (let i=0;i<rows.length;i++){
     const row = rows[i];
     row._wid = await (async function(r){
-      // explicit candidates
       const candidates = [r.withdrawal_id, r.withdraw_id, r.wid, r.w_id].filter(x=>x!==undefined && x!==null && x!=='');
       if (candidates.length && isUuid(String(candidates[0]))) return String(candidates[0]);
-      // if id looks like uuid and differs from user_id
       if (r.id && isUuid(String(r.id)) && String(r.id) !== String(r.user_id)) return String(r.id);
-      // lookup by user_id + created_at
       try {
         const uid = r.user_id || r.user || null;
         const created = r.created_at || r.created || null;
@@ -507,35 +477,37 @@ async function loadWithdrawals(resetPage){
     let sumAmt = 0, sumFee = 0;
     for (const r of rows) {
       const tr = document.createElement('tr');
-      const amt = Number(r.amount_cents || 0);
-      const fee = Number(r.fee_cents || 0);
+      const amt = Number(r.amount_cents || r.amount || 0);
+      const fee = Number(r.fee_cents || r.fee || 0);
+      const total = amt + fee;
       sumAmt += amt; sumFee += fee;
       const withdrawalId = r._wid || r.id || r.withdrawal_id || r.wid || '';
       const userId = r.user_id || '';
       const email = r.user_email || emailByUser[userId] || '—';
       const phone = r.user_phone || phoneByUser[userId] || '—';
-      const createdAt = r.created_at || r.created || r.createdAt || null;
-      const status = r.status || r.state || 'pending';
-      const network = r.network || r.chain || '';
-      const currency = r.currency || '';
-      const addr = r.address || r.to_address || r.wallet_address || r.recipient || '';
-      const total = amt + fee;
+      const createdAt = r.created_at || r.created || r.requested_at || '';
+      const network = r.network || '';
+      const currency = r.currency || r.curr || '';
+      const addrFull = r.address || r.to_address || r.wallet_address || r.recipient || r.dest_address || r.target_address || '';
+      const addrShort = addrFull ? ('<code>'+escapeHtml(short(addrFull))+'</code>') : '—';
+      const status = r.status || r.state || '—';
+      const txid = r.txid || r.tx || r.transaction || '';
 
       tr.innerHTML =
         '<td class="nowrap">'+(userId?('<code>'+escapeHtml(userId)+'</code>'):'—')+'</td>' +
-        '<td class="nowrap">'+(createdAt ? new Date(createdAt).toLocaleString() : '—')+'</td>' +
+        '<td class="nowrap">'+(createdAt?escapeHtml(new Date(createdAt).toLocaleString()):'—')+'</td>' +
         '<td>'+(escapeHtml(email)||'—')+'</td>' +
         '<td>'+(escapeHtml(phone)||'—')+'</td>' +
         '<td class="right">'+fmtCents(amt)+'</td>' +
         '<td class="right">'+fmtCents(fee)+'</td>' +
         '<td class="right">'+fmtCents(total)+'</td>' +
         '<td>'+(network? (escapeHtml(network) + (currency?(' / '+escapeHtml(currency)):'')) : '—')+'</td>' +
-        '<td>'+(addr?('<code>'+escapeHtml(short(addr))+'</code>'):'—')+'</td>' +
+        '<td>'+ addrShort +'</td>' +
         '<td>'+(escapeHtml(status))+'</td>' +
-        '<td>' + (r.txid ? ('<code>'+escapeHtml(short(r.txid))+'</code>') : (r.note?('<div class="small muted">'+escapeHtml(r.note)+'</div>'):'—')) + '</td>' +
+        '<td>' + (txid ? ('<code>'+escapeHtml(short(txid))+'</code>') : (r.note?('<div class="small muted">'+escapeHtml(r.note)+'</div>'):'—')) + '</td>' +
         '<td class="nowrap small">' +
-          '<button class="btn ok small js-withdraw-action" data-act="pay" data-wid="'+escapeHtml(withdrawalId)+'">Оплатить</button> ' +
-          '<button class="btn bad small js-withdraw-action" data-act="reject" data-wid="'+escapeHtml(withdrawalId)+'">Отклонить</button> ' +
+          '<button class="btn ok small js-withdraw-action" data-act="pay" data-wid="'+escapeHtml(withdrawalId||userId)+'">Оплатить</button> ' +
+          '<button class="btn bad small js-withdraw-action" data-act="reject" data-wid="'+escapeHtml(withdrawalId||userId)+'">Отклонить</button> ' +
           '<button class="btn ghost small js-view-user" data-user="'+escapeHtml(userId)+'">Профиль</button>' +
         '</td>';
       tbody.appendChild(tr);
@@ -550,145 +522,170 @@ async function loadWithdrawals(resetPage){
   }
 }
 
-/* ====== Исправленный делегированный обработчик кликов для действий с заявками ====== */
+/* ====== Improved delegated click handler for withdraw actions ====== */
 document.addEventListener('click', async function(e){
-  // кнопки оплаты/отклонения
   const btn = e.target.closest && e.target.closest('.js-withdraw-action');
-  if (btn) {
-    e.preventDefault();
-    const act = btn.dataset.act;
-    const rawWid = btn.dataset.wid;
-    // временно блокируем кнопку, чтобы избежать двойных нажатий
-    btn.disabled = true;
+  if (!btn) {
+    // profile open
+    const viewBtn = e.target.closest && e.target.closest('.js-view-user');
+    if (viewBtn) { const uid = viewBtn.dataset.user; if (uid) openUserDrawer(uid); }
+    return;
+  }
 
-    // нормализованные RPC вызовы (возвращают объект; supabase может вернуть { data } или throw)
-    async function rpcPay(wid, tx) {
-      try {
-        const res = await sb.rpc('admin_pay_withdrawal_rpc', { p_id: wid, p_txid: tx });
-        return res;
-      } catch (err) {
-        return { error: { message: err?.message || String(err) } };
-      }
-    }
-    async function rpcReject(wid, note) {
-      try {
-        const res = await sb.rpc('admin_reject_withdrawal_rpc', { p_id: wid, p_note: note });
-        return res;
-      } catch (err) {
-        return { error: { message: err?.message || String(err) } };
-      }
-    }
+  e.preventDefault();
+  const act = btn.dataset.act;
+  const rawWid = btn.dataset.wid;
+  if (!rawWid) { alert('Нет id заявки'); return; }
 
-    // Ищем кандидатную строку в кэше (wRowsCache), где могли бы храниться дополнительные поля
-    function findRowCandidateByRawWid(rawId) {
-      if (!rawId || !window.wRowsCache) return null;
-      for (const r of wRowsCache) {
-        if (!r) continue;
-        const candidates = [r.withdrawal_id, r.withdraw_id, r.wid, r.w_id, r.id];
-        for (const c of candidates) {
-          if (c && String(c) === String(rawId)) return r;
-        }
-      }
-      return null;
+  // block all buttons of this wid
+  function setProcessingForWid(wid, v) {
+    document.querySelectorAll('.js-withdraw-action').forEach(b=>{
+      if (String(b.dataset.wid) === String(wid)) { b.disabled = v; b.dataset.processing = v ? '1' : '0'; }
+    });
+  }
+  setProcessingForWid(rawWid, true);
+
+  async function callRpcSafe(name, params){
+    try {
+      const res = await sb.rpc(name, params);
+      return res;
+    } catch (err) {
+      return { error: { message: err?.message || String(err) } };
     }
-    // Пытаемся разрешить настоящий id заявки по user_id+created_at или по user_id+amount
-    async function resolveWithdrawalIdFromRow(rowCandidate) {
-      if (!rowCandidate) return null;
+  }
+
+  // resolve real id (best-effort)
+  async function resolveWithdrawalIdFromRaw(rawId) {
+    const candidate = (window.wRowsCache||[]).find(r => {
+      const cands = [r.withdrawal_id, r.withdraw_id, r.wid, r.w_id, r.id];
+      return cands.some(c => c && String(c) === String(rawId));
+    });
+    if (candidate && candidate._wid) return candidate._wid;
+    if (candidate && candidate.id) return candidate.id;
+
+    // guess by user_id match
+    const maybe = (window.wRowsCache||[]).find(r=> r.user_id && String(r.user_id) === String(rawId));
+    const row = maybe || null;
+    if (row) {
+      const uid = row.user_id || row.user;
+      const created = row.created_at || row.created;
+      const amt = (row.amount_cents != null) ? Number(row.amount_cents) : (row.amount ? Math.round(Number(row.amount)*100) : null);
       try {
-        const uid = rowCandidate.user_id || rowCandidate.user || null;
-        const created = rowCandidate.created_at || rowCandidate.created || null;
-        const amount = (rowCandidate.amount_cents != null) ? Number(rowCandidate.amount_cents) :
-                       (rowCandidate.amount ? Math.round(Number(rowCandidate.amount) * 100) : null);
         if (uid && created) {
-          const q = await sb.from('withdrawals').select('id, created_at, amount_cents').eq('user_id', uid).eq('created_at', created).maybeSingle();
+          const q = await sb.from('withdrawals').select('id').eq('user_id', uid).eq('created_at', created).maybeSingle();
           if (!q.error && q.data && q.data.id) return q.data.id;
         }
-        if (uid && amount != null) {
-          const q2 = await sb.from('withdrawals').select('id, created_at, amount_cents').eq('user_id', uid).eq('amount_cents', amount).order('created_at', { ascending: false }).limit(5);
+        if (uid && amt != null) {
+          const q2 = await sb.from('withdrawals').select('id').eq('user_id', uid).eq('amount_cents', amt).order('created_at', { ascending: false }).limit(1);
           if (!q2.error && Array.isArray(q2.data) && q2.data.length) return q2.data[0].id;
         }
-      } catch (err) { console.warn('[admin] resolveWithdrawalIdFromRow error', err); }
-      return null;
+      } catch (err) { console.warn('[admin] resolve error', err); }
+    }
+    if (isUuid(rawId)) return rawId;
+    return null;
+  }
+
+  try {
+    const realId = await resolveWithdrawalIdFromRaw(rawWid);
+    if (!realId) {
+      alert('Не удалось определить реальный id заявки. Открой DevTools → Network → admin_list_withdrawals и пришли user_id/created_at/amount_cents строки.');
+      return;
     }
 
+    // check current status from DB to avoid double actions
+    let current = null;
     try {
-      if (act === 'pay') {
-        // Запрашиваем TXID у админа
-        const tx = prompt('Введите TXID (если есть):', '') || null;
-        // Первый вызов — пробуем оплатить тем id, который показан в таблице
-        let res = await rpcPay(rawWid, tx);
+      const check = await sb.from('withdrawals').select('id,user_id,status,amount_cents,txid,address,network,currency').eq('id', realId).maybeSingle();
+      if (!check.error && check.data) current = check.data;
+    } catch (err) { console.warn('status check failed', err); }
 
-        // Если ответ — ошибка "withdrawal not found", пробуем резолвить реальный id и повторить
-        if (res?.error && String(res.error.message || '').toLowerCase().includes('withdrawal not found')) {
-          const candidate = findRowCandidateByRawWid(rawWid) || (wRowsCache || []).find(x => x.user_id && String(x.user_id) === String(rawWid));
-          const realId = await resolveWithdrawalIdFromRow(candidate);
-          if (!realId) {
-            alert('Не удалось автоматически найти запись заявки. Открой DevTools → Network → admin_list_withdrawals и скопируй user_id, created_at и amount_cents для проблемной строки, затем пришли их в чат для диагностики.');
-            return;
-          }
-          // Повторяем с resolved id
-          res = await rpcPay(realId, tx);
-        }
-
-        if (res?.error) {
-          alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error)));
-        } else {
-          alert('Оплата проведена успешно.');
-          await loadWithdrawals();
-        }
-
-      } else if (act === 'reject') {
-        const reason = prompt('Укажите причину отклонения (будет записана в заметку):', '') || null;
-        if (reason === null) { return; } // отмена prompt
-        if (!confirm('Отклонить заявку и вернуть средства пользователю?')) return;
-
-        let res = await rpcReject(rawWid, reason);
-
-        if (res?.error && String(res.error.message || '').toLowerCase().includes('withdrawal not found')) {
-          const candidate = findRowCandidateByRawWid(rawWid) || (wRowsCache || []).find(x => x.user_id && String(x.user_id) === String(rawWid));
-          const realId = await resolveWithdrawalIdFromRow(candidate);
-          if (!realId) {
-            alert('Не удалось автоматически найти запись заявки. Открой DevTools → Network → admin_list_withdrawals и скопируй user_id, created_at и amount_cents для проблемной строки, затем пришли их в чат для диагностики.');
-            return;
-          }
-          res = await rpcReject(realId, reason);
-        }
-
-        if (res?.error) {
-          alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error)));
-        } else {
-          alert('Заявка отклонена и средства возвращены.');
-          await loadWithdrawals();
-        }
+    if (act === 'pay') {
+      if (current && (String(current.status).toLowerCase() === 'paid' || String(current.status).toLowerCase() === 'processed')) {
+        alert('Заявка уже помечена как оплаченная на сервере — пропускаю.');
+        return;
       }
-    } catch (err) {
-      console.error(err);
-      alert('Ошибка сети/сервера: ' + (err?.message || String(err)));
-    } finally {
-      btn.disabled = false;
+
+      const addr = current?.address || current?.to_address || current?.wallet_address || current?.recipient || current?.dest_address || current?.target_address || '';
+      const addrMsg = addr ? ('Адрес: '+addr+'\n') : '';
+      const tx = prompt(addrMsg + 'Введите TXID (если есть):', '') || null;
+      if (tx === null) return;
+
+      // try main RPC
+      let res = await callRpcSafe('admin_pay_withdrawal_rpc', { p_id: realId, p_txid: tx });
+
+      // fallback to admin_update_withdrawal setting status=paid
+      if (res?.error && String(res.error.message || '').toLowerCase().includes('withdrawal not found')) {
+        res = await callRpcSafe('admin_update_withdrawal', { p_id: realId, p_status: 'paid', p_txid: tx });
+      }
+
+      if (res?.error) {
+        alert('Ошибка при оплате: ' + (res.error.message || JSON.stringify(res.error)));
+      } else {
+        alert('Оплата проведена (или помечена) успешно.');
+        await loadWithdrawals();
+      }
+
+    } else if (act === 'reject') {
+      if (current && String(current.status).toLowerCase() === 'rejected') {
+        alert('Заявка уже отклонена на сервере.');
+        return;
+      }
+
+      const reason = prompt('Укажите причину отклонения (будет записана в заметку):', '') || null;
+      if (reason === null) return;
+      if (!confirm('Отклонить заявку и вернуть средства пользователю?')) return;
+
+      let res = await callRpcSafe('admin_reject_withdrawal_rpc', { p_id: realId, p_note: reason });
+
+      // if function missing or returned not found, try admin_update_withdrawal
+      if (res?.error && String(res.error.message || '').toLowerCase().includes('function')) {
+        res = await callRpcSafe('admin_update_withdrawal', { p_id: realId, p_status: 'rejected', p_note: reason });
+      }
+
+      if (res?.error) {
+        // final fallback: direct UPDATE + attempt refund
+        console.warn('rpc reject failed, trying direct update', res.error);
+        try {
+          const upd = await sb.from('withdrawals').update({ status: 'rejected', note: reason }).eq('id', realId).select().maybeSingle();
+          if (upd.error) throw upd.error;
+
+          const amountCents = current?.amount_cents || 0;
+          const userId = current?.user_id || null;
+          if (amountCents && amountCents > 0 && userId) {
+            const refund = await callRpcSafe('admin_adjust_balance', { p_user_id: userId, p_delta_cents: amountCents });
+            if (refund?.error) {
+              alert('Заявка отклонена, но не удалось автоматически вернуть средства: ' + (refund.error.message || JSON.stringify(refund.error)));
+            } else {
+              alert('Заявка отклонена, средства возвращены.');
+            }
+          } else {
+            alert('Заявка отклонена (без возврата средств — сумма = 0 или неизвестен user_id).');
+          }
+          await loadWithdrawals();
+        } catch (err) {
+          alert('Не удалось отклонить заявку: ' + (err?.message || String(err)));
+        }
+      } else {
+        alert('Заявка успешно отклонена (через RPC).');
+        await loadWithdrawals();
+      }
     }
-    return;
+  } catch (err) {
+    console.error(err);
+    alert('Ошибка сети/сервера: ' + (err?.message || String(err)));
+  } finally {
+    setProcessingForWid(rawWid, false);
   }
-
-  // профиль: открыть drawer
-  const viewBtn = e.target.closest && e.target.closest('.js-view-user');
-  if (viewBtn) {
-    const uid = viewBtn.dataset.user;
-    if (uid) openUserDrawer(uid);
-    return;
-  }
-
 });
 
-/* (далее оставлена остальная часть файла без изменений — USERS, REWARDS, REFS, DRAWER и т.д.) */
+/* (далее: USERS, REWARDS, REFS, DRAWER и т.д.) */
 
   // ===================== USERS =====================
   let uRowsCache=[];
   async function loadUsers(){
     if (!isAdmin) return;
-    const tbody = $('#uTable tbody'); if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" class="muted small">Загрузка…</td></tr>';
-    const s = ($('#uSearch')?.value||'').trim();
+    const tbody = $('#uTable tbody'); tbody.innerHTML = '<tr><td colspan="8" class="muted small">Загрузка…</td></tr>';
+    const s = $('#uSearch').value.trim();
     const balMin = $('#uBalMin').value ? toCents($('#uBalMin').value) : null;
     const balMax = $('#uBalMax').value ? toCents($('#uBalMax').value) : null;
     let rows=null;
@@ -752,9 +749,8 @@ document.addEventListener('click', async function(e){
   let rwRowsCache=[];
   async function loadRewards(){
     if (!isAdmin) return;
-    const tbody = $('#rwTable tbody'); if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
-    const s = ($('#rwSearch')?.value||'').trim();
+    const tbody = $('#rwTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
+    const s = $('#rwSearch').value.trim();
     const lvl = $('#rwLevel').value;
     const from = $('#rwFrom').value ? new Date($('#rwFrom').value) : null;
     const to = $('#rwTo').value ? new Date($('#rwTo').value) : null;
@@ -815,8 +811,7 @@ document.addEventListener('click', async function(e){
   }
 
   async function loadL1ByKey(key){
-    const tbody = $('#rL1Table tbody'); if(!tbody)return;
-    tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
+    const tbody = $('#rL1Table tbody'); tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
     key = (key||'').trim();
     if(!key){ tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
 
@@ -873,9 +868,8 @@ document.addEventListener('click', async function(e){
   $('#rExportL1').addEventListener('click', ()=>exportCSV('referrals_L1.csv', window._l1Cache||[]));
 
   async function buildTreeByKey(){
-    const key = ($('#treeUser')?.value||'').trim();
-    const tbody = $('#treeTable tbody'); if(!tbody) return;
-    tbody.innerHTML='<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
+    const key = $('#treeUser').value.trim();
+    const tbody = $('#treeTable tbody'); tbody.innerHTML='<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
     if(!key){ tbody.innerHTML='<tr><td colspan="6" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
 
     let rootId = key;
@@ -964,9 +958,11 @@ document.addEventListener('click', async function(e){
     $('#dRefCode').value = prof?.data?.ref_code || '';
     $('#dRefLink').value = prof?.data?.ref_code ? buildRefLink(prof.data.ref_code) : '';
 
-    const wtbody = $('#dWTable tbody'); if(wtbody){ wtbody.innerHTML=''; (wds?.data||[]).forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML='<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td><td class="right">'+fmtCents(r.amount_cents||0)+'</td><td>'+String(r.status||'pending')+'</td><td class="nowrap">'+(r.txid?('<code>'+short(r.txid)+'</code>'):'—')+'</td>'; wtbody.appendChild(tr); }); }
+    const wtbody = $('#dWTable tbody'); wtbody.innerHTML='';
+    (wds?.data||[]).forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML='<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td><td class="right">'+fmtCents(r.amount_cents||0)+'</td><td>'+String(r.status||'pending')+'</td><td class="nowrap">'+(r.txid?('<code>'+short(r.txid)+'</code>'):'—')+'</td>'; wtbody.appendChild(tr); });
 
-    const rtbody = $('#dRTable tbody'); if(rtbody){ rtbody.innerHTML=''; let dL1=0,dL2=0,dL3=0, dAll=0;
+    const rtbody = $('#dRTable tbody'); rtbody.innerHTML='';
+    let dL1=0,dL2=0,dL3=0, dAll=0;
     (rrs?.data||[]).forEach(r=>{
       const amt = r.amount_cents ?? (r.amount_usd!=null?Math.round(Number(r.amount_usd)*100):(r.reward_usdt!=null?Math.round(Number(r.reward_usdt)*100):0));
       dAll += (amt||0);
@@ -981,7 +977,6 @@ document.addEventListener('click', async function(e){
     $('#dRwL1').textContent = fmtCents(dL1);
     $('#dRwL2').textContent = fmtCents(dL2);
     $('#dRwL3').textContent = fmtCents(dL3);
-    }
 
     $('#dCopyRef').onclick = async ()=>{ try{ await navigator.clipboard.writeText($('#dRefLink').value); alert('Скопировано'); }catch(_){ alert('Скопируйте вручную'); } };
     $('#dSaveProfile').onclick = async ()=>{ try{
@@ -1017,45 +1012,44 @@ document.addEventListener('click', async function(e){
     setTimeout(loadRewards,300);
   })();
 
-})();
-
-// ===== Deposits =====
-let dRowsCache=[];
-async function loadDeposits(){
-  if(!isAdmin) return;
-  const tbody = $('#dTable tbody'); if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" class="muted small">Загрузка…</td></tr>';
-  const r = await sb.from('v_admin_deposits')
-    .select('id, created_at, user_id, user_email, user_phone, amount_cents, currency, network, txid, status, note')
-    .order('created_at', {ascending:false}).limit(300);
-  if(r.error){ tbody.innerHTML = '<tr><td colspan="7" class="err">'+(r.error.message||'error')+'</td></tr>'; return; }
-  dRowsCache = r.data||[];
-  const s = ($('#dSearch')?.value||'').toLowerCase().trim();
-  let rows = dRowsCache;
-  if(s){
-    rows = rows.filter(x => (x.user_email||'').toLowerCase().includes(s) || (x.user_phone||'').toLowerCase().includes(s) || (x.txid||'').toLowerCase().includes(s) || (x.note||'').toLowerCase().includes(s) );
+  // ===== Deposits =====
+  let dRowsCache=[];
+  async function loadDeposits(){
+    if(!isAdmin) return;
+    const tbody = $('#dTable tbody'); if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="muted small">Загрузка…</td></tr>';
+    const r = await sb.from('v_admin_deposits')
+      .select('id, created_at, user_id, user_email, user_phone, amount_cents, currency, network, txid, status, note')
+      .order('created_at', {ascending:false}).limit(300);
+    if(r.error){ tbody.innerHTML = '<tr><td colspan="7" class="err">'+(r.error.message||'error')+'</td></tr>'; return; }
+    dRowsCache = r.data||[];
+    const s = ($('#dSearch')?.value||'').toLowerCase().trim();
+    let rows = dRowsCache;
+    if(s){
+      rows = rows.filter(x => (x.user_email||'').toLowerCase().includes(s) || (x.user_phone||'').toLowerCase().includes(s) || (x.txid||'').toLowerCase().includes(s) || (x.note||'').toLowerCase().includes(s) );
+    }
+    const fmtAmt = v => (v/100).toFixed(2);
+    const renderUser = x => (x.user_email||x.user_phone||x.user_id||'—');
+    const renderTx = x => x.txid ? ('<a href="https://tronscan.org/#/transaction/'+x.txid+'" target="_blank">'+x.txid.slice(0,10)+'…</a>') : '—';
+    tbody.innerHTML = rows.map(x => `
+      <tr>
+        <td>${new Date(x.created_at).toLocaleString()}</td>
+        <td>${renderUser(x)}</td>
+        <td>${(x.network||'')+' '+(x.currency||'')}</td>
+        <td>${fmtAmt(x.amount_cents)}</td>
+        <td>${renderTx(x)}</td>
+        <td>${x.status}</td>
+        <td>${x.note||''}</td>
+      </tr>`).join('');
+    $('#dCount').textContent = String(rows.length);
+    const sum = rows.reduce((a,x)=>a+(x.amount_cents||0),0);
+    $('#dSum').textContent = fmtAmt(sum);
   }
-  const fmtAmt = v => (v/100).toFixed(2);
-  const renderUser = x => (x.user_email||x.user_phone||x.user_id||'—');
-  const renderTx = x => x.txid ? ('<a href="https://tronscan.org/#/transaction/'+x.txid+'" target="_blank">'+escapeHtml(x.txid.slice(0,10))+'…</a>') : '—';
-  tbody.innerHTML = rows.map(x => `
-    <tr>
-      <td>${new Date(x.created_at).toLocaleString()}</td>
-      <td>${escapeHtml(renderUser(x))}</td>
-      <td>${escapeHtml((x.network||'')+' '+(x.currency||''))}</td>
-      <td class="right">${fmtAmt(x.amount_cents)}</td>
-      <td>${renderTx(x)}</td>
-      <td>${escapeHtml(x.status||'')}</td>
-      <td>${escapeHtml(x.note||'')}</td>
-    </tr>`).join('');
-  $('#dCount').textContent = String(rows.length);
-  const sum = rows.reduce((a,x)=>a+(x.amount_cents||0),0);
-  $('#dSum').textContent = (sum/100).toFixed(2);
-}
-$('#dRefresh').addEventListener('click', loadDeposits);
-$('#dExport').addEventListener('click', ()=> exportCSV('deposits.csv', dRowsCache||[]));
-$('#dSearch').addEventListener('input', ()=> loadDeposits());
-try{ sb.channel('adm-dep').on('postgres_changes', {event:'*', schema:'public', table:'deposits'}, ()=>{ if(activePage==='deposits'){ loadDeposits(); }}).subscribe(); }catch(_){}
+  $('#dRefresh')?.addEventListener('click', loadDeposits);
+  $('#dExport')?.addEventListener('click', ()=> exportCSV('deposits.csv', dRowsCache||[]));
+  $('#dSearch')?.addEventListener('input', ()=> loadDeposits());
+  try{ sb.channel('adm-dep').on('postgres_changes', {event:'*', schema:'public', table:'deposits'}, ()=>{ if($('.tab.active')?.dataset.tab==='deposits'){ loadDeposits(); }}).subscribe(); }catch(_){}
+})();
 </script>
 </body>
 </html>
