@@ -7,20 +7,6 @@
   <link rel="icon" href="data:,">
   <!-- Supabase client -->
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-  <script>
-    (function(){
-      try{
-        if (!window.supabase) throw new Error('supabase.js not loaded');
-        // === твои актуальные ключи (оставлены как есть) ===
-        window.sb = window.supabase.createClient(
-          'https://einpfuegfsilnoiareco.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w',
-          { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
-        );
-        console.log('[Admin] Supabase init OK');
-      } catch(e){ console.error('[Admin] Supabase init error', e); }
-    })();
-  </script>
   <style>
     :root{
       --bg:#f7f8fa; --panel:#ffffff; --text:#17223b; --muted:#6b7280; --accent:#2563eb;
@@ -121,7 +107,7 @@
     <div class="table-wrap" style="margin-top:8px">
       <table id="wTable">
         <thead><tr>
-          <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
+          <th>User ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
           <th class="right">Сумма</th><th class="right">Комиссия</th><th class="right">Итого</th>
           <th>Сеть</th><th>Адрес</th><th>Статус</th><th>TX/Примечание</th><th></th>
         </tr></thead>
@@ -221,11 +207,37 @@
     </div>
   </section>
 
+  <!-- DEPOSITS -->
+  <section class="panel" data-page="deposits" style="display:none">
+    <div class="cards">
+      <div class="card"><div class="k">Записей (огранич.)</div><div id="dCount" class="v">—</div></div>
+      <div class="card"><div class="k">Сумма (огранич.)</div><div id="dSum" class="v">—</div></div>
+      <div class="card"><div class="k">Статус</div><div id="dStatus" class="v">—</div></div>
+      <div class="card"><div class="k">Последнее обновление</div><div id="dUpdated" class="v">—</div></div>
+    </div>
+
+    <div class="row">
+      <input id="dSearch" class="grow" placeholder="Поиск: email, телефон, txid, note">
+      <button class="btn" id="dRefresh">Обновить</button>
+      <button class="btn ghost" id="dExport">Экспорт CSV</button>
+    </div>
+
+    <div class="table-wrap" style="margin-top:8px">
+      <table id="dTable">
+        <thead><tr>
+          <th>Дата</th><th>User</th><th>Сеть / Валюта</th><th class="right">Сумма</th><th>TX</th><th>Статус</th><th>Примечание</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- ABOUT -->
   <section class="panel" data-page="about" style="display:none">
     <h3>Справка</h3>
     <p class="small muted">
-      Источники (CORE): <code>v_admin_profiles</code>, <code>wallets</code>, <code>v_admin_rewards</code>, (опц.) <code>v_admin_rewards_totals</code>. RPC: <code>lc_is_admin</code>, <code>admin_list_users</code>, <code>admin_get_ref_tree</code>, <code>admin_balances_by_user_ids</code>, (опц.) <code>admin_update_withdrawal</code>, <code>admin_adjust_balance</code>.<br>
+      Источники (CORE): <code>v_admin_profiles</code>, <code>wallets</code>, <code>v_admin_rewards</code>, (опц.) <code>v_admin_rewards_totals</code>.<br>
+      RPC: <code>lc_is_admin</code>, <code>admin_list_users</code>, <code>admin_get_ref_tree</code>, <code>admin_balances_by_user_ids</code>, (опц.) <code>admin_update_withdrawal</code>, <code>admin_adjust_balance</code>.<br>
       Баланс канонический: <code>wallets.balance_cents</code>. Админ-панель не меняет схему сайта.
     </p>
   </section>
@@ -287,47 +299,51 @@
 
 <script>
 (function(){
+  // init supabase client (kept as-provided)
+  try{
+    if (!window.supabase) throw new Error('supabase.js not loaded');
+    window.sb = window.supabase.createClient(
+      'https://einpfuegfsilnoiareco.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w',
+      { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
+    );
+    console.log('[Admin] Supabase init OK');
+  } catch(e){ console.error('[Admin] Supabase init error', e); alert('Supabase не инициализирован'); }
 
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
   const sb = window.sb;
-  if (!sb) { alert('Supabase не инициализирован'); }
   const fmtCents = c => ((+c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2}) + ' USDT';
-  const pill = s => '<span class="pill '+s+'">'+(s==='paid'?'оплачено':s==='rejected'?'отклонено':'ожидание')+'</span>';
   const short = s => (s ? String(s).slice(0,6)+'…'+String(s).slice(-4) : '');
   const toCents = v => Math.round((Number(v)||0) * 100);
   const qlike = v => v? '%' + String(v).toLowerCase().trim() + '%' : null;
-  const isUUID = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(s||''));
 
-  let sessionUser = null, isAdmin = false, hasAdjust=false;
-
-  // Tabs
-  $$('#tabs .tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $$('#tabs .tab').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      const tab = btn.dataset.tab;
-      $$('[data-page]').forEach(p => p.style.display = (p.getAttribute('data-page') === tab) ? 'block' : 'none');
-      if (tab === 'withdrawals') loadWithdrawals(true);
-      if (tab === 'users') loadUsers();
-      if (tab === 'rewards') loadRewards();
-      if (tab === 'deposits') loadDeposits();
-    });
-  });
-
-  // Auth
-  async function refreshAuth(){
-    try {
-      const sessionResp = await sb.auth.getSession();
-      sessionUser = sessionResp?.data?.session?.user || null;
-    } catch(e) {
-      sessionUser = null;
-    }
-    $('#authInfo').textContent = sessionUser ? (sessionUser.email || sessionUser.id) : 'не авторизованы';
-    $('#btnLogin').style.display = sessionUser ? 'none':'inline-block';
-    $('#btnLogout').style.display = sessionUser ? 'inline-block':'none';
+  // Utilities
+  function isUUID(s){ return typeof s === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(s); }
+  function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function downloadCSV(name, rows){
+    if(!rows || !rows.length){ alert('Нет данных'); return; }
+    const keys = Object.keys(rows[0]);
+    const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+    const csv = [keys.join(',')].concat(rows.map(r=>keys.map(k=>esc(r[k])).join(','))).join('\n');
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   }
-  $('#btnLogin').addEventListener('click', async () => {
+
+  let sessionUser = null, isAdmin=false, hasAdjust=false;
+  let activePage = 'withdrawals';
+
+  // Auth & admin check
+  async function refreshAuth(){
+    try{
+      const { data: { session } } = await sb.auth.getSession();
+      sessionUser = session?.user || null;
+      $('#authInfo').textContent = sessionUser ? (sessionUser.email || sessionUser.id) : 'не авторизованы';
+      $('#btnLogin').style.display = sessionUser ? 'none':'inline-block';
+      $('#btnLogout').style.display = sessionUser ? 'inline-block':'none';
+    }catch(e){ console.warn(e); }
+  }
+  $('#btnLogin').addEventListener('click', async ()=>{
     try{
       const email = prompt('Email для входа:'); if(!email) return;
       const pwd = prompt('Пароль (пусто — magic-link):') || '';
@@ -340,7 +356,7 @@
         if(error){ alert('Ошибка отправки ссылки: '+(error.message||error)); return; }
         alert('Ссылка для входа отправлена на email.');
       }
-    }catch(e){ alert(e.message||e); }
+    }catch(e){ alert(String(e)); }
   });
   $('#btnLogout').addEventListener('click', async ()=>{ await sb.auth.signOut(); location.reload(); });
 
@@ -349,7 +365,7 @@
     try {
       const r = await sb.rpc('lc_is_admin');
       if (!r?.error) {
-        const row = Array.isArray(r.data) ? r.data[0] : r.data;
+        const row = Array.isArray(r.data)? r.data[0] : r.data;
         if (row === true || row?.is_admin === true) isAdmin = true;
       }
     } catch(_) {}
@@ -368,7 +384,6 @@
     }
   }
 
-  // Capability: admin_adjust_balance?
   async function detectAdjust(){
     try{
       const r = await sb.rpc('admin_adjust_balance', { p_user_id:'00000000-0000-0000-0000-000000000000', p_delta_cents: 0 });
@@ -376,405 +391,300 @@
     }catch(_){ hasAdjust=false; }
   }
 
-let wPage = 0, wLimit = 25, wLastCount = 0, wRowsCache = [];
+  // Tabs
+  $$('#tabs .tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $$('#tabs .tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      activePage = tab;
+      $$('[data-page]').forEach(p => p.style.display = (p.getAttribute('data-page') === tab) ? 'block' : 'none');
+      // Auto-load on tab open
+      if (tab === 'withdrawals') loadWithdrawals(true);
+      if (tab === 'users') loadUsers();
+      if (tab === 'rewards') loadRewards();
+      if (tab === 'deposits') loadDeposits();
+    });
+  });
 
-/* helpers */
-function isUuid(v){
-  return typeof v === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(v);
-}
-function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  // ------------------ WITHDRAWALS ------------------
+  let wPage = 0, wLimit = 25, wRowsCache = [];
 
-/* loadWithdrawals */
-async function loadWithdrawals(resetPage){
-  if (typeof isAdmin !== 'undefined' && !isAdmin) return;
-  if (resetPage) wPage = 0;
+  async function loadWithdrawals(reset){
+    if (!isAdmin) return;
+    if (reset) wPage = 0;
+    const tbody = $('#wTable tbody');
+    tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
+    const status = $('#wStatus')?.value || null;
+    const s = $('#wSearch')?.value?.trim() || null;
+    const from = $('#wFrom')?.value ? new Date($('#wFrom').value) : null;
+    const to = $('#wTo')?.value ? new Date($('#wTo').value) : null;
+    const min = $('#wAmtMin')?.value ? toCents($('#wAmtMin').value) : null;
+    const max = $('#wAmtMax')?.value ? toCents($('#wAmtMax').value) : null;
 
-  const tbody = document.querySelector('#wTable tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка…</td></tr>';
-
-  const status = (document.querySelector('#wStatus') && document.querySelector('#wStatus').value) || null;
-  const s = (document.querySelector('#wSearch') && (document.querySelector('#wSearch').value || '').trim()) || null;
-  const from = document.querySelector('#wFrom') && document.querySelector('#wFrom').value ? new Date(document.querySelector('#wFrom').value) : null;
-  const to = document.querySelector('#wTo') && document.querySelector('#wTo').value ? new Date(document.querySelector('#wTo').value) : null;
-  const min = document.querySelector('#wAmtMin') && document.querySelector('#wAmtMin').value ? toCents(document.querySelector('#wAmtMin').value) : null;
-  const max = document.querySelector('#wAmtMax') && document.querySelector('#wAmtMax').value ? toCents(document.querySelector('#wAmtMax').value) : null;
-
-  const params = {
-    p_status: status || null,
-    p_search: s || null,
-    p_from: from ? from.toISOString() : null,
-    p_to: to ? to.toISOString() : null,
-    p_min: min,
-    p_max: max,
-    p_offset: wPage * wLimit,
-    p_limit: wLimit
-  };
-
-  let rows = [];
-  try {
-    const r = await sb.rpc('admin_list_withdrawals', params);
-    if (r?.error) {
-      tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (r.error.message || JSON.stringify(r.error)) + '</td></tr>';
-      return;
-    }
-    rows = Array.isArray(r.data) ? r.data : (r.data ? [r.data] : []);
-    wRowsCache = rows;
-  } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (err?.message || String(err)) + '</td></tr>';
-    return;
-  }
-
-  // resolve reliable withdrawal id for each row (best-effort)
-  for (let i=0;i<rows.length;i++){
-    const row = rows[i];
-    row._wid = await (async function(r){
-      const candidates = [r.withdrawal_id, r.withdraw_id, r.wid, r.w_id].filter(x=>x!==undefined && x!==null && x!=='');
-      if (candidates.length && isUuid(String(candidates[0]))) return String(candidates[0]);
-      if (r.id && isUuid(String(r.id)) && String(r.id) !== String(r.user_id)) return String(r.id);
-      try {
-        const uid = r.user_id || r.user || null;
-        const created = r.created_at || r.created || null;
-        const amt = (r.amount_cents != null) ? Number(r.amount_cents) : (r.amount ? Number(r.amount) : null);
-        if (uid && created) {
-          const q = await sb.from('withdrawals').select('id,created_at,amount_cents').eq('user_id', uid).eq('created_at', created).maybeSingle();
-          if (!q.error && q.data && q.data.id && isUuid(String(q.data.id))) {
-            console.warn('[admin] resolved withdrawal id by (user_id + created_at)', {user_id:uid, created_at: created, found: q.data.id});
-            return String(q.data.id);
-          }
-        }
-        if (uid && amt != null) {
-          const q2 = await sb.from('withdrawals').select('id,created_at,amount_cents').eq('user_id', uid).eq('amount_cents', amt).order('created_at', {ascending:false}).limit(1);
-          if (!q2.error && q2.data && q2.data.length && isUuid(String(q2.data[0].id))) {
-            console.warn('[admin] resolved withdrawal id by (user_id + amount)', {user_id:uid, amount_cents: amt, found: q2.data[0].id});
-            return String(q2.data[0].id);
-          }
-        }
-      } catch(e){ console.warn('[admin] lookup error', e); }
-      return null;
-    })(row);
-  }
-
-  // load profiles
-  const userIds = Array.from(new Set(rows.map(r=>r.user_id).filter(Boolean)));
-  const emailByUser = {}, phoneByUser = {};
-  if (userIds.length){
-    try{
-      const prof = await sb.from('profiles').select('user_id,email,phone').in('user_id', userIds);
-      if (!prof.error && Array.isArray(prof.data)) {
-        prof.data.forEach(p=>{ emailByUser[p.user_id]=p.email; phoneByUser[p.user_id]=p.phone; });
+    const params = {
+      p_status: status || null,
+      p_search: s || null,
+      p_from: from ? from.toISOString() : null,
+      p_to: to ? to.toISOString() : null,
+      p_min: min,
+      p_max: max,
+      p_offset: wPage * wLimit,
+      p_limit: wLimit
+    };
+    try {
+      const r = await sb.rpc('admin_list_withdrawals', params);
+      if (r?.error) { tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(r.error.message||JSON.stringify(r.error))+'</td></tr>'; return; }
+      const rows = Array.isArray(r.data)? r.data : (r.data? [r.data] : []);
+      wRowsCache = rows;
+      // Add resolved id if possible
+      for (let i=0;i<rows.length;i++){
+        const row = rows[i];
+        row._wid = (row.withdrawal_id || row.withdraw_id || row.wid || row.w_id || row.id) || null;
       }
-    }catch(e){ console.warn('[admin] profiles lookup failed', e); }
-  }
+      // Load profiles for email/phone
+      const userIds = Array.from(new Set(rows.map(r=>r.user_id).filter(Boolean)));
+      const emailByUser = {}, phoneByUser = {};
+      if (userIds.length){
+        try{
+          const prof = await sb.from('profiles').select('user_id,email,phone').in('user_id', userIds);
+          if (!prof.error && Array.isArray(prof.data)) prof.data.forEach(p=>{ emailByUser[p.user_id]=p.email; phoneByUser[p.user_id]=p.phone; });
+        }catch(_) {}
+      }
 
-  // render table
-  try{
-    if (!rows || !rows.length) {
-      tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = '';
-    let sumAmt = 0, sumFee = 0;
-    for (const r of rows) {
-      const tr = document.createElement('tr');
-      const amt = Number(r.amount_cents || r.amount || 0);
-      const fee = Number(r.fee_cents || r.fee || 0);
-      const total = amt + fee;
-      sumAmt += amt; sumFee += fee;
-      const withdrawalId = r._wid || r.id || r.withdrawal_id || r.wid || '';
-      const userId = r.user_id || '';
-      const email = r.user_email || emailByUser[userId] || '—';
-      const phone = r.user_phone || phoneByUser[userId] || '—';
-      const createdAt = r.created_at || r.created || r.requested_at || '';
-      const network = r.network || '';
-      const currency = r.currency || r.curr || '';
-      const addrFull = r.address || r.to_address || r.wallet_address || r.recipient || r.dest_address || r.target_address || '';
-      const addrShort = addrFull ? ('<code>'+escapeHtml(short(addrFull))+'</code>') : '—';
-      const status = r.status || r.state || '—';
-      const txid = r.txid || r.tx || r.transaction || '';
-
-      tr.innerHTML =
-        '<td class="nowrap">'+(userId?('<code>'+escapeHtml(userId)+'</code>'):'—')+'</td>' +
-        '<td class="nowrap">'+(createdAt?escapeHtml(new Date(createdAt).toLocaleString()):'—')+'</td>' +
-        '<td>'+(escapeHtml(email)||'—')+'</td>' +
-        '<td>'+(escapeHtml(phone)||'—')+'</td>' +
-        '<td class="right">'+fmtCents(amt)+'</td>' +
-        '<td class="right">'+fmtCents(fee)+'</td>' +
-        '<td class="right">'+fmtCents(total)+'</td>' +
-        '<td>'+(network? (escapeHtml(network) + (currency?(' / '+escapeHtml(currency)):'')) : '—')+'</td>' +
-        '<td>'+ addrShort +'</td>' +
-        '<td>'+(escapeHtml(status))+'</td>' +
-        '<td>' + (txid ? ('<code>'+escapeHtml(short(txid))+'</code>') : (r.note?('<div class="small muted">'+escapeHtml(r.note)+'</div>'):'—')) + '</td>' +
-        '<td class="nowrap small">' +
-          '<button class="btn ok small js-withdraw-action" data-act="pay" data-wid="'+escapeHtml(withdrawalId||userId)+'">Оплатить</button> ' +
-          '<button class="btn bad small js-withdraw-action" data-act="reject" data-wid="'+escapeHtml(withdrawalId||userId)+'">Отклонить</button> ' +
-          '<button class="btn ghost small js-view-user" data-user="'+escapeHtml(userId)+'">Профиль</button>' +
-        '</td>';
-      tbody.appendChild(tr);
-    }
-    const wCountEl = document.querySelector('#wCount');
-    if (wCountEl) wCountEl.textContent = String(rows.length);
-    const wSumEl = document.querySelector('#wSum'); if (wSumEl) wSumEl.textContent = fmtCents(sumAmt);
-    const wFeeEl = document.querySelector('#wFee'); if (wFeeEl) wFeeEl.textContent = fmtCents(sumFee);
-    const wTotalEl = document.querySelector('#wTotal'); if (wTotalEl) wTotalEl.textContent = fmtCents(sumAmt+sumFee);
-  }catch(e){
-    tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">' + (e?.message || String(e)) + '</td></tr>';
-  }
-}
-
-/* ====== Improved delegated click handler for withdraw actions ====== */
-document.addEventListener('click', async function(e){
-  const btn = e.target.closest && e.target.closest('.js-withdraw-action');
-  if (!btn) {
-    // profile open
-    const viewBtn = e.target.closest && e.target.closest('.js-view-user');
-    if (viewBtn) { const uid = viewBtn.dataset.user; if (uid) openUserDrawer(uid); }
-    return;
-  }
-
-  e.preventDefault();
-  const act = btn.dataset.act;
-  const rawWid = btn.dataset.wid;
-  if (!rawWid) { alert('Нет id заявки'); return; }
-
-  // block all buttons of this wid
-  function setProcessingForWid(wid, v) {
-    document.querySelectorAll('.js-withdraw-action').forEach(b=>{
-      if (String(b.dataset.wid) === String(wid)) { b.disabled = v; b.dataset.processing = v ? '1' : '0'; }
-    });
-  }
-  setProcessingForWid(rawWid, true);
-
-  async function callRpcSafe(name, params){
-    try {
-      const res = await sb.rpc(name, params);
-      return res;
-    } catch (err) {
-      return { error: { message: err?.message || String(err) } };
-    }
-  }
-
-  // resolve real id (best-effort)
-  async function resolveWithdrawalIdFromRaw(rawId) {
-    const candidate = (window.wRowsCache||[]).find(r => {
-      const cands = [r.withdrawal_id, r.withdraw_id, r.wid, r.w_id, r.id];
-      return cands.some(c => c && String(c) === String(rawId));
-    });
-    if (candidate && candidate._wid) return candidate._wid;
-    if (candidate && candidate.id) return candidate.id;
-
-    // guess by user_id match
-    const maybe = (window.wRowsCache||[]).find(r=> r.user_id && String(r.user_id) === String(rawId));
-    const row = maybe || null;
-    if (row) {
-      const uid = row.user_id || row.user;
-      const created = row.created_at || row.created;
-      const amt = (row.amount_cents != null) ? Number(row.amount_cents) : (row.amount ? Math.round(Number(row.amount)*100) : null);
-      try {
-        if (uid && created) {
-          const q = await sb.from('withdrawals').select('id').eq('user_id', uid).eq('created_at', created).maybeSingle();
-          if (!q.error && q.data && q.data.id) return q.data.id;
-        }
-        if (uid && amt != null) {
-          const q2 = await sb.from('withdrawals').select('id').eq('user_id', uid).eq('amount_cents', amt).order('created_at', { ascending: false }).limit(1);
-          if (!q2.error && Array.isArray(q2.data) && q2.data.length) return q2.data[0].id;
-        }
-      } catch (err) { console.warn('[admin] resolve error', err); }
-    }
-    if (isUuid(rawId)) return rawId;
-    return null;
-  }
-
-  try {
-    const realId = await resolveWithdrawalIdFromRaw(rawWid);
-    if (!realId) {
-      alert('Не удалось определить реальный id заявки. Открой DevTools → Network → admin_list_withdrawals и пришли user_id/created_at/amount_cents строки.');
-      return;
-    }
-
-    // check current status from DB to avoid double actions
-    let current = null;
-    try {
-      const check = await sb.from('withdrawals').select('id,user_id,status,amount_cents,txid,address,network,currency').eq('id', realId).maybeSingle();
-      if (!check.error && check.data) current = check.data;
-    } catch (err) { console.warn('status check failed', err); }
-
-    if (act === 'pay') {
-      if (current && (String(current.status).toLowerCase() === 'paid' || String(current.status).toLowerCase() === 'processed')) {
-        alert('Заявка уже помечена как оплаченная на сервере — пропускаю.');
+      if (!rows.length){
+        tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет записей.</td></tr>';
+        $('#wCount').textContent = '0'; $('#wSum').textContent = '—'; $('#wFee').textContent='—'; $('#wTotal').textContent='—';
         return;
       }
-
-      const addr = current?.address || current?.to_address || current?.wallet_address || current?.recipient || current?.dest_address || current?.target_address || '';
-      const addrMsg = addr ? ('Адрес: '+addr+'\n') : '';
-      const tx = prompt(addrMsg + 'Введите TXID (если есть):', '') || null;
-      if (tx === null) return;
-
-      // try main RPC
-      let res = await callRpcSafe('admin_pay_withdrawal_rpc', { p_id: realId, p_txid: tx });
-
-      // fallback to admin_update_withdrawal setting status=paid
-      if (res?.error && String(res.error.message || '').toLowerCase().includes('withdrawal not found')) {
-        res = await callRpcSafe('admin_update_withdrawal', { p_id: realId, p_status: 'paid', p_txid: tx });
+      tbody.innerHTML = '';
+      let sumAmt=0, sumFee=0;
+      for (const r of rows){
+        const tr = document.createElement('tr');
+        const amt = Number(r.amount_cents || 0);
+        const fee = Number(r.fee_cents || 0);
+        sumAmt += amt; sumFee += fee;
+        const userId = r.user_id || '';
+        const email = r.user_email || emailByUser[userId] || '—';
+        const phone = r.user_phone || phoneByUser[userId] || '—';
+        const withdrawalId = r._wid || '';
+        const statusTxt = r.status || 'pending';
+        tr.innerHTML =
+          '<td class="nowrap">'+(userId?'<code>'+escapeHtml(userId)+'</code>':'—')+'</td>' +
+          '<td class="nowrap">'+(r.created_at? new Date(r.created_at).toLocaleString() : '—')+'</td>' +
+          '<td>' + escapeHtml(email) + '</td>' +
+          '<td>' + escapeHtml(phone) + '</td>' +
+          '<td class="right">'+fmtCents(amt)+'</td>' +
+          '<td class="right">'+fmtCents(fee)+'</td>' +
+          '<td class="right">'+fmtCents(amt+fee)+'</td>' +
+          '<td>' + (r.network? escapeHtml(r.network) + (r.currency?(' / '+escapeHtml(r.currency)): '') : '—') + '</td>' +
+          '<td>' + (r.address? escapeHtml(r.address) : (r.txid? '<code>'+escapeHtml(short(r.txid))+'</code>' : (r.note? '<div class="small muted">'+escapeHtml(r.note)+'</div>':'—'))) + '</td>' +
+          '<td>' + escapeHtml(statusTxt) + '</td>' +
+          '<td>' + (r.txid? '<code>'+escapeHtml(short(r.txid))+'</code>' : (r.note? '<div class="small muted">'+escapeHtml(r.note)+'</div>' : '—')) + '</td>' +
+          '<td class="nowrap small">' +
+            '<button class="btn ok small js-withdraw-action" data-act="pay" data-wid="'+escapeHtml(withdrawalId)+'">Оплатить</button> ' +
+            '<button class="btn bad small js-withdraw-action" data-act="reject" data-wid="'+escapeHtml(withdrawalId)+'">Отклонить</button> ' +
+            '<button class="btn ghost small js-view-user" data-user="'+escapeHtml(userId)+'">Профиль</button>' +
+          '</td>';
+        tbody.appendChild(tr);
       }
-
-      if (res?.error) {
-        alert('Ошибка при оплате: ' + (res.error.message || JSON.stringify(res.error)));
-      } else {
-        alert('Оплата проведена (или помечена) успешно.');
-        await loadWithdrawals();
-      }
-
-    } else if (act === 'reject') {
-      if (current && String(current.status).toLowerCase() === 'rejected') {
-        alert('Заявка уже отклонена на сервере.');
-        return;
-      }
-
-      const reason = prompt('Укажите причину отклонения (будет записана в заметку):', '') || null;
-      if (reason === null) return;
-      if (!confirm('Отклонить заявку и вернуть средства пользователю?')) return;
-
-      let res = await callRpcSafe('admin_reject_withdrawal_rpc', { p_id: realId, p_note: reason });
-
-      // if function missing or returned not found, try admin_update_withdrawal
-      if (res?.error && String(res.error.message || '').toLowerCase().includes('function')) {
-        res = await callRpcSafe('admin_update_withdrawal', { p_id: realId, p_status: 'rejected', p_note: reason });
-      }
-
-      if (res?.error) {
-        // final fallback: direct UPDATE + attempt refund
-        console.warn('rpc reject failed, trying direct update', res.error);
-        try {
-          const upd = await sb.from('withdrawals').update({ status: 'rejected', note: reason }).eq('id', realId).select().maybeSingle();
-          if (upd.error) throw upd.error;
-
-          const amountCents = current?.amount_cents || 0;
-          const userId = current?.user_id || null;
-          if (amountCents && amountCents > 0 && userId) {
-            const refund = await callRpcSafe('admin_adjust_balance', { p_user_id: userId, p_delta_cents: amountCents });
-            if (refund?.error) {
-              alert('Заявка отклонена, но не удалось автоматически вернуть средства: ' + (refund.error.message || JSON.stringify(refund.error)));
-            } else {
-              alert('Заявка отклонена, средства возвращены.');
-            }
-          } else {
-            alert('Заявка отклонена (без возврата средств — сумма = 0 или неизвестен user_id).');
-          }
-          await loadWithdrawals();
-        } catch (err) {
-          alert('Не удалось отклонить заявку: ' + (err?.message || String(err)));
-        }
-      } else {
-        alert('Заявка успешно отклонена (через RPC).');
-        await loadWithdrawals();
-      }
+      $('#wCount').textContent = String(rows.length);
+      $('#wSum').textContent = fmtCents(sumAmt);
+      $('#wFee').textContent = fmtCents(sumFee);
+      $('#wTotal').textContent = fmtCents(sumAmt+sumFee);
+      $('#wDiag').textContent = 'Страница: ' + (wPage+1);
+    } catch (err){
+      tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">'+(err?.message||String(err))+'</td></tr>';
     }
-  } catch (err) {
-    console.error(err);
-    alert('Ошибка сети/сервера: ' + (err?.message || String(err)));
-  } finally {
-    setProcessingForWid(rawWid, false);
   }
-});
 
-/* (далее: USERS, REWARDS, REFS, DRAWER и т.д.) */
+  // Withdraw actions (delegated)
+  document.addEventListener('click', async function(e){
+    const btn = e.target.closest && e.target.closest('.js-withdraw-action');
+    if (!btn) return;
+    e.preventDefault();
+    if (!isAdmin) { alert('Требуется права администратора'); return; }
+    const act = btn.dataset.act;
+    const rawWid = btn.dataset.wid;
+    btn.disabled = true;
 
-  // ===================== USERS =====================
-  let uRowsCache=[];
+    async function rpcPay(id, tx){
+      try { return await sb.rpc('admin_pay_withdrawal_rpc', { p_id: id, p_txid: tx }); }
+      catch(e){ return { error: { message: e?.message || String(e) } }; }
+    }
+    async function rpcReject(id){
+      try { return await sb.rpc('admin_reject_withdrawal_rpc', { p_id: id }); }
+      catch(e){ return { error: { message: e?.message || String(e) } }; }
+    }
+
+    // try direct, otherwise attempt to resolve by cache fields
+    try {
+      if (act === 'pay'){
+        const tx = prompt('Введите TXID (если есть):','') || null;
+        let res = await rpcPay(rawWid, tx);
+        if (res?.error && /withdrawal not found/i.test(String(res.error.message || res.error || ''))){
+          // try resolving from cache
+          let candidate = wRowsCache.find(x => [x.withdrawal_id, x.withdraw_id, x.wid, x.w_id, x.id].some(c=>String(c) === String(rawWid)));
+          if (!candidate) candidate = wRowsCache.find(x => x.user_id && String(x.user_id) === String(rawWid));
+          let realId = null;
+          if (candidate) {
+            // by user_id + created_at
+            try {
+              if (candidate.user_id && candidate.created_at){
+                const q = await sb.from('withdrawals').select('id').eq('user_id', candidate.user_id).eq('created_at', candidate.created_at).maybeSingle();
+                if (!q.error && q.data?.id) realId = q.data.id;
+              }
+              if (!realId && candidate.user_id && candidate.amount_cents != null){
+                const q2 = await sb.from('withdrawals').select('id').eq('user_id', candidate.user_id).eq('amount_cents', candidate.amount_cents).order('created_at', {ascending:false}).limit(1);
+                if (!q2.error && q2.data?.length) realId = q2.data[0].id;
+              }
+            }catch(_){}
+          }
+          if (!realId){
+            alert('Не удалось автоматически найти запись заявки. Откройте DevTools → Network → admin_list_withdrawals и скопируйте поля user_id, created_at и amount_cents для проблемной строки, затем вставьте их в панель админа или сюда для диагностики.');
+            return;
+          }
+          res = await rpcPay(realId, tx);
+        }
+        if (res?.error){ alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error))); }
+        else { alert('Оплачено'); loadWithdrawals(); }
+      } else if (act === 'reject'){
+        if (!confirm('Отклонить заявку? Баланс вернётся пользователю.')) return;
+        let res = await rpcReject(rawWid);
+        if (res?.error && /withdrawal not found/i.test(String(res.error.message || res.error || ''))){
+          let candidate = wRowsCache.find(x => [x.withdrawal_id, x.withdraw_id, x.wid, x.w_id, x.id].some(c=>String(c) === String(rawWid)));
+          if (!candidate) candidate = wRowsCache.find(x => x.user_id && String(x.user_id) === String(rawWid));
+          let realId = null;
+          if (candidate) {
+            try {
+              if (candidate.user_id && candidate.created_at){
+                const q = await sb.from('withdrawals').select('id').eq('user_id', candidate.user_id).eq('created_at', candidate.created_at).maybeSingle();
+                if (!q.error && q.data?.id) realId = q.data.id;
+              }
+              if (!realId && candidate.user_id && candidate.amount_cents != null){
+                const q2 = await sb.from('withdrawals').select('id').eq('user_id', candidate.user_id).eq('amount_cents', candidate.amount_cents).order('created_at', {ascending:false}).limit(1);
+                if (!q2.error && q2.data?.length) realId = q2.data[0].id;
+              }
+            }catch(_){}
+          }
+          if (!realId){
+            alert('Не удалось автоматически найти запись заявки. Откройте DevTools → Network → admin_list_withdrawals и скопируйте поля user_id, created_at и amount_cents для проблемной строки, затем вставьте их в панель админа или сюда для диагностики.');
+            return;
+          }
+          res = await rpcReject(realId);
+        }
+        if (res?.error){ alert('Ошибка: ' + (res.error.message || JSON.stringify(res.error))); }
+        else { alert('Отклонено'); loadWithdrawals(); }
+      }
+    } catch (err){
+      console.error(err); alert('Ошибка сети/сервера: ' + (err?.message || String(err)));
+    } finally { btn.disabled = false; }
+  });
+
+  // Prev/Next pagination
+  $('#wPrev').addEventListener('click', ()=>{
+    if (wPage > 0) { wPage--; loadWithdrawals(); }
+  });
+  $('#wNext').addEventListener('click', ()=>{
+    wPage++; loadWithdrawals();
+  });
+
+  $('#wReload').addEventListener('click', ()=>loadWithdrawals(true));
+  $('#wExport').addEventListener('click', ()=> downloadCSV('withdrawals.csv', wRowsCache.map(r=>({
+    user_id: r.user_id, created_at: r.created_at, amount_cents: r.amount_cents, fee_cents: r.fee_cents, status: r.status, txid: r.txid, note: r.note
+  }))));
+
+  // ------------------ USERS ------------------
+  let uRowsCache = [];
   async function loadUsers(){
     if (!isAdmin) return;
-    const tbody = $('#uTable tbody'); tbody.innerHTML = '<tr><td colspan="8" class="muted small">Загрузка…</td></tr>';
-    const s = $('#uSearch').value.trim();
-    const balMin = $('#uBalMin').value ? toCents($('#uBalMin').value) : null;
-    const balMax = $('#uBalMax').value ? toCents($('#uBalMax').value) : null;
-    let rows=null;
-
-    // 1) Предпочтительно: admin_list_users(p_search)
+    const tbody = $('#uTable tbody');
+    tbody.innerHTML = '<tr><td colspan="8" class="muted small">Загрузка…</td></tr>';
+    const s = $('#uSearch')?.value?.trim() || '';
+    const balMin = $('#uBalMin')?.value ? toCents($('#uBalMin').value) : null;
+    const balMax = $('#uBalMax')?.value ? toCents($('#uBalMax').value) : null;
+    let rows = null;
     try {
       const r = await sb.rpc('admin_list_users', { p_search: s || null });
-      if(!r.error){
+      if (!r.error) {
         const list = Array.isArray(r.data)? r.data : (r.data? [r.data] : []);
         rows = list.map(x=>({
-          user_id:x.user_id, created_at:x.activated_at || x.created_at,
-          email:x.email, phone:x.phone, ref_code:x.ref_code,
-          balance_cents:x.balance_cents ?? 0
+          user_id: x.user_id, created_at: x.activated_at || x.created_at,
+          email: x.email, phone: x.phone, ref_code: x.ref_code,
+          balance_cents: x.balance_cents ?? 0
         }));
       }
-    } catch(_){}
-
-    // 2) Фолбэк: v_admin_profiles + wallets
+    } catch(_) {}
     if (!rows){
       let q = sb.from('v_admin_profiles').select('user_id, email, phone, ref_code, invited_by_code, created_at').order('created_at', {ascending:false}).limit(1000);
-      if (s) { const like=qlike(s); q = q.or('user_id.ilike.'+like+',email.ilike.'+like+',phone.ilike.'+like+',ref_code.ilike.'+like); }
-      const r = await q; if (r.error) { tbody.innerHTML='<tr><td colspan="8" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
+      if (s){ const like = qlike(s); q = q.or('user_id.ilike.'+like+',email.ilike.'+like+',phone.ilike.'+like+',ref_code.ilike.'+like); }
+      const r = await q;
+      if (r.error){ tbody.innerHTML = '<tr><td colspan="8" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
       const ids = (r.data||[]).map(p=>p.user_id);
-      let balances={}; if (ids.length) { const w = await sb.from('wallets').select('user_id, balance_cents').in('user_id', ids); (w.data||[]).forEach(x=>balances[x.user_id]=x.balance_cents||0); }
-      rows = (r.data||[]).map(p=>({ user_id:p.user_id, created_at:p.created_at, email:p.email, phone:p.phone, ref_code:p.ref_code, balance_cents: balances[p.user_id]||0 }));
+      let balances = {};
+      if (ids.length){
+        const w = await sb.from('wallets').select('user_id,balance_cents').in('user_id', ids);
+        (w.data||[]).forEach(x=>balances[x.user_id] = x.balance_cents || 0);
+      }
+      rows = (r.data||[]).map(p=>({ user_id: p.user_id, created_at: p.created_at, email: p.email, phone: p.phone, ref_code: p.ref_code, balance_cents: balances[p.user_id]||0 }));
     }
-
-    // фильтр по балансу (клиентский)
-    if (balMin!=null || balMax!=null){
+    // client-side balance filter
+    if (balMin != null || balMax != null){
       rows = (rows||[]).filter(r => (balMin==null || r.balance_cents>=balMin) && (balMax==null || r.balance_cents<=balMax));
     }
-
-    uRowsCache = rows||[];
+    uRowsCache = rows || [];
     const sumBal = uRowsCache.reduce((a,b)=>a+(+b.balance_cents||0),0);
     $('#uCount').textContent = uRowsCache.length;
     $('#uSumBal').textContent = fmtCents(sumBal);
     $('#uAvgBal').textContent = uRowsCache.length? fmtCents(Math.round(sumBal/uRowsCache.length)) : '—';
     $('#uWithRef').textContent = uRowsCache.filter(r=>!!r.ref_code).length;
-
-    $('#uDiag').textContent = uRowsCache.length+' пользователей';
-    tbody.innerHTML=''; if(!uRowsCache.length){ tbody.innerHTML='<tr><td colspan="8" class="muted small">Пусто</td></tr>'; return; }
-    for (const r of uRowsCache) {
+    $('#uDiag').textContent = uRowsCache.length + ' пользователей';
+    if (!uRowsCache.length){ tbody.innerHTML = '<tr><td colspan="8" class="muted small">Пусто</td></tr>'; return; }
+    tbody.innerHTML = '';
+    for (const r of uRowsCache){
       const link = buildRefLink(r.ref_code);
       const tr = document.createElement('tr');
-      tr.innerHTML = '<td class="nowrap">'+r.user_id+'</td>'
-        + '<td class="nowrap">'+(r.created_at?new Date(r.created_at).toLocaleString():'—')+'</td>'
-        + '<td>'+(r.email||'—')+'</td>'
-        + '<td>'+(r.phone||'—')+'</td>'
+      tr.innerHTML = '<td class="nowrap">'+escapeHtml(r.user_id)+'</td>'
+        + '<td class="nowrap">'+(r.created_at? new Date(r.created_at).toLocaleString():'—')+'</td>'
+        + '<td>'+(r.email?escapeHtml(r.email):'—')+'</td>'
+        + '<td>'+(r.phone?escapeHtml(r.phone):'—')+'</td>'
         + '<td class="right">'+fmtCents(r.balance_cents||0)+'</td>'
-        + '<td>'+(r.ref_code||'—')+'</td>'
-        + '<td class="nowrap">'+(link?('<code>'+link+'</code>'):'—')+'</td>'
-        + '<td class="nowrap"><button class="btn ghost small" data-open="'+r.user_id+'">Открыть</button></td>';
+        + '<td>'+(r.ref_code?escapeHtml(r.ref_code):'—')+'</td>'
+        + '<td class="nowrap">'+(link?('<code>'+escapeHtml(link)+'</code>'):'—')+'</td>'
+        + '<td class="nowrap"><button class="btn ghost small" data-open="'+escapeHtml(r.user_id)+'">Открыть</button></td>';
       tbody.appendChild(tr);
     }
   }
   $('#uReload').addEventListener('click', loadUsers);
-  $('#uTable').addEventListener('click', e=>{ const btn=e.target.closest('button[data-open]'); if(!btn) return; openUserDrawer(btn.dataset.open); });
-  $('#uExport').addEventListener('click', ()=>exportCSV('users.csv', uRowsCache));
+  $('#uExport').addEventListener('click', ()=> downloadCSV('users.csv', uRowsCache.map(r=>({ user_id:r.user_id, created_at:r.created_at, email:r.email, phone:r.phone, balance_cents:r.balance_cents, ref_code:r.ref_code })) ));
+  $('#uTable').addEventListener('click', e=>{ const btn = e.target.closest('button[data-open]'); if (!btn) return; openUserDrawer(btn.dataset.open); });
 
-  // ===================== REWARDS =====================
-  let rwRowsCache=[];
+  // ------------------ REWARDS ------------------
+  let rwRowsCache = [];
   async function loadRewards(){
     if (!isAdmin) return;
-    const tbody = $('#rwTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
-    const s = $('#rwSearch').value.trim();
-    const lvl = $('#rwLevel').value;
-    const from = $('#rwFrom').value ? new Date($('#rwFrom').value) : null;
-    const to = $('#rwTo').value ? new Date($('#rwTo').value) : null;
+    const tbody = $('#rwTable tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
+    const s = $('#rwSearch')?.value?.trim() || '';
+    const lvl = $('#rwLevel')?.value;
+    const from = $('#rwFrom')?.value ? new Date($('#rwFrom').value) : null;
+    const to = $('#rwTo')?.value ? new Date($('#rwTo').value) : null;
 
     let q = sb.from('v_admin_rewards').select('created_at, level, target_user_id, source_user_id, amount_cents, amount_usd, reward_usdt, note').order('created_at', {ascending:false}).limit(1000);
-    if (s) { const like=qlike(s); q = q.or('target_user_id.ilike.'+like+',source_user_id.ilike.'+like+',note.ilike.'+like); }
-    if (lvl!=='') q = q.eq('level', Number(lvl));
+    if (s){ const like = qlike(s); q = q.or('target_user_id.ilike.'+like+',source_user_id.ilike.'+like+',note.ilike.'+like); }
+    if (lvl !== '') q = q.eq('level', Number(lvl));
     if (from) q = q.gte('created_at', from.toISOString());
     if (to) q = q.lte('created_at', to.toISOString());
 
     const r = await q;
-    if (r.error){ tbody.innerHTML='<tr><td colspan="6" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
-
-    // нормализация amount
-    let rows = (r.data||[]).map(x=>{
+    if (r.error){ tbody.innerHTML = '<tr><td colspan="6" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
+    const rows = (r.data||[]).map(x=>{
       let amount = x.amount_cents;
       if (amount == null && x.amount_usd != null) amount = Math.round(Number(x.amount_usd)*100);
       if (amount == null && x.reward_usdt != null) amount = Math.round(Number(x.reward_usdt)*100);
-      return { created_at:x.created_at, level:x.level, target_user_id:x.target_user_id, source_user_id:x.source_user_id, amount_cents:amount||0, note:x.note };
+      return { created_at: x.created_at, level: x.level, target_user_id: x.target_user_id, source_user_id: x.source_user_id, amount_cents: amount||0, note: x.note };
     });
-
-    rwRowsCache = rows||[];
-
-    // своды
+    rwRowsCache = rows;
     const sumAll = rwRowsCache.reduce((a,b)=>a+(+b.amount_cents||0),0);
     const sumL1 = rwRowsCache.filter(x=>+x.level===1).reduce((a,b)=>a+(+b.amount_cents||0),0);
     const sumL2 = rwRowsCache.filter(x=>+x.level===2).reduce((a,b)=>a+(+b.amount_cents||0),0);
@@ -784,62 +694,49 @@ document.addEventListener('click', async function(e){
     $('#rwByLvl').textContent = [sumL1,sumL2,sumL3].map(x=>((x/100)||0).toLocaleString('ru-RU',{maximumFractionDigits:2})).join(' / ') + ' USDT';
     $('#rwRange').textContent = (from?$('#rwFrom').value:'∞') + ' → ' + (to?$('#rwTo').value:'∞');
     $('#rwDiag').textContent = rwRowsCache.length+' записей';
-
-    tbody.innerHTML=''; if(!rwRowsCache.length){ tbody.innerHTML='<tr><td colspan="6" class="muted small">Пусто</td></tr>'; return; }
-    for (const x of rwRowsCache) {
-      const tr=document.createElement('tr');
+    tbody.innerHTML = '';
+    if (!rwRowsCache.length){ tbody.innerHTML = '<tr><td colspan="6" class="muted small">Пусто</td></tr>'; return; }
+    for (const x of rwRowsCache){
+      const tr = document.createElement('tr');
       tr.innerHTML = '<td class="nowrap">'+new Date(x.created_at).toLocaleString()+'</td>'
         + '<td>'+(x.level ?? '—')+'</td>'
-        + '<td class="nowrap">'+x.target_user_id+'</td>'
-        + '<td class="nowrap">'+(x.source_user_id || '—')+'</td>'
+        + '<td class="nowrap">'+escapeHtml(x.target_user_id)+'</td>'
+        + '<td class="nowrap">'+(x.source_user_id?escapeHtml(x.source_user_id):'—')+'</td>'
         + '<td class="right">'+fmtCents(x.amount_cents||0)+'</td>'
-        + '<td>'+(x.note||'—')+'</td>';
+        + '<td>'+(x.note?escapeHtml(x.note):'—')+'</td>';
       tbody.appendChild(tr);
     }
   }
   $('#rwReload').addEventListener('click', loadRewards);
-  $('#rwExport').addEventListener('click', ()=>exportCSV('rewards.csv', rwRowsCache));
-  try{ sb.channel('adm-rw').on('postgres_changes', { event:'*', schema:'public', table:'v_admin_rewards' }, ()=>{ if($('.tab.active')?.dataset.tab==='rewards') loadRewards(); }).subscribe(); }catch(_){}
+  $('#rwExport').addEventListener('click', ()=> downloadCSV('rewards.csv', rwRowsCache.map(r=>({ created_at:r.created_at, level:r.level, target:r.target_user_id, source:r.source_user_id, amount_cents:r.amount_cents, note:r.note })) ));
 
-  // ===================== REFS =====================
+  // ------------------ REFS ------------------
   async function adminGetRefTree(rootUserId){
-    try{
-      const r = await sb.rpc('admin_get_ref_tree', { p_user_id: rootUserId });
-      if (!r.error) return Array.isArray(r.data)? r.data : (r.data? [r.data] : []);
-    }catch(_){}
-    return null;
+    try{ const r = await sb.rpc('admin_get_ref_tree', { p_user_id: rootUserId }); if (!r.error) return Array.isArray(r.data)? r.data : (r.data? [r.data]: []); }
+    catch(_){} return null;
   }
 
   async function loadL1ByKey(key){
-    const tbody = $('#rL1Table tbody'); tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
+    const tbody = $('#rL1Table tbody');
     key = (key||'').trim();
-    if(!key){ tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
-
-    // Если пришёл ref_code → найдём его user_id
+    tbody.innerHTML = '<tr><td colspan="5" class="muted small">Загрузка…</td></tr>';
+    if (!key) { tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
     let rootId = key;
-    if(!isUUID(key)){
-      try{
-        const p = await sb.from('v_admin_profiles').select('user_id').eq('ref_code', key).maybeSingle();
-        if (p?.data?.user_id) rootId = p.data.user_id;
-      }catch(_){}
+    if (!isUUID(key)){
+      try{ const p = await sb.from('v_admin_profiles').select('user_id').eq('ref_code', key).maybeSingle(); if (p?.data?.user_id) rootId = p.data.user_id; } catch(_) {}
     }
-
     let rows = [];
-    const tree = isUUID(rootId) ? await adminGetRefTree(rootId) : null;
-    if (tree && tree.length){
-      rows = tree.filter(x=>String(x.gen) === '1').map(x=>({ user_id:x.user_id }));
-    }
+    const tree = isUUID(rootId)? await adminGetRefTree(rootId) : null;
+    if (tree && tree.length){ rows = tree.filter(x=>String(x.gen)==='1').map(x=>({ user_id:x.user_id })); }
     if (!rows.length){
       let v1 = await sb.from('v_admin_profiles').select('user_id,email,phone,ref_code').eq('inviter_user_id', rootId).limit(1000);
       if (!v1.error && v1.data?.length) rows = v1.data;
-      else if (!isUUID(key)) {
+      else if (!isUUID(key)){
         const v2 = await sb.from('v_admin_profiles').select('user_id,email,phone,ref_code').eq('invited_by_code', key).limit(1000);
         if (!v2.error && v2.data) rows = v2.data;
       }
     }
-
     if (!rows.length){ tbody.innerHTML = '<tr><td colspan="5" class="muted small">Нет данных</td></tr>'; window._l1Cache=[]; return; }
-
     const ids = rows.map(x=>x.user_id);
     const balances = {};
     try {
@@ -851,65 +748,57 @@ document.addEventListener('click', async function(e){
         (ww.data||[]).forEach(x=>balances[x.user_id]=x.balance_cents||0);
       }catch(_){}
     }
-
-    tbody.innerHTML='';
+    tbody.innerHTML = '';
     rows.forEach(x=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = '<td class="nowrap">'+x.user_id+'</td>'
-        + '<td>'+(x.email||'—')+'</td>'
-        + '<td>'+(x.phone||'—')+'</td>'
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td class="nowrap">'+escapeHtml(x.user_id)+'</td>'
+        + '<td>'+(x.email?escapeHtml(x.email):'—')+'</td>'
+        + '<td>'+(x.phone?escapeHtml(x.phone):'—')+'</td>'
         + '<td class="right">'+fmtCents(balances[x.user_id]||0)+'</td>'
-        + '<td>'+(x.ref_code||'—')+'</td>';
+        + '<td>'+(x.ref_code?escapeHtml(x.ref_code):'—')+'</td>';
       tbody.appendChild(tr);
     });
     window._l1Cache = rows.map(x=>({ user_id:x.user_id, email:x.email||'', phone:x.phone||'', balance_cents: balances[x.user_id]||0, ref_code:x.ref_code||'' }));
   }
   $('#rLoadL1').addEventListener('click', ()=>loadL1ByKey($('#rInviter').value.trim()));
-  $('#rExportL1').addEventListener('click', ()=>exportCSV('referrals_L1.csv', window._l1Cache||[]));
+  $('#rExportL1').addEventListener('click', ()=> downloadCSV('referrals_L1.csv', window._l1Cache || []));
 
   async function buildTreeByKey(){
     const key = $('#treeUser').value.trim();
-    const tbody = $('#treeTable tbody'); tbody.innerHTML='<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
-    if(!key){ tbody.innerHTML='<tr><td colspan="6" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
-
+    const tbody = $('#treeTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
+    if (!key){ tbody.innerHTML = '<tr><td colspan="6" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
     let rootId = key;
-    if(!isUUID(key)){
-      try{
-        const p = await sb.from('v_admin_profiles').select('ref_code').eq('user_id', rootId).maybeSingle();
-        if (p?.data?.ref_code) rootId = rootId;
-      }catch(_){}
+    if (!isUUID(key)){
+      try{ const p = await sb.from('v_admin_profiles').select('ref_code').eq('user_id', rootId).maybeSingle(); if (p?.data?.ref_code) rootId = rootId; }catch(_){}
     }
-
     let rows = [];
-    const tree = isUUID(rootId) ? await adminGetRefTree(rootId) : null;
-    if (tree && tree.length){
-      rows = tree.map(x=>({ level:x.gen, user_id:x.user_id }));
-    } else {
-      // Фолбэк: послойно через v_admin_profiles
-      let parents=[{user_id:rootId, ref_code:null}];
-      try { const p = await sb.from('v_admin_profiles').select('ref_code').eq('user_id', rootId).maybeSingle();
-            parents[0].ref_code = p?.data?.ref_code || null; } catch(_){}
-      for (let lvl=1; lvl<=3; lvl++) {
+    const tree = isUUID(rootId)? await adminGetRefTree(rootId) : null;
+    if (tree && tree.length) rows = tree.map(x=>({ level:x.gen, user_id:x.user_id, email:x.email, phone:x.phone, ref_code:x.ref_code }));
+    else {
+      // fallback: BFS layers via v_admin_profiles
+      let parents = [{ user_id: rootId, ref_code: null }];
+      try{ const p = await sb.from('v_admin_profiles').select('ref_code').eq('user_id', rootId).maybeSingle(); parents[0].ref_code = p?.data?.ref_code || null; }catch(_){}
+      for (let lvl=1; lvl<=3; lvl++){
         const parentIds = parents.map(p=>p.user_id);
         let childs = [];
-        const q1 = await sb.from('v_admin_profiles').select('user_id,email,phone,ref_code,inviter_user_id,invited_by_code').in('inviter_user_id', parentIds).limit(2000);
-        if (!q1.error && q1.data?.length) childs = q1.data;
-        const parentCodes = parents.map(p=>p.ref_code).filter(Boolean);
-        if (parentCodes.length) {
-          const q2 = await sb.from('v_admin_profiles').select('user_id,email,phone,ref_code,inviter_user_id,invited_by_code').in('invited_by_code', parentCodes).limit(2000);
-          if (!q2.error && q2.data) {
-            const seen=new Set(childs.map(c=>c.user_id));
-            q2.data.forEach(c=>{ if(!seen.has(c.user_id)) childs.push(c);});
+        try {
+          const q1 = await sb.from('v_admin_profiles').select('user_id,email,phone,ref_code,inviter_user_id,invited_by_code').in('inviter_user_id', parentIds).limit(2000);
+          if (!q1.error && q1.data?.length) childs = q1.data;
+          const parentCodes = parents.map(p=>p.ref_code).filter(Boolean);
+          if (parentCodes.length){
+            const q2 = await sb.from('v_admin_profiles').select('user_id,email,phone,ref_code,inviter_user_id,invited_by_code').in('invited_by_code', parentCodes).limit(2000);
+            if (!q2.error && q2.data){
+              const seen = new Set(childs.map(c=>c.user_id));
+              q2.data.forEach(c=>{ if (!seen.has(c.user_id)) childs.push(c); });
+            }
           }
-        }
+        } catch(_) {}
         if (!childs.length) break;
-        rows.push(...childs.map(c=>({level:lvl, user_id:c.user_id, email:c.email, phone:c.phone, ref_code:c.ref_code})));
+        rows.push(...childs.map(c=>({ level: lvl, user_id: c.user_id, email: c.email, phone: c.phone, ref_code: c.ref_code })));
         parents = childs;
       }
     }
-
-    if (!rows.length) { tbody.innerHTML='<tr><td colspan="6" class="muted small">Пусто</td></tr>'; window._treeCache=[]; return; }
-
+    if (!rows.length){ tbody.innerHTML = '<tr><td colspan="6" class="muted small">Пусто</td></tr>'; window._treeCache=[]; return; }
     const ids = Array.from(new Set(rows.map(r=>r.user_id)));
     const bal = {};
     try{
@@ -921,30 +810,29 @@ document.addEventListener('click', async function(e){
         (ww.data||[]).forEach(x=>bal[x.user_id]=x.balance_cents||0);
       }catch(_){}
     }
-
-    tbody.innerHTML='';
+    tbody.innerHTML = '';
     rows.forEach(r=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML = '<td>'+r.level+'</td>'
-        + '<td class="nowrap">'+r.user_id+'</td>'
-        + '<td>'+(r.email||'—')+'</td>'
-        + '<td>'+(r.phone||'—')+'</td>'
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>'+escapeHtml(String(r.level))+'</td>'
+        + '<td class="nowrap">'+escapeHtml(r.user_id)+'</td>'
+        + '<td>'+(r.email?escapeHtml(r.email):'—')+'</td>'
+        + '<td>'+(r.phone?escapeHtml(r.phone):'—')+'</td>'
         + '<td class="right">'+fmtCents(bal[r.user_id]||0)+'</td>'
-        + '<td>'+(r.ref_code||'—')+'</td>';
+        + '<td>'+(r.ref_code?escapeHtml(r.ref_code):'—')+'</td>';
       tbody.appendChild(tr);
     });
     window._treeCache = rows;
   }
   $('#treeLoad').addEventListener('click', buildTreeByKey);
-  $('#treeExport').addEventListener('click', ()=>{ const arr=(window._treeCache||[]).map(r=>({ level:r.level, user_id:r.user_id })); exportCSV('ref_tree.csv', arr); });
+  $('#treeExport').addEventListener('click', ()=> downloadCSV('ref_tree.csv', (window._treeCache||[]).map(r=>({ level:r.level, user_id:r.user_id, email:r.email, phone:r.phone })) ));
 
-  // ===================== DRAWER (PROFILE) =====================
+  // ------------------ DRAWER ------------------
   $('#dClose').addEventListener('click', ()=>$('#drawer').classList.remove('open'));
-  $('#dCopyUID').addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText($('#dUserId').value); alert('Скопировано'); }catch(_){ alert('Скопируйте вручную'); } });
+  $('#dCopyUID').addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText($('#dUserId').value); alert('Скопировано'); }catch(_){ alert('Скопируйте вручную'); }});
 
   async function openUserDrawer(uid){
-    if(!uid) return;
-    $('#drawer').classList.add('open'); $('#dTitle').textContent='Профиль: '+uid; $('#dUserId').value=uid;
+    if (!uid) return;
+    $('#drawer').classList.add('open'); $('#dTitle').textContent='Профиль: '+uid; $('#dUserId').value = uid;
     const [prof, wallet, wds, rrs] = await Promise.all([
       sb.from('profiles').select('user_id, created_at, email, phone, ref_code').eq('user_id', uid).maybeSingle(),
       sb.from('wallets').select('user_id, balance_cents').eq('user_id', uid).maybeSingle(),
@@ -958,10 +846,14 @@ document.addEventListener('click', async function(e){
     $('#dRefCode').value = prof?.data?.ref_code || '';
     $('#dRefLink').value = prof?.data?.ref_code ? buildRefLink(prof.data.ref_code) : '';
 
-    const wtbody = $('#dWTable tbody'); wtbody.innerHTML='';
-    (wds?.data||[]).forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML='<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td><td class="right">'+fmtCents(r.amount_cents||0)+'</td><td>'+String(r.status||'pending')+'</td><td class="nowrap">'+(r.txid?('<code>'+short(r.txid)+'</code>'):'—')+'</td>'; wtbody.appendChild(tr); });
+    const wtbody = $('#dWTable tbody'); wtbody.innerHTML = '';
+    (wds?.data||[]).forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td><td class="right">'+fmtCents(r.amount_cents||0)+'</td><td>'+escapeHtml(String(r.status||'pending'))+'</td><td class="nowrap">'+(r.txid?'<code>'+escapeHtml(short(r.txid))+'</code>':'—')+'</td>';
+      wtbody.appendChild(tr);
+    });
 
-    const rtbody = $('#dRTable tbody'); rtbody.innerHTML='';
+    const rtbody = $('#dRTable tbody'); rtbody.innerHTML = '';
     let dL1=0,dL2=0,dL3=0, dAll=0;
     (rrs?.data||[]).forEach(r=>{
       const amt = r.amount_cents ?? (r.amount_usd!=null?Math.round(Number(r.amount_usd)*100):(r.reward_usdt!=null?Math.round(Number(r.reward_usdt)*100):0));
@@ -969,8 +861,8 @@ document.addEventListener('click', async function(e){
       if (+r.level===1) dL1+=(amt||0);
       if (+r.level===2) dL2+=(amt||0);
       if (+r.level===3) dL3+=(amt||0);
-      const tr=document.createElement('tr');
-      tr.innerHTML='<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td><td>'+(r.level??'—')+'</td><td class="right">'+fmtCents(amt||0)+'</td><td class="nowrap">'+(r.source_user_id||'—')+'</td>';
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td class="nowrap">'+new Date(r.created_at).toLocaleString()+'</td><td>'+(r.level??'—')+'</td><td class="right">'+fmtCents(amt||0)+'</td><td class="nowrap">'+(r.source_user_id?escapeHtml(r.source_user_id):'—')+'</td>';
       rtbody.appendChild(tr);
     });
     $('#dRwAll').textContent = fmtCents(dAll);
@@ -980,75 +872,82 @@ document.addEventListener('click', async function(e){
 
     $('#dCopyRef').onclick = async ()=>{ try{ await navigator.clipboard.writeText($('#dRefLink').value); alert('Скопировано'); }catch(_){ alert('Скопируйте вручную'); } };
     $('#dSaveProfile').onclick = async ()=>{ try{
-      const upd=await sb.from('profiles').update({ email:$('#dEmail').value||null, phone:$('#dPhone').value||null, ref_code:$('#dRefCode').value||null }).eq('user_id', uid).select().maybeSingle();
-      if(upd.error) throw upd.error; alert('Сохранено'); loadUsers(); }catch(e){ alert(e.message||e); } };
+      const upd = await sb.from('profiles').update({ email: $('#dEmail').value||null, phone: $('#dPhone').value||null, ref_code: $('#dRefCode').value||null }).eq('user_id', uid).select().maybeSingle();
+      if (upd.error) throw upd.error;
+      alert('Сохранено'); loadUsers();
+    } catch(e){ alert(e.message || String(e)); } };
 
     const deltaRow = document.getElementById('deltaRow');
-    if (hasAdjust){ deltaRow.classList.remove('hidden'); } else { deltaRow.classList.add('hidden'); }
-    $('#dApplyDelta').onclick = async ()=>{ const delta=Number($('#dDelta').value||'0'); if(!Number.isFinite(delta)||!delta){ alert('Введите число (USDT)'); return; }
-      try{ const r=await sb.rpc('admin_adjust_balance', { p_user_id: uid, p_delta_cents: toCents(delta) }); if(r.error) throw r.error; alert('Баланс скорректирован'); openUserDrawer(uid); loadUsers(); }catch(e){ alert(e.message||e); } };
+    if (hasAdjust) deltaRow.classList.remove('hidden'); else deltaRow.classList.add('hidden');
+    $('#dApplyDelta').onclick = async ()=>{
+      const delta = Number($('#dDelta').value || '0');
+      if (!Number.isFinite(delta) || !delta) { alert('Введите число (USDT)'); return; }
+      try{
+        const r = await sb.rpc('admin_adjust_balance', { p_user_id: uid, p_delta_cents: toCents(delta) });
+        if (r.error) throw r.error;
+        alert('Баланс скорректирован'); openUserDrawer(uid); loadUsers();
+      } catch(e){ alert(e.message || String(e)); }
+    };
   }
 
-  // ===================== UTILS & INIT =====================
-  function buildRefLink(code){ if(!code) return ''; try{ const url = new URL(location.origin + '/register_single.html'); url.searchParams.set('ref', code); return url.toString(); }catch(_){ return 'https://example.com/register_single.html?ref='+encodeURIComponent(code); } }
-
-  function exportCSV(name, rows){
-    if(!rows||!rows.length){ alert('Нет данных'); return; }
-    const keys = Object.keys(rows[0]);
-    const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
-    const csv = [keys.join(',')].concat(rows.map(r=>keys.map(k=>esc(r[k])).join(','))).join('\n');
-    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  // ------------------ DEPOSITS ------------------
+  let dRowsCache = [];
+  async function loadDeposits(){
+    if (!isAdmin) return;
+    const tbody = $('#dTable tbody'); if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="muted small">Загрузка…</td></tr>';
+    try {
+      const r = await sb.from('v_admin_deposits').select('id, created_at, user_id, user_email, user_phone, amount_cents, currency, network, txid, status, note').order('created_at', {ascending:false}).limit(300);
+      if (r.error){ tbody.innerHTML = '<tr><td colspan="7" class="err">'+(r.error.message||'error')+'</td></tr>'; return; }
+      dRowsCache = r.data || [];
+      const s = ($('#dSearch')?.value || '').toLowerCase().trim();
+      let rows = dRowsCache;
+      if (s){
+        rows = rows.filter(x => (x.user_email||'').toLowerCase().includes(s) || (x.user_phone||'').toLowerCase().includes(s) || (x.txid||'').toLowerCase().includes(s) || (x.note||'').toLowerCase().includes(s) );
+      }
+      const fmtAmt = v => ((v||0)/100).toFixed(2) + ' USDT';
+      const renderUser = x => (x.user_email||x.user_phone||x.user_id||'—');
+      const renderTx = x => x.txid ? ('<a href="https://tronscan.org/#/transaction/'+escapeHtml(x.txid)+'" target="_blank">'+escapeHtml(x.txid.slice(0,10))+'…</a>') : '—';
+      tbody.innerHTML = rows.map(x => `
+        <tr>
+          <td class="nowrap">${new Date(x.created_at).toLocaleString()}</td>
+          <td>${escapeHtml(renderUser(x))}</td>
+          <td>${escapeHtml((x.network||'')+' '+(x.currency||''))}</td>
+          <td class="right">${fmtAmt(x.amount_cents)}</td>
+          <td class="nowrap">${renderTx(x)}</td>
+          <td>${escapeHtml(x.status||'')}</td>
+          <td>${escapeHtml(x.note||'')}</td>
+        </tr>`).join('');
+      $('#dCount').textContent = String(rows.length);
+      const sum = rows.reduce((a,x)=>a+(x.amount_cents||0),0);
+      $('#dSum').textContent = ((sum||0)/100).toFixed(2) + ' USDT';
+      $('#dUpdated').textContent = new Date().toLocaleString();
+    } catch (err){
+      tbody.innerHTML = '<tr><td colspan="7" class="small" style="color:#b91c1c">'+(err?.message||String(err))+'</td></tr>';
+    }
   }
+  $('#dRefresh').addEventListener('click', loadDeposits);
+  $('#dExport').addEventListener('click', ()=> downloadCSV('deposits.csv', dRowsCache.map(r=>({ id:r.id, created_at:r.created_at, user_id:r.user_id, email:r.user_email, phone:r.user_phone, amount_cents:r.amount_cents, currency:r.currency, network:r.network, txid:r.txid, status:r.status, note:r.note })) ));
+  $('#dSearch').addEventListener('input', loadDeposits);
+
+  // ------------------ INIT ------------------
+  function buildRefLink(code){ if(!code) return ''; try{ const url = new URL(location.origin + '/register_single.html'); url.searchParams.set('ref', code); return url.toString(); }catch(_){ return '/register_single.html?ref='+encodeURIComponent(code); } }
 
   (async function init(){
     await refreshAuth();
     await checkAdmin();
-    if(!isAdmin) return;
+    if (!isAdmin) return;
     await detectAdjust();
-    // Авто-подзагрузка
-    if ($('.tab.active')?.dataset.tab==='withdrawals') loadWithdrawals(true);
-    setTimeout(loadUsers,150);
-    setTimeout(loadRewards,300);
+    // initial loads
+    loadWithdrawals(true);
+    loadUsers();
+    loadRewards();
+    loadDeposits();
+    // realtime subscriptions (best-effort)
+    try{ sb.channel('adm-rw').on('postgres_changes', { event:'*', schema:'public', table:'v_admin_rewards' }, ()=>{ if (activePage==='rewards') loadRewards(); }).subscribe(); }catch(_){}
+    try{ sb.channel('adm-dep').on('postgres_changes', { event:'*', schema:'public', table:'deposits' }, ()=>{ if (activePage==='deposits') loadDeposits(); }).subscribe(); }catch(_){}
   })();
 
-  // ===== Deposits =====
-  let dRowsCache=[];
-  async function loadDeposits(){
-    if(!isAdmin) return;
-    const tbody = $('#dTable tbody'); if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="7" class="muted small">Загрузка…</td></tr>';
-    const r = await sb.from('v_admin_deposits')
-      .select('id, created_at, user_id, user_email, user_phone, amount_cents, currency, network, txid, status, note')
-      .order('created_at', {ascending:false}).limit(300);
-    if(r.error){ tbody.innerHTML = '<tr><td colspan="7" class="err">'+(r.error.message||'error')+'</td></tr>'; return; }
-    dRowsCache = r.data||[];
-    const s = ($('#dSearch')?.value||'').toLowerCase().trim();
-    let rows = dRowsCache;
-    if(s){
-      rows = rows.filter(x => (x.user_email||'').toLowerCase().includes(s) || (x.user_phone||'').toLowerCase().includes(s) || (x.txid||'').toLowerCase().includes(s) || (x.note||'').toLowerCase().includes(s) );
-    }
-    const fmtAmt = v => (v/100).toFixed(2);
-    const renderUser = x => (x.user_email||x.user_phone||x.user_id||'—');
-    const renderTx = x => x.txid ? ('<a href="https://tronscan.org/#/transaction/'+x.txid+'" target="_blank">'+x.txid.slice(0,10)+'…</a>') : '—';
-    tbody.innerHTML = rows.map(x => `
-      <tr>
-        <td>${new Date(x.created_at).toLocaleString()}</td>
-        <td>${renderUser(x)}</td>
-        <td>${(x.network||'')+' '+(x.currency||'')}</td>
-        <td>${fmtAmt(x.amount_cents)}</td>
-        <td>${renderTx(x)}</td>
-        <td>${x.status}</td>
-        <td>${x.note||''}</td>
-      </tr>`).join('');
-    $('#dCount').textContent = String(rows.length);
-    const sum = rows.reduce((a,x)=>a+(x.amount_cents||0),0);
-    $('#dSum').textContent = fmtAmt(sum);
-  }
-  $('#dRefresh')?.addEventListener('click', loadDeposits);
-  $('#dExport')?.addEventListener('click', ()=> exportCSV('deposits.csv', dRowsCache||[]));
-  $('#dSearch')?.addEventListener('input', ()=> loadDeposits());
-  try{ sb.channel('adm-dep').on('postgres_changes', {event:'*', schema:'public', table:'deposits'}, ()=>{ if($('.tab.active')?.dataset.tab==='deposits'){ loadDeposits(); }}).subscribe(); }catch(_){}
 })();
 </script>
 </body>
