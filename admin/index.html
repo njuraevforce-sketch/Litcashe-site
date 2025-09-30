@@ -6,17 +6,6 @@
   <title>LC • Admin</title>
   <link rel="icon" href="data:,">
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-  <script>
-    (function(){
-      try{
-        window.sb = window.supabase.createClient(
-          'https://einpfuegfsilnoiareco.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w',
-          { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
-        );
-      } catch(e){ console.error('Supabase init error', e); }
-    })();
-  </script>
   <style>
     :root{
       --bg:#f7f8fa; --panel:#ffffff; --text:#17223b; --muted:#6b7280; --accent:#2563eb;
@@ -110,19 +99,7 @@
     </div>
 
     <div class="row">
-      <select id="wStatus">
-        <option value="">Все статусы</option>
-        <option value="pending">Ожидание</option>
-        <option value="paid">Оплачено</option>
-        <option value="rejected">Отклонено</option>
-      </select>
-      <input id="wSearch" class="grow" placeholder="Поиск: id, адрес, TX, email, телефон">
-      <input id="wFrom" type="date" title="с даты">
-      <input id="wTo" type="date" title="по дату">
-      <input id="wAmtMin" type="number" step="0.01" placeholder="мин USDT" style="width:120px">
-      <input id="wAmtMax" type="number" step="0.01" placeholder="макс USDT" style="width:120px">
       <button class="btn" id="wReload">Обновить</button>
-      <button class="btn ghost" id="wExport">Экспорт CSV</button>
     </div>
 
     <div class="table-wrap" style="margin-top:8px">
@@ -140,24 +117,17 @@
   <!-- USERS -->
   <section class="panel" data-page="users" style="display:none">
     <div class="cards">
-      <div class="card"><div class="k">Пользователей (отфильтр.)</div><div id="uCount" class="v">—</div></div>
+      <div class="card"><div class="k">Пользователей</div><div id="uCount" class="v">—</div></div>
       <div class="card"><div class="k">Сумма балансов</div><div id="uSumBal" class="v">—</div></div>
-      <div class="card"><div class="k">Средний баланс</div><div id="uAvgBal" class="v">—</div></div>
-      <div class="card"><div class="k">С ref-кодом</div><div id="uWithRef" class="v">—</div></div>
     </div>
     <div class="row">
-      <input id="uSearch" class="grow" placeholder="Поиск: email, телефон, user_id, ref_code">
-      <input id="uBalMin" type="number" step="0.01" placeholder="баланс ≥ USDT" style="width:150px">
-      <input id="uBalMax" type="number" step="0.01" placeholder="баланс ≤ USDT" style="width:150px">
       <button class="btn" id="uReload">Обновить</button>
-      <button class="btn ghost" id="uExport">Экспорт CSV</button>
-      <span class="muted small" id="uDiag">—</span>
     </div>
     <div class="table-wrap" style="margin-top:8px">
       <table id="uTable">
         <thead><tr>
           <th>ID</th><th>Создано</th><th>Email</th><th>Телефон</th>
-          <th class="right">Баланс</th><th>Реф-код</th><th>Реф-ссылка</th><th></th>
+          <th class="right">Баланс</th><th>Реф-код</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -186,25 +156,11 @@
     <!-- SUPER ADMIN VIEW -->
     <div class="super-only">
       <div class="row">
-        <input id="rInviter" class="grow" placeholder="User ID или РЕФ-КОД (показать L1)">
         <button class="btn" id="rLoadL1">Показать L1</button>
-        <button class="btn ghost" id="rExportL1">Экспорт L1</button>
       </div>
       <div class="table-wrap" style="margin-top:8px">
         <table id="rL1Table">
           <thead><tr><th>User ID</th><th>Email</th><th>Телефон</th><th class="right">Баланс</th><th>Реф-код</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <div class="row" style="margin-top:12px">
-        <input id="treeUser" class="grow" placeholder="User ID или РЕФ-КОД (дерево 1–3)">
-        <button class="btn" id="treeLoad">Построить 1–3</button>
-        <button class="btn ghost" id="treeExport">Экспорт дерева</button>
-      </div>
-      <div class="table-wrap" style="margin-top:8px">
-        <table id="treeTable">
-          <thead><tr><th>Уровень</th><th>User ID</th><th>Email</th><th>Телефон</th><th class="right">Баланс</th><th>Реф-код</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -213,29 +169,10 @@
 
   <!-- REWARDS -->
   <section class="panel" data-page="rewards" style="display:none">
-    <div class="cards">
-      <div class="card"><div class="k">Записей (отфильтр.)</div><div id="rwCount" class="v">—</div></div>
-      <div class="card"><div class="k">Сумма начислений</div><div id="rwSum" class="v">—</div></div>
-      <div class="card"><div class="k">L1 / L2 / L3</div><div id="rwByLvl" class="v">—</div></div>
-      <div class="card"><div class="k">Период</div><div id="rwRange" class="v">—</div></div>
-    </div>
-    <div class="row">
-      <select id="rwLevel">
-        <option value="">Уровень: все</option>
-        <option value="0">0</option><option value="1">1</option>
-        <option value="2">2</option><option value="3">3</option>
-      </select>
-      <input id="rwFrom" type="date" title="с даты">
-      <input id="rwTo" type="date" title="по дату">
-      <input id="rwSearch" class="grow" placeholder="Поиск: target_user, source_user, заметка">
-      <button class="btn" id="rwReload">Обновить</button>
-      <button class="btn ghost" id="rwExport">Экспорт CSV</button>
-      <span class="muted small" id="rwDiag">—</span>
-    </div>
-    <div class="table-wrap" style="margin-top:8px">
+    <div class="table-wrap">
       <table id="rwTable">
         <thead><tr>
-          <th>Дата</th><th>Уровень</th><th>Получатель</th><th>Источник</th><th class="right">Сумма</th><th>Комментарий</th>
+          <th>Дата</th><th>Уровень</th><th>Получатель</th><th>Источник</th><th class="right">Сумма</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -244,19 +181,10 @@
 
   <!-- DEPOSITS -->
   <section class="panel" data-page="deposits" style="display:none">
-    <div class="cards">
-      <div class="card"><div class="k">Пополнений</div><div id="dCount" class="v">—</div></div>
-      <div class="card"><div class="k">Сумма</div><div id="dSum" class="v">—</div></div>
-    </div>
-    <div class="row">
-      <input id="dSearch" class="grow" placeholder="Поиск: email, телефон, TX">
-      <button class="btn" id="dRefresh">Обновить</button>
-      <button class="btn ghost" id="dExport">Экспорт CSV</button>
-    </div>
-    <div class="table-wrap" style="margin-top:8px">
+    <div class="table-wrap">
       <table id="dTable">
         <thead><tr>
-          <th>Дата</th><th>Пользователь</th><th>Сеть</th><th class="right">Сумма</th><th>TX</th><th>Статус</th><th>Примечание</th>
+          <th>Дата</th><th>Пользователь</th><th class="right">Сумма</th><th>TX</th><th>Статус</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -267,425 +195,282 @@
   <section class="panel" data-page="about" style="display:none">
     <h3>Справка</h3>
     <p class="small muted">
-      Источники: <code>profiles</code>, <code>wallets</code>, <code>user_referrals</code>, <code>withdrawals</code>.<br>
       Limited Admin: видит только своих рефералов. Super Admin: полный доступ.
     </p>
   </section>
 </div>
 
 <script>
-(function(){
-  // Utilities
-  const $ = s => document.querySelector(s);
-  const $$ = s => Array.from(document.querySelectorAll(s));
-  const sb = window.sb;
-  if (!sb) { alert('Supabase не инициализирован'); return; }
+// Простейший рабочий код без сложных конструкций
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded');
   
-  const fmtCents = c => ((+c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2}) + ' USDT';
-  const escapeHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const short = s => s ? s.slice(0,6)+'…'+s.slice(-4) : '';
-  
-  let currentAdmin = { type: 'super', ref_code: null };
+  // Инициализация Supabase
+  var sb = window.sb;
+  if (!sb) {
+    console.error('Supabase not loaded');
+    return;
+  }
 
-  // ===================== AUTH & ADMIN CHECK =====================
-  async function checkAdminRights() {
-    try {
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) return false;
-
-      // Check admins table
-      const { data: adminRow, error } = await sb.from('admins')
-        .select('admin_type, ref_code')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (!error && adminRow) {
-        currentAdmin = adminRow;
-        return true;
+  // Простейшая кнопка входа
+  document.getElementById('btnLogin').addEventListener('click', function() {
+    var email = prompt('Email:');
+    if (!email) return;
+    var password = prompt('Пароль:');
+    if (!password) return;
+    
+    sb.auth.signInWithPassword({ 
+      email: email, 
+      password: password 
+    }).then(function(result) {
+      if (result.error) {
+        alert('Ошибка: ' + result.error.message);
+      } else {
+        location.reload();
       }
-
-      alert('У вас нет прав администратора');
-      return false;
-    } catch (error) {
-      console.error('Admin check error:', error);
-      return false;
-    }
-  }
-
-  function setupUIForAdminType() {
-    if (currentAdmin.type === 'limited') {
-      document.body.classList.add('limited-admin');
-      $('#authInfo').textContent = `Limited Admin (${currentAdmin.ref_code})`;
-      
-      // Show only referrals tab
-      $$('#tabs .tab').forEach(tab => {
-        if (tab.dataset.tab !== 'refs') tab.style.display = 'none';
-      });
-      
-      // Auto-switch to referrals
-      $$('#tabs .tab').forEach(tab => tab.classList.remove('active'));
-      $('[data-tab="refs"]').classList.add('active');
-      $$('[data-page]').forEach(p => p.style.display = 'none');
-      $('[data-page="refs"]').style.display = 'block';
-
-      loadLimitedAdminData();
-    } else {
-      $('#authInfo').textContent = 'Super Admin';
-      loadWithdrawals();
-    }
-  }
-
-  // ===================== LIMITED ADMIN =====================
-  async function loadLimitedAdminData() {
-    if (currentAdmin.type !== 'limited' || !currentAdmin.ref_code) return;
-    
-    const tbody = $('#limitedRefsTable tbody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '<tr><td colspan="7" class="muted small">Загрузка...</td></tr>';
-
-    try {
-      const { data, error } = await sb.rpc('get_ref_tree_limited', { 
-        p_ref_code: currentAdmin.ref_code,
-        p_max_level: 100 
-      });
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="muted small">Нет рефералов</td></tr>';
-        updateLimitedStats(0, 0, {}, {});
-        return;
-      }
-
-      // Calculate stats
-      let totalUsers = data.length;
-      let totalBalance = 0;
-      const balanceByLevel = {};
-      
-      data.forEach(row => {
-        const balance = Number(row.balance_cents || 0);
-        totalBalance += balance;
-        const level = row.level;
-        if (!balanceByLevel[level]) balanceByLevel[level] = 0;
-        balanceByLevel[level] += balance;
-      });
-
-      updateLimitedStats(totalUsers, totalBalance, balanceByLevel);
-      renderLimitedReferralsTable(data, tbody);
-      
-    } catch (error) {
-      console.error('Limited admin data error:', error);
-      tbody.innerHTML = '<tr><td colspan="7" class="small" style="color:#b91c1c">Ошибка загрузки</td></tr>';
-    }
-  }
-
-  function updateLimitedStats(totalUsers, totalBalance, balanceByLevel) {
-    $('#lTotalUsers').textContent = totalUsers;
-    $('#lTotalBalance').textContent = fmtCents(totalBalance);
-    $('#lL1Balance').textContent = fmtCents(balanceByLevel[1] || 0);
-    $('#lL2Balance').textContent = fmtCents(balanceByLevel[2] || 0);
-  }
-
-  function renderLimitedReferralsTable(data, tbody) {
-    tbody.innerHTML = '';
-    data.forEach(row => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${row.level}</td>
-        <td class="nowrap"><code>${row.user_id}</code></td>
-        <td>${escapeHtml(row.email || '—')}</td>
-        <td>${escapeHtml(row.phone || '—')}</td>
-        <td class="right">${fmtCents(row.balance_cents)}</td>
-        <td>${escapeHtml(row.ref_code || '—')}</td>
-        <td class="nowrap">${new Date(row.created_at).toLocaleDateString()}</td>
-      `;
-      tbody.appendChild(tr);
     });
-  }
+  });
 
-  // ===================== WITHDRAWALS (SUPER ADMIN) =====================
-  async function loadWithdrawals() {
-    if (currentAdmin.type !== 'super') return;
-    
-    const tbody = $('#wTable tbody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка...</td></tr>';
-
-    try {
-      // Load withdrawals with user profiles
-      const { data: withdrawals, error } = await sb
-        .from('withdrawals')
-        .select(`
-          id, created_at, amount_cents, fee_cents, network, address, 
-          status, txid, note, user_id,
-          profiles!inner(email, phone)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-
-      if (!withdrawals || withdrawals.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет заявок</td></tr>';
-        return;
-      }
-
-      renderWithdrawalsTable(withdrawals, tbody);
-      updateWithdrawalStats(withdrawals);
-      
-    } catch (error) {
-      console.error('Withdrawals error:', error);
-      tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">Ошибка загрузки</td></tr>';
-    }
-  }
-
-  function renderWithdrawalsTable(withdrawals, tbody) {
-    tbody.innerHTML = '';
-    
-    withdrawals.forEach(w => {
-      const total = (w.amount_cents || 0) + (w.fee_cents || 0);
-      const statusPill = w.status === 'paid' ? 'paid' : w.status === 'rejected' ? 'rejected' : 'pending';
-      
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="nowrap"><code>${w.user_id}</code></td>
-        <td class="nowrap">${new Date(w.created_at).toLocaleString()}</td>
-        <td>${escapeHtml(w.profiles.email || '—')}</td>
-        <td>${escapeHtml(w.profiles.phone || '—')}</td>
-        <td class="right">${fmtCents(w.amount_cents)}</td>
-        <td class="right">${fmtCents(w.fee_cents)}</td>
-        <td class="right">${fmtCents(total)}</td>
-        <td>${escapeHtml(w.network || '—')}</td>
-        <td class="nowrap"><code>${escapeHtml(w.address || '—')}</code></td>
-        <td><span class="pill ${statusPill}">${w.status}</span></td>
-        <td>${w.txid ? `<code title="${w.txid}">${short(w.txid)}</code>` : (w.note || '—')}</td>
-        <td class="nowrap">
-          ${w.status === 'pending' ? `
-            <button class="btn ok small" data-action="pay" data-id="${w.id}">Оплатить</button>
-            <button class="btn bad small" data-action="reject" data-id="${w.id}">Отклонить</button>
-          ` : '<span class="muted small">—</span>'}
-        </td>
-      `;
-      tbody.appendChild(tr);
+  // Кнопка выхода
+  document.getElementById('btnLogout').addEventListener('click', function() {
+    sb.auth.signOut().then(function() {
+      location.reload();
     });
-  }
+  });
 
-  function updateWithdrawalStats(withdrawals) {
-    let count = withdrawals.length;
-    let sum = 0, fee = 0;
-    
-    withdrawals.forEach(w => {
-      sum += w.amount_cents || 0;
-      fee += w.fee_cents || 0;
-    });
-    
-    $('#wCount').textContent = count;
-    $('#wSum').textContent = fmtCents(sum);
-    $('#wFee').textContent = fmtCents(fee);
-    $('#wTotal').textContent = fmtCents(sum + fee);
-  }
-
-  // Withdrawal actions
-  async function processWithdrawal(action, withdrawalId) {
-    try {
-      let result;
-      if (action === 'pay') {
-        const txid = prompt('Введите TXID:') || null;
-        result = await sb.rpc('admin_pay_withdrawal_rpc', { 
-          p_id: withdrawalId, 
-          p_txid: txid 
-        });
-      } else if (action === 'reject') {
-        if (!confirm('Отклонить заявку? Баланс вернется пользователю.')) return;
-        result = await sb.rpc('admin_reject_withdrawal_rpc', { 
-          p_id: withdrawalId 
-        });
-      }
-
-      if (result.error) throw result.error;
-      alert(action === 'pay' ? 'Заявка оплачена' : 'Заявка отклонена');
-      loadWithdrawals();
-    } catch (error) {
-      alert('Ошибка: ' + (error.message || error));
-    }
-  }
-
-  // ===================== USERS (SUPER ADMIN) =====================
-  async function loadUsers() {
-    if (currentAdmin.type !== 'super') return;
-    
-    const tbody = $('#uTable tbody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '<tr><td colspan="8" class="muted small">Загрузка...</td></tr>';
-
-    try {
-      const { data: users, error } = await sb
-        .from('profiles')
-        .select('user_id, created_at, email, phone, ref_code, balance_cents')
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (error) throw error;
-
-      if (!users || users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="muted small">Нет пользователей</td></tr>';
-        return;
-      }
-
-      renderUsersTable(users, tbody);
-      updateUserStats(users);
+  // Проверка сессии
+  sb.auth.getSession().then(function({ data: { session } }) {
+    if (session) {
+      document.getElementById('btnLogin').style.display = 'none';
+      document.getElementById('btnLogout').style.display = 'inline-block';
+      document.getElementById('authInfo').textContent = session.user.email || 'Авторизован';
       
-    } catch (error) {
-      console.error('Users error:', error);
-      tbody.innerHTML = '<tr><td colspan="8" class="small" style="color:#b91c1c">Ошибка загрузки</td></tr>';
+      // Загружаем тип админа
+      loadAdminType(session.user.id);
     }
-  }
+  }).catch(function(error) {
+    console.error('Session error:', error);
+  });
 
-  function renderUsersTable(users, tbody) {
-    tbody.innerHTML = '';
-    
-    users.forEach(u => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="nowrap"><code>${u.user_id}</code></td>
-        <td class="nowrap">${new Date(u.created_at).toLocaleString()}</td>
-        <td>${escapeHtml(u.email || '—')}</td>
-        <td>${escapeHtml(u.phone || '—')}</td>
-        <td class="right">${fmtCents(u.balance_cents)}</td>
-        <td>${escapeHtml(u.ref_code || '—')}</td>
-        <td class="nowrap">${u.ref_code ? `<code>?ref=${u.ref_code}</code>` : '—'}</td>
-        <td class="nowrap">
-          <button class="btn ghost small" data-user="${u.user_id}">Профиль</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  function updateUserStats(users) {
-    const count = users.length;
-    let sumBal = 0, withRef = 0;
-    
-    users.forEach(u => {
-      sumBal += u.balance_cents || 0;
-      if (u.ref_code) withRef++;
-    });
-    
-    $('#uCount').textContent = count;
-    $('#uSumBal').textContent = fmtCents(sumBal);
-    $('#uAvgBal').textContent = count ? fmtCents(Math.round(sumBal/count)) : '—';
-    $('#uWithRef').textContent = withRef;
-  }
-
-  // ===================== INIT & EVENT HANDLERS =====================
-  async function init() {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) {
-      $('#btnLogin').style.display = 'inline-block';
-      $('#btnLogout').style.display = 'none';
-      return;
-    }
-
-    $('#btnLogin').style.display = 'none';
-    $('#btnLogout').style.display = 'inline-block';
-
-    const hasAdminRights = await checkAdminRights();
-    if (!hasAdminRights) return;
-
-    setupUIForAdminType();
-    setupEventHandlers();
-  }
-
-  function setupEventHandlers() {
-    // Auth
-    $('#btnLogin').addEventListener('click', function() {
-      const email = prompt('Email:');
-      if (!email) return;
-      const password = prompt('Пароль:');
-      if (!password) return;
-      
-      sb.auth.signInWithPassword({ 
-        email: email, 
-        password: password 
-      }).then(function(result) {
-        if (result.error) {
-          alert('Ошибка: ' + result.error.message);
+  // Загрузка типа админа
+  function loadAdminType(userId) {
+    sb.from('admins').select('admin_type, ref_code').eq('user_id', userId).maybeSingle()
+      .then(function({ data, error }) {
+        if (error || !data) {
+          console.log('Not an admin or error:', error);
+          return;
+        }
+        
+        if (data.admin_type === 'limited') {
+          setupLimitedAdmin(data.ref_code);
         } else {
+          setupSuperAdmin();
+        }
+      });
+  }
+
+  // Настройка Limited Admin
+  function setupLimitedAdmin(refCode) {
+    console.log('Setting up limited admin with ref:', refCode);
+    document.body.classList.add('limited-admin');
+    document.getElementById('authInfo').textContent = 'Limited Admin (' + refCode + ')';
+    
+    // Показываем только рефералов
+    var tabs = document.querySelectorAll('#tabs .tab');
+    tabs.forEach(function(tab) {
+      if (tab.dataset.tab !== 'refs') {
+        tab.style.display = 'none';
+      }
+    });
+    
+    // Переключаем на рефералов
+    document.querySelector('[data-tab="refs"]').click();
+    loadLimitedReferrals(refCode);
+  }
+
+  // Настройка Super Admin
+  function setupSuperAdmin() {
+    console.log('Setting up super admin');
+    document.getElementById('authInfo').textContent = 'Super Admin';
+    
+    // Вешаем обработчики на вкладки
+    var tabs = document.querySelectorAll('#tabs .tab');
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        // Убираем активный класс у всех
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        // Добавляем активный класс текущему
+        this.classList.add('active');
+        
+        // Показываем соответствующую страницу
+        var tabName = this.dataset.tab;
+        var pages = document.querySelectorAll('[data-page]');
+        pages.forEach(function(page) {
+          page.style.display = page.dataset.page === tabName ? 'block' : 'none';
+        });
+        
+        // Загружаем данные для вкладки
+        if (tabName === 'withdrawals') loadWithdrawals();
+        if (tabName === 'users') loadUsers();
+      });
+    });
+    
+    // Кнопка обновления заявок
+    document.getElementById('wReload').addEventListener('click', loadWithdrawals);
+    document.getElementById('uReload').addEventListener('click', loadUsers);
+    
+    // Загружаем начальные данные
+    loadWithdrawals();
+  }
+
+  // Загрузка рефералов для Limited Admin
+  function loadLimitedReferrals(refCode) {
+    var tbody = document.getElementById('limitedRefsTable').querySelector('tbody');
+    tbody.innerHTML = '<tr><td colspan="7" class="muted small">Загрузка...</td></tr>';
+    
+    sb.rpc('get_ref_tree_limited', { p_ref_code: refCode, p_max_level: 100 })
+      .then(function({ data, error }) {
+        if (error) {
+          tbody.innerHTML = '<tr><td colspan="7" class="small" style="color:#b91c1c">Ошибка загрузки</td></tr>';
+          return;
+        }
+        
+        if (!data || data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="muted small">Нет рефералов</td></tr>';
+          return;
+        }
+        
+        // Отображаем данные
+        tbody.innerHTML = '';
+        data.forEach(function(row) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.level}</td>
+            <td><code>${row.user_id}</code></td>
+            <td>${row.email || '—'}</td>
+            <td>${row.phone || '—'}</td>
+            <td class="right">${(row.balance_cents/100).toFixed(2)} USDT</td>
+            <td>${row.ref_code || '—'}</td>
+            <td>${new Date(row.created_at).toLocaleDateString()}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+  }
+
+  // Загрузка заявок для Super Admin
+  function loadWithdrawals() {
+    var tbody = document.getElementById('wTable').querySelector('tbody');
+    tbody.innerHTML = '<tr><td colspan="12" class="muted small">Загрузка...</td></tr>';
+    
+    sb.from('withdrawals').select(`
+      id, created_at, amount_cents, fee_cents, network, address, 
+      status, txid, note, user_id,
+      profiles!inner(email, phone)
+    `).order('created_at', { ascending: false }).limit(50)
+      .then(function({ data, error }) {
+        if (error) {
+          tbody.innerHTML = '<tr><td colspan="12" class="small" style="color:#b91c1c">Ошибка загрузки</td></tr>';
+          return;
+        }
+        
+        if (!data || data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="12" class="muted small">Нет заявок</td></tr>';
+          return;
+        }
+        
+        // Отображаем данные
+        tbody.innerHTML = '';
+        data.forEach(function(w) {
+          var total = (w.amount_cents || 0) + (w.fee_cents || 0);
+          var statusClass = w.status === 'paid' ? 'paid' : w.status === 'rejected' ? 'rejected' : 'pending';
+          
+          var tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><code>${w.user_id}</code></td>
+            <td>${new Date(w.created_at).toLocaleString()}</td>
+            <td>${w.profiles.email || '—'}</td>
+            <td>${w.profiles.phone || '—'}</td>
+            <td class="right">${(w.amount_cents/100).toFixed(2)} USDT</td>
+            <td class="right">${(w.fee_cents/100).toFixed(2)} USDT</td>
+            <td class="right">${(total/100).toFixed(2)} USDT</td>
+            <td>${w.network || '—'}</td>
+            <td><code>${w.address || '—'}</code></td>
+            <td><span class="pill ${statusClass}">${w.status}</span></td>
+            <td>${w.txid ? '<code>' + w.txid.slice(0,6) + '…' + w.txid.slice(-4) + '</code>' : (w.note || '—')}</td>
+            <td>
+              ${w.status === 'pending' ? 
+                '<button class="btn ok small" onclick="processWithdrawal(\'pay\', \'' + w.id + '\')">Оплатить</button>' +
+                '<button class="btn bad small" onclick="processWithdrawal(\'reject\', \'' + w.id + '\')">Отклонить</button>' : 
+                '<span class="muted small">—</span>'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+  }
+
+  // Загрузка пользователей для Super Admin
+  function loadUsers() {
+    var tbody = document.getElementById('uTable').querySelector('tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка...</td></tr>';
+    
+    sb.from('profiles').select('user_id, created_at, email, phone, ref_code, balance_cents')
+      .order('created_at', { ascending: false }).limit(100)
+      .then(function({ data, error }) {
+        if (error) {
+          tbody.innerHTML = '<tr><td colspan="6" class="small" style="color:#b91c1c">Ошибка загрузки</td></tr>';
+          return;
+        }
+        
+        if (!data || data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="muted small">Нет пользователей</td></tr>';
+          return;
+        }
+        
+        // Отображаем данные
+        tbody.innerHTML = '';
+        data.forEach(function(u) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><code>${u.user_id}</code></td>
+            <td>${new Date(u.created_at).toLocaleString()}</td>
+            <td>${u.email || '—'}</td>
+            <td>${u.phone || '—'}</td>
+            <td class="right">${(u.balance_cents/100).toFixed(2)} USDT</td>
+            <td>${u.ref_code || '—'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+  }
+});
+
+// Глобальная функция для обработки заявок
+function processWithdrawal(action, withdrawalId) {
+  if (action === 'pay') {
+    var txid = prompt('Введите TXID:') || null;
+    window.sb.rpc('admin_pay_withdrawal_rpc', { p_id: withdrawalId, p_txid: txid })
+      .then(function(result) {
+        if (result.error) alert('Ошибка: ' + result.error.message);
+        else {
+          alert('Заявка оплачена');
           location.reload();
         }
-      }).catch(function(error) {
-        alert('Ошибка: ' + error.message);
       });
-    });
-
-    $('#btnLogout').addEventListener('click', function() {
-      sb.auth.signOut().then(function() {
-        location.reload();
-      });
-    });
-
-    // Tabs
-    $$('#tabs .tab').forEach(btn => {
-      btn.addEventListener('click', function() {
-        if (currentAdmin.type === 'limited') return;
-        
-        $$('#tabs .tab').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        const tab = this.dataset.tab;
-        $$('[data-page]').forEach(p => {
-          p.style.display = (p.getAttribute('data-page') === tab) ? 'block' : 'none';
+  } else if (action === 'reject') {
+    if (confirm('Отклонить заявку?')) {
+      window.sb.rpc('admin_reject_withdrawal_rpc', { p_id: withdrawalId })
+        .then(function(result) {
+          if (result.error) alert('Ошибка: ' + result.error.message);
+          else {
+            alert('Заявка отклонена');
+            location.reload();
+          }
         });
-        
-        // Load data for tab
-        if (tab === 'withdrawals') loadWithdrawals();
-        if (tab === 'users') loadUsers();
-      });
-    });
-
-    // Withdrawal actions
-    document.addEventListener('click', function(e) {
-      const btn = e.target.closest('[data-action]');
-      if (!btn) return;
-      processWithdrawal(btn.dataset.action, btn.dataset.id);
-    });
-
-    // Limited admin export
-    $('#limitedExport')?.addEventListener('click', async function() {
-      try {
-        const { data } = await sb.rpc('get_ref_tree_limited', { 
-          p_ref_code: currentAdmin.ref_code,
-          p_max_level: 100 
-        });
-        exportCSV('my_referrals.csv', data || []);
-      } catch (error) {
-        alert('Ошибка экспорта: ' + (error.message || error));
-      }
-    });
-
-    // Super admin buttons
-    $('#wReload')?.addEventListener('click', function() { loadWithdrawals(); });
-    $('#uReload')?.addEventListener('click', function() { loadUsers(); });
+    }
   }
-
-  function exportCSV(name, rows) {
-    if (!rows || !rows.length) { alert('Нет данных'); return; }
-    const keys = Object.keys(rows[0]);
-    const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
-    const csv = [keys.join(',')].concat(rows.map(r => keys.map(k => esc(r[k])).join(','))).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  }
-
-  // Start
-  init();
-})();
+}
 </script>
 </body>
 </html>
