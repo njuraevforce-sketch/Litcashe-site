@@ -1076,5 +1076,134 @@
 
 })();
 </script>
+  <script>
+// === LIMITED ADMIN DROP-IN (вставить в конец файла, перед </body>) ===
+(function(){
+  const LIMITED_ADMIN_ID = '85b65876-8654-41a2-98a1-eb2349c71cfb';
+  const MAX_IDS = 5000;
+
+  function isLimited() {
+    return !!(window.sessionUser && window.sessionUser.id === LIMITED_ADMIN_ID);
+  }
+
+  async function limitedRenderReferralTree(){
+    const tbody = document.querySelector('#uTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" class="muted small">Загрузка…</td></tr>';
+    const currentUserId = window.sessionUser?.id || null;
+    if (!currentUserId){ tbody.innerHTML = '<tr><td colspan="8" class="muted small">Не авторизованы</td></tr>'; return; }
+
+    // 1) Получаем дерево через RPC admin_get_ref_tree
+    let tree = [];
+    try{
+      const res = await window.sb.rpc('admin_get_ref_tree', { p_user_id: currentUserId });
+      if (!res?.error) tree = Array.isArray(res.data) ? res.data : (res.data ? [res.data] : []);
+    }catch(e){ console.error('admin_get_ref_tree error', e); tree = []; }
+
+    const ids = Array.from(new Set((tree||[]).map(x=>x.user_id).filter(Boolean)));
+    if (!ids.length){
+      document.querySelector('#uCount').textContent = '0';
+      document.querySelector('#uSumBal').textContent = '0 USDT';
+      document.querySelector('#uAvgBal').textContent = '—';
+      document.querySelector('#uWithRef').textContent = '0';
+      tbody.innerHTML = '<tr><td colspan="2" class="muted small">У вас нет рефералов.</td></tr>';
+      return;
+    }
+
+    const sliced = ids.length > MAX_IDS ? ids.slice(0, MAX_IDS) : ids;
+
+    // 2) Берём email из public.profiles
+    let profiles = [];
+    try{
+      const p = await window.sb.from('profiles').select('user_id,email').in('user_id', sliced).limit(MAX_IDS);
+      if (!p.error) profiles = p.data || [];
+    }catch(e){ console.error('profiles fetch', e); }
+
+    // 3) Балансы: предпочитаем admin_balances_by_user_ids, иначе wallets
+    let balances = {};
+    try{
+      const b = await window.sb.rpc('admin_balances_by_user_ids', { p_ids: sliced });
+      if (!b.error && Array.isArray(b.data)) {
+        b.data.forEach(x=>balances[x.user_id] = Number(x.balance_cents || 0));
+      } else {
+        const w = await window.sb.from('wallets').select('user_id,balance_cents').in('user_id', sliced);
+        if (!w.error) (w.data||[]).forEach(x=>balances[x.user_id] = Number(x.balance_cents || 0));
+      }
+    }catch(e){
+      console.error('balances fetch', e);
+      try{ const w = await window.sb.from('wallets').select('user_id,balance_cents').in('user_id', sliced); if (!w.error) (w.data||[]).forEach(x=>balances[x.user_id]=Number(x.balance_cents||0)); }catch(_){}
+    }
+
+    // 4) Рендер: только email + баланс
+    const thead = document.querySelector('#uTable thead tr');
+    if (thead) thead.innerHTML = '<th>Email</th><th class="right">Баланс</th>';
+
+    const rows = (profiles||[]).map(p=>({ user_id: p.user_id, email: p.email, balance_cents: balances[p.user_id] || 0 }));
+
+    const sum = rows.reduce((a,b)=>a+(b.balance_cents||0),0);
+    document.querySelector('#uCount').textContent = String(rows.length);
+    document.querySelector('#uSumBal').textContent = ((sum||0)/100).toLocaleString('ru-RU',{minimumFractionDigits:0, maximumFractionDigits:2}) + ' USDT';
+    document.querySelector('#uAvgBal').textContent = rows.length ? (((Math.round(sum/rows.length))/100).toFixed(2) + ' USDT') : '—';
+    document.querySelector('#uWithRef').textContent = String(rows.filter(r=>!!r.email).length);
+    document.querySelector('#uDiag').textContent = rows.length + ' пользователей';
+
+    tbody.innerHTML = '';
+    for (const r of rows){
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + (r.email?escapeHtml(r.email):'—') + '</td>'
+                   + '<td class="right">' + (((r.balance_cents||0)/100).toLocaleString('ru-RU',{minimumFractionDigits:0, maximumFractionDigits:2})) + ' USDT</td>';
+      tbody.appendChild(tr);
+    }
+  }
+
+  // сохраняем оригинальные функции (если есть)
+  if (!window._orig_loadUsers && typeof window.loadUsers === 'function') window._orig_loadUsers = window.loadUsers;
+  if (!window._orig_openUserDrawer && typeof window.openUserDrawer === 'function') window._orig_openUserDrawer = window.openUserDrawer;
+
+  // override loadUsers — если limited, рендерим строго ограниченную таблицу
+  window.loadUsers = async function(){
+    if (isLimited()){
+      return limitedRenderReferralTree();
+    }
+    if (typeof window._orig_loadUsers === 'function') return window._orig_loadUsers();
+    return limitedRenderReferralTree();
+  };
+
+  // override openUserDrawer to block opening for limited admin
+  window.openUserDrawer = function(uid){
+    if (isLimited()){
+      alert('Доступ ограничен: просмотр только списка рефералов (без открытия профиля).');
+      return;
+    }
+    if (typeof window._orig_openUserDrawer === 'function') return window._orig_openUserDrawer(uid);
+  };
+
+  // глобальный guard: блокируем клики на action-кнопки для limited admin
+  document.addEventListener('click', function(e){
+    if (!isLimited()) return;
+    const forbidden = e.target.closest('.js-withdraw-action, button[data-open], #dApplyDelta, #dSaveProfile, #wExport, #uExport, #rwExport, #dExport');
+    if (forbidden){ e.preventDefault(); e.stopImmediatePropagation(); alert('Доступ ограничен: только просмотр.'); }
+  }, true);
+
+  // скрываем вкладки/кнопки не для limited admin (UI)
+  function hideForbiddenUI(){
+    if (!isLimited()) return;
+    document.querySelectorAll('#tabs .tab').forEach(t=>{ if (!['users','refs'].includes(t.dataset.tab)) t.style.display='none'; });
+    ['#dApplyDelta','#dSaveProfile','#wExport','#uExport','#rwExport','#dExport'].forEach(s=>{ const el=document.querySelector(s); if (el) el.style.display='none'; });
+    // спрячем кнопки открытия профиля в таблице (на всякий)
+    document.querySelectorAll('button[data-open]').forEach(b=>b.style.display='none');
+    // доп.: спрятать колонки действий в withdrawals
+    document.querySelectorAll('.js-withdraw-action').forEach(el=>{ try{ el.style.display='none'; }catch(_){} });
+  }
+
+  hideForbiddenUI();
+  let tries = 0; const tid = setInterval(()=>{ hideForbiddenUI(); tries++; if (tries>8) clearInterval(tid); },300);
+
+  // expose quick refesh helper
+  window._limited_refreshUI = limitedRenderReferralTree;
+
+})();
+</script>
+
 </body>
 </html>
