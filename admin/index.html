@@ -1076,8 +1076,10 @@
 
 })();
 </script>
-  <script>
-// === LIMITED ADMIN DROP-IN (вставить в конец файла, перед </body>) ===
+
+<!-- LIMITED ADMIN DROP-IN (вставлено автоматически) -->
+<script>
+// === LIMITED ADMIN DROP-IN (вставлено автоматически) ===
 (function(){
   const LIMITED_ADMIN_ID = '85b65876-8654-41a2-98a1-eb2349c71cfb';
   const MAX_IDS = 5000;
@@ -1093,7 +1095,6 @@
     const currentUserId = window.sessionUser?.id || null;
     if (!currentUserId){ tbody.innerHTML = '<tr><td colspan="8" class="muted small">Не авторизованы</td></tr>'; return; }
 
-    // 1) Получаем дерево через RPC admin_get_ref_tree
     let tree = [];
     try{
       const res = await window.sb.rpc('admin_get_ref_tree', { p_user_id: currentUserId });
@@ -1112,14 +1113,12 @@
 
     const sliced = ids.length > MAX_IDS ? ids.slice(0, MAX_IDS) : ids;
 
-    // 2) Берём email из public.profiles
     let profiles = [];
     try{
       const p = await window.sb.from('profiles').select('user_id,email').in('user_id', sliced).limit(MAX_IDS);
       if (!p.error) profiles = p.data || [];
     }catch(e){ console.error('profiles fetch', e); }
 
-    // 3) Балансы: предпочитаем admin_balances_by_user_ids, иначе wallets
     let balances = {};
     try{
       const b = await window.sb.rpc('admin_balances_by_user_ids', { p_ids: sliced });
@@ -1134,7 +1133,6 @@
       try{ const w = await window.sb.from('wallets').select('user_id,balance_cents').in('user_id', sliced); if (!w.error) (w.data||[]).forEach(x=>balances[x.user_id]=Number(x.balance_cents||0)); }catch(_){}
     }
 
-    // 4) Рендер: только email + баланс
     const thead = document.querySelector('#uTable thead tr');
     if (thead) thead.innerHTML = '<th>Email</th><th class="right">Баланс</th>';
 
@@ -1150,17 +1148,14 @@
     tbody.innerHTML = '';
     for (const r of rows){
       const tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + (r.email?escapeHtml(r.email):'—') + '</td>'
-                   + '<td class="right">' + (((r.balance_cents||0)/100).toLocaleString('ru-RU',{minimumFractionDigits:0, maximumFractionDigits:2})) + ' USDT</td>';
+      tr.innerHTML = '<td>' + (r.email?escapeHtml(r.email):'—') + '</td>' + '<td class="right">' + (((r.balance_cents||0)/100).toLocaleString('ru-RU',{minimumFractionDigits:0, maximumFractionDigits:2})) + ' USDT</td>';
       tbody.appendChild(tr);
     }
   }
 
-  // сохраняем оригинальные функции (если есть)
   if (!window._orig_loadUsers && typeof window.loadUsers === 'function') window._orig_loadUsers = window.loadUsers;
   if (!window._orig_openUserDrawer && typeof window.openUserDrawer === 'function') window._orig_openUserDrawer = window.openUserDrawer;
 
-  // override loadUsers — если limited, рендерим строго ограниченную таблицу
   window.loadUsers = async function(){
     if (isLimited()){
       return limitedRenderReferralTree();
@@ -1169,7 +1164,6 @@
     return limitedRenderReferralTree();
   };
 
-  // override openUserDrawer to block opening for limited admin
   window.openUserDrawer = function(uid){
     if (isLimited()){
       alert('Доступ ограничен: просмотр только списка рефералов (без открытия профиля).');
@@ -1178,28 +1172,23 @@
     if (typeof window._orig_openUserDrawer === 'function') return window._orig_openUserDrawer(uid);
   };
 
-  // глобальный guard: блокируем клики на action-кнопки для limited admin
   document.addEventListener('click', function(e){
     if (!isLimited()) return;
     const forbidden = e.target.closest('.js-withdraw-action, button[data-open], #dApplyDelta, #dSaveProfile, #wExport, #uExport, #rwExport, #dExport');
     if (forbidden){ e.preventDefault(); e.stopImmediatePropagation(); alert('Доступ ограничен: только просмотр.'); }
   }, true);
 
-  // скрываем вкладки/кнопки не для limited admin (UI)
   function hideForbiddenUI(){
     if (!isLimited()) return;
     document.querySelectorAll('#tabs .tab').forEach(t=>{ if (!['users','refs'].includes(t.dataset.tab)) t.style.display='none'; });
     ['#dApplyDelta','#dSaveProfile','#wExport','#uExport','#rwExport','#dExport'].forEach(s=>{ const el=document.querySelector(s); if (el) el.style.display='none'; });
-    // спрячем кнопки открытия профиля в таблице (на всякий)
     document.querySelectorAll('button[data-open]').forEach(b=>b.style.display='none');
-    // доп.: спрятать колонки действий в withdrawals
     document.querySelectorAll('.js-withdraw-action').forEach(el=>{ try{ el.style.display='none'; }catch(_){} });
   }
 
   hideForbiddenUI();
   let tries = 0; const tid = setInterval(()=>{ hideForbiddenUI(); tries++; if (tries>8) clearInterval(tid); },300);
 
-  // expose quick refesh helper
   window._limited_refreshUI = limitedRenderReferralTree;
 
 })();
