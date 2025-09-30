@@ -556,15 +556,32 @@
   }
 
   // ===================== ОБРАБОТЧИКИ СОБЫТИЙ =====================
-  $('#btnLogin').addEventListener('click', async () => {
-    try {
-      const email = prompt('Email для входа:');
-      if (!email) return;
-      
-      const { error } = await sb.auth.signInWithOtp({ 
-        email, 
-        options: { emailRedirectTo: location.href } 
-      });
+ $('#btnLogin').addEventListener('click', async () => {
+  try {
+    const email = prompt('Email для входа:');
+    if (!email) return;
+    
+    const password = prompt('Пароль:');
+    if (!password) {
+      alert('Вход отменен');
+      return;
+    }
+    
+    const { error } = await sb.auth.signInWithPassword({ 
+      email, 
+      password 
+    });
+    
+    if (error) {
+      alert('Ошибка входа: ' + (error.message || error));
+      return;
+    }
+    
+    location.reload();
+  } catch (error) {
+    alert('Ошибка: ' + (error.message || error));
+  }
+});
       
       if (error) throw error;
       alert('Ссылка для входа отправлена на email');
