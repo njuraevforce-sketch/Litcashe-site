@@ -566,7 +566,6 @@ $('#btnLogin').addEventListener('click', function() {
     return;
   }
   
-  // Простой синхронный вызов без async/await
   sb.auth.signInWithPassword({ 
     email: email, 
     password: password 
@@ -580,14 +579,6 @@ $('#btnLogin').addEventListener('click', function() {
     alert('Ошибка: ' + error.message);
   });
 });
-});
-      
-      if (error) throw error;
-      alert('Ссылка для входа отправлена на email');
-    } catch (error) {
-      alert('Ошибка: ' + (error.message || error));
-    }
-  });
 
   $('#btnLogout').addEventListener('click', async () => {
     await sb.auth.signOut();
