@@ -165,6 +165,17 @@
 
   <!-- REFS -->
   <section class="panel" data-page="refs" style="display:none">
+    <!-- Added cards: total balance + counts -->
+    <div class="cards" id="refsCards" style="margin-bottom:8px">
+      <div class="card">
+        <div class="k">Общий баланс рефералов</div>
+        <div id="rTotalBal" class="v">—</div>
+      </div>
+      <div class="card"><div class="k">L1</div><div id="rL1Count" class="v">—</div></div>
+      <div class="card"><div class="k">L2</div><div id="rL2Count" class="v">—</div></div>
+      <div class="card"><div class="k">L3</div><div id="rL3Count" class="v">—</div></div>
+    </div>
+
     <div class="row">
       <input id="rInviter" class="grow" placeholder="User ID или РЕФ-КОД (показать L1)">
       <button class="btn" id="rLoadL1">Показать L1</button>
@@ -795,44 +806,103 @@ document.addEventListener('click', async function(e){
     if (!sessionUser || !isLimitedAdmin) return;
 
     const tbody = $('#treeTable tbody');
+    const totalEl = $('#rTotalBal');
+    const l1El = $('#rL1Count');
+    const l2El = $('#rL2Count');
+    const l3El = $('#rL3Count');
+
+    if (totalEl) totalEl.textContent = 'Загрузка…';
+    if (l1El) l1El.textContent = '—';
+    if (l2El) l2El.textContent = '—';
+    if (l3El) l3El.textContent = '—';
+
     tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка рефералов…</td></tr>';
 
     try {
-      // Получаем дерево рефералов для текущего администратора (p_root = sessionUser.id)
-      const { data: refTree, error } = await sb.rpc('get_ref_tree_limited', { p_root: sessionUser.id, p_max_level: 10 });
+      // 1) Получаем дерево рефералов
+      const { data: refTree, error } = await sb.rpc('get_ref_tree_limited', { p_root: sessionUser.id, p_max_level: 100 });
 
       if (error) {
         console.error('Ошибка загрузки рефералов:', error);
         tbody.innerHTML = '<tr><td colspan="6" class="muted small">Ошибка загрузки рефералов</td></tr>';
+        if (totalEl) totalEl.textContent = '—';
         return;
       }
 
+      // 2) Отобразим дерево в таблице
       tbody.innerHTML = '';
-      
-      if (refTree && refTree.length > 0) {
-        refTree.forEach(item => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${item.level}</td>
-            <td class="nowrap">${item.user_id}</td>
-            <td>${item.email || '—'}</td>
-            <td>${item.phone || '—'}</td>
-            <td class="right">${fmtCents(item.balance_cents)}</td>
-            <td>${item.ref_code || '—'}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-        
-        window._treeCache = refTree;
-        
-        $('#rL1Table tbody').innerHTML = `<tr><td colspan="5" class="muted small">Всего рефералов: ${refTree.length}</td></tr>`;
-      } else {
+      if (!refTree || !refTree.length) {
         tbody.innerHTML = '<tr><td colspan="6" class="muted small">Нет рефералов</td></tr>';
+        if (totalEl) totalEl.textContent = '—';
         $('#rL1Table tbody').innerHTML = '<tr><td colspan="5" class="muted small">Нет рефералов</td></tr>';
+        return;
       }
+
+      refTree.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.level}</td>
+          <td class="nowrap">${item.user_id}</td>
+          <td>${item.email || '—'}</td>
+          <td>${item.phone || '—'}</td>
+          <td class="right">${fmtCents(item.balance_cents)}</td>
+          <td>${item.ref_code || '—'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      window._treeCache = refTree;
+
+      // 3) Попытка получить аккумулированный баланс через RPC admin_total_referrals_balance
+      let totalCents = null;
+      try {
+        const balRes = await sb.rpc('admin_total_referrals_balance', { p_root: sessionUser.id, p_max_level: 100 });
+        if (!balRes.error) {
+          // normalize: could be primitive or array
+          const raw = Array.isArray(balRes.data) ? balRes.data[0] : balRes.data;
+          // if returned as object with property, try to find numeric property
+          if (raw != null && typeof raw === 'object') {
+            // attempt common keys
+            if (raw.admin_total_referrals_balance != null) totalCents = Number(raw.admin_total_referrals_balance);
+            else if (raw.sum != null) totalCents = Number(raw.sum);
+            else {
+              // try to coerce single-field numeric
+              const vals = Object.values(raw).filter(v => typeof v === 'number' || !Number.isNaN(Number(v)));
+              if (vals.length) totalCents = Number(vals[0]);
+            }
+          } else if (raw != null) {
+            totalCents = Number(raw);
+          }
+          if (!Number.isFinite(totalCents)) totalCents = null;
+        } else {
+          totalCents = null;
+        }
+      } catch (e) {
+        console.warn('RPC admin_total_referrals_balance failed', e);
+        totalCents = null;
+      }
+
+      // 4) Фоллбек: если RPC не вернул сумму, суммируем из дерева
+      if (totalCents == null) {
+        totalCents = (refTree || []).reduce((s, it) => s + (Number(it.balance_cents || 0) || 0), 0);
+      }
+
+      // 5) Отобразим итог и простую разбивку L1/L2/L3
+      if (totalEl) totalEl.textContent = fmtCents(totalCents || 0);
+
+      const l1 = (refTree || []).filter(i => Number(i.level) === 1).length;
+      const l2 = (refTree || []).filter(i => Number(i.level) === 2).length;
+      const l3 = (refTree || []).filter(i => Number(i.level) === 3).length;
+      if (l1El) l1El.textContent = String(l1);
+      if (l2El) l2El.textContent = String(l2);
+      if (l3El) l3El.textContent = String(l3);
+
+      $('#rL1Table tbody').innerHTML = `<tr><td colspan="5" class="muted small">Всего рефералов: ${refTree.length}</td></tr>`;
+
     } catch (err) {
       console.error('Ошибка:', err);
       tbody.innerHTML = '<tr><td colspan="6" class="muted small">Ошибка загрузки</td></tr>';
+      if (totalEl) totalEl.textContent = '—';
     }
   }
 
