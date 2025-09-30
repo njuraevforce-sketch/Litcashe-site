@@ -311,6 +311,7 @@
       if (tab === 'withdrawals') loadWithdrawals(true);
       if (tab === 'users') loadUsers();
       if (tab === 'rewards') loadRewards();
+      if (tab === 'refs' && isLimitedAdmin) loadLimitedAdminRefs();
     });
   });
 
@@ -343,6 +344,9 @@
     isAdmin = false;
     isLimitedAdmin = false;
     
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+
     try {
       // Проверяем через lc_is_admin (суперадмин)
       const r = await sb.rpc('lc_is_admin');
@@ -350,6 +354,7 @@
         const row = Array.isArray(r.data) ? r.data[0] : r.data;
         if (row === true || row?.is_admin === true) {
           isAdmin = true;
+          console.log('[Admin] Super admin detected via lc_is_admin');
           return;
         }
       }
@@ -357,41 +362,35 @@
     
     // Проверяем через таблицу admins (limited admin)
     try{
-      const { data: { user } } = await sb.auth.getUser();
-      if (user) {
-        const q = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
-        if (!q.error && q.data?.user_id) {
-          isAdmin = true;
-          isLimitedAdmin = true;
-        }
+      const q = await sb.from('admins').select('user_id, admin_type').eq('user_id', user.id).maybeSingle();
+      if (!q.error && q.data?.user_id) {
+        isAdmin = true;
+        isLimitedAdmin = (q.data.admin_type === 'limited');
+        console.log('[Admin] Limited admin detected via admins table');
+        return;
       }
-    }catch(_){}
+    }catch(e){ 
+      console.error('[Admin] Error checking admins table:', e);
+      
+      // Fallback: проверяем через profiles если admins недоступна
+      try {
+        const prof = await sb.from('profiles').select('is_admin, admin_type, role').eq('user_id', user.id).maybeSingle();
+        if (!prof.error && prof.data) {
+          if (prof.data.is_admin === true || prof.data.admin_type === 'limited' || prof.data.role === 'limited') {
+            isAdmin = true;
+            isLimitedAdmin = true;
+            console.log('[Admin] Limited admin detected via profiles');
+            return;
+          }
+        }
+      } catch(e2) {
+        console.error('[Admin] Error checking profiles:', e2);
+      }
+    }
     
     if (!isAdmin) {
       alert('Доступ запрещён: вы не администратор.');
       $$('#tabs .tab').forEach(b=>b.disabled=true);
-    }
-    
-    // Для limited admin скрываем все вкладки кроме Рефералов
-    if (isLimitedAdmin) {
-      $$('#tabs .tab').forEach(tab => {
-        if (tab.dataset.tab !== 'refs') {
-          tab.style.display = 'none';
-        }
-      });
-      // Автоматически переключаем на вкладку Рефералов
-      $$('#tabs .tab').forEach(b=>b.classList.remove('active'));
-      $$('[data-page]').forEach(p => p.style.display = 'none');
-      $('[data-page="refs"]').style.display = 'block';
-      const refTab = $$('#tabs .tab').find(t => t.dataset.tab === 'refs');
-      if (refTab) refTab.classList.add('active');
-      
-      // Автоматически загружаем реферальное дерево для limited admin
-      setTimeout(() => {
-        if (sessionUser) {
-          loadLimitedAdminRefs();
-        }
-      }, 500);
     }
   }
 
@@ -405,14 +404,13 @@
 
 let wPage = 0, wLimit = 25, wLastCount = 0, wRowsCache = [];
 
-/* ======= Helpers inserted by assistant: isUuid and escapeHtml (safe, minimal) ======= */
 function isUuid(v){
   return typeof v === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(v);
 }
 function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 async function loadWithdrawals(resetPage){
-  if (typeof isAdmin !== 'undefined' && !isAdmin) return;
+  if (!isAdmin || isLimitedAdmin) return;
   if (resetPage) wPage = 0;
 
   const tbody = document.querySelector('#wTable tbody');
@@ -538,25 +536,20 @@ async function loadWithdrawals(resetPage){
   }
 }
 
-/* ====== Улучшенный делегированный обработчик кликов для действий с заявками ====== */
 document.addEventListener('click', async function(e){
   const btn = e.target.closest && e.target.closest('.js-withdraw-action');
   if (!btn) return;
   e.preventDefault();
 
   const act = btn.dataset.act;
-  const rawWid = btn.dataset.wid; // это то, что сейчас записывается в таблице
-  // для надёжности: сохраним user_id / created / amount в data-атрибуты, если они есть на строке
-  // Но т.к. HTML сейчас не содержит их, попытаемся получить их из wRowsCache по совпадению.
+  const rawWid = btn.dataset.wid;
   btn.disabled = true;
 
-  // helper: пробуем вызвать RPC и возвращаем parsed result or thrown error
   async function callRpcPay(wid, tx){
     try {
       const res = await sb.rpc('admin_pay_withdrawal_rpc', { p_id: wid, p_txid: tx });
       return res;
     } catch (e) {
-      // sb.rpc может бросать, нормализуем
       return { error: { message: e?.message || String(e) } };
     }
   }
@@ -569,9 +562,7 @@ document.addEventListener('click', async function(e){
     }
   }
 
-  // helper: попытка разрешить id заявки по user_id + created_at или по user_id + amount
   async function resolveWithdrawalIdFromRow(rowCandidate){
-    // rowCandidate может быть объект из admin_list_withdrawals (если у тебя в wRowsCache есть такие)
     if (!rowCandidate) return null;
     try {
       const uid = rowCandidate.user_id || rowCandidate.user || null;
@@ -585,7 +576,6 @@ document.addEventListener('click', async function(e){
       if (uid && amount != null) {
         const q2 = await sb.from('withdrawals').select('id, created_at, amount_cents, status').eq('user_id', uid).eq('amount_cents', amount).order('created_at', { ascending: false }).limit(5);
         if (!q2.error && Array.isArray(q2.data) && q2.data.length) {
-          // Возвращаем самый свежий
           return q2.data[0].id;
         }
       }
@@ -595,10 +585,8 @@ document.addEventListener('click', async function(e){
     return null;
   }
 
-  // helper: поиск кандидата в кешированных строках (wRowsCache) по rawWid или по user/amount
   function findRowCandidateByRawWid(rawId) {
     if (!rawId || !window.wRowsCache) return null;
-    // пробуем прямое совпадение in multiple fields
     for (const r of wRowsCache) {
       if (!r) continue;
       const candidates = [r.withdrawal_id, r.withdraw_id, r.wid, r.w_id, r.id];
@@ -612,25 +600,18 @@ document.addEventListener('click', async function(e){
   try {
     if (act === 'pay') {
       const tx = prompt('Введите TXID (если есть):','') || null;
-      // 1) первый вызов с тем id, что пришёл из таблицы
       let res = await callRpcPay(rawWid, tx);
       if (res?.error && (String(res.error.message || '').toLowerCase().includes('withdrawal not found') || String(res.error || '').toLowerCase().includes('withdrawal not found'))) {
         console.warn('[admin] initial pay returned withdrawal not found for id', rawWid, res);
-        // Попытка разрешить корректный id из кеша/по совпадению
         let candidateRow = findRowCandidateByRawWid(rawWid);
         if (!candidateRow && window.wRowsCache && wRowsCache.length) {
-          // возможно rawWid это user_id, попробуем найти строку, у которой user_id == rawWid
           candidateRow = wRowsCache.find(x => x.user_id && String(x.user_id) === String(rawWid));
         }
-        // если нашли кандидата — попробуем разрешить id через API
         let realId = await resolveWithdrawalIdFromRow(candidateRow);
         if (!realId && candidateRow) {
-          // последний шанс — попробуем просмотреть по user_id и amount (если есть)
           realId = await resolveWithdrawalIdFromRow({ user_id: candidateRow.user_id, amount_cents: candidateRow.amount_cents, created_at: candidateRow.created_at });
         }
         if (!realId) {
-          // ещё шанс: если wRowsCache содержит объект с txid/note совпадающим с отображаемым — попробуй найти
-          // (оставим этот шаг лёгким — покажем пользователю инструкцию)
           alert('Не удалось автоматически найти запись заявки. Откройте DevTools → Network → admin_list_withdrawals и скопируйте поля user_id, created_at и amount_cents для проблемной строки, затем вставьте их сюда в чат для диагностики.');
           return;
         }
@@ -649,7 +630,6 @@ document.addEventListener('click', async function(e){
       let res = await callRpcReject(rawWid);
       if (res?.error && (String(res.error.message || '').toLowerCase().includes('withdrawal not found') || String(res.error || '').toLowerCase().includes('withdrawal not found'))) {
         console.warn('[admin] initial reject returned withdrawal not found for id', rawWid, res);
-        // Попытка разрешить корректный id (как в pay)
         let candidateRow = findRowCandidateByRawWid(rawWid);
         if (!candidateRow && window.wRowsCache && wRowsCache.length) {
           candidateRow = wRowsCache.find(x => x.user_id && String(x.user_id) === String(rawWid));
@@ -681,18 +661,16 @@ document.addEventListener('click', async function(e){
   }
 });
 
-
   // ===================== USERS =====================
   let uRowsCache=[];
   async function loadUsers(){
-    if (!isAdmin) return;
+    if (!isAdmin || isLimitedAdmin) return;
     const tbody = $('#uTable tbody'); tbody.innerHTML = '<tr><td colspan="8" class="muted small">Загрузка…</td></tr>';
     const s = $('#uSearch').value.trim();
     const balMin = $('#uBalMin').value ? toCents($('#uBalMin').value) : null;
     const balMax = $('#uBalMax').value ? toCents($('#uBalMax').value) : null;
     let rows=null;
 
-    // 1) Предпочтительно: admin_list_users(p_search)
     try {
       const r = await sb.rpc('admin_list_users', { p_search: s || null });
       if(!r.error){
@@ -705,7 +683,6 @@ document.addEventListener('click', async function(e){
       }
     } catch(_){}
 
-    // 2) Фолбэк: v_admin_profiles + wallets
     if (!rows){
       let q = sb.from('v_admin_profiles').select('user_id, email, phone, ref_code, invited_by_code, created_at').order('created_at', {ascending:false}).limit(1000);
       if (s) { const like=qlike(s); q = q.or('user_id.ilike.'+like+',email.ilike.'+like+',phone.ilike.'+like+',ref_code.ilike.'+like); }
@@ -715,7 +692,6 @@ document.addEventListener('click', async function(e){
       rows = (r.data||[]).map(p=>({ user_id:p.user_id, created_at:p.created_at, email:p.email, phone:p.phone, ref_code:p.ref_code, balance_cents: balances[p.user_id]||0 }));
     }
 
-    // фильтр по балансу (клиентский)
     if (balMin!=null || balMax!=null){
       rows = (rows||[]).filter(r => (balMin==null || r.balance_cents>=balMin) && (balMax==null || r.balance_cents<=balMax));
     }
@@ -750,7 +726,7 @@ document.addEventListener('click', async function(e){
   // ===================== REWARDS =====================
   let rwRowsCache=[];
   async function loadRewards(){
-    if (!isAdmin) return;
+    if (!isAdmin || isLimitedAdmin) return;
     const tbody = $('#rwTable tbody'); tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка…</td></tr>';
     const s = $('#rwSearch').value.trim();
     const lvl = $('#rwLevel').value;
@@ -766,7 +742,6 @@ document.addEventListener('click', async function(e){
     const r = await q;
     if (r.error){ tbody.innerHTML='<tr><td colspan="6" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
 
-    // нормализация amount
     let rows = (r.data||[]).map(x=>{
       let amount = x.amount_cents;
       if (amount == null && x.amount_usd != null) amount = Math.round(Number(x.amount_usd)*100);
@@ -776,7 +751,6 @@ document.addEventListener('click', async function(e){
 
     rwRowsCache = rows||[];
 
-    // своды
     const sumAll = rwRowsCache.reduce((a,b)=>a+(+b.amount_cents||0),0);
     const sumL1 = rwRowsCache.filter(x=>+x.level===1).reduce((a,b)=>a+(+b.amount_cents||0),0);
     const sumL2 = rwRowsCache.filter(x=>+x.level===2).reduce((a,b)=>a+(+b.amount_cents||0),0);
@@ -804,68 +778,66 @@ document.addEventListener('click', async function(e){
   try{ sb.channel('adm-rw').on('postgres_changes', { event:'*', schema:'public', table:'v_admin_rewards' }, ()=>{ if($('.tab.active')?.dataset.tab==='rewards') loadRewards(); }).subscribe(); }catch(_){}
 
   // ===================== REFS =====================
-  // Новая функция для limited admin
   async function loadLimitedAdminRefs() {
-    if (!sessionUser) return;
+    if (!sessionUser || !isLimitedAdmin) return;
     
-    // Получаем ref_code текущего пользователя
-    const { data: profile } = await sb.from('profiles')
-      .select('ref_code')
-      .eq('user_id', sessionUser.id)
-      .single();
-    
-    if (!profile?.ref_code) {
-      alert('У вас нет реф-кода');
-      return;
-    }
-
-    // Загружаем реферальное дерево
-    const { data: refTree, error } = await sb.rpc('get_ref_tree_limited', {
-      p_ref_code: profile.ref_code,
-      p_max_level: 10
-    });
-
-    if (error) {
-      console.error('Ошибка загрузки рефералов:', error);
-      return;
-    }
-
-    // Обновляем интерфейс для limited admin
-    $('#rInviter').value = profile.ref_code;
-    $('#treeUser').value = profile.ref_code;
-    
-    // Показываем статистику
-    const totalRefs = refTree ? refTree.length - 1 : 0; // исключаем самого себя
-    $('#rL1Table tbody').innerHTML = '<tr><td colspan="5" class="muted small">Всего рефералов: ' + totalRefs + '</td></tr>';
-    
-    // Заполняем таблицу дерева
     const tbody = $('#treeTable tbody');
-    tbody.innerHTML = '';
-    
-    if (refTree && refTree.length > 0) {
-      refTree.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.level}</td>
-          <td class="nowrap">${item.user_id}</td>
-          <td>${item.email || '—'}</td>
-          <td>${item.phone || '—'}</td>
-          <td class="right">${fmtCents(item.balance_cents)}</td>
-          <td>${item.ref_code || '—'}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+    tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка рефералов…</td></tr>';
+
+    try {
+      const { data: profile, error: profileError } = await sb.from('profiles')
+        .select('ref_code')
+        .eq('user_id', sessionUser.id)
+        .single();
       
-      // Сохраняем кэш для экспорта
-      window._treeCache = refTree;
-    } else {
-      tbody.innerHTML = '<tr><td colspan="6" class="muted small">Нет рефералов</td></tr>';
+      if (profileError || !profile?.ref_code) {
+        tbody.innerHTML = '<tr><td colspan="6" class="muted small">Ошибка: нет реф-кода</td></tr>';
+        return;
+      }
+
+      const { data: refTree, error } = await sb.rpc('get_ref_tree_limited', {
+        p_ref_code: profile.ref_code,
+        p_max_level: 10
+      });
+
+      if (error) {
+        console.error('Ошибка загрузки рефералов:', error);
+        tbody.innerHTML = '<tr><td colspan="6" class="muted small">Ошибка загрузки рефералов</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+      
+      if (refTree && refTree.length > 0) {
+        refTree.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${item.level}</td>
+            <td class="nowrap">${item.user_id}</td>
+            <td>${item.email || '—'}</td>
+            <td>${item.phone || '—'}</td>
+            <td class="right">${fmtCents(item.balance_cents)}</td>
+            <td>${item.ref_code || '—'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+        
+        window._treeCache = refTree;
+        
+        const totalRefs = refTree.length - 1;
+        $('#rL1Table tbody').innerHTML = `<tr><td colspan="5" class="muted small">Всего рефералов: ${totalRefs}</td></tr>`;
+      } else {
+        tbody.innerHTML = '<tr><td colspan="6" class="muted small">Нет рефералов</td></tr>';
+        $('#rL1Table tbody').innerHTML = '<tr><td colspan="5" class="muted small">Нет рефералов</td></tr>';
+      }
+    } catch (err) {
+      console.error('Ошибка:', err);
+      tbody.innerHTML = '<tr><td colspan="6" class="muted small">Ошибка загрузки</td></tr>';
     }
   }
 
   async function adminGetRefTree(rootUserId){
     try{
-      // Получаем ref_code пользователя
       const { data: profile } = await sb.from('profiles')
         .select('ref_code')
         .eq('user_id', rootUserId)
@@ -873,14 +845,12 @@ document.addEventListener('click', async function(e){
       
       if (!profile?.ref_code) return null;
 
-      // Используем новую функцию
       const r = await sb.rpc('get_ref_tree_limited', {
         p_ref_code: profile.ref_code,
         p_max_level: 10
       });
       
       if (!r.error && r.data) {
-        // Конвертируем в старый формат для совместимости
         return r.data.map(item => ({
           gen: item.level,
           user_id: item.user_id,
@@ -904,7 +874,6 @@ document.addEventListener('click', async function(e){
     key = (key||'').trim();
     if(!key){ tbody.innerHTML = '<tr><td colspan="5" class="muted small">Укажите User ID или реф-код</td></tr>'; return; }
 
-    // Если пришёл ref_code → найдём его user_id
     let rootId = key;
     if(!isUUID(key)){
       try{
@@ -979,7 +948,6 @@ document.addEventListener('click', async function(e){
     if (tree && tree.length){
       rows = tree.map(x=>({ level:x.gen, user_id:x.user_id }));
     } else {
-      // Фолбэк: послойно через v_admin_profiles
       let parents=[{user_id:rootId, ref_code:null}];
       try { const p = await sb.from('v_admin_profiles').select('ref_code').eq('user_id', rootId).maybeSingle();
             parents[0].ref_code = p?.data?.ref_code || null; } catch(_){}
@@ -1078,7 +1046,7 @@ document.addEventListener('click', async function(e){
       if(upd.error) throw upd.error; alert('Сохранено'); loadUsers(); }catch(e){ alert(e.message||e); } };
 
     const deltaRow = document.getElementById('deltaRow');
-    if (hasAdjust){ deltaRow.classList.remove('hidden'); } else { deltaRow.classList.add('hidden'); }
+    if (hasAdjust && !isLimitedAdmin){ deltaRow.classList.remove('hidden'); } else { deltaRow.classList.add('hidden'); }
     $('#dApplyDelta').onclick = async ()=>{ const delta=Number($('#dDelta').value||'0'); if(!Number.isFinite(delta)||!delta){ alert('Введите число (USDT)'); return; }
       try{ const r=await sb.rpc('admin_adjust_balance', { p_user_id: uid, p_delta_cents: toCents(delta) }); if(r.error) throw r.error; alert('Баланс скорректирован'); openUserDrawer(uid); loadUsers(); }catch(e){ alert(e.message||e); } };
   }
@@ -1100,51 +1068,32 @@ document.addEventListener('click', async function(e){
     await checkAdmin();
     if(!isAdmin) return;
     await detectAdjust();
-    // Авто-подзагрузка
-    if ($('.tab.active')?.dataset.tab==='withdrawals') loadWithdrawals(true);
-    setTimeout(loadUsers,150);
-    setTimeout(loadRewards,300);
+    
+    // Для limited admin скрываем все вкладки кроме Рефералов
+    if (isLimitedAdmin) {
+      $$('#tabs .tab').forEach(tab => {
+        if (tab.dataset.tab !== 'refs') {
+          tab.style.display = 'none';
+        }
+      });
+      // Автоматически переключаем на вкладку Рефералов
+      $$('#tabs .tab').forEach(b=>b.classList.remove('active'));
+      $$('[data-page]').forEach(p => p.style.display = 'none');
+      $('[data-page="refs"]').style.display = 'block';
+      const refTab = $$('#tabs .tab').find(t => t.dataset.tab === 'refs');
+      if (refTab) refTab.classList.add('active');
+      
+      // Автоматически загружаем реферальное дерево
+      setTimeout(loadLimitedAdminRefs, 500);
+    } else {
+      // Для super admin загружаем стандартные вкладки
+      if ($('.tab.active')?.dataset.tab==='withdrawals') loadWithdrawals(true);
+      setTimeout(loadUsers,150);
+      setTimeout(loadRewards,300);
+    }
   })();
 
 })();
-
-  // ===== Deposits =====
-  let dRowsCache=[];
-  async function loadDeposits(){
-    if(!isAdmin) return;
-    const tbody = $('#dTable tbody'); if(!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="7" class="muted small">Загрузка…</td></tr>';
-    const r = await sb.from('v_admin_deposits')
-      .select('id, created_at, user_id, user_email, user_phone, amount_cents, currency, network, txid, status, note')
-      .order('created_at', {ascending:false}).limit(300);
-    if(r.error){ tbody.innerHTML = '<tr><td colspan="7" class="err">'+(r.error.message||'error')+'</td></tr>'; return; }
-    dRowsCache = r.data||[];
-    const s = ($('#dSearch')?.value||'').toLowerCase().trim();
-    let rows = dRowsCache;
-    if(s){
-      rows = rows.filter(x => (x.user_email||'').toLowerCase().includes(s) || (x.user_phone||'').toLowerCase().includes(s) || (x.txid||'').toLowerCase().includes(s) || (x.note||'').toLowerCase().includes(s) );
-    }
-    const fmtAmt = v => (v/100).toFixed(2);
-    const renderUser = x => (x.user_email||x.user_phone||x.user_id||'—');
-    const renderTx = x => x.txid ? ('<a href="https://tronscan.org/#/transaction/'+x.txid+'" target="_blank">'+x.txid.slice(0,10)+'…</a>') : '—';
-    tbody.innerHTML = rows.map(x => `
-      <tr>
-        <td>${new Date(x.created_at).toLocaleString()}</td>
-        <td>${renderUser(x)}</td>
-        <td>${(x.network||'')+' '+(x.currency||'')}</td>
-        <td>${fmtAmt(x.amount_cents)}</td>
-        <td>${renderTx(x)}</td>
-        <td>${x.status}</td>
-        <td>${x.note||''}</td>
-      </tr>`).join('');
-    $('#dCount').textContent = String(rows.length);
-    const sum = rows.reduce((a,x)=>a+(x.amount_cents||0),0);
-    $('#dSum').textContent = fmtAmt(sum);
-  }
-  $('#dRefresh')?.addEventListener('click', loadDeposits);
-  $('#dExport')?.addEventListener('click', ()=> exportCSV('deposits.csv', dRowsCache||[]));
-  $('#dSearch')?.addEventListener('input', ()=> loadDeposits());
-  try{ sb.channel('adm-dep').on('postgres_changes', {event:'*', schema:'public', table:'deposits'}, ()=>{ if(activePage==='deposits'){ loadDeposits(); }}).subscribe(); }catch(_){}
 </script>
 </body>
 </html>
