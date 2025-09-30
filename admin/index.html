@@ -556,31 +556,30 @@
   }
 
   // ===================== ОБРАБОТЧИКИ СОБЫТИЙ =====================
-$('#btnLogin').addEventListener('click', async function() {
-  try {
-    const email = prompt('Email для входа:');
-    if (!email) return;
-    
-    const password = prompt('Пароль:');
-    if (!password) {
-      alert('Вход отменен');
-      return;
-    }
-    
-    const { error } = await sb.auth.signInWithPassword({ 
-      email: email, 
-      password: password 
-    });
-    
-    if (error) {
-      alert('Ошибка входа: ' + (error.message || error));
-      return;
-    }
-    
-    location.reload();
-  } catch (error) {
-    alert('Ошибка: ' + (error.message || error));
+$('#btnLogin').addEventListener('click', function() {
+  var email = prompt('Email для входа:');
+  if (!email) return;
+  
+  var password = prompt('Пароль:');
+  if (!password) {
+    alert('Вход отменен');
+    return;
   }
+  
+  // Простой синхронный вызов без async/await
+  sb.auth.signInWithPassword({ 
+    email: email, 
+    password: password 
+  }).then(function(result) {
+    if (result.error) {
+      alert('Ошибка входа: ' + result.error.message);
+    } else {
+      location.reload();
+    }
+  }).catch(function(error) {
+    alert('Ошибка: ' + error.message);
+  });
+});
 });
       
       if (error) throw error;
