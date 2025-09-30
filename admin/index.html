@@ -293,7 +293,7 @@
       const { data: { user } } = await sb.auth.getUser();
       if (!user) return false;
 
-      // Check admins table first
+      // Check admins table
       const { data: adminRow, error } = await sb.from('admins')
         .select('admin_type, ref_code')
         .eq('user_id', user.id)
@@ -303,15 +303,6 @@
         currentAdmin = adminRow;
         return true;
       }
-
-      // Fallback to RPC
-      try {
-        const { data: rpcData } = await sb.rpc('get_admin_type');
-        if (rpcData && rpcData.length > 0) {
-          currentAdmin = rpcData[0];
-          return true;
-        }
-      } catch(e) {}
 
       alert('У вас нет прав администратора');
       return false;
@@ -610,34 +601,40 @@
 
   function setupEventHandlers() {
     // Auth
-    $('#btnLogin').addEventListener('click', async () => {
+    $('#btnLogin').addEventListener('click', function() {
       const email = prompt('Email:');
       if (!email) return;
       const password = prompt('Пароль:');
       if (!password) return;
       
-      try {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        location.reload();
-      } catch (error) {
-        alert('Ошибка: ' + (error.message || error));
-      }
+      sb.auth.signInWithPassword({ 
+        email: email, 
+        password: password 
+      }).then(function(result) {
+        if (result.error) {
+          alert('Ошибка: ' + result.error.message);
+        } else {
+          location.reload();
+        }
+      }).catch(function(error) {
+        alert('Ошибка: ' + error.message);
+      });
     });
 
-    $('#btnLogout').addEventListener('click', async () => {
-      await sb.auth.signOut();
-      location.reload();
+    $('#btnLogout').addEventListener('click', function() {
+      sb.auth.signOut().then(function() {
+        location.reload();
+      });
     });
 
     // Tabs
     $$('#tabs .tab').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', function() {
         if (currentAdmin.type === 'limited') return;
         
         $$('#tabs .tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const tab = btn.dataset.tab;
+        this.classList.add('active');
+        const tab = this.dataset.tab;
         $$('[data-page]').forEach(p => {
           p.style.display = (p.getAttribute('data-page') === tab) ? 'block' : 'none';
         });
@@ -649,14 +646,14 @@
     });
 
     // Withdrawal actions
-    $('#wTable').addEventListener('click', (e) => {
+    document.addEventListener('click', function(e) {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       processWithdrawal(btn.dataset.action, btn.dataset.id);
     });
 
     // Limited admin export
-    $('#limitedExport')?.addEventListener('click', async () => {
+    $('#limitedExport')?.addEventListener('click', async function() {
       try {
         const { data } = await sb.rpc('get_ref_tree_limited', { 
           p_ref_code: currentAdmin.ref_code,
@@ -669,8 +666,8 @@
     });
 
     // Super admin buttons
-    $('#wReload')?.addEventListener('click', () => loadWithdrawals());
-    $('#uReload')?.addEventListener('click', () => loadUsers());
+    $('#wReload')?.addEventListener('click', function() { loadWithdrawals(); });
+    $('#uReload')?.addEventListener('click', function() { loadUsers(); });
   }
 
   function exportCSV(name, rows) {
