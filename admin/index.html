@@ -596,6 +596,8 @@
 
   // ------------------ USERS ------------------
   let uRowsCache = [];
+
+  // ---- ЗАМЕНЕННАЯ ФУНКЦИЯ loadUsers() ----
   async function loadUsers(){
     if (!isAdmin) return;
     const tbody = $('#uTable tbody');
@@ -603,40 +605,162 @@
     const s = $('#uSearch')?.value?.trim() || '';
     const balMin = $('#uBalMin')?.value ? toCents($('#uBalMin').value) : null;
     const balMax = $('#uBalMax')?.value ? toCents($('#uBalMax').value) : null;
-    let rows = null;
+
+    // current user id from sessionUser
+    const currentUserId = sessionUser?.id || null;
+    if (!currentUserId){
+      tbody.innerHTML = '<tr><td colspan="8" class="muted small">Не авторизованы</td></tr>';
+      return;
+    }
+
     try {
-      const r = await sb.rpc('admin_list_users', { p_search: s || null });
-      if (!r.error) {
-        const list = Array.isArray(r.data)? r.data : (r.data? [r.data] : []);
-        rows = list.map(x=>({
-          user_id: x.user_id, created_at: x.activated_at || x.created_at,
-          email: x.email, phone: x.phone, ref_code: x.ref_code,
-          balance_cents: x.balance_cents ?? 0
-        }));
+      // First attempt: if there is an RPC admin_list_users that returns scoped results for limited admins, use it.
+      try {
+        const r = await sb.rpc('admin_list_users', { p_search: s || null });
+        if (!r.error) {
+          const list = Array.isArray(r.data)? r.data : (r.data? [r.data] : []);
+          // If RPC returned and seems scoped (we'll check length), use it but still enforce referral restriction below if needed.
+          if (Array.isArray(list) && list.length > 0) {
+            const rowsFromRpc = list.map(x=>({
+              user_id: x.user_id, created_at: x.activated_at || x.created_at,
+              email: x.email, phone: x.phone, ref_code: x.ref_code,
+              balance_cents: x.balance_cents ?? 0
+            }));
+            // If caller is super admin, RPC may already be full list. But for limited admin we prefer admin_get_ref_tree below.
+            // We'll continue only if admin_get_ref_tree fails to return referrals (fallback).
+            // Save RPC rows as fallback:
+            var rpcRowsFallback = rowsFromRpc;
+          }
+        }
+      } catch(_) {}
+
+      // Try to get full referral tree for the current admin
+      let referralIds = [];
+      try{
+        const tree = await adminGetRefTree(currentUserId);
+        if (Array.isArray(tree) && tree.length){
+          referralIds = Array.from(new Set(tree.map(x => x.user_id).filter(Boolean)));
+        }
+      }catch(_){}
+
+      // If tree empty, try to check direct referrals in user_referrals (fallback)
+      if (!referralIds.length){
+        try{
+          const direct = await sb.from('user_referrals').select('user_id').eq('referrer_user_id', currentUserId).limit(1);
+          if (!direct.error && direct.data && direct.data.length){
+            const tree2 = await adminGetRefTree(currentUserId);
+            if (Array.isArray(tree2) && tree2.length){
+              referralIds = Array.from(new Set(tree2.map(x=>x.user_id).filter(Boolean)));
+            }
+          }
+        }catch(_){}
       }
-    } catch(_) {}
-    if (!rows){
-      let q = sb.from('v_admin_profiles').select('user_id, email, phone, ref_code, invited_by_code, created_at').order('created_at', {ascending:false}).limit(1000);
-      if (s){ const like = qlike(s); q = q.or('user_id.ilike.'+like+',email.ilike.'+like+',phone.ilike.'+like+',ref_code.ilike.'+like); }
-      const r = await q;
-      if (r.error){ tbody.innerHTML = '<tr><td colspan="8" class="small" style="color:#b91c1c">'+(r.error.message||r.error)+'</td></tr>'; return; }
-      const ids = (r.data||[]).map(p=>p.user_id);
+
+      // If still no referrals and user appears to be a super-admin (present in admins), render full list (rpcRowsFallback or v_admin_profiles)
+      if (!referralIds.length){
+        const admCheck = await sb.from('admins').select('user_id').eq('user_id', currentUserId).maybeSingle();
+        if (!admCheck.error && admCheck.data?.user_id){
+          // Super admin — use RPC rows if available, otherwise v_admin_profiles fallback
+          if (typeof rpcRowsFallback !== 'undefined'){
+            renderUsersTable(rpcRowsFallback);
+            return;
+          }
+          const r = await sb.from('v_admin_profiles').select('user_id, email, phone, ref_code, invited_by_code, created_at').order('created_at', {ascending:false}).limit(1000);
+          if (r.error){ throw r.error; }
+          const ids = (r.data||[]).map(p=>p.user_id);
+          let balances = {};
+          if (ids.length){
+            const w = await sb.from('wallets').select('user_id,balance_cents').in('user_id', ids);
+            if (!w.error) (w.data||[]).forEach(x=>balances[x.user_id] = x.balance_cents || 0);
+          }
+          const rows = (r.data||[]).map(p=>({ user_id: p.user_id, created_at: p.created_at, email: p.email, phone: p.phone, ref_code: p.ref_code, balance_cents: balances[p.user_id]||0 }));
+          // apply client-side search/filter if needed
+          let filtered = rows;
+          if (s){ const like = s.toLowerCase(); filtered = filtered.filter(x => (x.user_id||'').toLowerCase().includes(like) || (x.email||'').toLowerCase().includes(like) || (x.phone||'').toLowerCase().includes(like) || (x.ref_code||'').toLowerCase().includes(like)); }
+          if (balMin != null || balMax != null){
+            filtered = filtered.filter(r => (balMin==null || r.balance_cents>=balMin) && (balMax==null || r.balance_cents<=balMax));
+          }
+          renderUsersTable(filtered);
+          return;
+        } else {
+          // Limited admin with no referrals -> show empty
+          $('#uCount').textContent = '0';
+          $('#uSumBal').textContent = '—';
+          $('#uAvgBal').textContent = '—';
+          $('#uWithRef').textContent = '0';
+          tbody.innerHTML = '<tr><td colspan="8" class="muted small">У вас нет рефералов.</td></tr>';
+          return;
+        }
+      }
+
+      // If we have referralIds, load only those profiles and balances
+      if (!referralIds.length){
+        $('#uCount').textContent = '0';
+        $('#uSumBal').textContent = '—';
+        $('#uAvgBal').textContent = '—';
+        $('#uWithRef').textContent = '0';
+        tbody.innerHTML = '<tr><td colspan="8" class="muted small">Нет рефералов.</td></tr>';
+        return;
+      }
+
+      // Safety: limit number of ids to avoid huge requests (adjust as needed)
+      const MAX_IDS = 5000;
+      if (referralIds.length > MAX_IDS) referralIds = referralIds.slice(0, MAX_IDS);
+
+      // Fetch profiles
+      const profQ = await sb.from('profiles').select('user_id, created_at, email, phone, ref_code').in('user_id', referralIds).limit(MAX_IDS);
+      if (profQ.error) throw profQ.error;
+      const profiles = profQ.data || [];
+
+      // Fetch balances via RPC if available, otherwise fallback to wallets table
       let balances = {};
-      if (ids.length){
-        const w = await sb.from('wallets').select('user_id,balance_cents').in('user_id', ids);
-        (w.data||[]).forEach(x=>balances[x.user_id] = x.balance_cents || 0);
+      try {
+        const wRpc = await sb.rpc('admin_balances_by_user_ids', { p_ids: referralIds });
+        if (!wRpc.error && Array.isArray(wRpc.data)) {
+          wRpc.data.forEach(x=>balances[x.user_id] = x.balance_cents || 0);
+        } else {
+          const w = await sb.from('wallets').select('user_id,balance_cents').in('user_id', referralIds);
+          if (!w.error) (w.data||[]).forEach(x=>balances[x.user_id]=x.balance_cents||0);
+        }
+      } catch(e){
+        const w = await sb.from('wallets').select('user_id,balance_cents').in('user_id', referralIds);
+        if (!w.error) (w.data||[]).forEach(x=>balances[x.user_id]=x.balance_cents||0);
       }
-      rows = (r.data||[]).map(p=>({ user_id: p.user_id, created_at: p.created_at, email: p.email, phone: p.phone, ref_code: p.ref_code, balance_cents: balances[p.user_id]||0 }));
+
+      // Build rows and apply client-side search/filters
+      let rows = profiles.map(p=>({
+        user_id: p.user_id,
+        created_at: p.created_at,
+        email: p.email,
+        phone: p.phone,
+        ref_code: p.ref_code,
+        balance_cents: balances[p.user_id] || 0
+      }));
+
+      if (s){
+        const like = s.toLowerCase();
+        rows = rows.filter(x => (x.user_id||'').toLowerCase().includes(like) || (x.email||'').toLowerCase().includes(like) || (x.phone||'').toLowerCase().includes(like) || (x.ref_code||'').toLowerCase().includes(like));
+      }
+      if (balMin != null || balMax != null){
+        rows = rows.filter(r => (balMin==null || r.balance_cents>=balMin) && (balMax==null || r.balance_cents<=balMax));
+      }
+
+      renderUsersTable(rows);
+
+    } catch (err) {
+      console.error('loadUsers error', err);
+      tbody.innerHTML = '<tr><td colspan="8" class="small" style="color:#b91c1c">'+(err?.message||String(err))+'</td></tr>';
     }
-    // client-side balance filter
-    if (balMin != null || balMax != null){
-      rows = (rows||[]).filter(r => (balMin==null || r.balance_cents>=balMin) && (balMax==null || r.balance_cents<=balMax));
-    }
+  }
+
+  // helper render function used by loadUsers
+  function renderUsersTable(rows){
+    const tbody = $('#uTable tbody');
     uRowsCache = rows || [];
     const sumBal = uRowsCache.reduce((a,b)=>a+(+b.balance_cents||0),0);
     $('#uCount').textContent = uRowsCache.length;
-    $('#uSumBal').textContent = fmtCents(sumBal);
-    $('#uAvgBal').textContent = uRowsCache.length? fmtCents(Math.round(sumBal/uRowsCache.length)) : '—';
+    $('#uSumBal').textContent = ((sumBal||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2}) + ' USDT';
+    $('#uAvgBal').textContent = uRowsCache.length? (((Math.round(sumBal / uRowsCache.length))/100).toFixed(2) + ' USDT') : '—';
     $('#uWithRef').textContent = uRowsCache.filter(r=>!!r.ref_code).length;
     $('#uDiag').textContent = uRowsCache.length + ' пользователей';
     if (!uRowsCache.length){ tbody.innerHTML = '<tr><td colspan="8" class="muted small">Пусто</td></tr>'; return; }
@@ -648,13 +772,15 @@
         + '<td class="nowrap">'+(r.created_at? new Date(r.created_at).toLocaleString():'—')+'</td>'
         + '<td>'+(r.email?escapeHtml(r.email):'—')+'</td>'
         + '<td>'+(r.phone?escapeHtml(r.phone):'—')+'</td>'
-        + '<td class="right">'+fmtCents(r.balance_cents||0)+'</td>'
+        + '<td class="right">'+(((r.balance_cents||0)/100).toLocaleString('ru-RU', {minimumFractionDigits:0, maximumFractionDigits:2}))+' USDT'+'</td>'
         + '<td>'+(r.ref_code?escapeHtml(r.ref_code):'—')+'</td>'
         + '<td class="nowrap">'+(link?('<code>'+escapeHtml(link)+'</code>'):'—')+'</td>'
         + '<td class="nowrap"><button class="btn ghost small" data-open="'+escapeHtml(r.user_id)+'">Открыть</button></td>';
       tbody.appendChild(tr);
     }
   }
+  // ---- КОНЕЦ loadUsers ----
+
   $('#uReload').addEventListener('click', loadUsers);
   $('#uExport').addEventListener('click', ()=> downloadCSV('users.csv', uRowsCache.map(r=>({ user_id:r.user_id, created_at:r.created_at, email:r.email, phone:r.phone, balance_cents:r.balance_cents, ref_code:r.ref_code })) ));
   $('#uTable').addEventListener('click', e=>{ const btn = e.target.closest('button[data-open]'); if (!btn) return; openUserDrawer(btn.dataset.open); });
