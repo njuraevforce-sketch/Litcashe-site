@@ -343,51 +343,64 @@
   async function checkAdmin(){
     isAdmin = false;
     isLimitedAdmin = false;
-    
+
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return;
 
+    // 1) Проверяем явно — супер админ?
     try {
-      // Проверяем через lc_is_admin (суперадмин)
-      const r = await sb.rpc('lc_is_admin');
-      if (!r?.error) {
-        const row = Array.isArray(r.data) ? r.data[0] : r.data;
-        if (row === true || row?.is_admin === true) {
+      const resSuper = await sb.rpc('lc_is_super_admin');
+      if (!resSuper?.error) {
+        const val = Array.isArray(resSuper.data) ? resSuper.data[0] : resSuper.data;
+        if (val === true || val?.lc_is_super_admin === true || val?.is_super === true) {
           isAdmin = true;
-          console.log('[Admin] Super admin detected via lc_is_admin');
+          isLimitedAdmin = false;
+          console.log('[Admin] Super admin (via lc_is_super_admin)');
           return;
         }
       }
-    } catch(_) {}
-    
-    // Проверяем через таблицу admins (limited admin)
+    } catch(e){ console.warn('lc_is_super_admin failed', e); }
+
+    // 2) Если не супер — проверяем limited через RPC
+    try {
+      const resLimited = await sb.rpc('lc_is_limited_admin');
+      if (!resLimited?.error) {
+        const val = Array.isArray(resLimited.data) ? resLimited.data[0] : resLimited.data;
+        if (val === true || val?.lc_is_limited_admin === true || val?.is_limited === true) {
+          isAdmin = true;
+          isLimitedAdmin = true;
+          console.log('[Admin] Limited admin (via lc_is_limited_admin)');
+          return;
+        }
+      }
+    } catch(e){ console.warn('lc_is_limited_admin failed', e); }
+
+    // 3) Fallback: проверяем таблицу admins напрямую (если предыдущие RPC недоступны)
     try{
       const q = await sb.from('admins').select('user_id, admin_type').eq('user_id', user.id).maybeSingle();
       if (!q.error && q.data?.user_id) {
         isAdmin = true;
         isLimitedAdmin = (q.data.admin_type === 'limited');
-        console.log('[Admin] Limited admin detected via admins table');
+        console.log('[Admin] Detected via admins table', q.data.admin_type);
         return;
       }
-    }catch(e){ 
-      console.error('[Admin] Error checking admins table:', e);
-      
-      // Fallback: проверяем через profiles если admins недоступна
-      try {
-        const prof = await sb.from('profiles').select('is_admin, admin_type, role').eq('user_id', user.id).maybeSingle();
-        if (!prof.error && prof.data) {
-          if (prof.data.is_admin === true || prof.data.admin_type === 'limited' || prof.data.role === 'limited') {
-            isAdmin = true;
-            isLimitedAdmin = true;
-            console.log('[Admin] Limited admin detected via profiles');
-            return;
-          }
+    }catch(e){ console.error('[Admin] Error checking admins table:', e); }
+
+    // 4) Fallback: profiles flags (last resort)
+    try {
+      const prof = await sb.from('profiles').select('is_admin, admin_type, role').eq('user_id', user.id).maybeSingle();
+      if (!prof.error && prof.data) {
+        if (prof.data.is_admin === true || prof.data.admin_type === 'limited' || prof.data.role === 'limited') {
+          isAdmin = true;
+          isLimitedAdmin = true;
+          console.log('[Admin] Limited admin detected via profiles fallbacks');
+          return;
         }
-      } catch(e2) {
-        console.error('[Admin] Error checking profiles:', e2);
       }
+    } catch(e) {
+      console.error('[Admin] Error checking profiles:', e);
     }
-    
+
     if (!isAdmin) {
       alert('Доступ запрещён: вы не администратор.');
       $$('#tabs .tab').forEach(b=>b.disabled=true);
@@ -780,25 +793,13 @@ document.addEventListener('click', async function(e){
   // ===================== REFS =====================
   async function loadLimitedAdminRefs() {
     if (!sessionUser || !isLimitedAdmin) return;
-    
+
     const tbody = $('#treeTable tbody');
     tbody.innerHTML = '<tr><td colspan="6" class="muted small">Загрузка рефералов…</td></tr>';
 
     try {
-      const { data: profile, error: profileError } = await sb.from('profiles')
-        .select('ref_code')
-        .eq('user_id', sessionUser.id)
-        .single();
-      
-      if (profileError || !profile?.ref_code) {
-        tbody.innerHTML = '<tr><td colspan="6" class="muted small">Ошибка: нет реф-кода</td></tr>';
-        return;
-      }
-
-      const { data: refTree, error } = await sb.rpc('get_ref_tree_limited', {
-        p_ref_code: profile.ref_code,
-        p_max_level: 10
-      });
+      // Получаем дерево рефералов для текущего администратора (p_root = sessionUser.id)
+      const { data: refTree, error } = await sb.rpc('get_ref_tree_limited', { p_root: sessionUser.id, p_max_level: 10 });
 
       if (error) {
         console.error('Ошибка загрузки рефералов:', error);
@@ -824,8 +825,7 @@ document.addEventListener('click', async function(e){
         
         window._treeCache = refTree;
         
-        const totalRefs = refTree.length - 1;
-        $('#rL1Table tbody').innerHTML = `<tr><td colspan="5" class="muted small">Всего рефералов: ${totalRefs}</td></tr>`;
+        $('#rL1Table tbody').innerHTML = `<tr><td colspan="5" class="muted small">Всего рефералов: ${refTree.length}</td></tr>`;
       } else {
         tbody.innerHTML = '<tr><td colspan="6" class="muted small">Нет рефералов</td></tr>';
         $('#rL1Table tbody').innerHTML = '<tr><td colspan="5" class="muted small">Нет рефералов</td></tr>';
@@ -838,17 +838,8 @@ document.addEventListener('click', async function(e){
 
   async function adminGetRefTree(rootUserId){
     try{
-      const { data: profile } = await sb.from('profiles')
-        .select('ref_code')
-        .eq('user_id', rootUserId)
-        .single();
-      
-      if (!profile?.ref_code) return null;
-
-      const r = await sb.rpc('get_ref_tree_limited', {
-        p_ref_code: profile.ref_code,
-        p_max_level: 10
-      });
+      if (!rootUserId) return null;
+      const r = await sb.rpc('get_ref_tree_limited', { p_root: rootUserId, p_max_level: 10 });
       
       if (!r.error && r.data) {
         return r.data.map(item => ({
