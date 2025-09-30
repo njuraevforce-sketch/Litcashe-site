@@ -556,7 +556,7 @@
   }
 
   // ===================== ОБРАБОТЧИКИ СОБЫТИЙ =====================
- $('#btnLogin').addEventListener('click', async () => {
+$('#btnLogin').addEventListener('click', async function() {
   try {
     const email = prompt('Email для входа:');
     if (!email) return;
@@ -568,8 +568,8 @@
     }
     
     const { error } = await sb.auth.signInWithPassword({ 
-      email, 
-      password 
+      email: email, 
+      password: password 
     });
     
     if (error) {
