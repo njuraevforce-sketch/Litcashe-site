@@ -686,6 +686,24 @@
     object-fit: cover; /* Заполняет контейнер без искажений */
   }
 
+  /* Overlay для блокировки видео */
+  #limitOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.65);
+    color: #fff;
+    font-weight: 600;
+    font-size: 16px;
+    backdrop-filter: blur(4px);
+    border-radius: var(--radius);
+  }
+
   /* Утилиты */
   .muted {
     color: var(--text-secondary);
@@ -1257,6 +1275,7 @@
             <source src="/assets/videos/ad1.MP4" type="video/mp4">
             Ваш браузер не поддерживает видео тег.
           </video>
+          <div id="limitOverlay">Лимит просмотров исчерпан</div>
         </div>
 
         <div class="progress">
@@ -1456,7 +1475,7 @@ window.LC_TOAST = (function(){
   return{ok:show,err:show};
 })();
 
-// Реферальная ссылка - правильная реализация из старого файла
+// Реферальная ссылка - ИДЕНТИЧНО СТАРОМУ ФАЙЛУ (из таблицы profiles)
 document.addEventListener('DOMContentLoaded', async () => {
   const sb = window.sb || window._supabase;
   if (!sb) return;
@@ -1464,21 +1483,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const { data: { user } } = await sb.auth.getUser();
     if (user) {
-      // Генерация реферального кода из user.id как в старом файле
-      function shortCodeFromUUID(id){
-        try{
-          const hex = String(id||'').replace(/-/g,'').slice(-8);
-          return parseInt(hex,16).toString(36).toUpperCase().padStart(6,'0').slice(0,8);
-        }catch(_){ return 'REF'; }
-      }
-      
-      const refCode = shortCodeFromUUID(user.id);
+      // ВЗЯТО ИЗ СТАРОГО ФАЙЛА - получение ref_code из таблицы profiles
+      const { data: profile, error } = await sb
+        .from('profiles')
+        .select('ref_code')
+        .eq('id', user.id)
+        .single();
+
       const refLink = document.getElementById('refLink');
       if (refLink) {
-        refLink.value = window.location.origin + '/ref/' + refCode;
+        if (profile && profile.ref_code) {
+          // Используем ref_code из профиля
+          refLink.value = window.location.origin + '/ref/' + profile.ref_code;
+        } else {
+          // Fallback на случайную генерацию если ref_code нет
+          refLink.value = window.location.origin + '/ref/' + Math.random().toString(36).substr(2, 9);
+        }
       }
 
-      // Копирование реферальной ссылки
+      // Копирование реферальной ссылки - идентично старому файлу
       const btnCopyRef = document.getElementById('btnCopyRef');
       if (btnCopyRef) {
         btnCopyRef.addEventListener('click', function() {
@@ -1491,6 +1514,190 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch(e) {
     console.warn('Error setting referral link:', e);
   }
+});
+
+// Видео просмотры - ИДЕНТИЧНО СТАРОМУ ФАЙЛУ
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  const video = document.getElementById('promoVid');
+  const startBtn = document.getElementById('startBtn');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  
+  if (!sb || !video || !startBtn) return;
+
+  const MIN_SEC = 10;
+  let played = 0, awarding = false;
+
+  function toast(msg, ok=false){
+    try{ window.LC_TOAST?.(msg, ok); }catch(_){ alert(msg); }
+  }
+
+  function setProgress(s){
+    const pct = Math.min(100, Math.max(0, (s / MIN_SEC) * 100));
+    if (progressFill) { 
+      progressFill.style.transition='width .4s ease'; 
+      progressFill.style.width = pct + '%'; 
+    }
+  }
+
+  const labelLeft = n => `Доступно просмотров сегодня: ${Math.max(0, n|0)}`;
+  
+  const setBlocked = on => {
+    const overlay = document.getElementById('limitOverlay');
+    if (overlay) overlay.style.display = on ? 'flex' : 'none';
+    if (startBtn) { 
+      startBtn.disabled = !!on; 
+      startBtn.setAttribute('aria-disabled', on ? 'true' : 'false'); 
+    }
+    try{ if (on && video) video.pause(); }catch(_){}
+  };
+
+  async function getLeftToday(){
+    try {
+      const info = (window.LC && window.LC._levelInfo) ? window.LC._levelInfo : null;
+      if (info) {
+        const left = Number(info.views_left_today ?? ((info.daily_limit ?? 5) - (info.views_used_today ?? 0)) ?? 0);
+        if (progressText) progressText.textContent = labelLeft(left);
+        return left;
+      } else {
+        // Fallback если кэш не готов
+        const { data } = await sb.rpc('get_level_info_v2');
+        const i2 = Array.isArray(data) ? data[0] : (data || {});
+        const left = Number(i2.views_left_today ?? ((i2.daily_limit ?? 5) - (i2.views_used_today ?? 0)) ?? 0);
+        if (progressText) progressText.textContent = labelLeft(left);
+        if (!window.LC) window.LC = {};
+        window.LC._levelInfo = i2;
+        return left;
+      }
+    } catch(e) { 
+      console.error(e); 
+      if (progressText) progressText.textContent = 'Ошибка загрузки';
+      return 0; 
+    }
+  }
+
+  async function ensureSession() {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      return session || null;
+    } catch(e) { 
+      console.error(e); 
+      return null; 
+    }
+  }
+
+  async function awardOnce(){
+    if (awarding) return;
+    if (played < MIN_SEC) return;
+
+    awarding = true;
+    try {
+      const session = await ensureSession();
+      if (!session) {
+        toast('❌ Нужно войти в систему');
+        return;
+      }
+
+      const { data, error } = await sb.rpc('award_view_v2', { 
+        duration_sec: Math.min(played, 12) 
+      });
+      
+      if (error) {
+        toast('❌ Ошибка: ' + (error.message || 'Неизвестная ошибка'));
+        return;
+      }
+
+      const result = Array.isArray(data) ? data[0] : data;
+      const credited = Number(result?.credited ?? result?.reward_per_view ?? 0);
+      
+      if (credited > 0) {
+        toast(`✅ Зачислено +$${credited.toFixed(2)}`, true);
+        
+        // Обновляем UI
+        setTimeout(() => {
+          try{ 
+            window.LC?.loadLevelInfo?.(); 
+          }catch(_){}
+        }, 500);
+      }
+
+      // Обновляем оставшиеся просмотры
+      await getLeftToday();
+
+    } catch(e) {
+      console.error('Award error:', e);
+      toast('❌ Ошибка начисления');
+    } finally {
+      awarding = false;
+    }
+  }
+
+  // Биндинг событий видео
+  function bindVideo(){
+    if (!video) return;
+    
+    video.addEventListener('timeupdate', () => {
+      played = Math.floor(video.currentTime || 0);
+      setProgress(played);
+      
+      // Автоматическое начисление при достижении MIN_SEC
+      if (played >= MIN_SEC) {
+        awardOnce();
+      }
+    });
+
+    video.addEventListener('ended', () => {
+      awardOnce();
+    });
+  }
+
+  // Обработчик кнопки "Заработать за просмотр"
+  startBtn.addEventListener('click', async function(){
+    if (startBtn.disabled) return;
+    
+    const session = await ensureSession();
+    if (!session) {
+      toast('❌ Сначала войдите в систему');
+      return;
+    }
+
+    const left = await getLeftToday();
+    if (left <= 0) {
+      toast('❌ Лимит просмотров исчерпан');
+      setBlocked(true);
+      return;
+    }
+
+    // Сброс состояния
+    played = 0;
+    setProgress(0);
+    
+    try {
+      await video.play();
+    } catch(e) {
+      console.error('Video play error:', e);
+      toast('❌ Ошибка воспроизведения видео');
+    }
+  });
+
+  // Инициализация
+  async function initVideo(){
+    const session = await ensureSession();
+    if (!session) {
+      setBlocked(true);
+      if (progressText) progressText.textContent = 'Требуется вход в систему';
+      return;
+    }
+
+    const left = await getLeftToday();
+    setBlocked(left <= 0);
+    
+    bindVideo();
+  }
+
+  // Запуск инициализации
+  initVideo();
 });
 
 // Загрузка данных уровня и баланса
@@ -1728,144 +1935,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   } catch(e){ console.warn('ref widgets error', e); }
-});
-
-// Видео просмотры
-document.addEventListener('DOMContentLoaded', async () => {
-  const sb = window.sb || window._supabase || window.supabase;
-  const video = document.getElementById('promoVid');
-  const startBtn = document.getElementById('startBtn');
-  const progressFill = document.getElementById('progressFill');
-  const progressText = document.getElementById('progressText');
-
-  const MIN_SEC = 10;
-  let played = 0;
-  let awarding = false;
-  let alreadyAwardedForThisPlay = false;
-
-  function toast(msg, ok=false){
-    try{ window.LC_TOAST?.(msg, ok); }catch(_){ alert(msg); }
-  }
-
-  function setProgress(sec){
-    const p = Math.min(100, Math.floor(sec / MIN_SEC * 100));
-    progressFill && (progressFill.style.width = p + '%');
-  }
-
-  function parseMoney(txt){ return Number(String(txt||'').replace(/[^0-9.]/g,'')) || 0; }
-  function formatMoney(v){ return '$' + Number(v||0).toFixed(2); }
-
-  function bumpBalance(delta){
-    const el = document.querySelector('[data-balance]');
-    if (!el) return;
-    const cur = parseMoney(el.textContent);
-    el.textContent = formatMoney(cur + Number(delta||0));
-  }
-  
-  function bumpViews(n=1){
-    const el = document.querySelector('[data-views]');
-    if (!el) return;
-    const cur = parseInt(el.textContent||'0',10) || 0;
-    el.textContent = String(cur + n);
-  }
-
-  async function ensureSession(){
-    const { data:{ session } } = await sb.auth.getSession();
-    return session;
-  }
-
-  async function getLeftToday(){
-    const { data, error } = await sb.rpc('get_left_today_views');
-    if (error) return 0;
-    return Array.isArray(data) ? Number(data[0]?.get_left_today_views||0) : Number(data||0);
-  }
-
-  function setBlocked(blocked){
-    startBtn.disabled = !!blocked;
-    startBtn.style.opacity = blocked ? .6 : 1;
-  }
-
-  async function checkAccessAndInit(){
-    try{
-      const session = await ensureSession(); 
-      if(!session){ toast('Нужно войти'); return 0; }
-      const { data, error } = await sb.rpc('get_video_access_state');
-      const active = !error && (Array.isArray(data) ? data[0]?.get_video_access_state : data);
-      if (!active) {
-        setBlocked(true);
-        progressText && (progressText.textContent = 'Доступ закрыт');
-        return 0;
-      }
-    }catch(e){ console.error(e); }
-    
-    const left = await getLeftToday();
-    setBlocked(left <= 0);
-    progressText && (progressText.textContent = `Доступно просмотров сегодня: ${left}`);
-    return left;
-  }
-
-  async function awardOnce(){
-    if (awarding || alreadyAwardedForThisPlay) return;
-    if (played < MIN_SEC) return;
-
-    awarding = true;
-    try{
-      const session = await ensureSession(); 
-      if(!session){ awarding=false; return; }
-
-      const { data, error } = await sb.rpc('award_view_v2', { duration_sec: Math.min(played, 12) });
-      if (error) { toast('Ошибка начисления: ' + (error.message || 'unknown')); return; }
-
-      const res = Array.isArray(data) ? data[0] : (data || {});
-      const left = Number(res?.views_left_today ?? res?.views_left ?? 0);
-      const credited = Number(res?.credited ?? res?.reward_per_view ?? 0);
-
-      if (credited > 0){
-        bumpBalance(credited);
-        bumpViews(1);
-        toast(`Зачислено ✅ +${credited.toFixed(2)}`, true);
-      }
-      
-      progressText && (progressText.textContent = `Доступно просмотров сегодня: ${left}`);
-      setBlocked(left <= 0);
-      alreadyAwardedForThisPlay = true;
-
-      setTimeout(() => { 
-        try{ window.LC?.loadLevelInfo?.(); }catch(_){ } 
-      }, 1200);
-
-    } finally {
-      try{ video && (video.pause(), video.currentTime = 0); }catch(_){}
-      setProgress(0); 
-      played = 0; 
-      awarding = false;
-    }
-  }
-
-  function bindVideo(){
-    if (!video) return;
-    video.addEventListener('timeupdate', () => {
-      played = Math.floor(video.currentTime || 0);
-      setProgress(played);
-      if (played >= MIN_SEC) awardOnce();
-    });
-    
-    video.addEventListener('ended', awardOnce);
-  }
-
-  function start(){
-    if (startBtn.disabled) return;
-    alreadyAwardedForThisPlay = false;
-    played = 0; 
-    setProgress(0);
-    try{ video && (video.currentTime = 0, video.play()); }catch(_){}
-  }
-
-  if (startBtn && video) {
-    startBtn.addEventListener('click', start);
-    bindVideo();
-    checkAccessAndInit();
-  }
 });
 
 // Навигация и авторизация
