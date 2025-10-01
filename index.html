@@ -81,6 +81,148 @@
     overflow-x: hidden;
   }
 
+  /* === УНИФИЦИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ === */
+  .language-switcher {
+    position: relative;
+    display: inline-block;
+    z-index: 1001;
+  }
+
+  .lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+  }
+
+  .lang-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  }
+
+  .lang-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .lang-arrow {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.3s ease;
+  }
+
+  .language-switcher.active .lang-arrow {
+    transform: rotate(180deg);
+  }
+
+  .lang-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px;
+    min-width: 140px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1002;
+  }
+
+  .language-switcher.active .lang-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .lang-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .lang-item:hover {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--primary-light);
+  }
+
+  .lang-item.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .lang-flag {
+    width: 16px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+
+  .lang-name {
+    flex: 1;
+  }
+
+  .lang-code {
+    font-size: 10px;
+    opacity: 0.7;
+    font-weight: 600;
+  }
+
+  /* Флаги языков */
+  .lang-flag.ru { background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%); }
+  .lang-flag.en { background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%); }
+  .lang-flag.cn { background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%); }
+  .lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
+  .lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
+  .lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
+
+  /* Мобильная адаптация */
+  @media (max-width: 768px) {
+    .language-switcher {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .lang-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .lang-dropdown {
+      position: static;
+      margin-top: 8px;
+      transform: none;
+      width: 100%;
+    }
+  }
+
   /* Анимация крипторынка на фоне */
   .crypto-background {
     position: fixed;
@@ -423,119 +565,6 @@
     transform: translateY(-1px);
     box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
   }
-
-  /* === СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ === */
-  .lc-lang {
-    position: relative;
-    display: inline-block;
-  }
-
-  .lc-lang__btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 32px;
-    padding: 0 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    white-space: nowrap;
-  }
-
-  .lc-lang__btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
-  }
-
-  .lc-lang__icon {
-    width: 14px;
-    height: 14px;
-  }
-
-  .lc-lang__menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 5px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 8px;
-    min-width: 140px;
-    max-height: 300px;
-    overflow-y: auto;
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(20px);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
-    z-index: 1002;
-    list-style: none;
-  }
-
-  .lc-lang.is-open .lc-lang__menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
-  .lc-lang__menu li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .lc-lang__menu li:hover {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--primary-light);
-  }
-
-  .lc-lang__menu li.active {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--primary);
-    font-weight: 600;
-  }
-
-  .lang-flag {
-    width: 16px;
-    height: 12px;
-    border-radius: 2px;
-    display: inline-block;
-    border: 1px solid rgba(255,255,255,0.2);
-    flex-shrink: 0;
-  }
-
-  /* Флаги языков */
-  .lang-flag.ru { background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%); }
-  .lang-flag.en { background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%); }
-  .lang-flag.cn { background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%); }
-  .lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
-  .lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
-  .lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
-  .lang-flag.pt { background: linear-gradient(to right, #006600 40%, #ff0000 40%, #ff0000 60%, #ffcc00 60%); }
-  .lang-flag.ar { background: linear-gradient(to bottom, #ce1126 33%, #ffffff 33%, #ffffff 66%, #000000 66%); }
-  .lang-flag.jp { background: radial-gradient(circle, #bc002d 30%, white 30%); }
-  .lang-flag.kr { background: linear-gradient(to bottom, #ffffff 50%, #000000 50%); }
-  .lang-flag.tr { background: linear-gradient(to bottom, #e30a17 0%, #e30a17 100%); }
-  .lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
-  .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
-  .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
 
   /* Основной контент */
   .main {
@@ -906,33 +935,6 @@
     border-bottom: none;
   }
 
-  /* Мобильная оптимизация для переключателя */
-  @media (max-width: 768px) {
-    .lc-lang {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    
-    .lc-lang__btn {
-      width: 100%;
-      justify-content: center;
-    }
-    
-    .lc-lang__menu {
-      position: static;
-      margin-top: 8px;
-      transform: none;
-      width: 100%;
-    }
-    
-    .lc-floating {
-      position: fixed;
-      top: 70px;
-      right: 15px;
-      z-index: 1001;
-    }
-  }
-
   /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
   @media (max-width: 768px) {
     html, body {
@@ -1207,7 +1209,47 @@
       </div>
 
       <div class="nav-cta">
-        <!-- Переключатель языка будет автоматически добавлен скриптом language-switcher.js -->
+        <!-- Унифицированный переключатель языков -->
+        <div class="language-switcher">
+          <button class="lang-btn" id="langBtn">
+            <svg class="lang-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+                    fill="none" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            <span class="lang-code">RU</span>
+            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          
+          <div class="lang-dropdown">
+            <div class="lang-item active" data-lang="ru">
+              <span class="lang-flag ru"></span>
+              <span class="lang-name">Русский</span>
+            </div>
+            <div class="lang-item" data-lang="en">
+              <span class="lang-flag en"></span>
+              <span class="lang-name">English</span>
+            </div>
+            <div class="lang-item" data-lang="cn">
+              <span class="lang-flag cn"></span>
+              <span class="lang-name">中文</span>
+            </div>
+            <div class="lang-item" data-lang="es">
+              <span class="lang-flag es"></span>
+              <span class="lang-name">Español</span>
+            </div>
+            <div class="lang-item" data-lang="fr">
+              <span class="lang-flag fr"></span>
+              <span class="lang-name">Français</span>
+            </div>
+            <div class="lang-item" data-lang="de">
+              <span class="lang-flag de"></span>
+              <span class="lang-name">Deutsch</span>
+            </div>
+          </div>
+        </div>
+        
         <a class="btn" href="login_single.html" data-i18n="nav_login">Вход</a>
         <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
       </div>
