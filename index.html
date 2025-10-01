@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#0a1a14">
 
@@ -49,12 +49,24 @@
     --border: rgba(16, 185, 129, 0.3);
     --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     --radius: 12px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
   }
 
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    height: 100%;
+    overflow-x: hidden;
+    position: fixed;
+    width: 100%;
   }
 
   body {
@@ -63,14 +75,19 @@
     color: var(--text);
     line-height: 1.4;
     position: relative;
-    overflow-x: hidden;
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     -webkit-text-size-adjust: 100%;
+    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
+    width: 100vw;
+    overflow-x: hidden;
+    padding: 0;
+    margin: 0;
   }
 
-  /* Анимация крипторынка на фоне */
+  /* Анимация крипторынка на фоне - УВЕЛИЧЕНА ВИДИМОСТЬ ДЛЯ МОБИЛЬНЫХ */
   .crypto-background {
     position: fixed;
     top: 0;
@@ -283,16 +300,17 @@
     width: 100%;
   }
 
-  /* Header */
+  /* Header - ФИКСИРОВАННАЯ ШАПКА ДЛЯ МОБИЛЬНЫХ */
   .header {
-    background: rgba(10, 26, 20, 0.95);
+    background: rgba(10, 26, 20, 0.98);
     backdrop-filter: blur(20px);
     box-shadow: var(--shadow);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
     flex-shrink: 0;
+    padding-top: var(--safe-top);
   }
 
   .nav {
@@ -301,6 +319,7 @@
     justify-content: space-between;
     height: 50px;
     gap: 10px;
+    padding: 0 10px;
   }
 
   .brand {
@@ -311,6 +330,7 @@
     font-weight: 700;
     color: var(--text);
     flex-shrink: 0;
+    z-index: 1001;
   }
 
   .logo {
@@ -401,6 +421,7 @@
     font-size: 11px;
     backdrop-filter: blur(10px);
     white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .btn:hover {
@@ -430,12 +451,15 @@
     flex-direction: column;
     min-height: calc(100vh - 120px);
     overflow-y: auto;
+    width: 100%;
+    position: relative;
   }
 
   .main-content {
     flex: 1;
     display: flex;
     flex-direction: column;
+    width: 100%;
   }
 
   /* Карточки */
@@ -450,6 +474,7 @@
     backdrop-filter: blur(15px);
     position: relative;
     overflow: hidden;
+    width: 100%;
   }
 
   .card::before {
@@ -497,6 +522,7 @@
     display: grid;
     gap: 10px;
     margin-bottom: 10px;
+    width: 100%;
   }
 
   .grid-3 {
@@ -602,6 +628,7 @@
     font-weight: 500;
     backdrop-filter: blur(20px);
     flex-shrink: 0;
+    padding-bottom: calc(15px + var(--safe-bottom));
   }
 
   /* Иконки для заголовков */
@@ -621,11 +648,12 @@
 
   /* Hero секция */
   .hero {
-    padding: 30px 0;
+    padding: 20px 0;
     display: grid;
     grid-template-columns: 1.3fr 1fr;
-    gap: 30px;
+    gap: 20px;
     align-items: center;
+    width: 100%;
   }
 
   .hero-badge {
@@ -644,18 +672,20 @@
   }
 
   .hero-title {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 800;
     margin-bottom: 15px;
     background: linear-gradient(135deg, var(--text), var(--primary-light));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    line-height: 1.2;
   }
 
   .hero-buttons {
     display: flex;
     gap: 10px;
     margin: 20px 0;
+    flex-wrap: wrap;
   }
 
   .hero-stats {
@@ -671,7 +701,7 @@
   }
 
   .hero-stat .number {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 800;
     margin-bottom: 4px;
   }
@@ -682,11 +712,12 @@
     align-items: center;
     justify-content: center;
     min-height: 200px;
+    width: 100%;
   }
 
   .rotator-img {
     width: 100%;
-    max-height: 250px;
+    max-height: 200px;
     object-fit: contain;
     border-radius: var(--radius);
     transition: opacity 0.3s ease;
@@ -696,7 +727,7 @@
   .contact-fab {
     position: fixed;
     right: 20px;
-    bottom: 20px;
+    bottom: calc(20px + var(--safe-bottom));
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -709,6 +740,7 @@
     box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
     z-index: 1000;
     transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .contact-fab:hover {
@@ -721,48 +753,355 @@
     height: 22px;
   }
 
-  /* Мобильная оптимизация */
+  /* Бургер меню для мобильных */
+  .burger {
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1001;
+  }
+
+  .burger span {
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    transition: all 0.3s;
+    border-radius: 1px;
+  }
+
+  /* Мобильное меню */
+  .mobile-menu {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    right: 0;
+    background: rgba(10, 26, 20, 0.98);
+    backdrop-filter: blur(30px);
+    border-bottom: 1px solid var(--border);
+    padding: 15px;
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+  }
+
+  .mobile-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .mobile-menu a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .mobile-menu a:hover,
+  .mobile-menu a.active {
+    color: var(--primary);
+  }
+
+  .mobile-menu a:last-child {
+    border-bottom: none;
+  }
+
+  /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
   @media (max-width: 768px) {
+    html {
+      position: fixed;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    body {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .container {
+      padding: 0 10px;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .nav {
+      height: 50px;
+      padding: 0 8px;
+      gap: 8px;
+    }
+
+    .brand {
+      font-size: 15px;
+    }
+
+    .logo {
+      width: 26px;
+      height: 26px;
+      font-size: 11px;
+    }
+
+    .nav-cta {
+      gap: 6px;
+    }
+
+    .btn {
+      height: 32px;
+      padding: 0 10px;
+      font-size: 10px;
+    }
+
+    .main {
+      padding: 10px 0;
+      min-height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+
+    .hero {
+      grid-template-columns: 1fr;
+      padding: 15px 0;
+      gap: 15px;
+    }
+
+    .hero-title {
+      font-size: 20px;
+    }
+
+    .hero-buttons {
+      flex-direction: column;
+      margin: 15px 0;
+    }
+
+    .hero-buttons .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .hero-stats {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .hero-stat {
+      padding: 10px 6px;
+    }
+
+    .hero-stat .number {
+      font-size: 14px;
+    }
+
+    .rotator-img {
+      max-height: 160px;
+    }
+
+    .grid {
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .grid-3 {
+      grid-template-columns: 1fr;
+    }
+
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .card {
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+
+    .card h2 {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .video-container {
+      height: 180px;
+      margin-bottom: 8px;
+    }
+
+    .contact-fab {
+      width: 50px;
+      height: 50px;
+      right: 15px;
+      bottom: calc(15px + var(--safe-bottom));
+    }
+
+    /* Скрываем обычное меню, показываем бургер */
+    .nav-links {
+      display: none !important;
+    }
+    
+    .burger {
+      display: flex;
+    }
+
+    /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
+    .crypto-logo {
+      font-size: 16px !important;
+      animation-duration: 18s !important;
+      color: rgba(16, 185, 129, 0.95) !important;
+      text-shadow: 0 0 30px rgba(16, 185, 129, 1) !important;
+    }
+
+    .trading-bot {
+      width: 30px !important;
+      height: 30px !important;
+      animation-duration: 22s !important;
+      box-shadow: 0 0 40px var(--primary) !important;
+      opacity: 0.9 !important;
+    }
+
+    .crypto-chart {
+      width: 90px !important;
+      height: 40px !important;
+      animation-duration: 35s !important;
+      border: 2px solid rgba(16, 185, 129, 0.8) !important;
+      background: rgba(16, 185, 129, 0.3) !important;
+    }
+
+    .price-line {
+      animation-duration: 16s !important;
+      height: 3px !important;
+      box-shadow: 0 0 30px var(--primary) !important;
+      opacity: 0.7 !important;
+    }
+
+    .exchange-logo {
+      animation-duration: 28s !important;
+      color: rgba(52, 211, 153, 0.95) !important;
+      background: rgba(16, 185, 129, 0.4) !important;
+      font-size: 12px !important;
+      padding: 3px 7px !important;
+    }
+
+    .pulse-dot {
+      width: 9px !important;
+      height: 9px !important;
+      box-shadow: 0 0 35px var(--primary) !important;
+    }
+  }
+
+  /* Для очень маленьких экранов */
+  @media (max-width: 480px) {
     .container {
       padding: 0 8px;
     }
 
     .nav {
-      height: 45px;
       padding: 0 5px;
     }
 
-    .hero {
-      grid-template-columns: 1fr;
-      padding: 20px 0;
-      gap: 20px;
-    }
-
     .hero-title {
-      font-size: 22px;
-    }
-
-    .hero-buttons {
-      flex-direction: column;
-    }
-
-    .hero-stats {
-      grid-template-columns: repeat(3, 1fr);
+      font-size: 18px;
     }
 
     .hero-stat .number {
-      font-size: 16px;
+      font-size: 12px;
     }
 
-    .rotator-img {
-      max-height: 180px;
+    .card h2 {
+      font-size: 13px;
+    }
+
+    .card {
+      padding: 10px;
+    }
+
+    .btn {
+      padding: 0 8px;
+      font-size: 10px;
+    }
+
+    .video-container {
+      height: 160px;
     }
 
     .contact-fab {
       width: 45px;
       height: 45px;
-      right: 15px;
-      bottom: 15px;
+      right: 12px;
+      bottom: calc(12px + var(--safe-bottom));
+    }
+    
+    .contact-fab svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  /* Для горизонтальной ориентации на мобильных */
+  @media (max-width: 768px) and (orientation: landscape) {
+    .main {
+      min-height: calc(100vh - 120px);
+    }
+    
+    .container {
+      padding: 0 8px;
+    }
+
+    .video-container {
+      height: 140px;
+    }
+    
+    .hero {
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .hero-title {
+      font-size: 16px;
+    }
+  }
+
+  /* Высота viewport для мобильных */
+  @media (max-height: 700px) {
+    .main {
+      padding: 8px 0;
+      min-height: calc(100vh - 120px);
+    }
+
+    .grid {
+      gap: 6px;
+    }
+
+    .card {
+      margin-bottom: 6px;
+    }
+
+    .video-container {
+      height: 140px;
+    }
+    
+    .hero {
+      padding: 10px 0;
+    }
+  }
+
+  /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
+  @media (prefers-reduced-motion: reduce) {
+    .crypto-logo,
+    .trading-bot,
+    .price-line,
+    .exchange-logo,
+    .crypto-chart,
+    .pulse-dot,
+    .logo,
+    .card::before {
+      animation: none !important;
+      transition: none !important;
     }
   }
   </style>
@@ -772,6 +1111,16 @@
 <!-- Анимированный фон с крипто-элементами -->
 <div class="crypto-background" id="cryptoBackground">
   <!-- Элементы добавляются через JavaScript -->
+</div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html" class="active">Главная</a>
+  <a href="dashboard_single.html">Личный кабинет</a>
+  <a href="deposit_single.html">Пополнение</a>
+  <a href="withdraw_single.html">Вывод</a>
+  <a href="faq_single.html">FAQ</a>
+  <a href="settings_single.html">Настройки</a>
 </div>
 
 <header class="header">
@@ -793,6 +1142,12 @@
       <div class="nav-cta">
         <a class="btn" href="login_single.html">Вход</a>
         <a class="btn primary" href="register_single.html">Регистрация</a>
+      </div>
+
+      <div class="burger" id="burgerBtn">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
     </nav>
   </div>
@@ -874,165 +1229,195 @@
   </svg>
 </a>
 
-<!-- Все оригинальные скрипты сохранены -->
 <script>
-  // Hourly image rotator
-  (function(){
-    const el = document.getElementById('brandRotator');
-    if(!el) return;
-
-    const IMAGES = [
-      'assets/rotator/lit-1.jpg',
-      'assets/rotator/lit-2.jpg',
-      'assets/rotator/lit-3.jpg',
-      'assets/rotator/lit-4.jpg',
-      'assets/rotator/lit-5.webp'
-    ];
-
-    const HOUR = 60 * 70 * 1000;
-    function hourIndex(t = Date.now()){ return Math.floor(t / HOUR) % IMAGES.length; }
-
-    function swapTo(idx){
-      const next = IMAGES[idx % IMAGES.length];
-      if(el.dataset.src === next) return;
-      el.style.opacity = 0;
-      const img = new Image();
-      img.decoding = 'async';
-      img.onload = () => {
-        el.src = next; el.dataset.src = next; el.alt = 'Lit Energy — ' + (idx+1);
-        requestAnimationFrame(()=>{ el.style.opacity = 1; });
-      };
-      img.src = next;
-    }
-
-    IMAGES.forEach(src => { const i = new Image(); i.src = src; });
-
-    swapTo(hourIndex());
-
-    const msToNextHour = HOUR - (Date.now() % HOUR) + 50;
-    setTimeout(function tick(){
-      swapTo(hourIndex());
-      setInterval(() => swapTo(hourIndex()), HOUR);
-    }, msToNextHour);
-  })();
-
-  // KPI auto-growth
-  (function(){
-    const elUsers = document.getElementById('kpiUsers');
-    const elPayouts = document.getElementById('kpiPayouts');
-    if(!elUsers || !elPayouts) return;
-
-    const START_DATE = new Date('2025-09-27T00:00:00Z');
-    const BASE_USERS = 1248;
-    const BASE_PAYOUTS = 935128;
-    const USERS_PER_DAY_MIN = 15, USERS_PER_DAY_MAX = 99;
-    const PAYOUTS_PER_DAY_MIN = 1199, PAYOUTS_PER_DAY_MAX = 35000;
-
-    const MS_DAY = 86_400_000;
-    const todayUTC = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
-    const days = Math.max(0, Math.floor((todayUTC - START_DATE.getTime()) / MS_DAY));
-    function rand01(n){
-      const x = (n * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff;
-    }
-    function incForDay(day, min, max){ return Math.round(min + rand01(day+1)*(max-min)); }
-    function sumIncs(days, min, max){ let s=0; for(let d=0; d<days; d++) s += incForDay(d, min, max); return s; }
-
-    const usersToday   = BASE_USERS  + sumIncs(days, USERS_PER_DAY_MIN, USERS_PER_DAY_MAX);
-    const payoutsToday = BASE_PAYOUTS+ sumIncs(days, PAYOUTS_PER_DAY_MIN, PAYOUTS_PER_DAY_MAX);
-
-    const fmtInt = n => new Intl.NumberFormat('ru-RU').format(n);
-    const fmtMoneyK = n => '$' + Math.round(n/1000) + 'k';
-
-    function tween(el, from, to, fmt, dur=900){
-      const start = performance.now();
-      function frame(t){
-        const p = Math.min(1, (t-start)/dur);
-        const val = Math.round(from + (to-from)*p);
-        el.textContent = fmt(val);
-        if(p < 1) requestAnimationFrame(frame);
+// Бургер-меню
+document.addEventListener('DOMContentLoaded', function() {
+  const burgerBtn = document.getElementById('burgerBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  
+  if (burgerBtn && mobileMenu) {
+    burgerBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      mobileMenu.classList.toggle('active');
+      burgerBtn.classList.toggle('active');
+    });
+    
+    // Закрытие меню при клике на ссылку
+    const mobileLinks = mobileMenu.querySelectorAll('a');
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        mobileMenu.classList.remove('active');
+        burgerBtn.classList.remove('active');
+      });
+    });
+    
+    // Закрытие меню при клике вне его
+    document.addEventListener('click', function(e) {
+      if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
+        mobileMenu.classList.remove('active');
+        burgerBtn.classList.remove('active');
       }
-      requestAnimationFrame(frame);
-    }
+    });
+  }
+});
 
-    const prev = JSON.parse(localStorage.getItem('lc_kpis')||'{}');
-    const prevUsers   = typeof prev.users==='number'   ? prev.users   : usersToday - 25;
-    const prevPayouts = typeof prev.payouts==='number' ? prev.payouts : payoutsToday - 1500;
-    tween(elUsers,   prevUsers,   usersToday,   fmtInt);
-    tween(elPayouts, prevPayouts, payoutsToday, fmtMoneyK);
+// Hourly image rotator
+(function(){
+  const el = document.getElementById('brandRotator');
+  if(!el) return;
 
-    localStorage.setItem('lc_kpis', JSON.stringify({ users: usersToday, payouts: payoutsToday, day: days }));
-  })();
+  const IMAGES = [
+    'assets/rotator/lit-1.jpg',
+    'assets/rotator/lit-2.jpg',
+    'assets/rotator/lit-3.jpg',
+    'assets/rotator/lit-4.jpg',
+    'assets/rotator/lit-5.webp'
+  ];
 
-  // Crypto background animation
-  document.addEventListener('DOMContentLoaded', function() {
-    const cryptoBackground = document.getElementById('cryptoBackground');
-    if (!cryptoBackground) return;
+  const HOUR = 60 * 70 * 1000;
+  function hourIndex(t = Date.now()){ return Math.floor(t / HOUR) % IMAGES.length; }
 
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    
-    const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
-    const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
-    
-    const cryptoLogoCount = isMobile ? 15 : 12;
-    const exchangeLogoCount = isMobile ? 10 : 8;
-    const botCount = isMobile ? 8 : 6;
-    const lineCount = isMobile ? 10 : 8;
-    const chartCount = isMobile ? 6 : 4;
-    const dotCount = isMobile ? 15 : 10;
-    
-    for (let i = 0; i < cryptoLogoCount; i++) {
-      const element = document.createElement('div');
-      element.className = 'crypto-logo';
-      element.textContent = cryptoLogos[i % cryptoLogos.length];
-      element.style.left = Math.random() * 90 + 5 + '%';
-      element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
-      element.style.fontSize = (Math.random() * 8 + 14) + 'px';
-      cryptoBackground.appendChild(element);
-    }
-    
-    for (let i = 0; i < exchangeLogoCount; i++) {
-      const element = document.createElement('div');
-      element.className = 'exchange-logo';
-      element.textContent = exchangeLogos[i % exchangeLogos.length];
-      element.style.top = Math.random() * 80 + 10 + '%';
-      element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
-      cryptoBackground.appendChild(element);
-    }
-    
-    for (let i = 0; i < botCount; i++) {
-      const bot = document.createElement('div');
-      bot.className = 'trading-bot';
-      bot.style.left = Math.random() * 80 + 10 + '%';
-      bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
-      cryptoBackground.appendChild(bot);
-    }
-    
-    for (let i = 0; i < lineCount; i++) {
-      const line = document.createElement('div');
-      line.className = 'price-line';
-      line.style.top = Math.random() * 80 + 10 + '%';
-      line.style.width = (Math.random() * 200 + 100) + 'px';
-      line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
-      cryptoBackground.appendChild(line);
-    }
+  function swapTo(idx){
+    const next = IMAGES[idx % IMAGES.length];
+    if(el.dataset.src === next) return;
+    el.style.opacity = 0;
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      el.src = next; el.dataset.src = next; el.alt = 'Lit Energy — ' + (idx+1);
+      requestAnimationFrame(()=>{ el.style.opacity = 1; });
+    };
+    img.src = next;
+  }
 
-    for (let i = 0; i < chartCount; i++) {
-      const chart = document.createElement('div');
-      chart.className = 'crypto-chart';
-      chart.style.left = Math.random() * 80 + 10 + '%';
-      chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
-      cryptoBackground.appendChild(chart);
-    }
+  IMAGES.forEach(src => { const i = new Image(); i.src = src; });
 
-    for (let i = 0; i < dotCount; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'pulse-dot';
-      dot.style.left = Math.random() * 95 + '%';
-      dot.style.top = Math.random() * 95 + '%';
-      dot.style.animationDelay = (i * 0.3) + 's';
-      cryptoBackground.appendChild(dot);
+  swapTo(hourIndex());
+
+  const msToNextHour = HOUR - (Date.now() % HOUR) + 50;
+  setTimeout(function tick(){
+    swapTo(hourIndex());
+    setInterval(() => swapTo(hourIndex()), HOUR);
+  }, msToNextHour);
+})();
+
+// KPI auto-growth
+(function(){
+  const elUsers = document.getElementById('kpiUsers');
+  const elPayouts = document.getElementById('kpiPayouts');
+  if(!elUsers || !elPayouts) return;
+
+  const START_DATE = new Date('2025-09-27T00:00:00Z');
+  const BASE_USERS = 1248;
+  const BASE_PAYOUTS = 935128;
+  const USERS_PER_DAY_MIN = 15, USERS_PER_DAY_MAX = 99;
+  const PAYOUTS_PER_DAY_MIN = 1199, PAYOUTS_PER_DAY_MAX = 35000;
+
+  const MS_DAY = 86_400_000;
+  const todayUTC = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+  const days = Math.max(0, Math.floor((todayUTC - START_DATE.getTime()) / MS_DAY));
+  function rand01(n){
+    const x = (n * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff;
+  }
+  function incForDay(day, min, max){ return Math.round(min + rand01(day+1)*(max-min)); }
+  function sumIncs(days, min, max){ let s=0; for(let d=0; d<days; d++) s += incForDay(d, min, max); return s; }
+
+  const usersToday   = BASE_USERS  + sumIncs(days, USERS_PER_DAY_MIN, USERS_PER_DAY_MAX);
+  const payoutsToday = BASE_PAYOUTS+ sumIncs(days, PAYOUTS_PER_DAY_MIN, PAYOUTS_PER_DAY_MAX);
+
+  const fmtInt = n => new Intl.NumberFormat('ru-RU').format(n);
+  const fmtMoneyK = n => '$' + Math.round(n/1000) + 'k';
+
+  function tween(el, from, to, fmt, dur=900){
+    const start = performance.now();
+    function frame(t){
+      const p = Math.min(1, (t-start)/dur);
+      const val = Math.round(from + (to-from)*p);
+      el.textContent = fmt(val);
+      if(p < 1) requestAnimationFrame(frame);
     }
-  });
+    requestAnimationFrame(frame);
+  }
+
+  const prev = JSON.parse(localStorage.getItem('lc_kpis')||'{}');
+  const prevUsers   = typeof prev.users==='number'   ? prev.users   : usersToday - 25;
+  const prevPayouts = typeof prev.payouts==='number' ? prev.payouts : payoutsToday - 1500;
+  tween(elUsers,   prevUsers,   usersToday,   fmtInt);
+  tween(elPayouts, prevPayouts, payoutsToday, fmtMoneyK);
+
+  localStorage.setItem('lc_kpis', JSON.stringify({ users: usersToday, payouts: payoutsToday, day: days }));
+})();
+
+// Crypto background animation
+document.addEventListener('DOMContentLoaded', function() {
+  const cryptoBackground = document.getElementById('cryptoBackground');
+  if (!cryptoBackground) return;
+
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  
+  const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
+  const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
+  
+  const cryptoLogoCount = isMobile ? 15 : 12;
+  const exchangeLogoCount = isMobile ? 10 : 8;
+  const botCount = isMobile ? 8 : 6;
+  const lineCount = isMobile ? 10 : 8;
+  const chartCount = isMobile ? 6 : 4;
+  const dotCount = isMobile ? 15 : 10;
+  
+  for (let i = 0; i < cryptoLogoCount; i++) {
+    const element = document.createElement('div');
+    element.className = 'crypto-logo';
+    element.textContent = cryptoLogos[i % cryptoLogos.length];
+    element.style.left = Math.random() * 90 + 5 + '%';
+    element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
+    element.style.fontSize = (Math.random() * 8 + 14) + 'px';
+    cryptoBackground.appendChild(element);
+  }
+  
+  for (let i = 0; i < exchangeLogoCount; i++) {
+    const element = document.createElement('div');
+    element.className = 'exchange-logo';
+    element.textContent = exchangeLogos[i % exchangeLogos.length];
+    element.style.top = Math.random() * 80 + 10 + '%';
+    element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
+    cryptoBackground.appendChild(element);
+  }
+  
+  for (let i = 0; i < botCount; i++) {
+    const bot = document.createElement('div');
+    bot.className = 'trading-bot';
+    bot.style.left = Math.random() * 80 + 10 + '%';
+    bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
+    cryptoBackground.appendChild(bot);
+  }
+  
+  for (let i = 0; i < lineCount; i++) {
+    const line = document.createElement('div');
+    line.className = 'price-line';
+    line.style.top = Math.random() * 80 + 10 + '%';
+    line.style.width = (Math.random() * 200 + 100) + 'px';
+    line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
+    cryptoBackground.appendChild(line);
+  }
+
+  for (let i = 0; i < chartCount; i++) {
+    const chart = document.createElement('div');
+    chart.className = 'crypto-chart';
+    chart.style.left = Math.random() * 80 + 10 + '%';
+    chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
+    cryptoBackground.appendChild(chart);
+  }
+
+  for (let i = 0; i < dotCount; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'pulse-dot';
+    dot.style.left = Math.random() * 95 + '%';
+    dot.style.top = Math.random() * 95 + '%';
+    dot.style.animationDelay = (i * 0.3) + 's';
+    cryptoBackground.appendChild(dot);
+  }
+});
 </script>
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
