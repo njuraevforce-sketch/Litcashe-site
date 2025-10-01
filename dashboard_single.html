@@ -70,7 +70,7 @@
     flex-direction: column;
   }
 
-  /* === ЯЗЫКОВОЙ ПЕРЕКЛЮЧАТЕЛЬ === */
+  /* === УНИФИЦИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ === */
   .language-switcher {
     position: relative;
     display: inline-block;
@@ -142,12 +142,6 @@
     transform: translateY(0);
   }
 
-  .lang-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
   .lang-item {
     display: flex;
     align-items: center;
@@ -158,6 +152,7 @@
     transition: all 0.2s ease;
     font-size: 11px;
     font-weight: 500;
+    color: var(--text);
   }
 
   .lang-item:hover {
@@ -175,14 +170,12 @@
     width: 16px;
     height: 12px;
     border-radius: 2px;
-    display: inline-block;
     border: 1px solid rgba(255,255,255,0.2);
     flex-shrink: 0;
   }
 
   .lang-name {
     flex: 1;
-    text-align: left;
   }
 
   .lang-code {
@@ -198,14 +191,26 @@
   .lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
   .lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
   .lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
-  .lang-flag.pt { background: linear-gradient(to right, #006600 40%, #ff0000 40%, #ff0000 60%, #ffcc00 60%); }
-  .lang-flag.ar { background: linear-gradient(to bottom, #ce1126 33%, #ffffff 33%, #ffffff 66%, #000000 66%); }
-  .lang-flag.jp { background: radial-gradient(circle, #bc002d 30%, white 30%); }
-  .lang-flag.kr { background: linear-gradient(to bottom, #ffffff 50%, #000000 50%); }
-  .lang-flag.tr { background: linear-gradient(to bottom, #e30a17 0%, #e30a17 100%); }
-  .lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
-  .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
-  .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
+
+  /* Мобильная адаптация */
+  @media (max-width: 768px) {
+    .language-switcher {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .lang-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .lang-dropdown {
+      position: static;
+      margin-top: 8px;
+      transform: none;
+      width: 100%;
+    }
+  }
 
   /* Анимация крипторынка на фоне - УВЕЛИЧЕНА ВИДИМОСТЬ ДЛЯ МОБИЛЬНЫХ */
   .crypto-background {
@@ -1153,24 +1158,6 @@
       height: 9px !important;
       box-shadow: 0 0 35px var(--primary) !important;
     }
-
-    /* Language switcher mobile optimization */
-    .language-switcher {
-      margin-right: 0;
-      margin-bottom: 10px;
-    }
-
-    .lang-btn {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .lang-dropdown {
-      position: static;
-      margin-top: 8px;
-      transform: none;
-      width: 100%;
-    }
   }
 
   /* Для очень маленьких экранов */
@@ -1309,15 +1296,42 @@
   <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
   <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
   
-  <!-- Языковой переключатель для мобильных -->
+  <!-- Унифицированный переключатель языков для мобильных -->
   <div class="language-switcher mobile-lang">
     <button class="lang-btn" aria-label="Выбор языка">
-      <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="lang-icon" viewBox="0 0 24 24" fill="none">
         <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
               fill="none" stroke="currentColor" stroke-width="1.2"/>
       </svg>
       <span class="lang-code">RU</span>
     </button>
+    
+    <div class="lang-dropdown">
+      <div class="lang-item active" data-lang="ru">
+        <span class="lang-flag ru"></span>
+        <span class="lang-name">Русский</span>
+      </div>
+      <div class="lang-item" data-lang="en">
+        <span class="lang-flag en"></span>
+        <span class="lang-name">English</span>
+      </div>
+      <div class="lang-item" data-lang="cn">
+        <span class="lang-flag cn"></span>
+        <span class="lang-name">中文</span>
+      </div>
+      <div class="lang-item" data-lang="es">
+        <span class="lang-flag es"></span>
+        <span class="lang-name">Español</span>
+      </div>
+      <div class="lang-item" data-lang="fr">
+        <span class="lang-flag fr"></span>
+        <span class="lang-name">Français</span>
+      </div>
+      <div class="lang-item" data-lang="de">
+        <span class="lang-flag de"></span>
+        <span class="lang-name">Deutsch</span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1343,51 +1357,43 @@
       </div>
 
       <div class="nav-cta">
-        <!-- Новый языковой переключатель -->
-        <div class="language-switcher" id="languageSwitcher">
+        <!-- Унифицированный переключатель языков -->
+        <div class="language-switcher">
           <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
-            <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg class="lang-icon" viewBox="0 0 24 24" fill="none">
               <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
                     fill="none" stroke="currentColor" stroke-width="1.2"/>
             </svg>
             <span class="lang-code">RU</span>
-            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
           
-          <div class="lang-dropdown" id="langDropdown">
-            <div class="lang-list">
-              <div class="lang-item active" data-lang="ru">
-                <span class="lang-flag ru"></span>
-                <span class="lang-name">Русский</span>
-                <span class="lang-code">RU</span>
-              </div>
-              <div class="lang-item" data-lang="en">
-                <span class="lang-flag en"></span>
-                <span class="lang-name">English</span>
-                <span class="lang-code">EN</span>
-              </div>
-              <div class="lang-item" data-lang="cn">
-                <span class="lang-flag cn"></span>
-                <span class="lang-name">中文</span>
-                <span class="lang-code">CN</span>
-              </div>
-              <div class="lang-item" data-lang="es">
-                <span class="lang-flag es"></span>
-                <span class="lang-name">Español</span>
-                <span class="lang-code">ES</span>
-              </div>
-              <div class="lang-item" data-lang="fr">
-                <span class="lang-flag fr"></span>
-                <span class="lang-name">Français</span>
-                <span class="lang-code">FR</span>
-              </div>
-              <div class="lang-item" data-lang="de">
-                <span class="lang-flag de"></span>
-                <span class="lang-name">Deutsch</span>
-                <span class="lang-code">DE</span>
-              </div>
+          <div class="lang-dropdown">
+            <div class="lang-item active" data-lang="ru">
+              <span class="lang-flag ru"></span>
+              <span class="lang-name">Русский</span>
+            </div>
+            <div class="lang-item" data-lang="en">
+              <span class="lang-flag en"></span>
+              <span class="lang-name">English</span>
+            </div>
+            <div class="lang-item" data-lang="cn">
+              <span class="lang-flag cn"></span>
+              <span class="lang-name">中文</span>
+            </div>
+            <div class="lang-item" data-lang="es">
+              <span class="lang-flag es"></span>
+              <span class="lang-name">Español</span>
+            </div>
+            <div class="lang-item" data-lang="fr">
+              <span class="lang-flag fr"></span>
+              <span class="lang-name">Français</span>
+            </div>
+            <div class="lang-item" data-lang="de">
+              <span class="lang-flag de"></span>
+              <span class="lang-name">Deutsch</span>
             </div>
           </div>
         </div>
@@ -2183,50 +2189,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isAuth = !!(data && data.user);
     if(isAuth && cta){
       cta.innerHTML = `
-        <div class="language-switcher" id="languageSwitcher">
+        <div class="language-switcher">
           <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
-            <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg class="lang-icon" viewBox="0 0 24 24" fill="none">
               <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
                     fill="none" stroke="currentColor" stroke-width="1.2"/>
             </svg>
             <span class="lang-code">RU</span>
-            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
           
-          <div class="lang-dropdown" id="langDropdown">
-            <div class="lang-list">
-              <div class="lang-item active" data-lang="ru">
-                <span class="lang-flag ru"></span>
-                <span class="lang-name">Русский</span>
-                <span class="lang-code">RU</span>
-              </div>
-              <div class="lang-item" data-lang="en">
-                <span class="lang-flag en"></span>
-                <span class="lang-name">English</span>
-                <span class="lang-code">EN</span>
-              </div>
-              <div class="lang-item" data-lang="cn">
-                <span class="lang-flag cn"></span>
-                <span class="lang-name">中文</span>
-                <span class="lang-code">CN</span>
-              </div>
-              <div class="lang-item" data-lang="es">
-                <span class="lang-flag es"></span>
-                <span class="lang-name">Español</span>
-                <span class="lang-code">ES</span>
-              </div>
-              <div class="lang-item" data-lang="fr">
-                <span class="lang-flag fr"></span>
-                <span class="lang-name">Français</span>
-                <span class="lang-code">FR</span>
-              </div>
-              <div class="lang-item" data-lang="de">
-                <span class="lang-flag de"></span>
-                <span class="lang-name">Deutsch</span>
-                <span class="lang-code">DE</span>
-              </div>
+          <div class="lang-dropdown">
+            <div class="lang-item active" data-lang="ru">
+              <span class="lang-flag ru"></span>
+              <span class="lang-name">Русский</span>
+            </div>
+            <div class="lang-item" data-lang="en">
+              <span class="lang-flag en"></span>
+              <span class="lang-name">English</span>
+            </div>
+            <div class="lang-item" data-lang="cn">
+              <span class="lang-flag cn"></span>
+              <span class="lang-name">中文</span>
+            </div>
+            <div class="lang-item" data-lang="es">
+              <span class="lang-flag es"></span>
+              <span class="lang-name">Español</span>
+            </div>
+            <div class="lang-item" data-lang="fr">
+              <span class="lang-flag fr"></span>
+              <span class="lang-name">Français</span>
+            </div>
+            <div class="lang-item" data-lang="de">
+              <span class="lang-flag de"></span>
+              <span class="lang-name">Deutsch</span>
             </div>
           </div>
         </div>
