@@ -1248,7 +1248,7 @@
           
           <div class="lang-dropdown" id="langDropdown">
             <div class="lang-list">
-              <div class="lang-item" data-lang="ru">
+              <div class="lang-item active" data-lang="ru">
                 <span class="lang-flag ru"></span>
                 <span class="lang-name">Русский</span>
                 <span class="lang-code">RU</span>
@@ -1371,7 +1371,7 @@
   </svg>
 </a>
 
-<!-- Подключаем систему перевода с правильными путями -->
+<!-- Подключаем систему перевода -->
 <script src="assets/js/i18n.js"></script>
 <script src="assets/js/language-switcher.js"></script>
 
@@ -1405,57 +1405,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-});
 
-// Language switcher functionality
-document.addEventListener('DOMContentLoaded', function() {
-  const langBtn = document.getElementById('langBtn');
-  const langDropdown = document.getElementById('langDropdown');
-  const langItems = document.querySelectorAll('.lang-item');
-  const languageSwitcher = document.getElementById('languageSwitcher');
-  
-  if (langBtn && langDropdown) {
-    // Toggle dropdown
-    langBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      languageSwitcher.classList.toggle('active');
-    });
-    
-    // Handle language selection
-    langItems.forEach(item => {
-      item.addEventListener('click', function() {
-        const lang = this.getAttribute('data-lang');
-        
-        // Update button
-        const langCode = this.querySelector('.lang-code').textContent;
-        const langName = this.querySelector('.lang-name').textContent;
-        const langFlag = this.querySelector('.lang-flag').className;
-        
-        langBtn.querySelector('.lang-code').textContent = langCode;
-        
-        // Close dropdown
-        languageSwitcher.classList.remove('active');
-        
-        // Trigger language change
-        if (window.changeLanguage) {
-          window.changeLanguage(lang);
-        } else {
-          console.log('Language changed to:', lang, '- i18n system not loaded yet');
-        }
-        
-        // Update active state
-        langItems.forEach(item => item.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-      if (!langBtn.contains(e.target) && !langDropdown.contains(e.target)) {
-        languageSwitcher.classList.remove('active');
-      }
-    });
-  }
+  // УДАЛЕН ДУБЛИРУЮЩИЙСЯ КОД ЯЗЫКОВОГО ПЕРЕКЛЮЧАТЕЛЯ
+  // Теперь он полностью в language-switcher.js
 });
 
 // Hourly image rotator
