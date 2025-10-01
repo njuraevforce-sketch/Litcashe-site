@@ -68,6 +68,8 @@
     -webkit-text-size-adjust: 100%;
     display: flex;
     flex-direction: column;
+    /* ФИКС: предотвращаем белый фон при загрузке */
+    background-color: #0a1a14;
   }
 
   /* Анимация крипторынка на фоне - УВЕЛИЧЕНА ВИДИМОСТЬ ДЛЯ МОБИЛЬНЫХ */
@@ -438,7 +440,7 @@
     flex-direction: column;
   }
 
-  /* Карточки */
+  /* Карточки - ФИКСИРУЕМ РАЗМЕРЫ */
   .card {
     background: var(--bg-card);
     border-radius: var(--radius);
@@ -450,6 +452,9 @@
     backdrop-filter: blur(15px);
     position: relative;
     overflow: hidden;
+    /* ФИКС: предотвращаем растягивание карточек */
+    min-height: 0;
+    flex-shrink: 0;
   }
 
   .card::before {
@@ -492,11 +497,13 @@
     box-shadow: 0 0 8px var(--primary);
   }
 
-  /* Сетка */
+  /* Сетка - ФИКСИРУЕМ КОЛОНКИ */
   .grid {
     display: grid;
     gap: 10px;
     margin-bottom: 10px;
+    /* ФИКС: предотвращаем растягивание сетки */
+    align-items: start;
   }
 
   .grid-3 {
@@ -513,6 +520,8 @@
     padding: 15px 10px;
     position: relative;
     overflow: hidden;
+    /* ФИКС: фиксируем высоту */
+    height: fit-content;
   }
 
   .stat-card:before {
@@ -649,7 +658,7 @@
     color: var(--text-secondary);
   }
 
-  /* Видео */
+  /* Видео - ФИКСИРУЕМ РАЗМЕР */
   .video-container {
     width: 100%;
     border-radius: var(--radius);
@@ -658,6 +667,11 @@
     margin-bottom: 12px;
     border: 1px solid var(--border);
     position: relative;
+    /* ФИКС: ограничиваем высоту видео */
+    max-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .video-container:before {
@@ -682,6 +696,8 @@
     width: 100%;
     height: auto;
     display: block;
+    max-height: 250px;
+    object-fit: contain;
   }
 
   /* Утилиты */
@@ -747,7 +763,7 @@
     box-shadow: 0 0 8px var(--primary);
   }
 
-  /* Уведомления */
+  /* Уведомления - ФИКС БЕЛОГО ФОНА */
   .notification {
     position: fixed;
     top: 60px;
@@ -761,6 +777,9 @@
     transition: transform 0.3s ease;
     z-index: 1000;
     font-size: 11px;
+    /* ФИКС: предотвращаем влияние на основной фон */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .notification.show {
@@ -938,6 +957,11 @@
 
     .video-container {
       margin-bottom: 8px;
+      max-height: 200px;
+    }
+
+    .video-container video {
+      max-height: 200px;
     }
 
     .progress {
@@ -1059,7 +1083,15 @@
     }
 
     .nav-cta .btn:first-child {
-      display: none; /* Скрываем кнопку Вход на очень маленьких экранах */
+      display: none;
+    }
+
+    .video-container {
+      max-height: 180px;
+    }
+
+    .video-container video {
+      max-height: 180px;
     }
   }
 
@@ -1071,6 +1103,14 @@
     
     .container {
       padding: 0 8px;
+    }
+
+    .video-container {
+      max-height: 150px;
+    }
+
+    .video-container video {
+      max-height: 150px;
     }
   }
 
@@ -1087,6 +1127,14 @@
 
     .card {
       margin-bottom: 6px;
+    }
+
+    .video-container {
+      max-height: 180px;
+    }
+
+    .video-container video {
+      max-height: 180px;
     }
   }
 
@@ -1231,10 +1279,10 @@
       </div>
     </div>
 
-    <!-- Основной контент -->
-    <div class="grid grid-2">
+    <!-- Основной контент - ФИКСИРУЕМ ВЫСОТУ КОЛОНОК -->
+    <div class="grid grid-2" style="align-items: start;">
       <!-- Видео блок -->
-      <div class="card">
+      <div class="card" style="min-height: 400px;">
         <h2><span class="icon">▶</span>Просмотр видео</h2>
         
         <div class="video-container">
@@ -1256,7 +1304,7 @@
       </div>
 
       <!-- Реферальная панель -->
-      <div class="card">
+      <div class="card" style="min-height: 400px;">
         <h2><span class="icon">👥</span>Реферальная панель</h2>
         
         <div class="flex" style="margin-bottom: 12px">
@@ -1426,8 +1474,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Проверка мобильного устройства
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
     
-    // Функция показа уведомления
+    // Функция показа уведомления - ФИКС БЕЛОГО ФОНА
     function showNotification(message) {
+      // Убедимся, что фон установлен перед показом уведомления
+      document.body.style.background = 'var(--bg-gradient)';
+      document.body.style.backgroundColor = '#0a1a14';
+      
       notification.textContent = message;
       notification.classList.add('show');
       setTimeout(() => {
@@ -1549,15 +1601,24 @@ document.addEventListener('DOMContentLoaded', function() {
       console.warn("[init referral]", e); 
     }
 
-    // Демонстрационное уведомление при загрузке
+    // Демонстрационное уведомление при загрузке - ФИКС БЕЛОГО ФОНА
     setTimeout(() => {
+      // Убедимся, что фон установлен перед показом
+      document.body.style.background = 'var(--bg-gradient)';
+      document.body.style.backgroundColor = '#0a1a14';
       showNotification('🚀 Добро пожаловать в Litcash!');
-    }, 1000);
+    }, 1500); // Увеличил задержку для уверенности
 });
 
 // Запуск видео функции
 document.addEventListener('DOMContentLoaded', function(){
   try{ if(window.LC && typeof LC.initVideoWatch==='function') LC.initVideoWatch(); }catch(_){}
+});
+
+// ФИКС: Предотвращаем белый фон при загрузке
+window.addEventListener('load', function() {
+  document.body.style.background = 'var(--bg-gradient)';
+  document.body.style.backgroundColor = '#0a1a14';
 });
 </script>
 </body>
