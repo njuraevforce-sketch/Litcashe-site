@@ -424,14 +424,13 @@
     box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
   }
 
-  /* === ЯЗЫКОВОЙ ПЕРЕКЛЮЧАТЕЛЬ === */
-  .language-switcher {
+  /* === СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ === */
+  .lc-lang {
     position: relative;
     display: inline-block;
-    z-index: 1001;
   }
 
-  .lang-btn {
+  .lc-lang__btn {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -449,29 +448,19 @@
     white-space: nowrap;
   }
 
-  .lang-btn:hover {
+  .lc-lang__btn:hover {
     border-color: var(--primary);
     color: var(--primary);
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
   }
 
-  .lang-icon {
+  .lc-lang__icon {
     width: 14px;
     height: 14px;
   }
 
-  .lang-arrow {
-    width: 12px;
-    height: 12px;
-    transition: transform 0.3s ease;
-  }
-
-  .language-switcher.active .lang-arrow {
-    transform: rotate(180deg);
-  }
-
-  .lang-dropdown {
+  .lc-lang__menu {
     position: absolute;
     top: 100%;
     right: 0;
@@ -481,6 +470,8 @@
     border-radius: var(--radius);
     padding: 8px;
     min-width: 140px;
+    max-height: 300px;
+    overflow-y: auto;
     box-shadow: var(--shadow);
     backdrop-filter: blur(20px);
     opacity: 0;
@@ -488,21 +479,16 @@
     transform: translateY(-10px);
     transition: all 0.3s ease;
     z-index: 1002;
+    list-style: none;
   }
 
-  .language-switcher.active .lang-dropdown {
+  .lc-lang.is-open .lc-lang__menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
   }
 
-  .lang-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .lang-item {
+  .lc-lang__menu li {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -512,14 +498,15 @@
     transition: all 0.2s ease;
     font-size: 11px;
     font-weight: 500;
+    color: var(--text);
   }
 
-  .lang-item:hover {
+  .lc-lang__menu li:hover {
     background: rgba(16, 185, 129, 0.15);
     color: var(--primary-light);
   }
 
-  .lang-item.active {
+  .lc-lang__menu li.active {
     background: rgba(16, 185, 129, 0.2);
     color: var(--primary);
     font-weight: 600;
@@ -532,17 +519,6 @@
     display: inline-block;
     border: 1px solid rgba(255,255,255,0.2);
     flex-shrink: 0;
-  }
-
-  .lang-name {
-    flex: 1;
-    text-align: left;
-  }
-
-  .lang-code {
-    font-size: 10px;
-    opacity: 0.7;
-    font-weight: 600;
   }
 
   /* Флаги языков */
@@ -930,6 +906,33 @@
     border-bottom: none;
   }
 
+  /* Мобильная оптимизация для переключателя */
+  @media (max-width: 768px) {
+    .lc-lang {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    .lc-lang__btn {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .lc-lang__menu {
+      position: static;
+      margin-top: 8px;
+      transform: none;
+      width: 100%;
+    }
+    
+    .lc-floating {
+      position: fixed;
+      top: 70px;
+      right: 15px;
+      z-index: 1001;
+    }
+  }
+
   /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
   @media (max-width: 768px) {
     html, body {
@@ -1060,24 +1063,6 @@
       display: flex;
     }
 
-    /* Language switcher mobile optimization */
-    .language-switcher {
-      margin-right: 0;
-      margin-bottom: 10px;
-    }
-
-    .lang-btn {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .lang-dropdown {
-      position: static;
-      margin-top: 8px;
-      transform: none;
-      width: 100%;
-    }
-
     /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
     .crypto-logo {
       font-size: 16px !important;
@@ -1203,17 +1188,6 @@
   <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
   <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
   <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
-  
-  <!-- Языковой переключатель для мобильных -->
-  <div class="language-switcher mobile-lang">
-    <button class="lang-btn" aria-label="Выбор языка">
-      <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
-              fill="none" stroke="currentColor" stroke-width="1.2"/>
-      </svg>
-      <span class="lang-code">RU</span>
-    </button>
-  </div>
 </div>
 
 <header class="header">
@@ -1233,55 +1207,7 @@
       </div>
 
       <div class="nav-cta">
-        <!-- Новый языковой переключатель -->
-        <div class="language-switcher" id="languageSwitcher">
-          <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
-            <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
-                    fill="none" stroke="currentColor" stroke-width="1.2"/>
-            </svg>
-            <span class="lang-code">RU</span>
-            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          
-          <div class="lang-dropdown" id="langDropdown">
-            <div class="lang-list">
-              <div class="lang-item active" data-lang="ru">
-                <span class="lang-flag ru"></span>
-                <span class="lang-name">Русский</span>
-                <span class="lang-code">RU</span>
-              </div>
-              <div class="lang-item" data-lang="en">
-                <span class="lang-flag en"></span>
-                <span class="lang-name">English</span>
-                <span class="lang-code">EN</span>
-              </div>
-              <div class="lang-item" data-lang="cn">
-                <span class="lang-flag cn"></span>
-                <span class="lang-name">中文</span>
-                <span class="lang-code">CN</span>
-              </div>
-              <div class="lang-item" data-lang="es">
-                <span class="lang-flag es"></span>
-                <span class="lang-name">Español</span>
-                <span class="lang-code">ES</span>
-              </div>
-              <div class="lang-item" data-lang="fr">
-                <span class="lang-flag fr"></span>
-                <span class="lang-name">Français</span>
-                <span class="lang-code">FR</span>
-              </div>
-              <div class="lang-item" data-lang="de">
-                <span class="lang-flag de"></span>
-                <span class="lang-name">Deutsch</span>
-                <span class="lang-code">DE</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
+        <!-- Переключатель языка будет автоматически добавлен скриптом language-switcher.js -->
         <a class="btn" href="login_single.html" data-i18n="nav_login">Вход</a>
         <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
       </div>
@@ -1405,9 +1331,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-
-  // УДАЛЕН ДУБЛИРУЮЩИЙСЯ КОД ЯЗЫКОВОГО ПЕРЕКЛЮЧАТЕЛЯ
-  // Теперь он полностью в language-switcher.js
 });
 
 // Hourly image rotator
