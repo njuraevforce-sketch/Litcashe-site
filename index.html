@@ -1,330 +1,1043 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+
   <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#09141d">
+  <meta name="theme-color" content="#0a1a14">
 
-<!-- iOS -->
-<link rel="apple-touch-icon" href="/icons/litcash-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- iOS -->
+  <link rel="apple-touch-icon" href="/icons/litcash-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-  <title>Litcash — Главная</title>
-
-  <!-- SEO -->
-  <meta name="description" content="Платформа вознаграждений за короткие видео и реферальную программу."/>
-  <meta name="robots" content="index,follow"/>
-  <link rel="icon" href="favicon.svg"/>
-
-  <!-- ========== BASE STYLES ========== -->
-  <style>
-    :root{
-      --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef;
-      --accent:#00eaff; --accent-2:#1e88e5; --success:#17c964; --danger:#ef4444; --warning:#f59e0b;
-      --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      min-height:100vh; margin:0; display:flex; flex-direction:column; color:var(--text);
-      font:15px/1.6 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      background:
-        radial-gradient(1200px 600px at -10% -30%, rgba(30,136,229,.15), transparent 55%),
-        radial-gradient(900px 400px at 110% 10%, rgba(0,234,255,.15), transparent 60%),
-        linear-gradient(180deg, var(--bg-2), var(--bg));
-      -webkit-text-size-adjust:100%;
-    }
-    a{color:var(--text); text-decoration:none}
-    .container{width:min(1100px,92vw); margin:0 auto; padding:20px 0}
-    .card{
-      margin:18px 0; padding:20px; border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      box-shadow:var(--shadow); backdrop-filter:blur(6px);
-    }
-    .muted{color:var(--muted)}
-    h1,h2,h3{margin:0 0 10px}
-    h1{font-size:clamp(26px,3.6vw,40px)}
-    h2{font-size:clamp(20px,2.6vw,26px)}
-    h3{font-size:18px}
-
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:10px;
-      min-height:44px; padding:0 16px; border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background:linear-gradient(90deg, rgba(30,136,229,.25), rgba(0,234,255,.18));
-      color:#fff; font-weight:700; cursor:pointer;
-      transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
-      box-shadow:0 6px 18px rgba(30,136,229,.25);
-      -webkit-tap-highlight-color:rgba(0,0,0,0);
-    }
-    .btn:hover{ transform:translateY(-1px); box-shadow:0 10px 24px rgba(30,136,229,.35) }
-    .btn.ghost{ background:transparent; box-shadow:none; color:var(--text) }
-    .btn.small{ min-height:36px; padding:0 12px; border-radius:10px; font-size:13px }
-
-    .flex{ display:flex; align-items:center; gap:12px }
-    .grid{ display:grid; gap:16px }
-    .grid-2{ grid-template-columns: repeat(2, minmax(0,1fr)) }
-    .grid-3{ grid-template-columns: repeat(3, minmax(0,1fr)) }
-    @media (max-width: 900px){ .grid-2, .grid-3{ grid-template-columns: 1fr } }
-
-    /* Header */
-    .header{
-      position:sticky; top:0; z-index:50;
-      backdrop-filter:saturate(180%) blur(8px);
-      background:rgba(10,12,18,.6);
-      border-bottom:1px solid rgba(255,255,255,.08);
-    }
-    .nav{ display:flex; align-items:center; justify-content:space-between; padding:14px 0 }
-    .brand{ display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.4px; color:white }
-    .brand .logo{ width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow:0 6px 18px rgba(0,234,255,.45) }
-    .nav-links{ display:flex; align-items:center; gap:14px }
-    .nav-links a{ padding:8px 12px; border-radius:10px; color:#cfe9ff; font-weight:600; opacity:.9 }
-    .nav-links a.active, .nav-links a:hover{ background:rgba(0,234,255,.12); color:white }
-    .nav-cta{ display:flex; align-items:center; gap:10px }
-
-    .hamburger{ display:none }
-    @media (max-width: 960px){
-      .nav-links{ display:none }
-      .hamburger{ display:inline-flex; align-items:center; gap:8px }
-      .drawer{ position:fixed; inset:0 0 0 auto; width:min(360px, 86vw); background:rgba(12,14,20,.98); border-left:1px solid rgba(255,255,255,.08); transform:translateX(100%); transition:transform .25s ease; z-index:60; }
-      .drawer.open{ transform:translateX(0) }
-      .drawer .links{ display:flex; flex-direction:column; padding:24px; gap:10px }
-      .drawer .links a{ padding:12px; border-radius:12px }
-    }
-
-    .drawer{ position:fixed; inset:0 0 0 auto; width:min(360px, 86vw); background:rgba(12,14,20,.98); border-left:1px solid rgba(255,255,255,.08); transform:translateX(100%); transition:transform .25s ease; z-index:60 }
-    .drawer.open{ transform:translateX(0) }
-    .drawer .links{ display:flex; flex-direction:column; padding:24px; gap:10px }
-
-    .hero{ padding:48px 0 10px; display:grid; gap:22px; align-items:center; grid-template-columns: 1.3fr 1fr }
-    .hero .title{ font-weight:900; letter-spacing:.2px }
-    .hero .subtitle{ color:#cfe9ff }
-    .hero .badge{ display:inline-flex; align-items:center; gap:8px; height:28px; padding:0 10px; font-size:12px; border-radius:999px; background:rgba(0,234,255,.12); color:#cfe9ff; border:1px solid rgba(0,234,255,.25) }
-    .hero .card{ padding:24px }
-    .kpis{ display:grid; grid-template-columns: repeat(3,1fr); gap:12px }
-    .kpi{ background:rgba(255,255,255,.03); border:1px dashed rgba(255,255,255,.1); border-radius:14px; padding:14px; position:relative; overflow:hidden }
-    .kpi .n{ font-size:22px; font-weight:800 }
-    .kpi::after{content:""; position:absolute; inset:auto -40% -30% -40%; height:120%; background:radial-gradient(60% 40% at 50% 50%, rgba(30,136,229,.12), transparent 70%); pointer-events:none}
-    @media (max-width: 960px){ .hero{ grid-template-columns:1fr; padding-top:24px } }
-
-    footer.footer{ margin-top:auto; border-top:1px solid rgba(255,255,255,.08); padding:26px 0; color:#b7c3d6; font-size:14px }
-
-    img, video, canvas { max-width:100%; height:auto }
-
-    /* ==== Hourly Rotator Styles ==== */
-    .hero-rotator{ display:grid; place-items:center; padding:14px; min-height:260px; overflow:hidden }
-    .rotator-img{ width:100%; max-height:320px; aspect-ratio:16/10; object-fit:contain; opacity:1; transition:opacity .35s ease }
-    @media (max-width:960px){ .rotator-img{ max-height:260px }}
-
-    .lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}
-    .lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
-  
-    /* Contact (Telegram) floating button */
-    .contact-fab{
-      position:fixed; right:22px; bottom:22px; z-index:70;
-      width:56px; height:56px; border-radius:50%;
-      display:inline-flex; align-items:center; justify-content:center;
-      background:linear-gradient(135deg, var(--accent), var(--accent-2));
-      color:#fff; border:1px solid rgba(255,255,255,.16);
-      box-shadow:0 10px 30px rgba(0,234,255,.40);
-      transition:transform .15s ease, box-shadow .2s ease, opacity .2s ease;
-    }
-    .contact-fab:hover{ transform:translateY(-2px) scale(1.03); box-shadow:0 14px 34px rgba(0,234,255,.50) }
-    .contact-fab:active{ transform:translateY(0) scale(.98) }
-    .contact-fab svg{ width:26px; height:26px; display:block }
-    @media (max-width:680px){
-      .contact-fab{ width:54px; height:54px; right:16px; bottom:16px }
-    }
-
-  </style>
-
-  <!-- ======= JS (App + Toast) ======= -->
-  <script>
-    /* тут остаётся App + i18n код вашего проекта */
+  <!-- PWA init -->
+  <script defer src="/app-install.js"></script>
+  <script defer>
+  (function () {
+    if (!('serviceWorker' in navigator)) return;
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.getRegistration('/')
+        .then(function (reg) {
+          if (!reg) {
+            return navigator.serviceWorker.register('/sw.js', { scope: '/' });
+          }
+        })
+        .catch(console.error);
+    });
+  })();
   </script>
+
+  <title>Litcash — Главная</title>
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
+
+  <style>
+  /* === ОСНОВНЫЕ СТИЛИ === */
+  :root {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --primary-light: #34d399;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --bg: #0a1a14;
+    --bg-gradient: linear-gradient(135deg, #0a1a14 0%, #0d2c1f 50%, #0a1a14 100%);
+    --bg-card: rgba(255, 255, 255, 0.08);
+    --text: #ffffff;
+    --text-secondary: #a7f3d0;
+    --border: rgba(16, 185, 129, 0.3);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --radius: 12px;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text);
+    line-height: 1.4;
+    position: relative;
+    overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Анимация крипторынка на фоне */
+  .crypto-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+  }
+
+  .crypto-logo {
+    position: absolute;
+    font-size: 18px;
+    font-weight: 800;
+    color: rgba(16, 185, 129, 0.9);
+    opacity: 0;
+    animation: float 20s linear infinite;
+    text-shadow: 0 0 25px rgba(16, 185, 129, 1);
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+    z-index: 1;
+  }
+
+  .trading-bot {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle, var(--primary) 0%, transparent 60%);
+    border-radius: 50%;
+    opacity: 0;
+    animation: trade 25s ease-in-out infinite;
+    filter: blur(1px);
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+    box-shadow: 0 0 35px var(--primary);
+    opacity: 0.8;
+  }
+
+  .price-line {
+    position: absolute;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+    opacity: 0;
+    animation: priceMove 15s linear infinite;
+    box-shadow: 0 0 25px var(--primary);
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+    opacity: 0.6;
+  }
+
+  .exchange-logo {
+    position: absolute;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(52, 211, 153, 0.9);
+    opacity: 0;
+    animation: exchangeFloat 30s linear infinite;
+    padding: 4px 8px;
+    background: rgba(16, 185, 129, 0.35);
+    border-radius: 4px;
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+  }
+
+  .crypto-chart {
+    position: absolute;
+    width: 100px;
+    height: 45px;
+    border: 2px solid rgba(16, 185, 129, 0.7);
+    opacity: 0;
+    animation: chartFloat 40s linear infinite;
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+    background: rgba(16, 185, 129, 0.25);
+  }
+
+  .crypto-chart::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, transparent 100%);
+    clip-path: polygon(0% 100%, 10% 80%, 20% 60%, 30% 70%, 40% 40%, 50% 50%, 60% 30%, 70% 60%, 80% 20%, 90% 40%, 100% 10%, 100% 100%, 0% 100%);
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(100vh) rotate(0deg) scale(0.5);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.9;
+    }
+    90% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translateY(-100px) rotate(360deg) scale(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes trade {
+    0%, 100% {
+      transform: translate(0, 0) scale(0.8);
+      opacity: 0;
+    }
+    20% {
+      transform: translate(200px, 150px) scale(1);
+      opacity: 0.8;
+    }
+    40% {
+      transform: translate(400px, 80px) scale(0.7);
+      opacity: 0.8;
+    }
+    60% {
+      transform: translate(600px, 200px) scale(0.9);
+      opacity: 0.8;
+    }
+    80% {
+      transform: translate(800px, 120px) scale(0.6);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes priceMove {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.6;
+    }
+    90% {
+      opacity: 0.6;
+    }
+    100% {
+      transform: translateX(100vw);
+      opacity: 0;
+    }
+  }
+
+  @keyframes exchangeFloat {
+    0% {
+      transform: translateX(100vw) translateY(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.8;
+    }
+    90% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateX(-100px) translateY(80px) rotate(180deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes chartFloat {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.4;
+    }
+    90% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(-100px) rotate(10deg);
+      opacity: 0;
+    }
+  }
+
+  .pulse-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    animation: pulse 3s ease-in-out infinite;
+    box-shadow: 0 0 30px var(--primary);
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.4;
+    }
+    50% {
+      transform: scale(2.5);
+      opacity: 0.3;
+    }
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+    width: 100%;
+  }
+
+  /* Header */
+  .header {
+    background: rgba(10, 26, 20, 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+    gap: 10px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    animation: logoGlow 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes logoGlow {
+    0% {
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+    100% {
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6);
+    }
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-links a {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 6px 0;
+    font-size: 12px;
+    position: relative;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .nav-links a:hover {
+    color: var(--primary-light);
+  }
+
+  .nav-links a.active {
+    color: var(--primary);
+  }
+
+  .nav-links a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  .nav-cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Кнопки */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 11px;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+  }
+
+  .btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  }
+
+  .btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: var(--primary);
+    color: white;
+  }
+
+  .btn.primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    transform: translateY(-1px);
+    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+  }
+
+  /* Основной контент */
+  .main {
+    padding: 15px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Карточки */
+  .card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 15px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .card:hover::before {
+    left: 100%;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+    border-color: rgba(16, 185, 129, 0.5);
+  }
+
+  .card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card h2:before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  /* Сетка */
+  .grid {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Статистические карточки */
+  .stat-card {
+    text-align: center;
+    padding: 15px 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  .stat-card .muted {
+    color: var(--text-secondary);
+    font-size: 11px;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .stat-card .value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--text), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+  }
+
+  .stat-card .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--primary-light);
+    border-radius: 12px;
+    font-size: 9px;
+    font-weight: 600;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Видео контейнер */
+  .video-container {
+    width: 100%;
+    height: 200px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #000;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .video-container video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* Утилиты */
+  .muted {
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
+  .flex {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  /* Footer */
+  .footer {
+    background: rgba(10, 26, 20, 0.8);
+    border-top: 1px solid var(--border);
+    padding: 15px 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    backdrop-filter: blur(20px);
+    flex-shrink: 0;
+  }
+
+  /* Иконки для заголовков */
+  .icon {
+    width: 18px;
+    height: 18px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  /* Hero секция */
+  .hero {
+    padding: 30px 0;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 30px;
+    align-items: center;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 10px;
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--primary-light);
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    margin-bottom: 15px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, var(--text), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .hero-stat {
+    text-align: center;
+    padding: 12px;
+  }
+
+  .hero-stat .number {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  /* Rotator */
+  .hero-rotator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+
+  .rotator-img {
+    width: 100%;
+    max-height: 250px;
+    object-fit: contain;
+    border-radius: var(--radius);
+    transition: opacity 0.3s ease;
+  }
+
+  /* Contact FAB */
+  .contact-fab {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+
+  .contact-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.6);
+  }
+
+  .contact-fab svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Мобильная оптимизация */
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 8px;
+    }
+
+    .nav {
+      height: 45px;
+      padding: 0 5px;
+    }
+
+    .hero {
+      grid-template-columns: 1fr;
+      padding: 20px 0;
+      gap: 20px;
+    }
+
+    .hero-title {
+      font-size: 22px;
+    }
+
+    .hero-buttons {
+      flex-direction: column;
+    }
+
+    .hero-stats {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .hero-stat .number {
+      font-size: 16px;
+    }
+
+    .rotator-img {
+      max-height: 180px;
+    }
+
+    .contact-fab {
+      width: 45px;
+      height: 45px;
+      right: 15px;
+      bottom: 15px;
+    }
+  }
+  </style>
 </head>
+
 <body>
-  <script>document.documentElement.classList.add('js-enabled');</script>
+<!-- Анимированный фон с крипто-элементами -->
+<div class="crypto-background" id="cryptoBackground">
+  <!-- Элементы добавляются через JavaScript -->
+</div>
 
-  <header class="header noscript-header">
-    <div class="container nav">
-      <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
-      <nav class="nav-links">
-        <a href="index.html" data-i18n="nav_home">Главная</a>
-        <a href="dashboard_single.html" data-i18n="nav_dashboard">Личный кабинет</a>
-        <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
-        <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
-        <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
-        <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
-      </nav>
-      <div class="nav-cta">
-        <a class="btn ghost" href="login_single.html" data-i18n="nav_login">Вход</a>
-        <a class="btn" href="register_single.html" data-i18n="nav_register">Регистрация</a>
+<header class="header">
+  <div class="container">
+    <nav class="nav">
+      <a class="brand" href="index.html">
+        <div class="logo">LC</div>
+        <span>Litcash</span>
+      </a>
+      
+      <div class="nav-links">
+        <a href="index.html" class="active">Главная</a>
+        <a href="dashboard_single.html">Личный кабинет</a>
+        <a href="deposit_single.html">Пополнение</a>
+        <a href="withdraw_single.html">Вывод</a>
+        <a href="faq_single.html">FAQ</a>
       </div>
-    </div>
-  </header>
 
-  <main class="container">
-    <script>try{App && App.initPage && App.initPage("home")}catch(e){}</script>
+      <div class="nav-cta">
+        <a class="btn" href="login_single.html">Вход</a>
+        <a class="btn primary" href="register_single.html">Регистрация</a>
+      </div>
+    </nav>
+  </div>
+</header>
 
+<main class="main">
+  <div class="container main-content">
+    <!-- Hero секция -->
     <section class="hero">
       <div>
-        <span class="badge">USDT • TRC20 • 13%/5%/1%</span>
-        <!-- Новый слоган (можете заменить на любой из вариантов ниже)-->
-        <h1 class="title" data-i18n="hero_title">Заряжайся и побеждай! LITCASH-заработок, которому доверяют!</h1>
-        <div class="flex" style="margin-top:16px">
-          <a class="btn" data-i18n="get_started" href="register_single.html">Начать</a>
-          <a class="btn ghost" data-i18n="learn_more" href="#how">Подробнее</a>
+        <div class="hero-badge">USDT • TRC20 • 13%/5%/1%</div>
+        <h1 class="hero-title">Заряжайся и побеждай! LITCASH-заработок, которому доверяют!</h1>
+        
+        <div class="hero-buttons">
+          <a class="btn primary" href="register_single.html">Начать</a>
+          <a class="btn" href="#how">Подробнее</a>
         </div>
-        <div class="kpis" style="margin-top:22px">
-          <div class="kpi"><div class="n" id="kpiUsers">128</div><div class="muted" data-i18n="kpi_users">Активные пользователи</div></div>
-          <div class="kpi"><div class="n" id="kpiPayouts">$504211</div><div class="muted" data-i18n="kpi_payouts">Выплаты</div></div>
-          <div class="kpi"><div class="n" id="kpiApr">~5%</div><div class="muted" data-i18n="kpi_apr">Потенциальный APR</div></div>
+
+        <div class="hero-stats">
+          <div class="card hero-stat">
+            <div class="number" id="kpiUsers">128</div>
+            <div class="muted">Активные пользователи</div>
+          </div>
+          <div class="card hero-stat">
+            <div class="number" id="kpiPayouts">$504k</div>
+            <div class="muted">Выплаты</div>
+          </div>
+          <div class="card hero-stat">
+            <div class="number" id="kpiApr">~5%</div>
+            <div class="muted">Потенциальный APR</div>
+          </div>
         </div>
       </div>
+
       <div class="card hero-rotator">
         <img id="brandRotator" class="rotator-img" src="assets/rotator/lit-1.webp" alt="Lit Energy — бренд" loading="eager" decoding="async"/>
       </div>
     </section>
 
+    <!-- How it works -->
     <section class="grid grid-3" id="how">
-      <div class="card"><h3>1. Активация</h3><p class="muted">Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.</p></div>
-      <div class="card"><h3>2. Просмотры</h3><p class="muted">Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.</p></div>
-      <div class="card"><h3>3. Рефералы</h3><p class="muted">Создай команду инвесторов — ты получаешь 13% / 5% / 1%.</p></div>
+      <div class="card">
+        <h2><span class="icon">1</span>Активация</h2>
+        <p class="muted">Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.</p>
+      </div>
+      <div class="card">
+        <h2><span class="icon">2</span>Просмотры</h2>
+        <p class="muted">Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.</p>
+      </div>
+      <div class="card">
+        <h2><span class="icon">3</span>Рефералы</h2>
+        <p class="muted">Создай команду инвесторов — ты получаешь 13% / 5% / 1%.</p>
+      </div>
     </section>
 
+    <!-- Video section -->
     <section class="card">
-      <h2 class="section-title" data-i18n="preview_video">Превью</h2>
-      <video id="heroVideo" class="video" controls playsinline>
-        <source src="/assets/hero.MP4" type="video/mp4"/>
-      </video>
+      <h2><span class="icon">▶</span>Превью</h2>
+      <div class="video-container">
+        <video id="heroVideo" controls playsinline>
+          <source src="/assets/hero.MP4" type="video/mp4"/>
+        </video>
+      </div>
     </section>
-  </main>
+  </div>
+</main>
 
-  <!-- Hourly image rotator (меняет картинку каждый час) -->
-  <script>
-    (function(){
-      const el = document.getElementById('brandRotator');
-      if(!el) return;
+<footer class="footer">
+  <div class="container">
+    © 2025 Litcash. Все права защищены.
+  </div>
+</footer>
 
-      // Положите файлы по путям ниже (или измените список на свои пути)
-      const IMAGES = [
-        'assets/rotator/lit-1.jpg',
-        'assets/rotator/lit-2.jpg',
-        'assets/rotator/lit-3.jpg',
-        'assets/rotator/lit-4.jpg',
-        'assets/rotator/lit-5.webp'
-      ];
+<!-- Floating contact button -->
+<a class="contact-fab" href="https://t.me/litcash_investment" target="_blank" rel="noopener" aria-label="Связь с оператором в Telegram" title="Связь с оператором">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M21.6 3.2L2.8 10.4c-.9.34-.86 1.66.06 1.94l5.68 1.79a1 1 0 01.66.66l1.79 5.68c.28.92 1.6.96 1.94.06L21.6 3.2z" fill="currentColor"/>
+    <path d="M9.5 14.5l5.6-5.6" stroke="#ffffff" stroke-opacity=".9" stroke-width="1.7" stroke-linecap="round"/>
+  </svg>
+</a>
 
-      const HOUR = 60 * 70 * 1000;
-      function hourIndex(t = Date.now()){ return Math.floor(t / HOUR) % IMAGES.length; }
+<!-- Все оригинальные скрипты сохранены -->
+<script>
+  // Hourly image rotator
+  (function(){
+    const el = document.getElementById('brandRotator');
+    if(!el) return;
 
-      // Плавная смена с предзагрузкой
-      function swapTo(idx){
-        const next = IMAGES[idx % IMAGES.length];
-        if(el.dataset.src === next) return;
-        el.style.opacity = 0;
-        const img = new Image();
-        img.decoding = 'async';
-        img.onload = () => {
-          el.src = next; el.dataset.src = next; el.alt = 'Lit Energy — ' + (idx+1);
-          requestAnimationFrame(()=>{ el.style.opacity = 1; });
-        };
-        img.src = next;
-      }
+    const IMAGES = [
+      'assets/rotator/lit-1.jpg',
+      'assets/rotator/lit-2.jpg',
+      'assets/rotator/lit-3.jpg',
+      'assets/rotator/lit-4.jpg',
+      'assets/rotator/lit-5.webp'
+    ];
 
-      // Предзагрузка
-      IMAGES.forEach(src => { const i = new Image(); i.src = src; });
+    const HOUR = 60 * 70 * 1000;
+    function hourIndex(t = Date.now()){ return Math.floor(t / HOUR) % IMAGES.length; }
 
-      // Стартовое изображение по текущему часу
+    function swapTo(idx){
+      const next = IMAGES[idx % IMAGES.length];
+      if(el.dataset.src === next) return;
+      el.style.opacity = 0;
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => {
+        el.src = next; el.dataset.src = next; el.alt = 'Lit Energy — ' + (idx+1);
+        requestAnimationFrame(()=>{ el.style.opacity = 1; });
+      };
+      img.src = next;
+    }
+
+    IMAGES.forEach(src => { const i = new Image(); i.src = src; });
+
+    swapTo(hourIndex());
+
+    const msToNextHour = HOUR - (Date.now() % HOUR) + 50;
+    setTimeout(function tick(){
       swapTo(hourIndex());
+      setInterval(() => swapTo(hourIndex()), HOUR);
+    }, msToNextHour);
+  })();
 
-      // Переключение ровно на границе часа
-      const msToNextHour = HOUR - (Date.now() % HOUR) + 50;
-      setTimeout(function tick(){
-        swapTo(hourIndex());
-        setInterval(() => swapTo(hourIndex()), HOUR);
-      }, msToNextHour);
-    })();
-  </script>
+  // KPI auto-growth
+  (function(){
+    const elUsers = document.getElementById('kpiUsers');
+    const elPayouts = document.getElementById('kpiPayouts');
+    if(!elUsers || !elPayouts) return;
 
-  <!-- ===== Авто‑рост KPI без реальной базы ===== -->
-  <script>
-    (function(){
-      const elUsers = document.getElementById('kpiUsers');
-      const elPayouts = document.getElementById('kpiPayouts');
-      if(!elUsers || !elPayouts) return;
+    const START_DATE = new Date('2025-09-27T00:00:00Z');
+    const BASE_USERS = 1248;
+    const BASE_PAYOUTS = 935128;
+    const USERS_PER_DAY_MIN = 15, USERS_PER_DAY_MAX = 99;
+    const PAYOUTS_PER_DAY_MIN = 1199, PAYOUTS_PER_DAY_MAX = 35000;
 
-      // Настраиваемые параметры
-      const START_DATE = new Date('2025-09-27T00:00:00Z'); // базовая точка отсчёта
-      const BASE_USERS = 1248;     // стартовое число пользователей
-      const BASE_PAYOUTS = 935128;  // стартовые выплаты в USD (182k)
-      const USERS_PER_DAY_MIN = 15, USERS_PER_DAY_MAX = 99;      // ежедневный прирост пользователей
-      const PAYOUTS_PER_DAY_MIN = 1199, PAYOUTS_PER_DAY_MAX = 35000; // ежедневный прирост выплат (USD)
+    const MS_DAY = 86_400_000;
+    const todayUTC = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+    const days = Math.max(0, Math.floor((todayUTC - START_DATE.getTime()) / MS_DAY));
+    function rand01(n){
+      const x = (n * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff;
+    }
+    function incForDay(day, min, max){ return Math.round(min + rand01(day+1)*(max-min)); }
+    function sumIncs(days, min, max){ let s=0; for(let d=0; d<days; d++) s += incForDay(d, min, max); return s; }
 
-      // Простая детерминированная "случайность" по номеру дня —
-      // чтобы цифры каждый день менялись, но не скакали при перезагрузке.
-      const MS_DAY = 86_400_000;
-      const todayUTC = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
-      const days = Math.max(0, Math.floor((todayUTC - START_DATE.getTime()) / MS_DAY));
-      function rand01(n){ // 0..1, зависит только от n
-        const x = (n * 1103515245 + 12345) & 0x7fffffff; return x / 0x7fffffff;
+    const usersToday   = BASE_USERS  + sumIncs(days, USERS_PER_DAY_MIN, USERS_PER_DAY_MAX);
+    const payoutsToday = BASE_PAYOUTS+ sumIncs(days, PAYOUTS_PER_DAY_MIN, PAYOUTS_PER_DAY_MAX);
+
+    const fmtInt = n => new Intl.NumberFormat('ru-RU').format(n);
+    const fmtMoneyK = n => '$' + Math.round(n/1000) + 'k';
+
+    function tween(el, from, to, fmt, dur=900){
+      const start = performance.now();
+      function frame(t){
+        const p = Math.min(1, (t-start)/dur);
+        const val = Math.round(from + (to-from)*p);
+        el.textContent = fmt(val);
+        if(p < 1) requestAnimationFrame(frame);
       }
-      function incForDay(day, min, max){ return Math.round(min + rand01(day+1)*(max-min)); }
-      function sumIncs(days, min, max){ let s=0; for(let d=0; d<days; d++) s += incForDay(d, min, max); return s; }
+      requestAnimationFrame(frame);
+    }
 
-      const usersToday   = BASE_USERS  + sumIncs(days, USERS_PER_DAY_MIN, USERS_PER_DAY_MAX);
-      const payoutsToday = BASE_PAYOUTS+ sumIncs(days, PAYOUTS_PER_DAY_MIN, PAYOUTS_PER_DAY_MAX);
+    const prev = JSON.parse(localStorage.getItem('lc_kpis')||'{}');
+    const prevUsers   = typeof prev.users==='number'   ? prev.users   : usersToday - 25;
+    const prevPayouts = typeof prev.payouts==='number' ? prev.payouts : payoutsToday - 1500;
+    tween(elUsers,   prevUsers,   usersToday,   fmtInt);
+    tween(elPayouts, prevPayouts, payoutsToday, fmtMoneyK);
 
-      const fmtInt = n => new Intl.NumberFormat('ru-RU').format(n);
-      const fmtMoneyK = n => '$' + Math.round(n/1000) + 'k';
+    localStorage.setItem('lc_kpis', JSON.stringify({ users: usersToday, payouts: payoutsToday, day: days }));
+  })();
 
-      // Плавная анимация к текущему значению
-      function tween(el, from, to, fmt, dur=900){
-        const start = performance.now();
-        function frame(t){
-          const p = Math.min(1, (t-start)/dur);
-          const val = Math.round(from + (to-from)*p);
-          el.textContent = fmt(val);
-          if(p < 1) requestAnimationFrame(frame);
-        }
-        requestAnimationFrame(frame);
-      }
+  // Crypto background animation
+  document.addEventListener('DOMContentLoaded', function() {
+    const cryptoBackground = document.getElementById('cryptoBackground');
+    if (!cryptoBackground) return;
 
-      // Стартуем анимацию от последнего показанного к сегодняшнему
-      const prev = JSON.parse(localStorage.getItem('lc_kpis')||'{}');
-      const prevUsers   = typeof prev.users==='number'   ? prev.users   : usersToday - 25;
-      const prevPayouts = typeof prev.payouts==='number' ? prev.payouts : payoutsToday - 1500;
-      tween(elUsers,   prevUsers,   usersToday,   fmtInt);
-      tween(elPayouts, prevPayouts, payoutsToday, fmtMoneyK);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    
+    const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
+    const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
+    
+    const cryptoLogoCount = isMobile ? 15 : 12;
+    const exchangeLogoCount = isMobile ? 10 : 8;
+    const botCount = isMobile ? 8 : 6;
+    const lineCount = isMobile ? 10 : 8;
+    const chartCount = isMobile ? 6 : 4;
+    const dotCount = isMobile ? 15 : 10;
+    
+    for (let i = 0; i < cryptoLogoCount; i++) {
+      const element = document.createElement('div');
+      element.className = 'crypto-logo';
+      element.textContent = cryptoLogos[i % cryptoLogos.length];
+      element.style.left = Math.random() * 90 + 5 + '%';
+      element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
+      element.style.fontSize = (Math.random() * 8 + 14) + 'px';
+      cryptoBackground.appendChild(element);
+    }
+    
+    for (let i = 0; i < exchangeLogoCount; i++) {
+      const element = document.createElement('div');
+      element.className = 'exchange-logo';
+      element.textContent = exchangeLogos[i % exchangeLogos.length];
+      element.style.top = Math.random() * 80 + 10 + '%';
+      element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
+      cryptoBackground.appendChild(element);
+    }
+    
+    for (let i = 0; i < botCount; i++) {
+      const bot = document.createElement('div');
+      bot.className = 'trading-bot';
+      bot.style.left = Math.random() * 80 + 10 + '%';
+      bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
+      cryptoBackground.appendChild(bot);
+    }
+    
+    for (let i = 0; i < lineCount; i++) {
+      const line = document.createElement('div');
+      line.className = 'price-line';
+      line.style.top = Math.random() * 80 + 10 + '%';
+      line.style.width = (Math.random() * 200 + 100) + 'px';
+      line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
+      cryptoBackground.appendChild(line);
+    }
 
-      localStorage.setItem('lc_kpis', JSON.stringify({ users: usersToday, payouts: payoutsToday, day: days }));
-    })();
-  </script>
+    for (let i = 0; i < chartCount; i++) {
+      const chart = document.createElement('div');
+      chart.className = 'crypto-chart';
+      chart.style.left = Math.random() * 80 + 10 + '%';
+      chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
+      cryptoBackground.appendChild(chart);
+    }
 
-  <!-- External libs (оставлены как в исходнике) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="supabaseConfig.js"></script>
-  <script defer src="app_supabase.js"></script>
-
-  <!-- Floating contact button -->
-  <a class="contact-fab" href="https://t.me/litcash_investment" target="_blank"
-     rel="noopener" aria-label="Связь с оператором в Telegram" title="Связь с оператором">
-    <!-- generic paper-plane icon (SVG) -->
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M21.6 3.2L2.8 10.4c-.9.34-.86 1.66.06 1.94l5.68 1.79a1 1 0 01.66.66l1.79 5.68c.28.92 1.6.96 1.94.06L21.6 3.2z" fill="currentColor"/>
-      <path d="M9.5 14.5l5.6-5.6" stroke="#ffffff" stroke-opacity=".9" stroke-width="1.7" stroke-linecap="round"/>
-    </svg>
-  </a>
-  <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
-  }
+    for (let i = 0; i < dotCount; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'pulse-dot';
+      dot.style.left = Math.random() * 95 + '%';
+      dot.style.top = Math.random() * 95 + '%';
+      dot.style.animationDelay = (i * 0.3) + 's';
+      cryptoBackground.appendChild(dot);
+    }
+  });
 </script>
-<script src="/app-install.js" defer></script>
+
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="supabaseConfig.js"></script>
+<script defer src="app_supabase.js"></script>
 
 </body>
 </html>
