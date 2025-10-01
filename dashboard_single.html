@@ -29,7 +29,7 @@
   })();
   </script>
 
-  <title>Кабинет — Litcash</title>
+  <title data-i18n="page_title_dashboard">Кабинет — Litcash</title>
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
 
   <style>
@@ -69,6 +69,143 @@
     display: flex;
     flex-direction: column;
   }
+
+  /* === ЯЗЫКОВОЙ ПЕРЕКЛЮЧАТЕЛЬ === */
+  .language-switcher {
+    position: relative;
+    display: inline-block;
+    z-index: 1001;
+  }
+
+  .lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+  }
+
+  .lang-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  }
+
+  .lang-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .lang-arrow {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.3s ease;
+  }
+
+  .language-switcher.active .lang-arrow {
+    transform: rotate(180deg);
+  }
+
+  .lang-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px;
+    min-width: 140px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1002;
+  }
+
+  .language-switcher.active .lang-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .lang-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .lang-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .lang-item:hover {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--primary-light);
+  }
+
+  .lang-item.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .lang-flag {
+    width: 16px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+
+  .lang-name {
+    flex: 1;
+    text-align: left;
+  }
+
+  .lang-code {
+    font-size: 10px;
+    opacity: 0.7;
+    font-weight: 600;
+  }
+
+  /* Флаги языков */
+  .lang-flag.ru { background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%); }
+  .lang-flag.en { background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%); }
+  .lang-flag.cn { background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%); }
+  .lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
+  .lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
+  .lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
+  .lang-flag.pt { background: linear-gradient(to right, #006600 40%, #ff0000 40%, #ff0000 60%, #ffcc00 60%); }
+  .lang-flag.ar { background: linear-gradient(to bottom, #ce1126 33%, #ffffff 33%, #ffffff 66%, #000000 66%); }
+  .lang-flag.jp { background: radial-gradient(circle, #bc002d 30%, white 30%); }
+  .lang-flag.kr { background: linear-gradient(to bottom, #ffffff 50%, #000000 50%); }
+  .lang-flag.tr { background: linear-gradient(to bottom, #e30a17 0%, #e30a17 100%); }
+  .lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
+  .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
+  .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
 
   /* Анимация крипторынка на фоне - УВЕЛИЧЕНА ВИДИМОСТЬ ДЛЯ МОБИЛЬНЫХ */
   .crypto-background {
@@ -720,25 +857,6 @@
     text-align: center;
   }
 
-  /* Языковой переключатель */
-  .lang-select {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text);
-    font-size: 11px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-  }
-
-  .lang-select:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
-
   /* Footer */
   .footer {
     background: rgba(10, 26, 20, 0.8);
@@ -786,13 +904,6 @@
   .notification.show {
     transform: translateX(0);
   }
-
-  /* Language switcher styles */
-  .lc-lang{position:relative;display:inline-flex;align-items:center}
-  .lc-lang__btn{height:28px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)!important;background:var(--bg-card)!important;color:var(--text)!important;display:inline-flex;gap:4px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:all 0.3s ease}
-  .lc-lang__btn:hover{border-color:var(--primary)!important;color:var(--primary)!important;box-shadow:0 2px 10px rgba(0,0,0,.3)}
-  .lc-lang__icon{width:12px;height:12px}
-  .lc-lang__label{font-size:9px;line-height:1}
 
   /* iOS PWA safe-area fix */
   :root{
@@ -1042,6 +1153,24 @@
       height: 9px !important;
       box-shadow: 0 0 35px var(--primary) !important;
     }
+
+    /* Language switcher mobile optimization */
+    .language-switcher {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+
+    .lang-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .lang-dropdown {
+      position: static;
+      margin-top: 8px;
+      transform: none;
+      width: 100%;
+    }
   }
 
   /* Для очень маленьких экранов */
@@ -1174,11 +1303,22 @@
 
 <!-- Мобильное меню -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="dashboard_single.html" class="active">Личный кабинет</a>
-  <a href="deposit_single.html">Пополнение</a>
-  <a href="withdraw_single.html">Вывод</a>
-  <a href="faq_single.html">FAQ</a>
-  <a href="settings_single.html">Настройки</a>
+  <a href="dashboard_single.html" class="active" data-i18n="nav_dashboard">Личный кабинет</a>
+  <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
+  <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
+  <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
+  <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
+  
+  <!-- Языковой переключатель для мобильных -->
+  <div class="language-switcher mobile-lang">
+    <button class="lang-btn" aria-label="Выбор языка">
+      <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+              fill="none" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+      <span class="lang-code">RU</span>
+    </button>
+  </div>
 </div>
 
 <!-- Уведомление -->
@@ -1191,29 +1331,69 @@
     <nav class="nav">
       <a class="brand" href="index.html">
         <div class="logo">LC</div>
-        <span>Litcash</span>
+        <span data-i18n="brand_name">Litcash</span>
       </a>
       
       <div class="nav-links">
-        <a href="dashboard_single.html" class="active">Личный кабинет</a>
-        <a href="deposit_single.html">Пополнение</a>
-        <a href="withdraw_single.html">Вывод</a>
-        <a href="faq_single.html">FAQ</a>
-        <a href="settings_single.html">Настройки</a>
+        <a href="dashboard_single.html" class="active" data-i18n="nav_dashboard">Личный кабинет</a>
+        <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
+        <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
+        <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
+        <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
       </div>
 
       <div class="nav-cta">
-        <div class="lc-lang">
-          <button class="lc-lang__btn">
-            <svg class="lc-lang__icon" viewBox="0 0 24 24">
-              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+        <!-- Новый языковой переключатель -->
+        <div class="language-switcher" id="languageSwitcher">
+          <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
+            <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+                    fill="none" stroke="currentColor" stroke-width="1.2"/>
             </svg>
-            <span class="lc-lang__label">RU</span>
+            <span class="lang-code">RU</span>
+            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
+          
+          <div class="lang-dropdown" id="langDropdown">
+            <div class="lang-list">
+              <div class="lang-item active" data-lang="ru">
+                <span class="lang-flag ru"></span>
+                <span class="lang-name">Русский</span>
+                <span class="lang-code">RU</span>
+              </div>
+              <div class="lang-item" data-lang="en">
+                <span class="lang-flag en"></span>
+                <span class="lang-name">English</span>
+                <span class="lang-code">EN</span>
+              </div>
+              <div class="lang-item" data-lang="cn">
+                <span class="lang-flag cn"></span>
+                <span class="lang-name">中文</span>
+                <span class="lang-code">CN</span>
+              </div>
+              <div class="lang-item" data-lang="es">
+                <span class="lang-flag es"></span>
+                <span class="lang-name">Español</span>
+                <span class="lang-code">ES</span>
+              </div>
+              <div class="lang-item" data-lang="fr">
+                <span class="lang-flag fr"></span>
+                <span class="lang-name">Français</span>
+                <span class="lang-code">FR</span>
+              </div>
+              <div class="lang-item" data-lang="de">
+                <span class="lang-flag de"></span>
+                <span class="lang-name">Deutsch</span>
+                <span class="lang-code">DE</span>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <a class="btn" href="login_single.html">Вход</a>
-        <a class="btn primary" href="register_single.html">Регистрация</a>
+        <a class="btn" href="login_single.html" data-i18n="nav_login">Вход</a>
+        <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
       </div>
 
       <div class="burger" id="burgerBtn">
@@ -1230,36 +1410,36 @@
     <!-- Статистика -->
     <div class="grid grid-3">
       <div class="card stat-card">
-        <div class="muted">Баланс</div>
+        <div class="muted" data-i18n="dashboard_balance">Баланс</div>
         <div class="value" data-balance>$0.00</div>
       </div>
       
       <div class="card stat-card">
-        <div class="muted">Просмотры</div>
+        <div class="muted" data-i18n="dashboard_views">Просмотры</div>
         <div class="value" data-views>0</div>
       </div>
       
       <div class="card stat-card">
-        <div class="muted">Уровень</div>
+        <div class="muted" data-i18n="dashboard_level">Уровень</div>
         <div class="value" data-level>—</div>
-        <div class="badge" id="perViewBadge">+$0.00 за просмотр</div>
+        <div class="badge" id="perViewBadge" data-i18n="dashboard_per_view">+$0.00 за просмотр</div>
       </div>
     </div>
 
     <!-- Дополнительная статистика -->
     <div class="grid grid-3">
       <div class="card stat-card">
-        <div class="muted">Ставка</div>
+        <div class="muted" data-i18n="dashboard_rate">Ставка</div>
         <div class="value" data-rate>—</div>
       </div>
       
       <div class="card stat-card">
-        <div class="muted">Капитал (расч.)</div>
+        <div class="muted" data-i18n="dashboard_capital">Капитал (расч.)</div>
         <div class="value" data-cap>—</div>
       </div>
       
       <div class="card stat-card">
-        <div class="muted">Рефералы</div>
+        <div class="muted" data-i18n="dashboard_referrals">Рефералы</div>
         <div class="value" data-refs>0</div>
       </div>
     </div>
@@ -1268,47 +1448,47 @@
     <div class="grid grid-2">
       <!-- Видео блок -->
       <div class="card">
-        <h2><span class="icon">▶</span>Просмотр видео</h2>
+        <h2><span class="icon">▶</span><span data-i18n="dashboard_video_view">Просмотр видео</span></h2>
         
         <div class="video-container">
           <video id="promoVid" controls style="width:100%;height:100%">
             <source src="/assets/videos/ad1.MP4" type="video/mp4">
-            Ваш браузер не поддерживает видео тег.
+            <span data-i18n="video_not_supported">Ваш браузер не поддерживает видео тег.</span>
           </video>
-          <div id="limitOverlay">Лимит просмотров исчерпан</div>
+          <div id="limitOverlay" data-i18n="video_limit_reached">Лимит просмотров исчерпан</div>
         </div>
 
         <div class="progress">
           <div class="progress-fill" id="progressFill" style="width: 0%"></div>
         </div>
-        <div class="muted" id="progressText">Прогресс: 0%</div>
+        <div class="muted" id="progressText" data-i18n="dashboard_progress">Прогресс: 0%</div>
 
         <div class="flex" style="margin-top: 12px">
-          <button class="btn primary" id="startBtn" style="flex: 1">🎬 Заработать за просмотр</button>
-          <a href="deposit_single.html" class="btn" style="flex: 1; text-align: center">💳 Пополнить</a>
+          <button class="btn primary" id="startBtn" style="flex: 1" data-i18n="dashboard_earn_by_view">🎬 Заработать за просмотр</button>
+          <a href="deposit_single.html" class="btn" style="flex: 1; text-align: center" data-i18n="dashboard_deposit">💳 Пополнить</a>
         </div>
       </div>
 
       <!-- Реферальная панель -->
       <div class="card">
-        <h2><span class="icon">👥</span>Реферальная панель</h2>
+        <h2><span class="icon">👥</span><span data-i18n="dashboard_referral_panel">Реферальная панель</span></h2>
         
         <div class="flex" style="margin-bottom: 12px">
           <input class="input" id="refLink" readonly value="" style="flex: 1">
-          <button class="btn" id="btnCopyRef">📋 Копировать</button>
+          <button class="btn" id="btnCopyRef" data-i18n="dashboard_copy">📋 Копировать</button>
         </div>
 
         <div class="grid grid-3" style="margin-bottom: 12px">
           <div class="card stat-card">
-            <div class="muted">1 поколение</div>
+            <div class="muted" data-i18n="dashboard_gen1">1 поколение</div>
             <div class="value" id="gen1Count">0</div>
           </div>
           <div class="card stat-card">
-            <div class="muted">2 поколение</div>
+            <div class="muted" data-i18n="dashboard_gen2">2 поколение</div>
             <div class="value" id="gen2Count">0</div>
           </div>
           <div class="card stat-card">
-            <div class="muted">3 поколение</div>
+            <div class="muted" data-i18n="dashboard_gen3">3 поколение</div>
             <div class="value" id="gen3Count">0</div>
           </div>
         </div>
@@ -1317,16 +1497,16 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Поколение</th>
-                <th>Email</th>
-                <th>Капитал</th>
-                <th>Уровень</th>
-                <th>Дата</th>
+                <th data-i18n="dashboard_generation">Поколение</th>
+                <th data-i18n="dashboard_email">Email</th>
+                <th data-i18n="dashboard_capital">Капитал</th>
+                <th data-i18n="dashboard_level">Уровень</th>
+                <th data-i18n="dashboard_date">Дата</th>
               </tr>
             </thead>
             <tbody id="refTree">
               <tr>
-                <td colspan="5" class="text-center muted">Нет данных</td>
+                <td colspan="5" class="text-center muted" data-i18n="no_data">Нет данных</td>
               </tr>
             </tbody>
           </table>
@@ -1336,44 +1516,44 @@
 
     <!-- Информационная таблица -->
     <div class="card">
-      <h2><span class="icon">ℹ</span>Информационная таблица</h2>
+      <h2><span class="icon">ℹ</span><span data-i18n="dashboard_info_table">Информационная таблица</span></h2>
       <div style="overflow-x: auto;">
         <table class="table">
           <thead>
             <tr>
-              <th>Показатель</th>
-              <th>Значение</th>
-              <th>Комментарий</th>
+              <th data-i18n="dashboard_indicator">Показатель</th>
+              <th data-i18n="dashboard_value">Значение</th>
+              <th data-i18n="dashboard_comment">Комментарий</th>
             </tr>
           </thead>
           <tbody id="infoRows">
             <tr>
-              <td>Уровень</td>
+              <td data-i18n="dashboard_level">Уровень</td>
               <td><span data-level-name>—</span></td>
-              <td>Starter / Advanced / Pro Elite / Titanium</td>
+              <td data-i18n="dashboard_levels_list">Starter / Advanced / Pro Elite / Titanium</td>
             </tr>
             <tr>
-              <td>Процент</td>
+              <td data-i18n="dashboard_percentage">Процент</td>
               <td><span data-rate>—</span></td>
-              <td>Начисляется от базового капитала уровня</td>
+              <td data-i18n="dashboard_percentage_desc">Начисляется от базового капитала уровня</td>
             </tr>
             <tr>
-              <td>База уровня</td>
+              <td data-i18n="dashboard_base">База уровня</td>
               <td><span id="baseCapCell">—</span></td>
-              <td>min(капитал, потолок уровня)</td>
+              <td data-i18n="dashboard_base_desc">min(капитал, потолок уровня)</td>
             </tr>
             <tr>
-              <td>За 1 просмотр</td>
+              <td data-i18n="dashboard_per_view">За 1 просмотр</td>
               <td><span data-reward-per-view>$0.00</span></td>
-              <td>5 просмотров = полный дневной %</td>
+              <td data-i18n="dashboard_per_view_desc">5 просмотров = полный дневной %</td>
             </tr>
             <tr>
-              <td>За 5 просмотров (сегодня)</td>
+              <td data-i18n="dashboard_daily_reward">За 5 просмотров (сегодня)</td>
               <td><span data-daily-reward>$0.00</span></td>
-              <td>Сумма за сутки по уровню</td>
+              <td data-i18n="dashboard_daily_reward_desc">Сумма за сутки по уровню</td>
             </tr>
             <tr>
-              <td>Цель следующего уровня</td>
+              <td data-i18n="dashboard_next_level_goal">Цель следующего уровня</td>
               <td colspan="2"><span id="nextTargetCell">—</span></td>
             </tr>
           </tbody>
@@ -1384,30 +1564,30 @@
     <!-- Реферальный доход -->
     <div class="grid grid-2">
       <div class="card">
-        <h2><span class="icon">💰</span>Реферальный доход</h2>
+        <h2><span class="icon">💰</span><span data-i18n="dashboard_referral_income">Реферальный доход</span></h2>
         <div style="overflow-x: auto;">
           <table class="table">
             <thead>
               <tr>
-                <th>Поколение</th>
-                <th>Сумма</th>
+                <th data-i18n="dashboard_generation">Поколение</th>
+                <th data-i18n="dashboard_amount">Сумма</th>
               </tr>
             </thead>
             <tbody id="refRows">
               <tr>
-                <td>1-е поколение (13%)</td>
+                <td data-i18n="dashboard_gen1_with_percent">1-е поколение (13%)</td>
                 <td id="gen1Cell">$0.00</td>
               </tr>
               <tr>
-                <td>2-е поколение (5%)</td>
+                <td data-i18n="dashboard_gen2_with_percent">2-е поколение (5%)</td>
                 <td id="gen2Cell">$0.00</td>
               </tr>
               <tr>
-                <td>3-е поколение (1%)</td>
+                <td data-i18n="dashboard_gen3_with_percent">3-е поколение (1%)</td>
                 <td id="gen3Cell">$0.00</td>
               </tr>
               <tr>
-                <td><strong>Итого</strong></td>
+                <td><strong data-i18n="dashboard_total">Итого</strong></td>
                 <td id="refTotalCell"><strong>$0.00</strong></td>
               </tr>
             </tbody>
@@ -1416,20 +1596,20 @@
       </div>
 
       <div class="card">
-        <h2><span class="icon">📊</span>Последние реферальные начисления</h2>
+        <h2><span class="icon">📊</span><span data-i18n="dashboard_recent_referral_earnings">Последние реферальные начисления</span></h2>
         <div style="overflow-x: auto;">
           <table class="table">
             <thead>
               <tr>
-                <th>Дата</th>
-                <th>Поколение</th>
-                <th>Сумма</th>
-                <th>Источник</th>
+                <th data-i18n="dashboard_date">Дата</th>
+                <th data-i18n="dashboard_generation">Поколение</th>
+                <th data-i18n="dashboard_amount">Сумма</th>
+                <th data-i18n="dashboard_source">Источник</th>
               </tr>
             </thead>
             <tbody id="refList">
               <tr>
-                <td colspan="4" class="text-center muted">Нет данных</td>
+                <td colspan="4" class="text-center muted" data-i18n="no_data">Нет данных</td>
               </tr>
             </tbody>
           </table>
@@ -1441,15 +1621,52 @@
 
 <footer class="footer">
   <div class="container">
-    © 2025 Litcash. Все права защищены.
+    <span data-i18n="footer_copyright">© 2025 Litcash. Все права защищены.</span>
   </div>
 </footer>
+
+<!-- Подключаем систему перевода -->
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/language-switcher.js"></script>
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
 <script defer src="app_supabase.js"></script>
 
 <script>
+// Бургер-меню
+document.addEventListener('DOMContentLoaded', function() {
+  const burgerBtn = document.getElementById('burgerBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  
+  if (burgerBtn && mobileMenu) {
+    burgerBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      mobileMenu.classList.toggle('active');
+      burgerBtn.classList.toggle('active');
+    });
+    
+    // Закрытие меню при клике на ссылку
+    const mobileLinks = mobileMenu.querySelectorAll('a');
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        mobileMenu.classList.remove('active');
+        burgerBtn.classList.remove('active');
+      });
+    });
+    
+    // Закрытие меню при клике вне его
+    document.addEventListener('click', function(e) {
+      if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
+        mobileMenu.classList.remove('active');
+        burgerBtn.classList.remove('active');
+      }
+    });
+  }
+
+  // Языковой переключатель теперь обрабатывается в language-switcher.js
+});
+
 // ===== ПЕРЕНЕСЕННЫЕ ВЫЗОВЫ ИЗ СТАРОГО ФАЙЛА =====
 
 // Toast уведомления
@@ -1507,7 +1724,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnCopyRef.addEventListener('click', function() {
           refLink.select();
           document.execCommand('copy');
-          window.LC_TOAST?.('✅ Реферальная ссылка скопирована!');
+          window.LC_TOAST?.ok('✅ Реферальная ссылка скопирована!');
         });
       }
     }
@@ -1530,7 +1747,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let played = 0, awarding = false;
 
   function toast(msg, ok=false){
-    try{ window.LC_TOAST?.(msg, ok); }catch(_){ alert(msg); }
+    try{ window.LC_TOAST?.ok(msg, ok); }catch(_){ alert(msg); }
   }
 
   function setProgress(s){
@@ -1966,15 +2183,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isAuth = !!(data && data.user);
     if(isAuth && cta){
       cta.innerHTML = `
-        <div class="lc-lang">
-          <button class="lc-lang__btn">
-            <svg class="lc-lang__icon" viewBox="0 0 24 24">
-              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+        <div class="language-switcher" id="languageSwitcher">
+          <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
+            <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+                    fill="none" stroke="currentColor" stroke-width="1.2"/>
             </svg>
-            <span class="lc-lang__label">RU</span>
+            <span class="lang-code">RU</span>
+            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
+          
+          <div class="lang-dropdown" id="langDropdown">
+            <div class="lang-list">
+              <div class="lang-item active" data-lang="ru">
+                <span class="lang-flag ru"></span>
+                <span class="lang-name">Русский</span>
+                <span class="lang-code">RU</span>
+              </div>
+              <div class="lang-item" data-lang="en">
+                <span class="lang-flag en"></span>
+                <span class="lang-name">English</span>
+                <span class="lang-code">EN</span>
+              </div>
+              <div class="lang-item" data-lang="cn">
+                <span class="lang-flag cn"></span>
+                <span class="lang-name">中文</span>
+                <span class="lang-code">CN</span>
+              </div>
+              <div class="lang-item" data-lang="es">
+                <span class="lang-flag es"></span>
+                <span class="lang-name">Español</span>
+                <span class="lang-code">ES</span>
+              </div>
+              <div class="lang-item" data-lang="fr">
+                <span class="lang-flag fr"></span>
+                <span class="lang-name">Français</span>
+                <span class="lang-code">FR</span>
+              </div>
+              <div class="lang-item" data-lang="de">
+                <span class="lang-flag de"></span>
+                <span class="lang-name">Deutsch</span>
+                <span class="lang-code">DE</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <button id="nav-logout" class="btn danger">Выйти</button>`;
+        <button id="nav-logout" class="btn danger" data-i18n="nav_logout">Выйти</button>`;
       
       const btn = document.getElementById('nav-logout');
       if(btn){ 
@@ -1997,27 +2253,6 @@ document.addEventListener("DOMContentLoaded", async function(){
       await LC.mountReferral(); 
     }
   } catch(e){ console.warn("[init referral]", e); }
-});
-
-// Бургер-меню (сохранено из нового дизайна)
-document.addEventListener('DOMContentLoaded', function() {
-  const burgerBtn = document.getElementById('burgerBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
-  
-  if (burgerBtn && mobileMenu) {
-    burgerBtn.addEventListener('click', function() {
-      mobileMenu.classList.toggle('active');
-      burgerBtn.classList.toggle('active');
-    });
-    
-    const mobileLinks = mobileMenu.querySelectorAll('a');
-    mobileLinks.forEach(link => {
-      link.addEventListener('click', function() {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      });
-    });
-  }
 });
 
 // Анимированный фон (сохранено из нового дизайна)
