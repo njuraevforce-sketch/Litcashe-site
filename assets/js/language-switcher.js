@@ -1,7 +1,9 @@
 /*
- * Language switcher component for 14 languages
+ * Language switcher component for 14 languages - FIXED
  */
 (function(){
+  console.log('Language switcher: Loading...');
+
   // Supported languages with flags and names
   const languages = {
     'ru': { name: 'RU', flag: 'ru' },
@@ -21,19 +23,11 @@
   };
 
   /**
-   * Helper to create DOM elements with optional className.
-   */
-  function createEl(tag, cls){
-    const el = document.createElement(tag);
-    if(cls) el.className = cls;
-    return el;
-  }
-
-  /**
-   * Build markup for language switcher with 14 languages
+   * Build markup for language switcher
    */
   function buildMarkup(){
-    const container = createEl('div','lc-lang');
+    const container = document.createElement('div');
+    container.className = 'lc-lang';
     
     let menuHTML = '';
     for (const [code, lang] of Object.entries(languages)) {
@@ -66,9 +60,13 @@
     const btn = container.querySelector('.lc-lang__btn');
     const menu = container.querySelector('.lc-lang__menu');
     const label = container.querySelector('.lc-lang__label');
-    if (!btn || !menu) return;
+    
+    if (!btn || !menu) {
+      console.error('Language switcher: Could not find button or menu elements');
+      return;
+    }
 
-    // Retrieve current language - use same key as i18n.js
+    // Retrieve current language
     function getLang(){
       try { 
         return localStorage.getItem('lc_lang') || 'ru';
@@ -79,17 +77,30 @@
 
     // Update storage and apply translations
     function setLang(lang){
-      if (!languages[lang]) return;
+      if (!languages[lang]) {
+        console.error('Language switcher: Unknown language:', lang);
+        return;
+      }
       
-      try{ 
+      console.log('Language switcher: Setting language to', lang);
+      
+      try { 
         localStorage.setItem('lc_lang', lang); 
-      } catch(_){}
+      } catch(e) {
+        console.error('Language switcher: Failed to save to localStorage:', e);
+      }
       
       // Update LC_I18N if available
-      if (window.LC_I18N) {
-        try{ 
-          LC_I18N.set(lang);
-        } catch(_){}
+      if (window.LC_I18N && typeof window.LC_I18N.set === 'function') {
+        try { 
+          window.LC_I18N.set(lang);
+          console.log('Language switcher: LC_I18N.set called successfully');
+        } catch(e) {
+          console.error('Language switcher: Error calling LC_I18N.set:', e);
+        }
+      } else {
+        console.warn('Language switcher: LC_I18N not available, reloading page');
+        setTimeout(() => window.location.reload(), 100);
       }
       
       // Update label
@@ -98,9 +109,11 @@
       }
       
       // Update HTML lang attribute
-      try{ 
+      try { 
         document.documentElement.setAttribute('lang', lang); 
-      } catch(_){}
+      } catch(e) {
+        console.error('Language switcher: Failed to set lang attribute:', e);
+      }
       
       // Update active state in dropdown
       updateActiveLang(lang);
@@ -120,7 +133,6 @@
     function openMenu() {
       btn.setAttribute('aria-expanded','true');
       container.classList.add('is-open');
-      // Add scroll for many languages
       menu.style.maxHeight = '300px';
       menu.style.overflowY = 'auto';
       menu.focus();
@@ -133,8 +145,9 @@
       menu.style.overflowY = '';
     }
 
-    // Initialize
+    // Initialize with current language
     const currentLang = getLang();
+    console.log('Language switcher: Current language is', currentLang);
     setLang(currentLang);
 
     // Event handlers
@@ -163,17 +176,42 @@
   }
 
   /**
-   * Find header mount point
+   * Find header mount point - IMPROVED
    */
   function findHeaderMount(){
+    // Priority 1: nav-cta in header
+    const headerNavCta = document.querySelector('header .nav-cta');
+    if (headerNavCta) {
+      console.log('Language switcher: Found header .nav-cta');
+      return headerNavCta;
+    }
+    
+    // Priority 2: any nav-cta
+    const navCta = document.querySelector('.nav-cta');
+    if (navCta) {
+      console.log('Language switcher: Found .nav-cta');
+      return navCta;
+    }
+    
+    // Priority 3: header container
     const selectors = [
-      '.nav-cta', '.header .container', 'header .container', 
-      'header', '.header', '.navbar'
+      '.header .container',
+      'header .container', 
+      '.header',
+      'header',
+      '.navbar',
+      'nav'
     ];
+    
     for (const sel of selectors) {
       const el = document.querySelector(sel);
-      if (el) return el;
+      if (el) {
+        console.log('Language switcher: Found mount point:', sel);
+        return el;
+      }
     }
+    
+    console.error('Language switcher: No mount point found');
     return null;
   }
 
@@ -181,34 +219,46 @@
    * Main entry point
    */
   function mount(){
+    console.log('Language switcher: Mounting...');
+    
+    // Check if already mounted
     const existing = document.querySelector('.lc-lang');
     if (existing) {
+      console.log('Language switcher: Found existing, rebinding...');
       bind(existing);
       return;
     }
     
+    // Build and insert switcher
     const container = buildMarkup();
     const mountPoint = findHeaderMount();
     
     if (mountPoint) {
-      // Insert at beginning of nav-cta or append to other containers
       if (mountPoint.classList.contains('nav-cta')) {
         mountPoint.insertBefore(container, mountPoint.firstChild);
+        console.log('Language switcher: Inserted into nav-cta');
       } else {
         mountPoint.appendChild(container);
+        console.log('Language switcher: Appended to container');
       }
+      
+      bind(container);
+      console.log('Language switcher: Successfully mounted and bound');
     } else {
+      // Fallback: add to body
       container.classList.add('lc-floating');
       document.body.appendChild(container);
+      bind(container);
+      console.warn('Language switcher: Mounted as floating element');
     }
-    
-    bind(container);
   }
 
-  // Wait for DOM ready
-  if (document.readyState !== 'loading') {
-    mount();
+  // Wait for DOM ready with better timing
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(mount, 100); // Small delay to ensure other scripts are loaded
+    });
   } else {
-    document.addEventListener('DOMContentLoaded', mount);
+    setTimeout(mount, 100);
   }
 })();
