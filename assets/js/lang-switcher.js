@@ -1,19 +1,9 @@
 /*
- * Language switcher component.  This script is designed to work on pages that
- * either already contain a `.lc-lang` element in the markup or that need the
- * switcher injected.  If an existing `.lc-lang` container is found, the
- * script will attach click/keyboard handlers to it so users can toggle
- * between languages.  Otherwise it will construct a new switcher and
- * mount it into the first suitable header container.  The current language
- * label will update based on localStorage (`litcash_lang`) and
- * LC_I18N.getLang() if available.
+ * Language switcher component. Updated to work with LC_I18N system
  */
 (function(){
   /**
    * Helper to create DOM elements with optional className.
-   * @param {string} tag HTML tag
-   * @param {string} cls Optional class name
-   * @returns {HTMLElement}
    */
   function createEl(tag, cls){
     const el = document.createElement(tag);
@@ -22,11 +12,7 @@
   }
 
   /**
-   * Build markup for a fresh language switcher.  The button contains an icon
-   * and a label; the menu lists available languages with both locale code
-   * and human‑readable language name.  We include the label in the button so
-   * the current language can be displayed (e.g., RU or EN).
-   * @returns {HTMLElement}
+   * Build markup for language switcher with 3 languages
    */
   function buildMarkup(){
     const container = createEl('div','lc-lang');
@@ -38,19 +24,25 @@
         <span class="lc-lang__label"></span>
       </button>
       <ul class="lc-lang__menu" role="listbox" tabindex="-1">
-        <li role="option" data-lang="ru">RU Русский</li>
-        <li role="option" data-lang="en">EN English</li>
+        <li role="option" data-lang="ru">
+          <span class="lang-flag ru"></span>
+          <span>Русский</span>
+        </li>
+        <li role="option" data-lang="en">
+          <span class="lang-flag en"></span>
+          <span>English</span>
+        </li>
+        <li role="option" data-lang="cn">
+          <span class="lang-flag cn"></span>
+          <span>中文</span>
+        </li>
       </ul>
     `;
     return container;
   }
 
   /**
-   * Attach click/keyboard handlers to the switcher container.  If a label is
-   * present it will be kept in sync with the current language.  The handler
-   * uses LC_I18N if available to set/apply language and always writes the
-   * selection into localStorage under `litcash_lang`.
-   * @param {HTMLElement} container
+   * Attach handlers to the switcher container
    */
   function bind(container){
     const btn = container.querySelector('.lc-lang__btn');
@@ -58,42 +50,85 @@
     const label = container.querySelector('.lc-lang__label');
     if (!btn || !menu) return;
 
-    // Retrieve current language from localStorage or LC_I18N, default ru
+    // Retrieve current language - use same key as i18n.js
     function getLang(){
-      try { return localStorage.getItem('litcash_lang') || (window.LC_I18N && LC_I18N.getLang ? LC_I18N.getLang() : 'ru'); } catch(e) { return 'ru'; }
+      try { 
+        return localStorage.getItem('lc_lang') || 'ru';
+      } catch(e) { 
+        return 'ru'; 
+      }
     }
-    // Update storage, LC_I18N, and label when language changes
-    function setLang(l){
-      try{ localStorage.setItem('litcash_lang', l); }catch(_){}
+
+    // Update storage and apply translations
+    function setLang(lang){
+      try{ 
+        localStorage.setItem('lc_lang', lang); 
+      } catch(_){}
+      
+      // Update LC_I18N if available
       if (window.LC_I18N) {
-        try{ LC_I18N.setLang(l); LC_I18N.apply(); }catch(_){}
+        try{ 
+          LC_I18N.set(lang);
+          LC_I18N.apply();
+        } catch(_){}
       }
+      
+      // Update label
       if (label) {
-        label.textContent = (l === 'ru' ? 'RU' : 'EN');
+        const langNames = {
+          'ru': 'RU',
+          'en': 'EN', 
+          'cn': '中文'
+        };
+        label.textContent = langNames[lang] || 'RU';
       }
-      try{ document.documentElement.setAttribute('lang', l); }catch(_){}
+      
+      // Update HTML lang attribute
+      try{ 
+        document.documentElement.setAttribute('lang', lang); 
+      } catch(_){}
+      
+      // Update active state in dropdown
+      updateActiveLang(lang);
     }
-    // Initialize label with current language
-    const current = getLang();
-    if (label) label.textContent = (current === 'ru' ? 'RU' : 'EN');
+
+    // Update active state in dropdown menu
+    function updateActiveLang(lang) {
+      menu.querySelectorAll('li').forEach(li => {
+        if (li.getAttribute('data-lang') === lang) {
+          li.classList.add('active');
+        } else {
+          li.classList.remove('active');
+        }
+      });
+    }
 
     function openMenu() {
       btn.setAttribute('aria-expanded','true');
       container.classList.add('is-open');
       menu.focus();
     }
+    
     function closeMenu() {
       btn.setAttribute('aria-expanded','false');
       container.classList.remove('is-open');
     }
 
+    // Initialize
+    const currentLang = getLang();
+    setLang(currentLang);
+
+    // Event handlers
     btn.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       container.classList.contains('is-open') ? closeMenu() : openMenu();
     });
+    
     document.addEventListener('click', (e) => {
       if (!container.contains(e.target)) closeMenu();
     });
+    
     menu.addEventListener('click', (e) => {
       const li = e.target.closest('[data-lang]');
       if (!li) return;
@@ -102,22 +137,20 @@
       setLang(lang);
       closeMenu();
     });
+    
     menu.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeMenu();
     });
   }
 
   /**
-   * Find a suitable header or nav element to mount our switcher into.  A list
-   * of selectors is attempted in order; the first match will be used.  If
-   * nothing is found the switcher is added to the body and positioned via
-   * CSS.
-   * @returns {HTMLElement|null}
+   * Find header mount point
    */
   function findHeaderMount(){
     const selectors = [
-      'header .container', 'header .wrapper', 'header nav', 'header',
-      '.header .container', '.header .wrapper', '.header nav', '.header',
+      '.nav-cta', '.nav-links', '.header .container', 'header .container', 
+      'header .wrapper', 'header nav', 'header',
+      '.header .wrapper', '.header nav', '.header',
       '.navbar', '.topbar', '.top-bar', '.nav', '.site-header'
     ];
     for (const sel of selectors) {
@@ -128,10 +161,7 @@
   }
 
   /**
-   * Main entry point: ensure exactly one language switcher exists.  If one
-   * already exists in the markup (`.lc-lang`), attach handlers to it.  If
-   * not, create a new switcher and append it to a header/nav container or
-   * fallback to the body.
+   * Main entry point
    */
   function mount(){
     const existing = document.querySelector('.lc-lang');
@@ -139,25 +169,29 @@
       bind(existing);
       return;
     }
+    
     const container = buildMarkup();
     const mountPoint = findHeaderMount();
+    
     if (mountPoint) {
-      mountPoint.appendChild(container);
+      // Insert at beginning of nav-cta or append to other containers
+      if (mountPoint.classList.contains('nav-cta')) {
+        mountPoint.insertBefore(container, mountPoint.firstChild);
+      } else {
+        mountPoint.appendChild(container);
+      }
     } else {
       container.classList.add('lc-floating');
-      (document.body || document.documentElement).appendChild(container);
+      document.body.appendChild(container);
     }
+    
     bind(container);
   }
 
-  /**
-   * Call mount() when the document is ready.  This ensures we can attach
-   * events and find header elements even if this script is loaded with
-   * `defer`.
-   */
-  function ready(fn){
-    if (document.readyState !== 'loading') fn();
-    else document.addEventListener('DOMContentLoaded', fn);
+  // Wait for DOM ready
+  if (document.readyState !== 'loading') {
+    mount();
+  } else {
+    document.addEventListener('DOMContentLoaded', mount);
   }
-  ready(mount);
 })();
