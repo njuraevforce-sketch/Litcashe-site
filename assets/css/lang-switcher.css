@@ -1,42 +1,114 @@
-/* Language Switcher (consistent, compact) */
-.lc-lang { position: relative; display: inline-flex; align-items: center; }
+/* Language Switcher Styles */
+.lc-lang {
+  position: relative;
+  display: inline-block;
+}
+
 .lc-lang__btn {
-  width: 36px; height: 36px;
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  color: #eee;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 11px;
   cursor: pointer;
-  transition: transform .08s ease, box-shadow .2s ease, background .2s ease;
-  backdrop-filter: blur(6px);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
-.lc-lang__btn:hover { box-shadow: 0 2px 12px rgba(0,0,0,.35); background: rgba(255,255,255,.12); }
-.lc-lang__btn:active { transform: translateY(1px); }
-.lc-lang__icon { width: 18px; height: 18px; }
 
-/* Dropdown */
+.lc-lang__btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+}
+
+.lc-lang__icon {
+  width: 14px;
+  height: 14px;
+}
+
 .lc-lang__menu {
-  list-style: none; margin: 8px 0 0; padding: 6px 0;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(20,20,20,.96);
-  color: #eee;
-  position: absolute; right: 0; min-width: 140px;
-  box-shadow: 0 12px 24px rgba(0,0,0,.35);
-  display: none; z-index: 99999;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  min-width: 140px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 1002;
+  list-style: none;
 }
-.lc-lang.is-open .lc-lang__menu { display: block; }
-.lc-lang__menu li { padding: 8px 12px; cursor: pointer; }
-.lc-lang__menu li:hover { background: rgba(255,255,255,.08); }
 
-/* If there's no header, pin to viewport top-right */
-body > .lc-lang.lc-floating {
-  position: fixed; right: 16px; top: 16px; z-index: 99999;
+.lc-lang.is-open .lc-lang__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
-@media (prefers-color-scheme: light) {
-  .lc-lang__btn { border-color: rgba(0,0,0,.12); background: rgba(255,255,255,.85); color: #111; }
-  .lc-lang__menu { background: #fff; color: #111; border-color: rgba(0,0,0,.12); }
-  .lc-lang__menu li:hover { background: rgba(0,0,0,.06); }
+.lc-lang__menu li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.lc-lang__menu li:hover {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--primary-light);
+}
+
+.lc-lang__menu li.active {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Language Flags */
+.lang-flag {
+  width: 16px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.lang-flag.ru { background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%); }
+.lang-flag.en { background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%); }
+.lang-flag.cn { background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%); }
+.lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
+.lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
+.lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
+.lang-flag.pt { background: linear-gradient(to right, #006600 40%, #ff0000 40%, #ff0000 60%, #ffcc00 60%); }
+.lang-flag.ar { background: linear-gradient(to bottom, #ce1126 33%, #ffffff 33%, #ffffff 66%, #000000 66%); }
+.lang-flag.jp { background: radial-gradient(circle, #bc002d 30%, white 30%); }
+.lang-flag.kr { background: linear-gradient(to bottom, #ffffff 50%, #000000 50%); }
+.lang-flag.tr { background: linear-gradient(to bottom, #e30a17 0%, #e30a17 100%); }
+.lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
+.lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
+.lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
+
+/* Floating language switcher */
+.lc-lang.lc-floating {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  z-index: 1000;
 }
