@@ -2,743 +2,39 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  
+  <title>Litcash</title>
+
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0a1a14">
+  <meta name="theme-color" content="#09141d">
 
   <!-- iOS -->
   <link rel="apple-touch-icon" href="/icons/litcash-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-  <!-- PWA init -->
-  <script defer src="/app-install.js"></script>
-  <script defer>
-  (function () {
-    if (!('serviceWorker' in navigator)) return;
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.getRegistration('/')
-        .then(function (reg) {
-          if (!reg) {
-            return navigator.serviceWorker.register('/sw.js', { scope: '/' });
-          }
-        })
-        .catch(console.error);
-    });
-  })();
-  </script>
-
+  
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Вход — Litcash</title>
-  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
-
+  <link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
+  
   <style>
-  /* === ОСНОВНЫЕ СТИЛИ === */
-  :root {
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #34d399;
-    --success: #22c55e;
-    --warning: #f59e0b;
-    --error: #ef4444;
-    --bg: #0a1a14;
-    --bg-gradient: linear-gradient(135deg, #0a1a14 0%, #0d2c1f 50%, #0a1a14 100%);
-    --bg-card: rgba(255, 255, 255, 0.08);
-    --text: #ffffff;
-    --text-secondary: #a7f3d0;
-    --border: rgba(16, 185, 129, 0.3);
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --radius: 12px;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html {
-    height: 100%;
-    overflow-x: hidden;
-    background: var(--bg);
-  }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: var(--bg-gradient);
-    color: var(--text);
-    line-height: 1.4;
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    -webkit-text-size-adjust: 100%;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    overflow-x: hidden;
-  }
-
-  /* Анимация крипторынка на фоне */
-  .crypto-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-    background: var(--bg);
-  }
-
-  .crypto-logo {
-    position: absolute;
-    font-size: 18px;
-    font-weight: 800;
-    color: rgba(16, 185, 129, 0.9);
-    opacity: 0;
-    animation: float 20s linear infinite;
-    text-shadow: 0 0 25px rgba(16, 185, 129, 1);
-    z-index: 1;
-  }
-
-  .trading-bot {
-    position: absolute;
-    width: 35px;
-    height: 35px;
-    background: radial-gradient(circle, var(--primary) 0%, transparent 60%);
-    border-radius: 50%;
-    opacity: 0;
-    animation: trade 25s ease-in-out infinite;
-    filter: blur(1px);
-    box-shadow: 0 0 35px var(--primary);
-    opacity: 0.8;
-  }
-
-  .price-line {
-    position: absolute;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
-    opacity: 0;
-    animation: priceMove 15s linear infinite;
-    box-shadow: 0 0 25px var(--primary);
-    opacity: 0.6;
-  }
-
-  .exchange-logo {
-    position: absolute;
-    font-size: 13px;
-    font-weight: 700;
-    color: rgba(52, 211, 153, 0.9);
-    opacity: 0;
-    animation: exchangeFloat 30s linear infinite;
-    padding: 4px 8px;
-    background: rgba(16, 185, 129, 0.35);
-    border-radius: 4px;
-    border: 1px solid rgba(16, 185, 129, 0.5);
-  }
-
-  .crypto-chart {
-    position: absolute;
-    width: 100px;
-    height: 45px;
-    border: 2px solid rgba(16, 185, 129, 0.7);
-    opacity: 0;
-    animation: chartFloat 40s linear infinite;
-    background: rgba(16, 185, 129, 0.25);
-  }
-
-  .crypto-chart::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, transparent 100%);
-    clip-path: polygon(0% 100%, 10% 80%, 20% 60%, 30% 70%, 40% 40%, 50% 50%, 60% 30%, 70% 60%, 80% 20%, 90% 40%, 100% 10%, 100% 100%, 0% 100%);
-  }
-
-  @keyframes float {
-    0% {
-      transform: translateY(100vh) rotate(0deg) scale(0.5);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.9;
-    }
-    90% {
-      opacity: 0.9;
-    }
-    100% {
-      transform: translateY(-100px) rotate(360deg) scale(1);
-      opacity: 0;
-    }
-  }
-
-  @keyframes trade {
-    0%, 100% {
-      transform: translate(0, 0) scale(0.8);
-      opacity: 0;
-    }
-    20% {
-      transform: translate(200px, 150px) scale(1);
-      opacity: 0.8;
-    }
-    40% {
-      transform: translate(400px, 80px) scale(0.7);
-      opacity: 0.8;
-    }
-    60% {
-      transform: translate(600px, 200px) scale(0.9);
-      opacity: 0.8;
-    }
-    80% {
-      transform: translate(800px, 120px) scale(0.6);
-      opacity: 0.8;
-    }
-  }
-
-  @keyframes priceMove {
-    0% {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.6;
-    }
-    90% {
-      opacity: 0.6;
-    }
-    100% {
-      transform: translateX(100vw);
-      opacity: 0;
-    }
-  }
-
-  @keyframes exchangeFloat {
-    0% {
-      transform: translateX(100vw) translateY(0) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.8;
-    }
-    90% {
-      opacity: 0.8;
-    }
-    100% {
-      transform: translateX(-100px) translateY(80px) rotate(180deg);
-      opacity: 0;
-    }
-  }
-
-  @keyframes chartFloat {
-    0% {
-      transform: translateY(100vh) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.4;
-    }
-    90% {
-      opacity: 0.4;
-    }
-    100% {
-      transform: translateY(-100px) rotate(10deg);
-      opacity: 0;
-    }
-  }
-
-  .pulse-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--primary-light);
-    border-radius: 50%;
-    animation: pulse 3s ease-in-out infinite;
-    box-shadow: 0 0 30px var(--primary);
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.4;
-    }
-    50% {
-      transform: scale(2.5);
-      opacity: 0.3;
-    }
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-    width: 100%;
-  }
-
-  /* Header */
-  .header {
-    background: rgba(10, 26, 20, 0.98);
-    backdrop-filter: blur(20px);
-    box-shadow: var(--shadow);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    flex-shrink: 0;
-    padding-top: var(--safe-top);
-  }
-
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 50px;
-    gap: 10px;
-    padding: 0 10px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    flex-shrink: 0;
-    z-index: 1001;
-  }
-
-  .logo {
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    animation: logoGlow 3s ease-in-out infinite alternate;
-  }
-
-  @keyframes logoGlow {
-    0% {
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    }
-    100% {
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6);
-    }
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .nav-links a {
-    color: var(--text);
-    text-decoration: none;
-    font-weight: 500;
-    padding: 6px 0;
-    font-size: 12px;
-    position: relative;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-  }
-
-  .nav-links a:hover {
-    color: var(--primary-light);
-  }
-
-  .nav-links a.active {
-    color: var(--primary);
-  }
-
-  .nav-links a.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--primary);
-    box-shadow: 0 0 8px var(--primary);
-  }
-
-  .nav-cta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  /* Кнопки */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    height: 32px;
-    padding: 0 12px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    color: var(--text);
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 11px;
-    backdrop-filter: blur(10px);
-    white-space: nowrap;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
-  }
-
-  .btn.primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-color: var(--primary);
-    color: white;
-  }
-
-  .btn.primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    transform: translateY(-1px);
-    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
-  }
-
-  /* Основной контент */
-  .main {
-    padding: 15px 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 120px);
-    overflow-y: auto;
-    width: 100%;
-    position: relative;
-  }
-
-  .main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-
-  /* Карточки */
-  .card {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    padding: 15px;
-    margin-bottom: 12px;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(15px);
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-  }
-
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
-    transition: left 0.5s ease;
-  }
-
-  .card:hover::before {
-    left: 100%;
-  }
-
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
-    border-color: rgba(16, 185, 129, 0.5);
-  }
-
-  .card h2 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card h2:before {
-    content: '';
-    width: 3px;
-    height: 16px;
-    background: var(--primary);
-    border-radius: 2px;
-    box-shadow: 0 0 8px var(--primary);
-  }
-
-  /* Сетка */
-  .grid {
-    display: grid;
-    gap: 10px;
-    margin-bottom: 10px;
-    width: 100%;
-  }
-
-  /* Формы */
-  .input {
-    width: 100%;
-    height: 32px;
-    padding: 0 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text);
-    font-size: 11px;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-  }
-
-  .input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  /* Утилиты */
-  .muted {
-    color: var(--text-secondary);
-    font-size: 11px;
-  }
-
-  .flex {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .text-center {
-    text-align: center;
-  }
-
-  /* Footer */
-  .footer {
-    background: rgba(10, 26, 20, 0.8);
-    border-top: 1px solid var(--border);
-    padding: 15px 0;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 10px;
-    font-weight: 500;
-    backdrop-filter: blur(20px);
-    flex-shrink: 0;
-    padding-bottom: calc(15px + var(--safe-bottom));
-  }
-
-  /* Иконки для заголовков */
-  .icon {
-    width: 18px;
-    height: 18px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 9px;
-    font-weight: bold;
-    box-shadow: 0 0 8px var(--primary);
-  }
-
-  /* Бургер меню для мобильных */
-  .burger {
-    display: none;
-    flex-direction: column;
-    gap: 3px;
-    cursor: pointer;
-    padding: 8px;
-    z-index: 1001;
-  }
-
-  .burger span {
-    width: 18px;
-    height: 2px;
-    background: var(--text);
-    transition: all 0.3s;
-    border-radius: 1px;
-  }
-
-  /* Мобильное меню */
-  .mobile-menu {
-    position: fixed;
-    top: 50px;
-    left: 0;
-    right: 0;
-    background: rgba(10, 26, 20, 0.98);
-    backdrop-filter: blur(30px);
-    border-bottom: 1px solid var(--border);
-    padding: 15px;
-    transform: translateY(-100%);
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 999;
-  }
-
-  .mobile-menu.active {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  .mobile-menu a {
-    display: block;
-    color: var(--text);
-    text-decoration: none;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .mobile-menu a:hover,
-  .mobile-menu a.active {
-    color: var(--primary);
-  }
-
-  .mobile-menu a:last-child {
-    border-bottom: none;
-  }
-
-  /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
-  @media (max-width: 768px) {
-    html, body {
-      background: var(--bg);
-      position: relative;
-      height: auto;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    .container {
-      padding: 0 10px;
-      max-width: 100%;
-      width: 100%;
-    }
-
-    .nav {
-      height: 50px;
-      padding: 0 8px;
-      gap: 8px;
-    }
-
-    .brand {
-      font-size: 15px;
-    }
-
-    .logo {
-      width: 26px;
-      height: 26px;
-      font-size: 11px;
-    }
-
-    .nav-cta {
-      gap: 6px;
-    }
-
-    .btn {
-      height: 32px;
-      padding: 0 10px;
-      font-size: 10px;
-    }
-
-    .main {
-      padding: 10px 0;
-      min-height: calc(100vh - 140px);
-      overflow-y: auto;
-    }
-
-    .grid {
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .card {
-      padding: 12px;
-      margin-bottom: 8px;
-    }
-
-    .card h2 {
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-
-    .input {
-      height: 30px;
-      font-size: 10px;
-    }
-
-    /* Скрываем обычное меню, показываем бургер */
-    .nav-links {
-      display: none !important;
-    }
-    
-    .burger {
-      display: flex;
-    }
-  }
-
-  /* Для очень маленьких экранов */
-  @media (max-width: 480px) {
-    .container {
-      padding: 0 8px;
-    }
-
-    .nav {
-      padding: 0 5px;
-    }
-
-    .card h2 {
-      font-size: 13px;
-    }
-
-    .card {
-      padding: 10px;
-    }
-
-    .btn {
-      padding: 0 8px;
-      font-size: 9px;
-    }
-  }
+    :root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg-2),var(--bg));color:var(--text);font:15px/1.6 Inter,system-ui}
+    .container{width:min(1100px,92vw);margin:0 auto;padding:24px 0}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:20px}
+    .grid{display:grid;gap:16px} .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))} @media (max-width:900px){.grid-2{grid-template-columns:1fr}}
+    .btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18));color:white;font-weight:700;cursor:pointer}
+    .input{width:100%;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);padding:0 12px}
+    .header{position:sticky;top:0;background:rgba(10,12,18,.6);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0} .nav a{color:#cfe9ff;margin-right:12px;text-decoration:none}
+    .muted{color:var(--muted)}
   </style>
 </head>
-
 <body>
+
 <!-- === LC RECOVERY HARDLOCK (v8) — prevent any auto-redirect to dashboard until password is updated === -->
-<script>(function(){
+<script>
+(function(){
   try {
     var parts = (location.search||'') + (location.hash||'');
     var isRec = /(^|[?#&])type=recovery|access_token=|recovery_token=/i.test(parts);
@@ -784,410 +80,303 @@
       }, 60);
     })();
   } catch(e){}
-})();</script>
-
-<!-- === LC RECOVERY LOCK (v4) — block any auto-redirects away from recovery === -->
-<script>
-(function(){
-  try {
-    var parts = (location.search || '') + (location.hash || '');
-    var isRecovery = /type=recovery|access_token=|recovery_token=/.test(parts);
-    if (isRecovery) {
-      // Global lock flag
-      window.__LC_RECOVERY_LOCK__ = true;
-      try { sessionStorage.setItem('lc_recovery_lock','1'); } catch(_) {}
-      // Guard against scripts calling location redirects to dashboard
-      var origAssign = location.assign.bind(location);
-      var origReplace = location.replace.bind(location);
-      function blockIfDashboard(url){
-        try {
-          var s = String(url);
-          if (window.__LC_RECOVERY_LOCK__ && /(\/|^)dashboard.*\.html|dashboard/i.test(s)) return true;
-        } catch(_) {}
-        return false;
-      }
-      location.assign = function(url){ if (blockIfDashboard(url)) return; return origAssign(url); };
-      location.replace = function(url){ if (blockIfDashboard(url)) return; return origReplace(url); };
-      // Restore after full load (once recovery UI is shown)
-      window.addEventListener('load', function(){ setTimeout(function(){ window.__LC_RECOVERY_LOCK__ = false; }, 8000); });
-    }
-  } catch(e){}
 })();
 </script>
 
-<!-- Анимированный фон с крипто-элементами -->
-<div class="crypto-background" id="cryptoBackground">
-  <!-- Элементы добавляются через JavaScript -->
-</div>
-
-<!-- Мобильное меню -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="index.html">Главная</a>
-  <a href="dashboard_single.html">Личный кабинет</a>
-  <a href="deposit_single.html">Пополнение</a>
-  <a href="withdraw_single.html">Вывод</a>
-  <a href="faq_single.html">FAQ</a>
-  <a href="settings_single.html">Настройки</a>
-</div>
-
-<header class="header">
-  <div class="container">
-    <nav class="nav">
-      <a class="brand" href="index.html">
-        <div class="logo">LC</div>
-        <span>Litcash</span>
-      </a>
-      
-      <div class="nav-links">
-        <a href="index.html">Главная</a>
-        <a href="dashboard_single.html">Личный кабинет</a>
-        <a href="deposit_single.html">Пополнение</a>
-        <a href="withdraw_single.html">Вывод</a>
-        <a href="faq_single.html">FAQ</a>
-        <a href="settings_single.html">Настройки</a>
-      </div>
-
-      <div class="nav-cta">
-        <a class="btn" href="login_single.html">Вход</a>
-        <a class="btn primary" href="register_single.html">Регистрация</a>
-      </div>
-
-      <div class="burger" id="burgerBtn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+<header class="header noscript-header">
+  <div class="container nav">
+    <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
+    <nav class="nav-links">
+      <a href="index.html">Главная</a>
+      <a href="dashboard_single.html">Личный кабинет</a>
+      <a href="deposit_single.html">Пополнение</a>
+      <a href="withdraw_single.html">Вывод</a>
+      <a href="faq_single.html">FAQ</a>
+      <a href="settings_single.html">Настройки</a>
     </nav>
+    <div class="nav-cta">
+      <a class="btn ghost" href="login_single.html">Вход</a>
+      <a class="btn primary" href="register_single.html">Регистрация</a>
+    </div>
   </div>
 </header>
 
-<main class="main">
-  <div class="container main-content">
-    <div class="card">
-      <h2><span class="icon">🔐</span>Вход</h2>
-      
-      <form class="grid" id="loginForm">
-        <input class="input" id="loginEmail" placeholder="Email (или оставьте пустым)" type="email">
-        <input class="input" id="loginPhone" placeholder="Телефон (с кодом страны)" type="tel">
-        <input class="input" id="loginPass" placeholder="Пароль" required type="password">
-        <button class="btn primary" type="submit">Войти</button>
-      </form>
+<main class="container">
+  <div class="card">
+    <h1>Вход</h1>
+    <form class="grid" id="loginForm">
+      <input class="input" id="loginEmail" placeholder="Email (или оставьте пустым)" type="email">
+      <input class="input" id="loginPhone" placeholder="Телефон (с кодом страны)" type="tel">
+      <input class="input" id="loginPass" placeholder="Пароль" required type="password">
+      <button class="btn" type="submit">Войти</button>
+    </form>
 
-      <!-- LC: Forgot password (email) -->
-      <div id="lc-forgot-card" class="card" style="margin-top:12px; padding:12px;">
-        <div class="grid" style="grid-template-columns: 1fr auto; gap:10px;">
-          <input id="forgotEmail" class="input" type="email" placeholder="Ваш email для восстановления">
-          <button id="sendReset" class="btn" type="button">Сбросить пароль</button>
-        </div>
-        <div class="muted" style="margin-top:8px">
-          Укажи email и получи письмо со ссылкой для смены пароля.
-        </div>
+    <!-- LC: Forgot password (email) -->
+    <div id="lc-forgot-card" class="card" style="margin-top:12px; padding:12px;">
+      <div class="grid" style="grid-template-columns: 1fr auto; gap:10px;">
+        <input id="forgotEmail" class="input" type="email" placeholder="Ваш email для восстановления">
+        <button id="sendReset" class="btn" type="button">Сбросить пароль</button>
       </div>
-
-      <!-- LC: Recovery (set new password after clicking email link) -->
-      <div id="lc-recovery-card" class="card" style="display:none; margin-top:12px; padding:12px;">
-        <div class="grid">
-          <input id="recoverPass1" class="input" type="password" placeholder="Новый пароль" minlength="6" required>
-          <input id="recoverPass2" class="input" type="password" placeholder="Повторите новый пароль" minlength="6" required>
-          <button id="applyNewPass" class="btn primary" type="button">Сохранить новый пароль</button>
-        </div>
-        <div class="muted" id="recoveryHint" style="margin-top:8px">
-          Вы открыли ссылку из письма. Установите новый пароль.
-        </div>
+      <div class="muted" style="margin-top:8px">
+        Укажи email и получи письмо со ссылкой для смены пароля.
       </div>
-
-      <p class="muted" style="margin-top: 12px;">Нет аккаунта? <a href="register_single.html">Зарегистрируйтесь</a></p>
     </div>
+
+    <!-- LC: Recovery (set new password after clicking email link) -->
+    <div id="lc-recovery-card" class="card" style="display:none; margin-top:12px; padding:12px;">
+      <div class="grid">
+        <input id="recoverPass1" class="input" type="password" placeholder="Новый пароль" minlength="6" required>
+        <input id="recoverPass2" class="input" type="password" placeholder="Повторите новый пароль" minlength="6" required>
+        <button id="applyNewPass" class="btn" type="button">Сохранить новый пароль</button>
+      </div>
+      <div class="muted" id="recoveryHint" style="margin-top:8px">
+        Вы открыли ссылку из письма. Установите новый пароль.
+      </div>
+    </div>
+
+    <p class="muted">Нет аккаунта? <a href="register_single.html">Зарегистрируйтесь</a></p>
   </div>
 </main>
 
 <footer class="footer">
-  <div class="container">
-    © 2025 Litcash. Все права защищены.
-  </div>
+  <div class="container">© 2025 Litcash</div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabaseConfig.js"></script>
 <script>
-// Бургер-меню
-document.addEventListener('DOMContentLoaded', function() {
-  const burgerBtn = document.getElementById('burgerBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
-  
-  if (burgerBtn && mobileMenu) {
-    burgerBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      mobileMenu.classList.toggle('active');
-      burgerBtn.classList.toggle('active');
-    });
+// Инициализация Supabase клиента
+const initSupabase = () => {
+  if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+    window.sb = window.supabase.createClient(
+      window.SUPABASE_URL, 
+      window.SUPABASE_ANON_KEY,
+      { 
+        auth: { 
+          persistSession: true, 
+          autoRefreshToken: true, 
+          detectSessionInUrl: true 
+        } 
+      }
+    );
+    return window.sb;
+  }
+  return null;
+};
+
+// Функция входа
+const handleLogin = async (email, phone, password) => {
+  const sb = window.sb || initSupabase();
+  if (!sb) {
+    alert('Ошибка инициализации');
+    return;
+  }
+
+  try {
+    let authMethod;
     
-    // Закрытие меню при клике на ссылку
-    const mobileLinks = mobileMenu.querySelectorAll('a');
-    mobileLinks.forEach(link => {
-      link.addEventListener('click', function() {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
+    if (email) {
+      authMethod = sb.auth.signInWithPassword({
+        email: email,
+        password: password
       });
-    });
-    
-    // Закрытие меню при клике вне его
-    document.addEventListener('click', function(e) {
-      if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      }
-    });
-  }
-});
-
-// Crypto background animation
-document.addEventListener('DOMContentLoaded', function() {
-  const cryptoBackground = document.getElementById('cryptoBackground');
-  if (!cryptoBackground) return;
-
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-  
-  const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
-  const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
-  
-  const cryptoLogoCount = isMobile ? 8 : 12;
-  const exchangeLogoCount = isMobile ? 6 : 8;
-  const botCount = isMobile ? 4 : 6;
-  const lineCount = isMobile ? 6 : 8;
-  const chartCount = isMobile ? 3 : 4;
-  const dotCount = isMobile ? 8 : 10;
-  
-  for (let i = 0; i < cryptoLogoCount; i++) {
-    const element = document.createElement('div');
-    element.className = 'crypto-logo';
-    element.textContent = cryptoLogos[i % cryptoLogos.length];
-    element.style.left = Math.random() * 90 + 5 + '%';
-    element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
-    element.style.fontSize = (Math.random() * 8 + 14) + 'px';
-    cryptoBackground.appendChild(element);
-  }
-  
-  for (let i = 0; i < exchangeLogoCount; i++) {
-    const element = document.createElement('div');
-    element.className = 'exchange-logo';
-    element.textContent = exchangeLogos[i % exchangeLogos.length];
-    element.style.top = Math.random() * 80 + 10 + '%';
-    element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
-    cryptoBackground.appendChild(element);
-  }
-  
-  for (let i = 0; i < botCount; i++) {
-    const bot = document.createElement('div');
-    bot.className = 'trading-bot';
-    bot.style.left = Math.random() * 80 + 10 + '%';
-    bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
-    cryptoBackground.appendChild(bot);
-  }
-  
-  for (let i = 0; i < lineCount; i++) {
-    const line = document.createElement('div');
-    line.className = 'price-line';
-    line.style.top = Math.random() * 80 + 10 + '%';
-    line.style.width = (Math.random() * 200 + 100) + 'px';
-    line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
-    cryptoBackground.appendChild(line);
-  }
-
-  for (let i = 0; i < chartCount; i++) {
-    const chart = document.createElement('div');
-    chart.className = 'crypto-chart';
-    chart.style.left = Math.random() * 80 + 10 + '%';
-    chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
-    cryptoBackground.appendChild(chart);
-  }
-
-  for (let i = 0; i < dotCount; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'pulse-dot';
-    dot.style.left = Math.random() * 95 + '%';
-    dot.style.top = Math.random() * 95 + '%';
-    dot.style.animationDelay = (i * 0.3) + 's';
-    cryptoBackground.appendChild(dot);
-  }
-});
-</script>
-
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="supabaseConfig.js"></script>
-<script defer src="app_supabase.js"></script>
-
-<!-- Все оригинальные скрипты восстановления пароля -->
-<script>
-// LC: Forgot password functionality
-(function(){
-  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
-  ready(function(){
-    var emailInput=document.getElementById('forgotEmail');
-    var sendBtn=document.getElementById('sendReset');
-    if(!emailInput||!sendBtn) return;
-
-    var sb=(function(){
-      try{
-        if (window.sb && window.sb.auth && typeof window.sb.auth.resetPasswordForEmail==='function') return window.sb;
-        if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-          return (window.sb = window.supabase.createClient(
-            window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
-            { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
-          ));
-        }
-      }catch(_){}
-      return null;
-    })();
-
-    sendBtn.addEventListener('click', async function(e){
-      e.preventDefault();
-      if(!sb){ alert('Supabase не инициализирован'); return; }
-      var email=(emailInput.value||'').trim();
-      if(!email){ alert('Введите email'); return; }
-      var redirectTo = new URL('login_single.html', location.origin).href;
-      sendBtn.disabled=true;
-      try{
-        var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirectTo });
-        if (res && res.error) throw res.error;
-        alert('Письмо отправлено. Проверьте почту и перейдите по ссылке.');
-      }catch(err){
-        alert('Ошибка: ' + (err && err.message ? err.message : err));
-      }finally{
-        sendBtn.disabled=false;
-      }
-    });
-  });
-})();
-</script>
-
-<script>
-// LC: Recovery functionality
-(function(){
-  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
-
-  // Merge params from both ?query and #hash (Supabase often uses the hash for access_token/type)
-  function readParams(){
-    var map = new Map();
-    try {
-      var q = new URLSearchParams(location.search||'');
-      q.forEach((v,k)=>map.set(k,v));
-    } catch(_){}
-    try {
-      var h = location.hash ? location.hash.replace(/^#/, '') : '';
-      // If hash is something like "#access_token=...&type=recovery"
-      var hp = new URLSearchParams(h);
-      hp.forEach((v,k)=>map.set(k,v));
-    } catch(_){}
-    return map;
-  }
-
-  function showRecoveryUI(){
-    var loginForm = document.getElementById('loginForm');
-    var forgot = document.getElementById('lc-forgot-card');
-    var rec = document.getElementById('lc-recovery-card');
-    if (loginForm) loginForm.style.display = 'none';
-    if (forgot) forgot.style.display = 'none';
-    if (rec) rec.style.display = 'block';
-  }
-
-  ready(async function(){
-      // Force recovery UI if link contains recovery tokens
-  try {
-    var _h = (location.hash||''); var _s = (location.search||'');
-    var _map = new URLSearchParams(_h.replace(/^#/,'')); var _q = new URLSearchParams(_s.replace(/^\?/,''));
-    var _isRec = /recovery/i.test(String(_map.get('type')||_q.get('type')||'')) || _map.has('access_token') || _map.has('recovery_token') || _q.has('access_token') || _q.has('recovery_token');
-    if (_isRec) { try{ showRecoveryUI(); setTimeout(showRecoveryUI, 50); }catch(_){} }
-  } catch(_){}
-  // After Supabase parses tokens, clean hash to '#recovery' so tokens disappear
-  try {
-    var _wait = 0;
-    while (_isRec && _wait < 60) { // up to ~3.6s
-      var _sess = await sb.auth.getSession();
-      if (_sess && _sess.data && _sess.data.session) {
-        try { history.replaceState(null,'', location.pathname + (location.search||'') + '#recovery'); } catch(_) {}
-        break;
-      }
-      await new Promise(r=>setTimeout(r,60)); _wait++;
+    } else if (phone) {
+      // Для входа по телефону (если поддерживается)
+      authMethod = sb.auth.signInWithPassword({
+        phone: phone,
+        password: password
+      });
+    } else {
+      alert('Введите email или телефон');
+      return;
     }
-  } catch(_){}
-try{
-      var params = readParams();
-      var isRecovery = (String(params.get('type')||'').toLowerCase() === 'recovery') || params.has('access_token') || params.has('recovery_token');
 
-      // Reuse or create Supabase client
-      var sb = (function(){
-        try{
-          if (window.sb && window.sb.auth) return window.sb;
-          if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-            return (window.sb = window.supabase.createClient(
-              window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
-              { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
-            ));
-          }
-        }catch(_){}
-        return null;
-      })();
-      if (!sb) return;
-
-      // If URL suggests recovery, proactively show UI. We'll still verify session before changing password.
-      if (isRecovery) { showRecoveryUI(); setTimeout(showRecoveryUI, 50); }
-
-      // If not clearly recovery yet, listen for auth state changes — Supabase emits PASSWORD_RECOVERY upon token parsing.
-      try {
-        sb.auth.onAuthStateChange(function(event, session){
-          if (event === 'PASSWORD_RECOVERY') {
-            // For some projects, the event could be SIGNED_IN with recovery tokens
-            showRecoveryUI(); setTimeout(showRecoveryUI, 50);
-          }
-        });
-      } catch(_){}
-
-      // Wire up "save new password" handler
-      var p1 = document.getElementById('recoverPass1');
-      var p2 = document.getElementById('recoverPass2');
-      var btn = document.getElementById('applyNewPass');
-      if (!btn) return;
-      btn.addEventListener('click', async function(){
-        if ((p1.value||'').length < 6){ alert('Минимум 6 символов'); return; }
-        if (p1.value !== p2.value){ alert('Пароли не совпадают'); return; }
-        btn.disabled = true;
-        try{
-          // Ensure we actually have a session from the recovery link
-          var s = await sb.auth.getSession();
-          if (!s || !s.data || !s.data.session) {
-            throw new Error('Нет активной сессии восстановления. Откройте ссылку из письма ещё раз.');
-          }
-          var r = await sb.auth.updateUser({ password: p1.value });
-          if (r && r.error) throw r.error;
-          // End the temporary session and return to clean login
-          try{ window.__LC_RECOVERY_LOCK__ = false; sessionStorage.removeItem('lc_recovery_lock'); }catch(_){ }
-alert('Пароль обновлён. Входим в кабинет…');
-location.replace('dashboard_single.html');
-        }catch(err){
-          alert('Ошибка: ' + (err && err.message ? err.message : err));
-        }finally{
-          btn.disabled = false;
-        }
-      });
-
-      // Fallback: if UI not shown yet but session exists (token parsed), show it shortly after
-      setTimeout(async function(){
-        try {
-          var s = await sb.auth.getSession();
-          if (isRecovery && s && s.data && s.data.session) { showRecoveryUI(); setTimeout(showRecoveryUI, 50); }
-        } catch(_){}
-      }, 400);
-
-    }catch(_){}
-  });
-})();
-</script>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+    const { data, error } = await authMethod;
+    
+    if (error) throw error;
+    
+    if (data?.user) {
+      alert('Вход успешен!');
+      window.location.href = 'dashboard_single.html';
+    }
+  } catch (error) {
+    alert('Ошибка входа: ' + error.message);
   }
+};
+
+// Функция сброса пароля
+const handlePasswordReset = async (email) => {
+  const sb = window.sb || initSupabase();
+  if (!sb) {
+    alert('Ошибка инициализации');
+    return;
+  }
+
+  try {
+    const redirectTo = new URL('login_single.html', location.origin).href;
+    const { error } = await sb.auth.resetPasswordForEmail(email, { 
+      redirectTo: redirectTo 
+    });
+    
+    if (error) throw error;
+    
+    alert('Письмо отправлено. Проверьте почту и перейдите по ссылке.');
+  } catch (error) {
+    alert('Ошибка: ' + error.message);
+  }
+};
+
+// Функция восстановления пароля
+const handlePasswordRecovery = async (newPassword, confirmPassword) => {
+  const sb = window.sb || initSupabase();
+  if (!sb) {
+    alert('Ошибка инициализации');
+    return;
+  }
+
+  try {
+    if (newPassword.length < 6) {
+      throw new Error('Минимум 6 символов');
+    }
+    
+    if (newPassword !== confirmPassword) {
+      throw new Error('Пароли не совпадают');
+    }
+
+    const { data: sessionData } = await sb.auth.getSession();
+    if (!sessionData?.session) {
+      throw new Error('Нет активной сессии восстановления. Откройте ссылку из письма ещё раз.');
+    }
+
+    const { error } = await sb.auth.updateUser({ 
+      password: newPassword 
+    });
+    
+    if (error) throw error;
+
+    window.__LC_RECOVERY_LOCK__ = false;
+    try { sessionStorage.removeItem('lc_recovery_lock'); } catch(_){ }
+    
+    alert('Пароль обновлён. Входим в кабинет…');
+    window.location.replace('dashboard_single.html');
+  } catch (error) {
+    alert('Ошибка: ' + error.message);
+  }
+};
+
+// Показать UI восстановления
+const showRecoveryUI = () => {
+  const loginForm = document.getElementById('loginForm');
+  const forgot = document.getElementById('lc-forgot-card');
+  const rec = document.getElementById('lc-recovery-card');
+  
+  if (loginForm) loginForm.style.display = 'none';
+  if (forgot) forgot.style.display = 'none';
+  if (rec) rec.style.display = 'block';
+};
+
+// Проверка recovery параметров в URL
+const checkRecoveryParams = () => {
+  try {
+    const hash = (location.hash || '');
+    const search = (location.search || '');
+    const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+    const searchParams = new URLSearchParams(search.replace(/^\?/, ''));
+    
+    const isRecovery = 
+      /recovery/i.test(hashParams.get('type') || searchParams.get('type') || '') ||
+      hashParams.has('access_token') || 
+      hashParams.has('recovery_token') ||
+      searchParams.has('access_token') || 
+      searchParams.has('recovery_token');
+    
+    return isRecovery;
+  } catch (error) {
+    return false;
+  }
+};
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', () => {
+  // Инициализация Supabase
+  initSupabase();
+  
+  // Обработчик формы входа
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value.trim();
+      const phone = document.getElementById('loginPhone').value.trim();
+      const password = document.getElementById('loginPass').value;
+      
+      handleLogin(email, phone, password);
+    });
+  }
+  
+  // Обработчик сброса пароля
+  const sendResetBtn = document.getElementById('sendReset');
+  if (sendResetBtn) {
+    sendResetBtn.addEventListener('click', () => {
+      const email = document.getElementById('forgotEmail').value.trim();
+      if (!email) {
+        alert('Введите email');
+        return;
+      }
+      handlePasswordReset(email);
+    });
+  }
+  
+  // Обработчик восстановления пароля
+  const applyNewPassBtn = document.getElementById('applyNewPass');
+  if (applyNewPassBtn) {
+    applyNewPassBtn.addEventListener('click', () => {
+      const newPass = document.getElementById('recoverPass1').value;
+      const confirmPass = document.getElementById('recoverPass2').value;
+      
+      handlePasswordRecovery(newPass, confirmPass);
+    });
+  }
+  
+  // Проверка recovery параметров
+  if (checkRecoveryParams()) {
+    showRecoveryUI();
+    
+    // Очистка URL после обработки токенов
+    const sb = window.sb;
+    if (sb) {
+      setTimeout(async () => {
+        try {
+          const { data } = await sb.auth.getSession();
+          if (data?.session) {
+            history.replaceState(null, '', location.pathname + (location.search || '') + '#recovery');
+          }
+        } catch (error) {
+          console.log('Error cleaning URL:', error);
+        }
+      }, 100);
+    }
+  }
+  
+  // Обработчик изменений состояния аутентификации
+  const sb = window.sb;
+  if (sb) {
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        showRecoveryUI();
+      }
+    });
+  }
+});
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js');
+  });
+}
 </script>
-<script src="/app-install.js" defer></script>
 
 </body>
 </html>
