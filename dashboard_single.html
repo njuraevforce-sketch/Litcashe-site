@@ -649,9 +649,10 @@
     color: var(--text-secondary);
   }
 
-  /* Видео */
+  /* Видео - ФИКСИРОВАННЫЙ РАЗМЕР */
   .video-container {
     width: 100%;
+    height: 200px; /* Фиксированная высота */
     border-radius: var(--radius);
     overflow: hidden;
     background: #000;
@@ -680,8 +681,9 @@
 
   .video-container video {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
+    object-fit: cover; /* Заполняет контейнер без искажений */
   }
 
   /* Утилиты */
@@ -937,6 +939,7 @@
     }
 
     .video-container {
+      height: 180px; /* Меньшая высота на мобильных */
       margin-bottom: 8px;
     }
 
@@ -1058,6 +1061,10 @@
       font-size: 9px;
     }
 
+    .video-container {
+      height: 160px; /* Еще меньше на очень маленьких экранах */
+    }
+
     .nav-cta .btn:first-child {
       display: none; /* Скрываем кнопку Вход на очень маленьких экранах */
     }
@@ -1071,6 +1078,10 @@
     
     .container {
       padding: 0 8px;
+    }
+
+    .video-container {
+      height: 150px; /* Меньшая высота в ландшафте */
     }
   }
 
@@ -1087,6 +1098,10 @@
 
     .card {
       margin-bottom: 6px;
+    }
+
+    .video-container {
+      height: 140px; /* Еще меньше на устройствах с маленькой высотой */
     }
   }
 
@@ -1238,7 +1253,7 @@
         <h2><span class="icon">▶</span>Просмотр видео</h2>
         
         <div class="video-container">
-          <video id="promoVid" controls style="width:100%;height:auto">
+          <video id="promoVid" controls style="width:100%;height:100%">
             <source src="/assets/videos/ad1.MP4" type="video/mp4">
             Ваш браузер не поддерживает видео тег.
           </video>
@@ -1440,6 +1455,43 @@ window.LC_TOAST = (function(){
   }
   return{ok:show,err:show};
 })();
+
+// Реферальная ссылка - правильная реализация из старого файла
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
+
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (user) {
+      // Генерация реферального кода из user.id как в старом файле
+      function shortCodeFromUUID(id){
+        try{
+          const hex = String(id||'').replace(/-/g,'').slice(-8);
+          return parseInt(hex,16).toString(36).toUpperCase().padStart(6,'0').slice(0,8);
+        }catch(_){ return 'REF'; }
+      }
+      
+      const refCode = shortCodeFromUUID(user.id);
+      const refLink = document.getElementById('refLink');
+      if (refLink) {
+        refLink.value = window.location.origin + '/ref/' + refCode;
+      }
+
+      // Копирование реферальной ссылки
+      const btnCopyRef = document.getElementById('btnCopyRef');
+      if (btnCopyRef) {
+        btnCopyRef.addEventListener('click', function() {
+          refLink.select();
+          document.execCommand('copy');
+          window.LC_TOAST?.('✅ Реферальная ссылка скопирована!');
+        });
+      }
+    }
+  } catch(e) {
+    console.warn('Error setting referral link:', e);
+  }
+});
 
 // Загрузка данных уровня и баланса
 document.addEventListener('DOMContentLoaded', () => {
@@ -1876,23 +1928,6 @@ document.addEventListener("DOMContentLoaded", async function(){
       await LC.mountReferral(); 
     }
   } catch(e){ console.warn("[init referral]", e); }
-});
-
-// Реферальная ссылка
-document.addEventListener('DOMContentLoaded', function() {
-  const btnCopyRef = document.getElementById('btnCopyRef');
-  const refLink = document.getElementById('refLink');
-  
-  if (btnCopyRef && refLink) {
-    // Генерация реферальной ссылки
-    refLink.value = window.location.origin + '/ref/' + Math.random().toString(36).substr(2, 9);
-    
-    btnCopyRef.addEventListener('click', function() {
-      refLink.select();
-      document.execCommand('copy');
-      window.LC_TOAST?.('✅ Реферальная ссылка скопирована!');
-    });
-  }
 });
 
 // Бургер-меню (сохранено из нового дизайна)
