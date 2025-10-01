@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- PWA init -->
-  <script defer src="/js/app-install.js"></script>
+  <script defer src="/app-install.js"></script>
   <script defer>
   (function () {
     if (!('serviceWorker' in navigator)) return;
@@ -21,7 +21,7 @@
       navigator.serviceWorker.getRegistration('/')
         .then(function (reg) {
           if (!reg) {
-            return navigator.serviceWorker.register('/js/sw.js', { scope: '/' });
+            return navigator.serviceWorker.register('/sw.js', { scope: '/' });
           }
         })
         .catch(console.error);
@@ -68,8 +68,6 @@
     -webkit-text-size-adjust: 100%;
     display: flex;
     flex-direction: column;
-    /* ФИКС: предотвращаем белый фон при загрузке */
-    background-color: #0a1a14;
   }
 
   /* Анимация крипторынка на фоне - УВЕЛИЧЕНА ВИДИМОСТЬ ДЛЯ МОБИЛЬНЫХ */
@@ -440,7 +438,7 @@
     flex-direction: column;
   }
 
-  /* Карточки - ФИКСИРУЕМ РАЗМЕРЫ */
+  /* Карточки */
   .card {
     background: var(--bg-card);
     border-radius: var(--radius);
@@ -452,9 +450,6 @@
     backdrop-filter: blur(15px);
     position: relative;
     overflow: hidden;
-    /* ФИКС: предотвращаем растягивание карточек */
-    min-height: 0;
-    flex-shrink: 0;
   }
 
   .card::before {
@@ -497,13 +492,11 @@
     box-shadow: 0 0 8px var(--primary);
   }
 
-  /* Сетка - ФИКСИРУЕМ КОЛОНКИ */
+  /* Сетка */
   .grid {
     display: grid;
     gap: 10px;
     margin-bottom: 10px;
-    /* ФИКС: предотвращаем растягивание сетки */
-    align-items: start;
   }
 
   .grid-3 {
@@ -520,8 +513,6 @@
     padding: 15px 10px;
     position: relative;
     overflow: hidden;
-    /* ФИКС: фиксируем высоту */
-    height: fit-content;
   }
 
   .stat-card:before {
@@ -658,7 +649,7 @@
     color: var(--text-secondary);
   }
 
-  /* Видео - ФИКСИРУЕМ РАЗМЕР */
+  /* Видео */
   .video-container {
     width: 100%;
     border-radius: var(--radius);
@@ -667,11 +658,6 @@
     margin-bottom: 12px;
     border: 1px solid var(--border);
     position: relative;
-    /* ФИКС: ограничиваем высоту видео */
-    max-height: 250px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .video-container:before {
@@ -696,8 +682,6 @@
     width: 100%;
     height: auto;
     display: block;
-    max-height: 250px;
-    object-fit: contain;
   }
 
   /* Утилиты */
@@ -763,7 +747,7 @@
     box-shadow: 0 0 8px var(--primary);
   }
 
-  /* Уведомления - ФИКС БЕЛОГО ФОНА */
+  /* Уведомления */
   .notification {
     position: fixed;
     top: 60px;
@@ -777,9 +761,6 @@
     transition: transform 0.3s ease;
     z-index: 1000;
     font-size: 11px;
-    /* ФИКС: предотвращаем влияние на основной фон */
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 
   .notification.show {
@@ -957,11 +938,6 @@
 
     .video-container {
       margin-bottom: 8px;
-      max-height: 200px;
-    }
-
-    .video-container video {
-      max-height: 200px;
     }
 
     .progress {
@@ -1083,15 +1059,7 @@
     }
 
     .nav-cta .btn:first-child {
-      display: none;
-    }
-
-    .video-container {
-      max-height: 180px;
-    }
-
-    .video-container video {
-      max-height: 180px;
+      display: none; /* Скрываем кнопку Вход на очень маленьких экранах */
     }
   }
 
@@ -1103,14 +1071,6 @@
     
     .container {
       padding: 0 8px;
-    }
-
-    .video-container {
-      max-height: 150px;
-    }
-
-    .video-container video {
-      max-height: 150px;
     }
   }
 
@@ -1127,14 +1087,6 @@
 
     .card {
       margin-bottom: 6px;
-    }
-
-    .video-container {
-      max-height: 180px;
-    }
-
-    .video-container video {
-      max-height: 180px;
     }
   }
 
@@ -1279,15 +1231,15 @@
       </div>
     </div>
 
-    <!-- Основной контент - ФИКСИРУЕМ ВЫСОТУ КОЛОНОК -->
-    <div class="grid grid-2" style="align-items: start;">
+    <!-- Основной контент -->
+    <div class="grid grid-2">
       <!-- Видео блок -->
-      <div class="card" style="min-height: 400px;">
+      <div class="card">
         <h2><span class="icon">▶</span>Просмотр видео</h2>
         
         <div class="video-container">
           <video id="promoVid" controls style="width:100%;height:auto">
-            <source id="promoSource" src="/assets/videos/ad1.MP4/assets/videos/ad2.MP4/assets/videos/ad3.MP4/assets/videos/ad4.MP4/assets/videos/ad5.MP4/assets/videos/ad6.MP4/assets/videos/ad7.MP4/assets/videos/ad8.MP4/assets/videos/ad9.MP4/assets/videos/ad10.MP4/assets/videos/ad11.MP4/assets/videos/ad12.MP4/assets/videos/ad13.mp4/assets/videos/ad14.mp4/assets/videos/ad15.mp4/assets/videos/ad16.mp4/assets/videos/ad17.mp4/assets/videos/ad18.MP4/assets/videos/ad19.MP4/assets/videos/ad20.MP4" type="video/mp4">
+            <source src="/assets/videos/ad1.MP4" type="video/mp4">
             Ваш браузер не поддерживает видео тег.
           </video>
         </div>
@@ -1304,7 +1256,7 @@
       </div>
 
       <!-- Реферальная панель -->
-      <div class="card" style="min-height: 400px;">
+      <div class="card">
         <h2><span class="icon">👥</span>Реферальная панель</h2>
         
         <div class="flex" style="margin-bottom: 12px">
@@ -1460,8 +1412,8 @@
 </footer>
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="/js/supabaseConfig.js"></script>
-<script defer src="/js/app_supabase.js"></script>
+<script defer src="supabaseConfig.js"></script>
+<script defer src="app_supabase.js"></script>
 
 <script>
 // Анимированный фон и базовые функции
@@ -1576,75 +1528,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const refLink = document.getElementById('refLink');
     
     if (btnCopyRef && refLink) {
+      refLink.value = window.location.origin + '/ref/' + Math.random().toString(36).substr(2, 9);
+      
       btnCopyRef.addEventListener('click', function() {
-        // Реферальная ссылка будет установлена после загрузки профиля
-        if (refLink.value) {
-          refLink.select();
-          document.execCommand('copy');
-          showNotification('✅ Реферальная ссылка скопирована!');
-        } else {
-          showNotification('⏳ Загрузка реферальной ссылки...');
-        }
+        refLink.select();
+        document.execCommand('copy');
+        showNotification('✅ Реферальная ссылка скопирована!');
       });
     }
 
-    // Инициализация профиля и рефералов
+    // Инициализация оригинальных функций
     try {
       if (window.LC && typeof LC.ensureProfile === "function") { 
-        LC.ensureProfile().then(function(profile) {
-          // Профиль загружен, можно обновлять UI
-          if (window.LC && typeof LC.updateDashboard === "function") {
-            LC.updateDashboard();
-          }
-        }).catch(console.error);
+        LC.ensureProfile(); 
+      }
+      if (window.LC && typeof LC.mountReferral === "function") { 
+        LC.mountReferral(); 
       }
     } catch(e) { 
-      console.warn("[init profile]", e); 
+      console.warn("[init referral]", e); 
     }
-
-    // Реферальная система инициализируется после профиля
-    setTimeout(function() {
-      try {
-        if (window.LC && typeof LC.mountReferral === "function") {
-          LC.mountReferral();
-        }
-      } catch(e) {
-        console.warn("[mount referral]", e);
-      }
-    }, 1000);
-
-    // Инициализация видео после загрузки профиля
-    setTimeout(function() {
-      try { 
-        if (window.LC && typeof LC.initVideoWatch === 'function') {
-          LC.initVideoWatch();
-        }
-      } catch(e) {
-        console.warn("[init video]", e);
-      }
-    }, 1500);
-
-    // Обновление дашборда
-    setTimeout(function() {
-      try {
-        if (window.LC && typeof LC.updateDashboard === "function") {
-          LC.updateDashboard();
-        }
-      } catch(e) {
-        console.warn("[update dashboard]", e);
-      }
-    }, 2000);
 
     // Демонстрационное уведомление при загрузке
     setTimeout(() => {
       showNotification('🚀 Добро пожаловать в Litcash!');
-    }, 1500);
+    }, 1000);
 });
 
-// ФИКС: Предотвращаем белый фон при загрузке
-window.addEventListener('load', function() {
-  document.body.style.background = 'var(--bg-gradient)';
-  document.body.style.backgroundColor = '#0a1a14';
+// Запуск видео функции
+document.addEventListener('DOMContentLoaded', function(){
+  try{ if(window.LC && typeof LC.initVideoWatch==='function') LC.initVideoWatch(); }catch(_){}
 });
 </script>
 </body>
