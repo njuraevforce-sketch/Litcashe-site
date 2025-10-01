@@ -1203,7 +1203,32 @@
       </div>
 
       <div class="nav-cta">
-        <!-- Language switcher will be inserted here by JavaScript -->
+        <!-- Языковой переключатель - ДОБАВЛЕН ВРУЧНУЮ -->
+        <div class="lc-lang">
+          <button class="lc-lang__btn" aria-haspopup="listbox" aria-expanded="false">
+            <svg viewBox="0 0 24 24" class="lc-lang__icon" aria-hidden="true">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            <span class="lc-lang__label">RU</span>
+          </button>
+          <ul class="lc-lang__menu" role="listbox" tabindex="-1">
+            <li role="option" data-lang="ru"><span class="lang-flag ru"></span><span>RU</span></li>
+            <li role="option" data-lang="en"><span class="lang-flag en"></span><span>EN</span></li>
+            <li role="option" data-lang="cn"><span class="lang-flag cn"></span><span>中文</span></li>
+            <li role="option" data-lang="es"><span class="lang-flag es"></span><span>ES</span></li>
+            <li role="option" data-lang="fr"><span class="lang-flag fr"></span><span>FR</span></li>
+            <li role="option" data-lang="de"><span class="lang-flag de"></span><span>DE</span></li>
+            <li role="option" data-lang="pt"><span class="lang-flag pt"></span><span>PT</span></li>
+            <li role="option" data-lang="ar"><span class="lang-flag ar"></span><span>AR</span></li>
+            <li role="option" data-lang="ja"><span class="lang-flag jp"></span><span>JA</span></li>
+            <li role="option" data-lang="ko"><span class="lang-flag kr"></span><span>KO</span></li>
+            <li role="option" data-lang="tr"><span class="lang-flag tr"></span><span>TR</span></li>
+            <li role="option" data-lang="it"><span class="lang-flag it"></span><span>IT</span></li>
+            <li role="option" data-lang="hi"><span class="lang-flag in"></span><span>HI</span></li>
+            <li role="option" data-lang="pl"><span class="lang-flag pl"></span><span>PL</span></li>
+          </ul>
+        </div>
+        
         <a class="btn" href="login_single.html" data-i18n="nav_login">Вход</a>
         <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
       </div>
