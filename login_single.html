@@ -506,10 +506,6 @@
     width: 100%;
   }
 
-  .grid-2 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   /* Формы */
   .input {
     width: 100%;
@@ -689,10 +685,6 @@
       margin-bottom: 8px;
     }
 
-    .grid-2 {
-      grid-template-columns: 1fr;
-    }
-
     .card {
       padding: 12px;
       margin-bottom: 8px;
@@ -715,51 +707,6 @@
     
     .burger {
       display: flex;
-    }
-
-    /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
-    .crypto-logo {
-      font-size: 16px !important;
-      animation-duration: 18s !important;
-      color: rgba(16, 185, 129, 0.95) !important;
-      text-shadow: 0 0 30px rgba(16, 185, 129, 1) !important;
-    }
-
-    .trading-bot {
-      width: 30px !important;
-      height: 30px !important;
-      animation-duration: 22s !important;
-      box-shadow: 0 0 40px var(--primary) !important;
-      opacity: 0.9 !important;
-    }
-
-    .crypto-chart {
-      width: 90px !important;
-      height: 40px !important;
-      animation-duration: 35s !important;
-      border: 2px solid rgba(16, 185, 129, 0.8) !important;
-      background: rgba(16, 185, 129, 0.3) !important;
-    }
-
-    .price-line {
-      animation-duration: 16s !important;
-      height: 3px !important;
-      box-shadow: 0 0 30px var(--primary) !important;
-      opacity: 0.7 !important;
-    }
-
-    .exchange-logo {
-      animation-duration: 28s !important;
-      color: rgba(52, 211, 153, 0.95) !important;
-      background: rgba(16, 185, 129, 0.4) !important;
-      font-size: 12px !important;
-      padding: 3px 7px !important;
-    }
-
-    .pulse-dot {
-      width: 9px !important;
-      height: 9px !important;
-      box-shadow: 0 0 35px var(--primary) !important;
     }
   }
 
@@ -786,30 +733,6 @@
       font-size: 9px;
     }
   }
-
-  /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
-  @media (prefers-reduced-motion: reduce) {
-    .crypto-logo,
-    .trading-bot,
-    .price-line,
-    .exchange-logo,
-    .crypto-chart,
-    .pulse-dot,
-    .logo,
-    .card::before {
-      animation: none !important;
-      transition: none !important;
-    }
-  }
-  </style>
-
-  <!-- Language switcher styles -->
-  <style>
-  .lc-lang{position:relative;display:inline-flex;align-items:center}
-  .lc-lang__btn{height:28px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)!important;background:var(--bg-card)!important;color:var(--text)!important;display:inline-flex;gap:4px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:all 0.3s ease}
-  .lc-lang__btn:hover{border-color:var(--primary)!important;color:var(--primary)!important;box-shadow:0 2px 10px rgba(0,0,0,.3)}
-  .lc-lang__icon{width:12px;height:12px}
-  .lc-lang__label{font-size:9px;line-height:1}
   </style>
 </head>
 
@@ -925,15 +848,6 @@
       </div>
 
       <div class="nav-cta">
-        <div class="lc-lang">
-          <button class="lc-lang__btn">
-            <svg class="lc-lang__icon" viewBox="0 0 24 24">
-              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
-            </svg>
-            <span class="lc-lang__label">RU</span>
-          </button>
-        </div>
-        
         <a class="btn" href="login_single.html">Вход</a>
         <a class="btn primary" href="register_single.html">Регистрация</a>
       </div>
@@ -955,7 +869,7 @@
       <form class="grid" id="loginForm">
         <input class="input" id="loginEmail" placeholder="Email (или оставьте пустым)" type="email">
         <input class="input" id="loginPhone" placeholder="Телефон (с кодом страны)" type="tel">
-        <input class="input" id="loginPass" placeholder="Пароль" required="" type="password">
+        <input class="input" id="loginPass" placeholder="Пароль" required type="password">
         <button class="btn primary" type="submit">Войти</button>
       </form>
 
@@ -1099,12 +1013,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
-<script defer src="assets/js/i18n.js"></script>
 <script defer src="app_supabase.js"></script>
-<script defer src="assets/js/lang-switcher.js"></script>
 
 <!-- Все оригинальные скрипты восстановления пароля -->
-<script id="lc-forgot-inline">
+<script>
+// LC: Forgot password functionality
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
   ready(function(){
@@ -1146,7 +1059,8 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 
-<script id="lc-recovery-inline">
+<script>
+// LC: Recovery functionality
 (function(){
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
 
@@ -1273,6 +1187,7 @@ location.replace('dashboard_single.html');
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
   }
 </script>
+<script src="/app-install.js" defer></script>
 
 </body>
 </html>
