@@ -70,19 +70,22 @@
     flex-direction: column;
   }
 
-  /* === ЯЗЫКОВОЙ ПЕРЕКЛЮЧАТЕЛЬ === */
-  .language-switcher {
+  /* === ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ === */
+  .language-switcher-header {
     position: relative;
-    display: inline-block;
+    display: flex;
+    align-items: center;
     z-index: 1001;
+    margin-left: auto;
+    margin-right: 10px;
   }
 
-  .lang-btn {
+  .lang-btn-header {
     display: flex;
     align-items: center;
     gap: 6px;
     height: 32px;
-    padding: 0 12px;
+    padding: 0 10px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -95,7 +98,7 @@
     white-space: nowrap;
   }
 
-  .lang-btn:hover {
+  .lang-btn-header:hover {
     border-color: var(--primary);
     color: var(--primary);
     transform: translateY(-1px);
@@ -107,17 +110,12 @@
     height: 14px;
   }
 
-  .lang-arrow {
-    width: 12px;
-    height: 12px;
-    transition: transform 0.3s ease;
+  .lang-code-header {
+    font-size: 11px;
+    font-weight: 600;
   }
 
-  .language-switcher.active .lang-arrow {
-    transform: rotate(180deg);
-  }
-
-  .lang-dropdown {
+  .lang-dropdown-header {
     position: absolute;
     top: 100%;
     right: 0;
@@ -138,7 +136,7 @@
     z-index: 1002;
   }
 
-  .language-switcher.active .lang-dropdown {
+  .language-switcher-header.active .lang-dropdown-header {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -187,6 +185,22 @@
     font-weight: 600;
   }
 
+  /* Флаги языков */
+  .lang-flag.ru { background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%); }
+  .lang-flag.en { background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%); }
+  .lang-flag.cn { background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%); }
+  .lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
+  .lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
+  .lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
+  .lang-flag.pt { background: linear-gradient(to right, #006600 40%, #ff0000 40%, #ff0000 60%, #ffcc00 60%); }
+  .lang-flag.ar { background: linear-gradient(to bottom, #ce1126 33%, #ffffff 33%, #ffffff 66%, #000000 66%); }
+  .lang-flag.jp { background: radial-gradient(circle, #bc002d 30%, white 30%); }
+  .lang-flag.kr { background: linear-gradient(to bottom, #ffffff 50%, #000000 50%); }
+  .lang-flag.tr { background: linear-gradient(to bottom, #e30a17 0%, #e30a17 100%); }
+  .lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
+  .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
+  .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
+
   /* Мобильный языковой переключатель */
   .mobile-lang-switcher {
     padding: 15px 0;
@@ -228,83 +242,6 @@
     background: rgba(16, 185, 129, 0.2);
     color: var(--primary);
     font-weight: 600;
-  }
-
-  /* Флаги языков */
-  .lang-flag.ru { background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%); }
-  .lang-flag.en { background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%); }
-  .lang-flag.cn { background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%); }
-  .lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
-  .lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
-  .lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
-  .lang-flag.pt { background: linear-gradient(to right, #006600 40%, #ff0000 40%, #ff0000 60%, #ffcc00 60%); }
-  .lang-flag.ar { background: linear-gradient(to bottom, #ce1126 33%, #ffffff 33%, #ffffff 66%, #000000 66%); }
-  .lang-flag.jp { background: radial-gradient(circle, #bc002d 30%, white 30%); }
-  .lang-flag.kr { background: linear-gradient(to bottom, #ffffff 50%, #000000 50%); }
-  .lang-flag.tr { background: linear-gradient(to bottom, #e30a17 0%, #e30a17 100%); }
-  .lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
-  .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
-  .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
-
-  /* Мобильная адаптация */
-  @media (max-width: 768px) {
-    .language-switcher {
-      width: 100%;
-      margin-bottom: 10px;
-    }
-
-    .lang-btn {
-      width: 100%;
-      justify-content: center;
-      height: 40px;
-      font-size: 14px;
-    }
-
-    .lang-dropdown {
-      position: static;
-      margin-top: 8px;
-      transform: none;
-      width: 100%;
-      min-width: unset;
-      max-height: 250px;
-    }
-
-    .lang-item {
-      padding: 12px 10px;
-      font-size: 14px;
-    }
-
-    .lang-icon {
-      width: 16px;
-      height: 16px;
-    }
-
-    .lang-arrow {
-      width: 14px;
-      height: 14px;
-    }
-
-    /* Скрываем обычный переключатель в мобильном меню */
-    .mobile-menu .language-switcher {
-      display: none;
-    }
-  }
-
-  /* Для очень маленьких экранов */
-  @media (max-width: 480px) {
-    .lang-btn {
-      height: 36px;
-      font-size: 13px;
-    }
-
-    .lang-dropdown {
-      max-height: 200px;
-    }
-
-    .lang-item {
-      padding: 10px 8px;
-      font-size: 13px;
-    }
   }
 
   /* Анимация крипторынка на фоне - УВЕЛИЧЕНА ВИДИМОСТЬ ДЛЯ МОБИЛЬНЫХ */
@@ -1209,6 +1146,26 @@
       display: flex;
     }
 
+    /* ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ДЛЯ МОБИЛЬНЫХ */
+    .language-switcher-header {
+      margin-right: 5px;
+    }
+
+    .lang-btn-header {
+      height: 28px;
+      padding: 0 8px;
+      font-size: 10px;
+    }
+
+    .lang-code-header {
+      font-size: 10px;
+    }
+
+    .lang-dropdown-header {
+      min-width: 140px;
+      right: -10px;
+    }
+
     /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
     .crypto-logo {
       font-size: 16px !important;
@@ -1253,24 +1210,6 @@
       height: 9px !important;
       box-shadow: 0 0 35px var(--primary) !important;
     }
-
-    /* Language switcher mobile optimization */
-    .language-switcher {
-      margin-right: 0;
-      margin-bottom: 10px;
-    }
-
-    .lang-btn {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .lang-dropdown {
-      position: static;
-      margin-top: 8px;
-      transform: none;
-      width: 100%;
-    }
   }
 
   /* Для очень маленьких экранов */
@@ -1314,6 +1253,20 @@
 
     .nav-cta .btn:first-child {
       display: none; /* Скрываем кнопку Вход на очень маленьких экранах */
+    }
+
+    /* ДОПОЛНИТЕЛЬНАЯ ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ */
+    .language-switcher-header {
+      margin-right: 3px;
+    }
+
+    .lang-btn-header {
+      height: 26px;
+      padding: 0 6px;
+    }
+
+    .lang-code-header {
+      font-size: 9px;
     }
   }
 
@@ -1425,20 +1378,17 @@
         <span data-i18n="brand_name">Litcash</span>
       </a>
 
-      <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ ПЕРЕНЕСЕН СЮДА -->
-      <div class="language-switcher" id="languageSwitcher">
-        <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
+      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ -->
+      <div class="language-switcher-header" id="languageSwitcher">
+        <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
           <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
                   fill="none" stroke="currentColor" stroke-width="1.2"/>
           </svg>
-          <span class="lang-code">RU</span>
-          <svg class="lang-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <span class="lang-code-header">RU</span>
         </button>
         
-        <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-dropdown-header" id="langDropdown">
           <div class="lang-list">
             <div class="lang-item active" data-lang="ru">
               <span class="lang-flag ru"></span>
@@ -1795,7 +1745,34 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Языковой переключатель теперь обрабатывается в language-switcher.js
+  // Инициализация языкового переключателя
+  const langSwitcher = document.getElementById('languageSwitcher');
+  const langBtn = document.getElementById('langBtn');
+  const langDropdown = document.getElementById('langDropdown');
+  
+  if (langBtn && langDropdown) {
+    langBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      langSwitcher.classList.toggle('active');
+    });
+    
+    // Закрытие при клике вне переключателя
+    document.addEventListener('click', function() {
+      langSwitcher.classList.remove('active');
+    });
+    
+    // Выбор языка
+    const langItems = langDropdown.querySelectorAll('.lang-item');
+    langItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const lang = this.getAttribute('data-lang');
+        if (window.LanguageSwitcher) {
+          window.LanguageSwitcher.setLang(lang);
+        }
+        langSwitcher.classList.remove('active');
+      });
+    });
+  }
 });
 
 // ===== ПЕРЕНЕСЕННЫЕ ВЫЗОВЫ ИЗ СТАРОГО ФАЙЛА =====
@@ -2314,19 +2291,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isAuth = !!(data && data.user);
     if(isAuth && cta){
       cta.innerHTML = `
-        <div class="language-switcher" id="languageSwitcher">
-          <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
+        <div class="language-switcher-header" id="languageSwitcher">
+          <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
             <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
                     fill="none" stroke="currentColor" stroke-width="1.2"/>
             </svg>
-            <span class="lang-code">RU</span>
-            <svg class="lang-arrow" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <span class="lang-code-header">RU</span>
           </button>
           
-          <div class="lang-dropdown" id="langDropdown">
+          <div class="lang-dropdown-header" id="langDropdown">
             <div class="lang-list">
               <div class="lang-item active" data-lang="ru">
                 <span class="lang-flag ru"></span>
