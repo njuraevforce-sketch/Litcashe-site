@@ -424,6 +424,118 @@
     box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
   }
 
+  /* Языковой переключатель */
+  .language-switcher {
+    position: relative;
+    margin-right: 8px;
+  }
+
+  .lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .lang-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  }
+
+  .lang-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.3s ease;
+  }
+
+  .lang-btn.open svg {
+    transform: rotate(180deg);
+  }
+
+  .lang-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px;
+    min-width: 120px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1002;
+  }
+
+  .lang-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .lang-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .lang-option:hover {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--primary-light);
+  }
+
+  .lang-option.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .lang-flag {
+    width: 16px;
+    height: 12px;
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: bold;
+  }
+
+  .lang-flag.ru {
+    background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%);
+  }
+
+  .lang-flag.en {
+    background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%);
+  }
+
+  .lang-flag.cn {
+    background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%);
+  }
+
   /* Основной контент */
   .main {
     padding: 15px 0;
@@ -923,6 +1035,24 @@
       display: flex;
     }
 
+    /* Языковой переключатель в мобильной версии */
+    .language-switcher {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+
+    .lang-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .lang-dropdown {
+      position: static;
+      margin-top: 8px;
+      transform: none;
+      width: 100%;
+    }
+
     /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
     .crypto-logo {
       font-size: 16px !important;
@@ -1042,12 +1172,37 @@
 
 <!-- Мобильное меню -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="index.html" class="active">Главная</a>
-  <a href="dashboard_single.html">Личный кабинет</a>
-  <a href="deposit_single.html">Пополнение</a>
-  <a href="withdraw_single.html">Вывод</a>
-  <a href="faq_single.html">FAQ</a>
-  <a href="settings_single.html">Настройки</a>
+  <a href="index.html" class="active" data-i18n="nav.home">Главная</a>
+  <a href="dashboard_single.html" data-i18n="nav.dashboard">Личный кабинет</a>
+  <a href="deposit_single.html" data-i18n="nav.deposit">Пополнение</a>
+  <a href="withdraw_single.html" data-i18n="nav.withdraw">Вывод</a>
+  <a href="faq_single.html" data-i18n="nav.faq">FAQ</a>
+  <a href="settings_single.html" data-i18n="nav.settings">Настройки</a>
+  
+  <!-- Языковой переключатель в мобильном меню -->
+  <div class="language-switcher mobile-lang-switcher">
+    <button class="lang-btn" id="mobileLangBtn">
+      <span class="lang-flag ru"></span>
+      <span data-i18n="lang.russian">Русский</span>
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="lang-dropdown" id="mobileLangDropdown">
+      <div class="lang-option active" data-lang="ru">
+        <span class="lang-flag ru"></span>
+        <span data-i18n="lang.russian">Русский</span>
+      </div>
+      <div class="lang-option" data-lang="en">
+        <span class="lang-flag en"></span>
+        <span data-i18n="lang.english">English</span>
+      </div>
+      <div class="lang-option" data-lang="cn">
+        <span class="lang-flag cn"></span>
+        <span data-i18n="lang.chinese">中文</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <header class="header">
@@ -1055,20 +1210,45 @@
     <nav class="nav">
       <a class="brand" href="index.html">
         <div class="logo">LC</div>
-        <span>Litcash</span>
+        <span data-i18n="brand.name">Litcash</span>
       </a>
       
       <div class="nav-links">
-        <a href="index.html" class="active">Главная</a>
-        <a href="dashboard_single.html">Личный кабинет</a>
-        <a href="deposit_single.html">Пополнение</a>
-        <a href="withdraw_single.html">Вывод</a>
-        <a href="faq_single.html">FAQ</a>
+        <a href="index.html" class="active" data-i18n="nav.home">Главная</a>
+        <a href="dashboard_single.html" data-i18n="nav.dashboard">Личный кабинет</a>
+        <a href="deposit_single.html" data-i18n="nav.deposit">Пополнение</a>
+        <a href="withdraw_single.html" data-i18n="nav.withdraw">Вывод</a>
+        <a href="faq_single.html" data-i18n="nav.faq">FAQ</a>
       </div>
 
       <div class="nav-cta">
-        <a class="btn" href="login_single.html">Вход</a>
-        <a class="btn primary" href="register_single.html">Регистрация</a>
+        <!-- Языковой переключатель -->
+        <div class="language-switcher">
+          <button class="lang-btn" id="langBtn">
+            <span class="lang-flag ru"></span>
+            <span data-i18n="lang.russian">Русский</span>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="lang-dropdown" id="langDropdown">
+            <div class="lang-option active" data-lang="ru">
+              <span class="lang-flag ru"></span>
+              <span data-i18n="lang.russian">Русский</span>
+            </div>
+            <div class="lang-option" data-lang="en">
+              <span class="lang-flag en"></span>
+              <span data-i18n="lang.english">English</span>
+            </div>
+            <div class="lang-option" data-lang="cn">
+              <span class="lang-flag cn"></span>
+              <span data-i18n="lang.chinese">中文</span>
+            </div>
+          </div>
+        </div>
+        
+        <a class="btn" href="login_single.html" data-i18n="nav.login">Вход</a>
+        <a class="btn primary" href="register_single.html" data-i18n="nav.register">Регистрация</a>
       </div>
 
       <div class="burger" id="burgerBtn">
@@ -1085,26 +1265,26 @@
     <!-- Hero секция -->
     <section class="hero">
       <div>
-        <div class="hero-badge">USDT • TRC20 • 13%/5%/1%</div>
-        <h1 class="hero-title">Заряжайся и побеждай! LITCASH-заработок, которому доверяют!</h1>
+        <div class="hero-badge" data-i18n="hero.badge">USDT • TRC20 • 13%/5%/1%</div>
+        <h1 class="hero-title" data-i18n="hero.title">Заряжайся и побеждай! LITCASH-заработок, которому доверяют!</h1>
         
         <div class="hero-buttons">
-          <a class="btn primary" href="register_single.html">Начать</a>
-          <a class="btn" href="#how">Подробнее</a>
+          <a class="btn primary" href="register_single.html" data-i18n="hero.start">Начать</a>
+          <a class="btn" href="#how" data-i18n="hero.more">Подробнее</a>
         </div>
 
         <div class="hero-stats">
           <div class="card hero-stat">
             <div class="number" id="kpiUsers">128</div>
-            <div class="muted">Активные пользователи</div>
+            <div class="muted" data-i18n="hero.activeUsers">Активные пользователи</div>
           </div>
           <div class="card hero-stat">
             <div class="number" id="kpiPayouts">$504k</div>
-            <div class="muted">Выплаты</div>
+            <div class="muted" data-i18n="hero.payouts">Выплаты</div>
           </div>
           <div class="card hero-stat">
             <div class="number" id="kpiApr">~5%</div>
-            <div class="muted">Потенциальный APR</div>
+            <div class="muted" data-i18n="hero.apr">Потенциальный APR</div>
           </div>
         </div>
       </div>
@@ -1117,22 +1297,22 @@
     <!-- How it works -->
     <section class="grid grid-3" id="how">
       <div class="card">
-        <h2><span class="icon">1</span>Активация</h2>
-        <p class="muted">Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.</p>
+        <h2><span class="icon">1</span><span data-i18n="steps.activation">Активация</span></h2>
+        <p class="muted" data-i18n="steps.activationDesc">Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.</p>
       </div>
       <div class="card">
-        <h2><span class="icon">2</span>Просмотры</h2>
-        <p class="muted">Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.</p>
+        <h2><span class="icon">2</span><span data-i18n="steps.views">Просмотры</span></h2>
+        <p class="muted" data-i18n="steps.viewsDesc">Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.</p>
       </div>
       <div class="card">
-        <h2><span class="icon">3</span>Рефералы</h2>
-        <p class="muted">Создай команду инвесторов — ты получаешь 13% / 5% / 1%.</p>
+        <h2><span class="icon">3</span><span data-i18n="steps.referrals">Рефералы</span></h2>
+        <p class="muted" data-i18n="steps.referralsDesc">Создай команду инвесторов — ты получаешь 13% / 5% / 1%.</p>
       </div>
     </section>
 
     <!-- Video section -->
     <section class="card">
-      <h2><span class="icon">▶</span>Превью</h2>
+      <h2><span class="icon">▶</span><span data-i18n="video.preview">Превью</span></h2>
       <div class="video-container">
         <video id="heroVideo" controls playsinline>
           <source src="/assets/hero.MP4" type="video/mp4"/>
@@ -1144,7 +1324,7 @@
 
 <footer class="footer">
   <div class="container">
-    © 2025 Litcash. Все права защищены.
+    <span data-i18n="footer.copyright">© 2025 Litcash. Все права защищены.</span>
   </div>
 </footer>
 
@@ -1157,6 +1337,222 @@
 </a>
 
 <script>
+// ===== СИСТЕМА ПЕРЕВОДА =====
+const translations = {
+  ru: {
+    // Бренд и навигация
+    "brand.name": "Litcash",
+    "nav.home": "Главная",
+    "nav.dashboard": "Личный кабинет",
+    "nav.deposit": "Пополнение",
+    "nav.withdraw": "Вывод",
+    "nav.faq": "FAQ",
+    "nav.settings": "Настройки",
+    "nav.login": "Вход",
+    "nav.register": "Регистрация",
+    
+    // Языки
+    "lang.russian": "Русский",
+    "lang.english": "English",
+    "lang.chinese": "中文",
+    
+    // Hero секция
+    "hero.badge": "USDT • TRC20 • 13%/5%/1%",
+    "hero.title": "Заряжайся и побеждай! LITCASH-заработок, которому доверяют!",
+    "hero.start": "Начать",
+    "hero.more": "Подробнее",
+    "hero.activeUsers": "Активные пользователи",
+    "hero.payouts": "Выплаты",
+    "hero.apr": "Потенциальный APR",
+    
+    // Шаги работы
+    "steps.activation": "Активация",
+    "steps.activationDesc": "Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.",
+    "steps.views": "Просмотры",
+    "steps.viewsDesc": "Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.",
+    "steps.referrals": "Рефералы",
+    "steps.referralsDesc": "Создай команду инвесторов — ты получаешь 13% / 5% / 1%.",
+    
+    // Видео
+    "video.preview": "Превью",
+    
+    // Футер
+    "footer.copyright": "© 2025 Litcash. Все права защищены."
+  },
+  en: {
+    // Brand and navigation
+    "brand.name": "Litcash",
+    "nav.home": "Home",
+    "nav.dashboard": "Dashboard",
+    "nav.deposit": "Deposit",
+    "nav.withdraw": "Withdraw",
+    "nav.faq": "FAQ",
+    "nav.settings": "Settings",
+    "nav.login": "Login",
+    "nav.register": "Register",
+    
+    // Languages
+    "lang.russian": "Русский",
+    "lang.english": "English",
+    "lang.chinese": "中文",
+    
+    // Hero section
+    "hero.badge": "USDT • TRC20 • 13%/5%/1%",
+    "hero.title": "Charge up and win! LITCASH - earnings you can trust!",
+    "hero.start": "Get Started",
+    "hero.more": "Learn More",
+    "hero.activeUsers": "Active Users",
+    "hero.payouts": "Payouts",
+    "hero.apr": "Potential APR",
+    
+    // How it works
+    "steps.activation": "Activation",
+    "steps.activationDesc": "Deposit from 29 USDT (TRC20) - account becomes active.",
+    "steps.views": "Views",
+    "steps.viewsDesc": "Watch short videos. Every 5 views give up to 5% to your balance.",
+    "steps.referrals": "Referrals",
+    "steps.referralsDesc": "Build a team of investors - you get 13% / 5% / 1%.",
+    
+    // Video
+    "video.preview": "Preview",
+    
+    // Footer
+    "footer.copyright": "© 2025 Litcash. All rights reserved."
+  },
+  cn: {
+    // 品牌和导航
+    "brand.name": "Litcash",
+    "nav.home": "首页",
+    "nav.dashboard": "个人中心",
+    "nav.deposit": "充值",
+    "nav.withdraw": "提现",
+    "nav.faq": "常见问题",
+    "nav.settings": "设置",
+    "nav.login": "登录",
+    "nav.register": "注册",
+    
+    // 语言
+    "lang.russian": "俄语",
+    "lang.english": "英语",
+    "lang.chinese": "中文",
+    
+    // 主要部分
+    "hero.badge": "USDT • TRC20 • 13%/5%/1%",
+    "hero.title": "充电并获胜！LITCASH - 值得信赖的收入！",
+    "hero.start": "开始",
+    "hero.more": "了解更多",
+    "hero.activeUsers": "活跃用户",
+    "hero.payouts": "支付",
+    "hero.apr": "潜在年利率",
+    
+    // 工作原理
+    "steps.activation": "激活",
+    "steps.activationDesc": "从29 USDT (TRC20) 充值 - 账户变为活跃状态。",
+    "steps.views": "观看",
+    "steps.viewsDesc": "观看短视频。每5次观看可为您的余额增加高达5%。",
+    "steps.referrals": "推荐",
+    "steps.referralsDesc": "建立投资者团队 - 您将获得13% / 5% / 1%。",
+    
+    // 视频
+    "video.preview": "预览",
+    
+    // 页脚
+    "footer.copyright": "© 2025 Litcash。保留所有权利。"
+  }
+};
+
+// Функция для установки языка
+function setLanguage(lang) {
+  // Сохраняем выбранный язык
+  localStorage.setItem('litcash-language', lang);
+  
+  // Устанавливаем атрибут lang для html
+  document.documentElement.lang = lang;
+  
+  // Обновляем все элементы с data-i18n атрибутом
+  document.querySelectorAll('[data-i18n]').forEach(element => {
+    const key = element.getAttribute('data-i18n');
+    if (translations[lang] && translations[lang][key]) {
+      element.textContent = translations[lang][key];
+    }
+  });
+  
+  // Обновляем активный язык в переключателе
+  document.querySelectorAll('.lang-option').forEach(option => {
+    if (option.getAttribute('data-lang') === lang) {
+      option.classList.add('active');
+      
+      // Обновляем текст в кнопке переключателя
+      const langName = option.querySelector('span:last-child').textContent;
+      const flagClass = option.querySelector('.lang-flag').className;
+      
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.querySelector('.lang-flag').className = flagClass;
+        btn.querySelector('span:last-child').textContent = langName;
+      });
+    } else {
+      option.classList.remove('active');
+    }
+  });
+  
+  // Закрываем выпадающие меню языков
+  closeLangDropdowns();
+}
+
+// Функция для закрытия всех выпадающих меню языков
+function closeLangDropdowns() {
+  document.querySelectorAll('.lang-dropdown').forEach(dropdown => {
+    dropdown.classList.remove('active');
+  });
+  
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.remove('open');
+  });
+}
+
+// Инициализация языка при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+  // Получаем сохраненный язык или определяем язык браузера
+  const savedLang = localStorage.getItem('litcash-language');
+  const browserLang = navigator.language.split('-')[0];
+  const defaultLang = ['ru', 'en', 'cn'].includes(browserLang) ? browserLang : 'ru';
+  const initialLang = savedLang || defaultLang;
+  
+  // Устанавливаем язык
+  setLanguage(initialLang);
+  
+  // Обработчики для переключателей языков
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const dropdown = this.nextElementSibling;
+      const isActive = dropdown.classList.contains('active');
+      
+      // Закрываем все другие выпадающие меню
+      closeLangDropdowns();
+      
+      // Открываем/закрываем текущее
+      if (!isActive) {
+        dropdown.classList.add('active');
+        this.classList.add('open');
+      }
+    });
+  });
+  
+  // Обработчики для выбора языка
+  document.querySelectorAll('.lang-option').forEach(option => {
+    option.addEventListener('click', function() {
+      const lang = this.getAttribute('data-lang');
+      setLanguage(lang);
+    });
+  });
+  
+  // Закрытие выпадающих меню при клике вне их
+  document.addEventListener('click', function() {
+    closeLangDropdowns();
+  });
+});
+
 // Бургер-меню
 document.addEventListener('DOMContentLoaded', function() {
   const burgerBtn = document.getElementById('burgerBtn');
