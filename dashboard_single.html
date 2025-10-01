@@ -1117,6 +1117,23 @@
   })();
 </script>
 
+<!-- === LC RECOVERY GUARD === -->
+<script>
+(function () {
+  try {
+    if (location.pathname.endsWith('/login_single.html')) return;
+    var parts = (location.search || '') + (location.hash || '');
+    if (/(type=recovery|access_token|recovery_token)/i.test(parts)) {
+      var qs = '?' + parts.replace(/^[?#]/, '').replace('#','&');
+      var url = new URL('login_single.html', location.origin).href + qs;
+      location.replace(url);
+    }
+  } catch (e) {
+    console.error('recovery-guard', e);
+  }
+})();
+</script>
+
 <!-- Анимированный фон с крипто-элементами -->
 <div class="crypto-background" id="cryptoBackground">
   <!-- Элементы добавляются через JavaScript -->
@@ -1135,23 +1152,6 @@
 <div class="notification" id="notification">
   Текст уведомления
 </div>
-
-<!-- === LC RECOVERY GUARD === -->
-<script>
-(function () {
-  try {
-    if (location.pathname.endsWith('/login_single.html')) return;
-    var parts = (location.search || '') + (location.hash || '');
-    if (/(type=recovery|access_token|recovery_token)/i.test(parts)) {
-      var qs = '?' + parts.replace(/^[?#]/, '').replace('#','&');
-      var url = new URL('login_single.html', location.origin).href + qs;
-      location.replace(url);
-    }
-  } catch (e) {
-    console.error('recovery-guard', e);
-  }
-})();
-</script>
 
 <header class="header">
   <div class="container">
@@ -1416,148 +1416,575 @@
 <script defer src="app_supabase.js"></script>
 
 <script>
-// Анимированный фон и базовые функции
-document.addEventListener('DOMContentLoaded', function() {
-    const cryptoBackground = document.getElementById('cryptoBackground');
-    const notification = document.getElementById('notification');
-    const burgerBtn = document.getElementById('burgerBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    
-    // Проверка мобильного устройства
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    
-    // Функция показа уведомления
-    function showNotification(message) {
-      notification.textContent = message;
-      notification.classList.add('show');
-      setTimeout(() => {
-        notification.classList.remove('show');
-      }, 3000);
-    }
+// ===== ПЕРЕНЕСЕННЫЕ ВЫЗОВЫ ИЗ СТАРОГО ФАЙЛА =====
 
-    // Бургер-меню
-    if (burgerBtn && mobileMenu) {
-      burgerBtn.addEventListener('click', function() {
-        mobileMenu.classList.toggle('active');
-        burgerBtn.classList.toggle('active');
-      });
-      
-      // Закрытие меню при клике на ссылку
-      const mobileLinks = mobileMenu.querySelectorAll('a');
-      mobileLinks.forEach(link => {
-        link.addEventListener('click', function() {
-          mobileMenu.classList.remove('active');
-          burgerBtn.classList.remove('active');
-        });
-      });
+// Toast уведомления
+window.LC_TOAST = (function(){
+  let box;
+  function ensure(){
+    if(!box){
+      box=document.createElement('div');
+      box.className='lc-toast';
+      document.body.appendChild(box);
     }
+  }
+  function show(msg){
+    ensure();
+    const item=document.createElement('div');
+    item.className='lc-toast__item';
+    item.textContent=msg;
+    box.appendChild(item);
+    setTimeout(()=>{
+      item.remove();
+    },1700);
+  }
+  return{ok:show,err:show};
+})();
 
-    // Создание анимированного фона с оптимизацией для мобильных
-    const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
-    const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
-    
-    // Количество элементов в зависимости от устройства
-    const cryptoLogoCount = isMobile ? 15 : 12;
-    const exchangeLogoCount = isMobile ? 10 : 8;
-    const botCount = isMobile ? 8 : 6;
-    const lineCount = isMobile ? 10 : 8;
-    const chartCount = isMobile ? 6 : 4;
-    const dotCount = isMobile ? 15 : 10;
-    
-    // Создание крипто-логотипов
-    for (let i = 0; i < cryptoLogoCount; i++) {
-      const element = document.createElement('div');
-      element.className = 'crypto-logo';
-      element.textContent = cryptoLogos[i % cryptoLogos.length];
-      element.style.left = Math.random() * 90 + 5 + '%';
-      element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
-      element.style.fontSize = (Math.random() * 8 + 14) + 'px';
-      cryptoBackground.appendChild(element);
-    }
-    
-    // Создание логотипов бирж
-    for (let i = 0; i < exchangeLogoCount; i++) {
-      const element = document.createElement('div');
-      element.className = 'exchange-logo';
-      element.textContent = exchangeLogos[i % exchangeLogos.length];
-      element.style.top = Math.random() * 80 + 10 + '%';
-      element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
-      cryptoBackground.appendChild(element);
-    }
-    
-    // Создание торговых ботов
-    for (let i = 0; i < botCount; i++) {
-      const bot = document.createElement('div');
-      bot.className = 'trading-bot';
-      bot.style.left = Math.random() * 80 + 10 + '%';
-      bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
-      cryptoBackground.appendChild(bot);
-    }
-    
-    // Создание линий цен
-    for (let i = 0; i < lineCount; i++) {
-      const line = document.createElement('div');
-      line.className = 'price-line';
-      line.style.top = Math.random() * 80 + 10 + '%';
-      line.style.width = (Math.random() * 200 + 100) + 'px';
-      line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
-      cryptoBackground.appendChild(line);
-    }
+// Загрузка данных уровня и баланса
+document.addEventListener('DOMContentLoaded', () => {
+  window.LC = window.LC || {};
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
 
-    // Создание графиков
-    for (let i = 0; i < chartCount; i++) {
-      const chart = document.createElement('div');
-      chart.className = 'crypto-chart';
-      chart.style.left = Math.random() * 80 + 10 + '%';
-      chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
-      cryptoBackground.appendChild(chart);
-    }
-
-    // Создание пульсирующих точек
-    for (let i = 0; i < dotCount; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'pulse-dot';
-      dot.style.left = Math.random() * 95 + '%';
-      dot.style.top = Math.random() * 95 + '%';
-      dot.style.animationDelay = (i * 0.3) + 's';
-      cryptoBackground.appendChild(dot);
-    }
-
-    // Копирование реферальной ссылки
-    const btnCopyRef = document.getElementById('btnCopyRef');
-    const refLink = document.getElementById('refLink');
-    
-    if (btnCopyRef && refLink) {
-      refLink.value = window.location.origin + '/ref/' + Math.random().toString(36).substr(2, 9);
-      
-      btnCopyRef.addEventListener('click', function() {
-        refLink.select();
-        document.execCommand('copy');
-        showNotification('✅ Реферальная ссылка скопирована!');
-      });
-    }
-
-    // Инициализация оригинальных функций
+  window.LC.loadLevelInfo = async function () {
     try {
-      if (window.LC && typeof LC.ensureProfile === "function") { 
-        LC.ensureProfile(); 
-      }
-      if (window.LC && typeof LC.mountReferral === "function") { 
-        LC.mountReferral(); 
-      }
-    } catch(e) { 
-      console.warn("[init referral]", e); 
-    }
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) return;
 
-    // Демонстрационное уведомление при загрузке
-    setTimeout(() => {
-      showNotification('🚀 Добро пожаловать в Litcash!');
-    }, 1000);
+      const { data, error } = await sb.rpc('get_level_info_v2');
+      if (error) { console.error(error); return; }
+      const info = Array.isArray(data) ? data[0] : data;
+      window.LC._levelInfo = info;
+
+      if (!info) return;
+
+      const toUsdText = (v) => {
+        const n = Number(v || 0);
+        const asCents = Math.abs(n) >= 100 && Number.isInteger(n);
+        const usd = asCents ? n / 100 : n;
+        return '$' + usd.toFixed(2);
+      };
+
+      // Баланс
+      const balanceSrc = (info.balance_cents ?? info.balance_usd_cents ?? (info.balance_usd !== undefined ? info.balance_usd * 100 : undefined) ?? info.balance);
+      const balEl = document.querySelector('[data-balance]');
+      if (balEl) balEl.textContent = toUsdText(balanceSrc);
+
+      // Уровень
+      const lvlName = info.level_name || info.lvl_name || info.level_key || '—';
+      document.querySelectorAll('[data-level],[data-level-name]').forEach(n => n.textContent = lvlName);
+
+      // Процент
+      const bp = Number(info.reward_percent_bp ?? info.pct_bp ?? info.percent_bp ?? 0);
+      const percent = (bp / 100).toFixed(2) + ' %';
+      document.querySelectorAll('[data-rate]').forEach(n => n.textContent = percent);
+
+      // За 1 просмотр
+      const perViewCents = Number(info.reward_per_view_cents ?? info.per_view_cents ?? 0);
+      const pvText = toUsdText(perViewCents);
+      const pvSpan = document.querySelector('[data-reward-per-view]');
+      if (pvSpan) pvSpan.textContent = pvText;
+      const pvBadge = document.getElementById('perViewBadge');
+      if (pvBadge) pvBadge.textContent = `+${pvText} за просмотр`;
+
+      // За 5 просмотров
+      const daily = info.daily_reward_cents ?? info.daily_reward ?? 0;
+      document.querySelectorAll('[data-daily-reward]').forEach(n => n.textContent = toUsdText(daily));
+
+      // База уровня
+      const baseCents = Number(info.base_amount_cents ?? info.base_cap_cents ?? 0);
+      const bcEl = document.getElementById('baseCapCell');
+      if (bcEl) bcEl.textContent = toUsdText(baseCents);
+      const capEl = document.querySelector('[data-cap]');
+      if (capEl) capEl.textContent = toUsdText(baseCents);
+
+      // Просмотры
+      const viewsEl = document.querySelector('[data-views]');
+      if (viewsEl) {
+        const used = Number(info.views_used_today ?? ((info.daily_limit ?? 5) - (info.views_left_today ?? 0)) ?? info.views_total ?? info.views_today ?? info.views ?? 0);
+        viewsEl.textContent = used;
+      }
+
+      // Рефералы
+      const refsEl = document.querySelector('[data-refs]');
+      if (refsEl) refsEl.textContent = Number(info.refs_total ?? info.active_refs ?? 0);
+
+      // Цель следующего уровня
+      const ntEl = document.getElementById('nextTargetCell');
+      if (ntEl && info.next_target) ntEl.textContent = String(info.next_target);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  window.LC.loadLevelInfo();
 });
 
-// Запуск видео функции
-document.addEventListener('DOMContentLoaded', function(){
-  try{ if(window.LC && typeof LC.initVideoWatch==='function') LC.initVideoWatch(); }catch(_){}
+// Real-time обновление баланса
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
+
+  const toUsdText = (cents) => {
+    const n = Number(cents || 0);
+    const usd = n / 100;
+    return '$' + usd.toFixed(2);
+  };
+  
+  const setBalance = (cents) => {
+    const balEl = document.querySelector('[data-balance]');
+    if (balEl) balEl.textContent = toUsdText(cents);
+  };
+
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (user?.id) {
+      sb.channel('wallet-balance')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'wallets',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          const cents = payload?.new?.balance_cents ?? 0;
+          setBalance(cents);
+        })
+        .subscribe();
+    }
+  } catch (e) {
+    console.error('wallet realtime error', e);
+  }
+});
+
+// Реферальные счетчики
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb) return;
+
+    const $ = (sel) => document.querySelector(sel);
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val|0); };
+
+    function applyCounts(row) {
+      if (!row) return false;
+      const g1 = Number(row.gen1 ?? row.g1 ?? 0) | 0;
+      const g2 = Number(row.gen2 ?? row.g2 ?? 0) | 0;
+      const g3 = Number(row.gen3 ?? row.g3 ?? 0) | 0;
+      set('gen1Count', g1);
+      set('gen2Count', g2);
+      set('gen3Count', g3);
+      
+      const refsEl = document.querySelector('[data-refs]');
+      if (refsEl) {
+        const cur = parseInt((refsEl.textContent || '0').replace(/\D+/g,'')) || 0;
+        const total = g1 + g2 + g3;
+        if (cur === 0 && total > 0) refsEl.textContent = String(total);
+      }
+      return true;
+    }
+
+    // RPC вызов
+    try {
+      const rpc = await sb.rpc('get_referral_counts_active', { p_min_cents: 2900 });
+      if (!rpc.error && rpc.data) {
+        const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+        if (applyCounts(row)) return;
+      }
+    } catch(e) { console.warn('get_referral_counts_active RPC error', e); }
+
+    // Fallback к вьюхе
+    try {
+      let q = sb.from('v_referral_counts').select('gen1,gen2,gen3');
+      let res;
+      if (typeof q.maybeSingle === 'function') {
+        res = await q.maybeSingle();
+      } else {
+        res = await q.limit(1);
+        res = { data: (res.data && res.data[0]) || null, error: res.error };
+      }
+      if (!res.error && res.data) {
+        if (applyCounts(res.data)) return;
+      }
+    } catch(e) { console.warn('v_referral_counts view error', e); }
+
+  } catch(err) {
+    console.warn('ref-counts-db-patch init error', err);
+  }
+});
+
+// Реферальные выплаты
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const sb = window.sb || window._supabase || window.supabase;
+    if (!sb || !sb.from) return;
+
+    async function loadRows(){
+      try {
+        const r = await sb.from('v_referral_payouts')
+          .select('created_at,level,reward_usdt,source_type')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if(!r.error && Array.isArray(r.data)) return r.data;
+      } catch(_) {}
+      
+      try {
+        const { data: au } = await sb.auth.getUser();
+        const uid = au?.user?.id;
+        if(!uid) return [];
+        const r2 = await sb.from('referral_rewards')
+           .select('created_at,level,reward_usdt,source')
+           .eq('referrer_user_id', uid)
+           .order('created_at', { ascending: false })
+           .limit(50);
+        if(!r2.error && Array.isArray(r2.data)){
+          return r2.data.map(x => ({created_at:x.created_at, level:x.level, reward_usdt:x.reward_usdt, source_type:x.source||'view'}));
+        }
+      } catch(e){ console.warn('fallback referral_rewards error', e); }
+      return [];
+    }
+
+    const rows = await loadRows();
+    const sum = {1:0,2:0,3:0};
+    rows.forEach(r => { const L=Number(r.level||0), A=Number(r.reward_usdt||0); if(L>=1 && L<=3) sum[L]+=A; });
+    const fmt = n => '$'+(Math.round(Number(n||0)*100)/100).toFixed(2);
+
+    const g1 = document.getElementById('gen1Cell');
+    const g2 = document.getElementById('gen2Cell');
+    const g3 = document.getElementById('gen3Cell');
+    const total = document.getElementById('refTotalCell');
+    if (g1) g1.textContent = fmt(sum[1]);
+    if (g2) g2.textContent = fmt(sum[2]);
+    if (g3) g3.textContent = fmt(sum[3]);
+    if (total) total.textContent = fmt(sum[1]+sum[2]+sum[3]);
+
+    const list = document.getElementById('refList');
+    if (list) {
+      list.innerHTML = '';
+      if (!rows.length) {
+        list.innerHTML = '<tr><td class="muted" colspan="4">Нет данных</td></tr>';
+      } else {
+        rows.slice(0, 12).forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date(r.created_at).toLocaleString()}</td>
+            <td>${r.level}</td>
+            <td style="text-align:right">${fmt(r.reward_usdt)}</td>
+            <td>${r.source_type || 'доход'}</td>`;
+          list.appendChild(tr);
+        });
+      }
+    }
+  } catch(e){ console.warn('ref widgets error', e); }
+});
+
+// Видео просмотры
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase || window.supabase;
+  const video = document.getElementById('promoVid');
+  const startBtn = document.getElementById('startBtn');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+
+  const MIN_SEC = 10;
+  let played = 0;
+  let awarding = false;
+  let alreadyAwardedForThisPlay = false;
+
+  function toast(msg, ok=false){
+    try{ window.LC_TOAST?.(msg, ok); }catch(_){ alert(msg); }
+  }
+
+  function setProgress(sec){
+    const p = Math.min(100, Math.floor(sec / MIN_SEC * 100));
+    progressFill && (progressFill.style.width = p + '%');
+  }
+
+  function parseMoney(txt){ return Number(String(txt||'').replace(/[^0-9.]/g,'')) || 0; }
+  function formatMoney(v){ return '$' + Number(v||0).toFixed(2); }
+
+  function bumpBalance(delta){
+    const el = document.querySelector('[data-balance]');
+    if (!el) return;
+    const cur = parseMoney(el.textContent);
+    el.textContent = formatMoney(cur + Number(delta||0));
+  }
+  
+  function bumpViews(n=1){
+    const el = document.querySelector('[data-views]');
+    if (!el) return;
+    const cur = parseInt(el.textContent||'0',10) || 0;
+    el.textContent = String(cur + n);
+  }
+
+  async function ensureSession(){
+    const { data:{ session } } = await sb.auth.getSession();
+    return session;
+  }
+
+  async function getLeftToday(){
+    const { data, error } = await sb.rpc('get_left_today_views');
+    if (error) return 0;
+    return Array.isArray(data) ? Number(data[0]?.get_left_today_views||0) : Number(data||0);
+  }
+
+  function setBlocked(blocked){
+    startBtn.disabled = !!blocked;
+    startBtn.style.opacity = blocked ? .6 : 1;
+  }
+
+  async function checkAccessAndInit(){
+    try{
+      const session = await ensureSession(); 
+      if(!session){ toast('Нужно войти'); return 0; }
+      const { data, error } = await sb.rpc('get_video_access_state');
+      const active = !error && (Array.isArray(data) ? data[0]?.get_video_access_state : data);
+      if (!active) {
+        setBlocked(true);
+        progressText && (progressText.textContent = 'Доступ закрыт');
+        return 0;
+      }
+    }catch(e){ console.error(e); }
+    
+    const left = await getLeftToday();
+    setBlocked(left <= 0);
+    progressText && (progressText.textContent = `Доступно просмотров сегодня: ${left}`);
+    return left;
+  }
+
+  async function awardOnce(){
+    if (awarding || alreadyAwardedForThisPlay) return;
+    if (played < MIN_SEC) return;
+
+    awarding = true;
+    try{
+      const session = await ensureSession(); 
+      if(!session){ awarding=false; return; }
+
+      const { data, error } = await sb.rpc('award_view_v2', { duration_sec: Math.min(played, 12) });
+      if (error) { toast('Ошибка начисления: ' + (error.message || 'unknown')); return; }
+
+      const res = Array.isArray(data) ? data[0] : (data || {});
+      const left = Number(res?.views_left_today ?? res?.views_left ?? 0);
+      const credited = Number(res?.credited ?? res?.reward_per_view ?? 0);
+
+      if (credited > 0){
+        bumpBalance(credited);
+        bumpViews(1);
+        toast(`Зачислено ✅ +${credited.toFixed(2)}`, true);
+      }
+      
+      progressText && (progressText.textContent = `Доступно просмотров сегодня: ${left}`);
+      setBlocked(left <= 0);
+      alreadyAwardedForThisPlay = true;
+
+      setTimeout(() => { 
+        try{ window.LC?.loadLevelInfo?.(); }catch(_){ } 
+      }, 1200);
+
+    } finally {
+      try{ video && (video.pause(), video.currentTime = 0); }catch(_){}
+      setProgress(0); 
+      played = 0; 
+      awarding = false;
+    }
+  }
+
+  function bindVideo(){
+    if (!video) return;
+    video.addEventListener('timeupdate', () => {
+      played = Math.floor(video.currentTime || 0);
+      setProgress(played);
+      if (played >= MIN_SEC) awardOnce();
+    });
+    
+    video.addEventListener('ended', awardOnce);
+  }
+
+  function start(){
+    if (startBtn.disabled) return;
+    alreadyAwardedForThisPlay = false;
+    played = 0; 
+    setProgress(0);
+    try{ video && (video.currentTime = 0, video.play()); }catch(_){}
+  }
+
+  if (startBtn && video) {
+    startBtn.addEventListener('click', start);
+    bindVideo();
+    checkAccessAndInit();
+  }
+});
+
+// Навигация и авторизация
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  
+  try {
+    if (sb) {
+      const { data: { session } } = await sb.auth.getSession();
+      const onIndex = /(^|\/)index(\.html)?(\?|#|$)/i.test(location.pathname) || location.pathname === '/';
+      if (session && onIndex) {
+        window.location.replace('/dashboard_single.html');
+        return;
+      }
+      
+      if (session) {
+        const homeLinks = Array.from(document.querySelectorAll('a')).filter(a => /главн|home|index/i.test(a.textContent) || /index(\.html)?$/i.test(a.getAttribute('href')||''));
+        homeLinks.forEach(a => a.setAttribute('href', '/dashboard_single.html'));
+      }
+    }
+  } catch(e){ console.warn('redirect/home patch error', e); }
+
+  // Обновление навигации для авторизованных пользователей
+  try {
+    const sb = window._supabase;
+    if(!sb) return;
+    const cta = document.querySelector('.nav-cta');
+    const { data } = await sb.auth.getUser();
+    const isAuth = !!(data && data.user);
+    if(isAuth && cta){
+      cta.innerHTML = `
+        <div class="lc-lang">
+          <button class="lc-lang__btn">
+            <svg class="lc-lang__icon" viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+            </svg>
+            <span class="lc-lang__label">RU</span>
+          </button>
+        </div>
+        <button id="nav-logout" class="btn danger">Выйти</button>`;
+      
+      const btn = document.getElementById('nav-logout');
+      if(btn){ 
+        btn.addEventListener('click', function(e){ 
+          e.preventDefault(); 
+          if(window.logout){ logout(); } 
+        }); 
+      }
+    }
+  } catch(_){}
+});
+
+// Инициализация реферальной системы
+document.addEventListener("DOMContentLoaded", async function(){
+  try {
+    if (window.LC && typeof LC.ensureProfile==="function") { 
+      await LC.ensureProfile(); 
+    }
+    if (window.LC && typeof LC.mountReferral==="function") { 
+      await LC.mountReferral(); 
+    }
+  } catch(e){ console.warn("[init referral]", e); }
+});
+
+// Реферальная ссылка
+document.addEventListener('DOMContentLoaded', function() {
+  const btnCopyRef = document.getElementById('btnCopyRef');
+  const refLink = document.getElementById('refLink');
+  
+  if (btnCopyRef && refLink) {
+    // Генерация реферальной ссылки
+    refLink.value = window.location.origin + '/ref/' + Math.random().toString(36).substr(2, 9);
+    
+    btnCopyRef.addEventListener('click', function() {
+      refLink.select();
+      document.execCommand('copy');
+      window.LC_TOAST?.('✅ Реферальная ссылка скопирована!');
+    });
+  }
+});
+
+// Бургер-меню (сохранено из нового дизайна)
+document.addEventListener('DOMContentLoaded', function() {
+  const burgerBtn = document.getElementById('burgerBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  
+  if (burgerBtn && mobileMenu) {
+    burgerBtn.addEventListener('click', function() {
+      mobileMenu.classList.toggle('active');
+      burgerBtn.classList.toggle('active');
+    });
+    
+    const mobileLinks = mobileMenu.querySelectorAll('a');
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        mobileMenu.classList.remove('active');
+        burgerBtn.classList.remove('active');
+      });
+    });
+  }
+});
+
+// Анимированный фон (сохранено из нового дизайна)
+document.addEventListener('DOMContentLoaded', function() {
+  const cryptoBackground = document.getElementById('cryptoBackground');
+  if (!cryptoBackground) return;
+
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  
+  const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
+  const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
+  
+  const cryptoLogoCount = isMobile ? 15 : 12;
+  const exchangeLogoCount = isMobile ? 10 : 8;
+  const botCount = isMobile ? 8 : 6;
+  const lineCount = isMobile ? 10 : 8;
+  const chartCount = isMobile ? 6 : 4;
+  const dotCount = isMobile ? 15 : 10;
+  
+  for (let i = 0; i < cryptoLogoCount; i++) {
+    const element = document.createElement('div');
+    element.className = 'crypto-logo';
+    element.textContent = cryptoLogos[i % cryptoLogos.length];
+    element.style.left = Math.random() * 90 + 5 + '%';
+    element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
+    element.style.fontSize = (Math.random() * 8 + 14) + 'px';
+    cryptoBackground.appendChild(element);
+  }
+  
+  for (let i = 0; i < exchangeLogoCount; i++) {
+    const element = document.createElement('div');
+    element.className = 'exchange-logo';
+    element.textContent = exchangeLogos[i % exchangeLogos.length];
+    element.style.top = Math.random() * 80 + 10 + '%';
+    element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
+    cryptoBackground.appendChild(element);
+  }
+  
+  for (let i = 0; i < botCount; i++) {
+    const bot = document.createElement('div');
+    bot.className = 'trading-bot';
+    bot.style.left = Math.random() * 80 + 10 + '%';
+    bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
+    cryptoBackground.appendChild(bot);
+  }
+  
+  for (let i = 0; i < lineCount; i++) {
+    const line = document.createElement('div');
+    line.className = 'price-line';
+    line.style.top = Math.random() * 80 + 10 + '%';
+    line.style.width = (Math.random() * 200 + 100) + 'px';
+    line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
+    cryptoBackground.appendChild(line);
+  }
+
+  for (let i = 0; i < chartCount; i++) {
+    const chart = document.createElement('div');
+    chart.className = 'crypto-chart';
+    chart.style.left = Math.random() * 80 + 10 + '%';
+    chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
+    cryptoBackground.appendChild(chart);
+  }
+
+  for (let i = 0; i < dotCount; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'pulse-dot';
+    dot.style.left = Math.random() * 95 + '%';
+    dot.style.top = Math.random() * 95 + '%';
+    dot.style.animationDelay = (i * 0.3) + 's';
+    cryptoBackground.appendChild(dot);
+  }
 });
 </script>
 </body>
