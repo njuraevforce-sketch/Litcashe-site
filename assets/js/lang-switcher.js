@@ -1,7 +1,25 @@
 /*
- * Language switcher component. Updated to work with LC_I18N system
+ * Language switcher component for 14 languages
  */
 (function(){
+  // Supported languages with flags and names
+  const languages = {
+    'ru': { name: 'Русский', flag: 'ru' },
+    'en': { name: 'English', flag: 'en' },
+    'cn': { name: '中文', flag: 'cn' },
+    'es': { name: 'Español', flag: 'es' },
+    'fr': { name: 'Français', flag: 'fr' },
+    'de': { name: 'Deutsch', flag: 'de' },
+    'pt': { name: 'Português', flag: 'pt' },
+    'ar': { name: 'العربية', flag: 'ar' },
+    'ja': { name: '日本語', flag: 'jp' },
+    'ko': { name: '한국어', flag: 'kr' },
+    'tr': { name: 'Türkçe', flag: 'tr' },
+    'it': { name: 'Italiano', flag: 'it' },
+    'hi': { name: 'हिन्दी', flag: 'in' },
+    'pl': { name: 'Polski', flag: 'pl' }
+  };
+
   /**
    * Helper to create DOM elements with optional className.
    */
@@ -12,10 +30,21 @@
   }
 
   /**
-   * Build markup for language switcher with 3 languages
+   * Build markup for language switcher with 14 languages
    */
   function buildMarkup(){
     const container = createEl('div','lc-lang');
+    
+    let menuHTML = '';
+    for (const [code, lang] of Object.entries(languages)) {
+      menuHTML += `
+        <li role="option" data-lang="${code}">
+          <span class="lang-flag ${lang.flag}"></span>
+          <span>${lang.name}</span>
+        </li>
+      `;
+    }
+
     container.innerHTML = `
       <button class="lc-lang__btn" aria-haspopup="listbox" aria-expanded="false">
         <svg viewBox="0 0 24 24" class="lc-lang__icon" aria-hidden="true">
@@ -24,18 +53,7 @@
         <span class="lc-lang__label"></span>
       </button>
       <ul class="lc-lang__menu" role="listbox" tabindex="-1">
-        <li role="option" data-lang="ru">
-          <span class="lang-flag ru"></span>
-          <span>Русский</span>
-        </li>
-        <li role="option" data-lang="en">
-          <span class="lang-flag en"></span>
-          <span>English</span>
-        </li>
-        <li role="option" data-lang="cn">
-          <span class="lang-flag cn"></span>
-          <span>中文</span>
-        </li>
+        ${menuHTML}
       </ul>
     `;
     return container;
@@ -61,6 +79,8 @@
 
     // Update storage and apply translations
     function setLang(lang){
+      if (!languages[lang]) return;
+      
       try{ 
         localStorage.setItem('lc_lang', lang); 
       } catch(_){}
@@ -75,12 +95,7 @@
       
       // Update label
       if (label) {
-        const langNames = {
-          'ru': 'RU',
-          'en': 'EN', 
-          'cn': '中文'
-        };
-        label.textContent = langNames[lang] || 'RU';
+        label.textContent = languages[lang].name;
       }
       
       // Update HTML lang attribute
@@ -106,12 +121,17 @@
     function openMenu() {
       btn.setAttribute('aria-expanded','true');
       container.classList.add('is-open');
+      // Add scroll for many languages
+      menu.style.maxHeight = '300px';
+      menu.style.overflowY = 'auto';
       menu.focus();
     }
     
     function closeMenu() {
       btn.setAttribute('aria-expanded','false');
       container.classList.remove('is-open');
+      menu.style.maxHeight = '';
+      menu.style.overflowY = '';
     }
 
     // Initialize
