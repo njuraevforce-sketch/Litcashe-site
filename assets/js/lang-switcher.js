@@ -4,20 +4,20 @@
 (function(){
   // Supported languages with flags and names
   const languages = {
-    'ru': { name: 'Русский', flag: 'ru' },
-    'en': { name: 'English', flag: 'en' },
+    'ru': { name: 'RU', flag: 'ru' },
+    'en': { name: 'EN', flag: 'en' },
     'cn': { name: '中文', flag: 'cn' },
-    'es': { name: 'Español', flag: 'es' },
-    'fr': { name: 'Français', flag: 'fr' },
-    'de': { name: 'Deutsch', flag: 'de' },
-    'pt': { name: 'Português', flag: 'pt' },
-    'ar': { name: 'العربية', flag: 'ar' },
-    'ja': { name: '日本語', flag: 'jp' },
-    'ko': { name: '한국어', flag: 'kr' },
-    'tr': { name: 'Türkçe', flag: 'tr' },
-    'it': { name: 'Italiano', flag: 'it' },
-    'hi': { name: 'हिन्दी', flag: 'in' },
-    'pl': { name: 'Polski', flag: 'pl' }
+    'es': { name: 'ES', flag: 'es' },
+    'fr': { name: 'FR', flag: 'fr' },
+    'de': { name: 'DE', flag: 'de' },
+    'pt': { name: 'PT', flag: 'pt' },
+    'ar': { name: 'AR', flag: 'ar' },
+    'ja': { name: 'JA', flag: 'jp' },
+    'ko': { name: 'KO', flag: 'kr' },
+    'tr': { name: 'TR', flag: 'tr' },
+    'it': { name: 'IT', flag: 'it' },
+    'hi': { name: 'HI', flag: 'in' },
+    'pl': { name: 'PL', flag: 'pl' }
   };
 
   /**
@@ -50,7 +50,7 @@
         <svg viewBox="0 0 24 24" class="lc-lang__icon" aria-hidden="true">
           <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"/>
         </svg>
-        <span class="lc-lang__label"></span>
+        <span class="lc-lang__label">RU</span>
       </button>
       <ul class="lc-lang__menu" role="listbox" tabindex="-1">
         ${menuHTML}
@@ -89,7 +89,6 @@
       if (window.LC_I18N) {
         try{ 
           LC_I18N.set(lang);
-          LC_I18N.apply();
         } catch(_){}
       }
       
@@ -168,10 +167,8 @@
    */
   function findHeaderMount(){
     const selectors = [
-      '.nav-cta', '.nav-links', '.header .container', 'header .container', 
-      'header .wrapper', 'header nav', 'header',
-      '.header .wrapper', '.header nav', '.header',
-      '.navbar', '.topbar', '.top-bar', '.nav', '.site-header'
+      '.nav-cta', '.header .container', 'header .container', 
+      'header', '.header', '.navbar'
     ];
     for (const sel of selectors) {
       const el = document.querySelector(sel);
