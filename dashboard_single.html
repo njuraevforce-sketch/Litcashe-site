@@ -21,12 +21,7 @@
       navigator.serviceWorker.getRegistration('/')
         .then(function (reg) {
           if (!reg) {
-            return navigator.serviceWorker.register('/sw.js', { scope: '/' });
-          }
-        })
-        .catch(console.error);
-    });
-  })();
+  
   </script>
 
   <title data-i18n="page_title_dashboard">Кабинет — Litcash</title>
