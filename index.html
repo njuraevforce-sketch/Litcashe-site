@@ -1106,6 +1106,11 @@
       display: flex;
     }
 
+    /* СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ В МОБИЛЬНОМ МЕНЮ */
+    .mobile-lang-switcher {
+      display: block;
+    }
+
     /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
     .crypto-logo {
       font-size: 16px !important;
@@ -1231,6 +1236,69 @@
   <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
   <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
   <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
+  
+  <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ ДЛЯ МОБИЛЬНОГО МЕНЮ -->
+  <div class="mobile-lang-switcher">
+    <div class="mobile-lang-title" data-i18n="language_selector">Выберите язык</div>
+    <div class="mobile-lang-list">
+      <div class="mobile-lang-item active" data-lang="ru">
+        <span class="lang-flag ru"></span>
+        <span class="lang-name">Русский</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="en">
+        <span class="lang-flag en"></span>
+        <span class="lang-name">English</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="cn">
+        <span class="lang-flag cn"></span>
+        <span class="lang-name">中文</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="es">
+        <span class="lang-flag es"></span>
+        <span class="lang-name">Español</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="fr">
+        <span class="lang-flag fr"></span>
+        <span class="lang-name">Français</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="de">
+        <span class="lang-flag de"></span>
+        <span class="lang-name">Deutsch</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="pt">
+        <span class="lang-flag pt"></span>
+        <span class="lang-name">Português</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="ar">
+        <span class="lang-flag ar"></span>
+        <span class="lang-name">العربية</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="ja">
+        <span class="lang-flag jp"></span>
+        <span class="lang-name">日本語</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="ko">
+        <span class="lang-flag kr"></span>
+        <span class="lang-name">한국어</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="tr">
+        <span class="lang-flag tr"></span>
+        <span class="lang-name">Türkçe</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="it">
+        <span class="lang-flag it"></span>
+        <span class="lang-name">Italiano</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="hi">
+        <span class="lang-flag in"></span>
+        <span class="lang-name">हिन्दी</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="pl">
+        <span class="lang-flag pl"></span>
+        <span class="lang-name">Polski</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <header class="header">
@@ -1442,8 +1510,8 @@ document.addEventListener('DOMContentLoaded', function() {
       burgerBtn.classList.toggle('active');
     });
     
-    // Закрытие меню при клике на ссылку
-    const mobileLinks = mobileMenu.querySelectorAll('a');
+    // Закрытие меню при клике на ссылку или переключатель языка
+    const mobileLinks = mobileMenu.querySelectorAll('a, .mobile-lang-item');
     mobileLinks.forEach(link => {
       link.addEventListener('click', function() {
         mobileMenu.classList.remove('active');
@@ -1460,7 +1528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Инициализация языкового переключателя
+  // Инициализация языкового переключателя для десктопной версии
   const langSwitcher = document.getElementById('languageSwitcher');
   const langBtn = document.getElementById('langBtn');
   const langDropdown = document.getElementById('langDropdown');
@@ -1476,7 +1544,7 @@ document.addEventListener('DOMContentLoaded', function() {
       langSwitcher.classList.remove('active');
     });
     
-    // Выбор языка
+    // Выбор языка для десктопной версии
     const langItems = langDropdown.querySelectorAll('.lang-item');
     langItems.forEach(item => {
       item.addEventListener('click', function() {
@@ -1488,6 +1556,20 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+
+  // Инициализация языкового переключателя для мобильной версии
+  const mobileLangItems = document.querySelectorAll('.mobile-lang-item');
+  mobileLangItems.forEach(item => {
+    item.addEventListener('click', function() {
+      const lang = this.getAttribute('data-lang');
+      if (window.LanguageSwitcher) {
+        window.LanguageSwitcher.setLang(lang);
+      }
+      // Обновляем активный класс в мобильном меню
+      mobileLangItems.forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
 });
 
 // Hourly image rotator
