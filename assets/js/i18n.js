@@ -127,7 +127,24 @@ window.LC_I18N = (function(){
       // Текст прогресса видео
       "progress_views_left": "Доступно просмотров сегодня: {count}",
       "progress_login_required": "Требуется вход в систему",
-      "progress_loading_error": "Ошибка загрузки"
+      "progress_loading_error": "Ошибка загрузки",
+
+      // Crypto Trading Portal
+      "portal_title": "🚀 Crypto Trading Portal",
+      "portal_balance": "Ваш баланс",
+      "portal_active_vip": "Активный VIP:",
+      "portal_claim_profit": "💰 Забрать прибыль",
+      "portal_choose_vip": "📊 Выберите VIP уровень",
+      "portal_profit_history": "📈 История начислений",
+      "portal_no_profits": "Нет начислений",
+      "portal_button_title": "Crypto Trading",
+      "portal_click": "CLICK",
+      "portal_days_left": "Осталось дней:",
+      "portal_processing": "Процесс идет...",
+      "portal_limit_reached": "Лимит исчерпан (3/3)",
+      "portal_vip_active": "✅ Активен",
+      "portal_vip_buy": "Купить",
+      "portal_vip_no_funds": "Недостаточно средств"
     },
     "en": {
       "brand_name": "Litcash",
@@ -240,7 +257,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "Views available today: {count}",
       "progress_login_required": "Login required",
-      "progress_loading_error": "Loading error"
+      "progress_loading_error": "Loading error",
+
+      "portal_title": "🚀 Crypto Trading Portal",
+      "portal_balance": "Your Balance",
+      "portal_active_vip": "Active VIP:",
+      "portal_claim_profit": "💰 Claim Profit",
+      "portal_choose_vip": "📊 Choose VIP Level",
+      "portal_profit_history": "📈 Profit History",
+      "portal_no_profits": "No profits",
+      "portal_button_title": "Crypto Trading",
+      "portal_click": "CLICK",
+      "portal_days_left": "Days left:",
+      "portal_processing": "Processing...",
+      "portal_limit_reached": "Limit reached (3/3)",
+      "portal_vip_active": "✅ Active",
+      "portal_vip_buy": "Buy",
+      "portal_vip_no_funds": "Insufficient funds"
     },
     "cn": {
       "brand_name": "Litcash",
@@ -353,7 +386,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "今日可用观看次数：{count}",
       "progress_login_required": "需要登录",
-      "progress_loading_error": "加载错误"
+      "progress_loading_error": "加载错误",
+
+      "portal_title": "🚀 加密交易门户",
+      "portal_balance": "您的余额",
+      "portal_active_vip": "活跃VIP:",
+      "portal_claim_profit": "💰 领取利润",
+      "portal_choose_vip": "📊 选择VIP等级",
+      "portal_profit_history": "📈 利润历史",
+      "portal_no_profits": "无利润",
+      "portal_button_title": "加密交易",
+      "portal_click": "点击",
+      "portal_days_left": "剩余天数:",
+      "portal_processing": "处理中...",
+      "portal_limit_reached": "达到限制 (3/3)",
+      "portal_vip_active": "✅ 活跃",
+      "portal_vip_buy": "购买",
+      "portal_vip_no_funds": "资金不足"
     },
     "es": {
       "brand_name": "Litcash",
@@ -466,7 +515,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "Vistas disponibles hoy: {count}",
       "progress_login_required": "Inicio de sesión requerido",
-      "progress_loading_error": "Error de carga"
+      "progress_loading_error": "Error de carga",
+
+      "portal_title": "🚀 Portal de Trading Cripto",
+      "portal_balance": "Tu Saldo",
+      "portal_active_vip": "VIP Activo:",
+      "portal_claim_profit": "💰 Reclamar Ganancia",
+      "portal_choose_vip": "📊 Elige Nivel VIP",
+      "portal_profit_history": "📈 Historial de Ganancias",
+      "portal_no_profits": "Sin ganancias",
+      "portal_button_title": "Trading Cripto",
+      "portal_click": "CLIC",
+      "portal_days_left": "Días restantes:",
+      "portal_processing": "Procesando...",
+      "portal_limit_reached": "Límite alcanzado (3/3)",
+      "portal_vip_active": "✅ Activo",
+      "portal_vip_buy": "Comprar",
+      "portal_vip_no_funds": "Fondos insuficientes"
     },
     "fr": {
       "brand_name": "Litcash",
@@ -579,7 +644,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "Vues disponibles aujourd'hui : {count}",
       "progress_login_required": "Connexion requise",
-      "progress_loading_error": "Erreur de chargement"
+      "progress_loading_error": "Erreur de chargement",
+
+      "portal_title": "🚀 Portail de Trading Crypto",
+      "portal_balance": "Votre Solde",
+      "portal_active_vip": "VIP Actif:",
+      "portal_claim_profit": "💰 Réclamer le Profit",
+      "portal_choose_vip": "📊 Choisir le Niveau VIP",
+      "portal_profit_history": "📈 Historique des Profits",
+      "portal_no_profits": "Aucun profit",
+      "portal_button_title": "Trading Crypto",
+      "portal_click": "CLIQUER",
+      "portal_days_left": "Jours restants:",
+      "portal_processing": "Traitement...",
+      "portal_limit_reached": "Limite atteinte (3/3)",
+      "portal_vip_active": "✅ Actif",
+      "portal_vip_buy": "Acheter",
+      "portal_vip_no_funds": "Fonds insuffisants"
     },
     "de": {
       "brand_name": "Litcash",
@@ -692,7 +773,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "Ansichten verfügbar heute: {count}",
       "progress_login_required": "Anmeldung erforderlich",
-      "progress_loading_error": "Ladefehler"
+      "progress_loading_error": "Ladefehler",
+
+      "portal_title": "🚀 Crypto Trading Portal",
+      "portal_balance": "Ihr Guthaben",
+      "portal_active_vip": "Aktives VIP:",
+      "portal_claim_profit": "💰 Gewinn abholen",
+      "portal_choose_vip": "📊 VIP-Level wählen",
+      "portal_profit_history": "📈 Gewinnverlauf",
+      "portal_no_profits": "Keine Gewinne",
+      "portal_button_title": "Crypto Trading",
+      "portal_click": "KLICK",
+      "portal_days_left": "Verbleibende Tage:",
+      "portal_processing": "Wird verarbeitet...",
+      "portal_limit_reached": "Limit erreicht (3/3)",
+      "portal_vip_active": "✅ Aktiv",
+      "portal_vip_buy": "Kaufen",
+      "portal_vip_no_funds": "Unzureichende Mittel"
     },
     "pt": {
       "brand_name": "Litcash",
@@ -805,7 +902,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "Visualizações disponíveis hoje: {count}",
       "progress_login_required": "Login necessário",
-      "progress_loading_error": "Erro de carregamento"
+      "progress_loading_error": "Erro de carregamento",
+
+      "portal_title": "🚀 Portal de Trading Cripto",
+      "portal_balance": "Seu Saldo",
+      "portal_active_vip": "VIP Ativo:",
+      "portal_claim_profit": "💰 Reivindicar Lucro",
+      "portal_choose_vip": "📊 Escolher Nível VIP",
+      "portal_profit_history": "📈 Histórico de Lucros",
+      "portal_no_profits": "Sem lucros",
+      "portal_button_title": "Trading Cripto",
+      "portal_click": "CLICAR",
+      "portal_days_left": "Dias restantes:",
+      "portal_processing": "Processando...",
+      "portal_limit_reached": "Limite atingido (3/3)",
+      "portal_vip_active": "✅ Ativo",
+      "portal_vip_buy": "Comprar",
+      "portal_vip_no_funds": "Fundos insuficientes"
     },
     "ar": {
       "brand_name": "Litcash",
@@ -918,7 +1031,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "المشاهدات المتاحة اليوم: {count}",
       "progress_login_required": "تسجيل الدخول مطلوب",
-      "progress_loading_error": "خطأ في التحميل"
+      "progress_loading_error": "خطأ في التحميل",
+
+      "portal_title": "🚀 بوابة تداول العملات المشفرة",
+      "portal_balance": "رصيدك",
+      "portal_active_vip": "VIP النشط:",
+      "portal_claim_profit": "💰 المطالبة بالربح",
+      "portal_choose_vip": "📊 اختر مستوى VIP",
+      "portal_profit_history": "📈 سجل الأرباح",
+      "portal_no_profits": "لا توجد أرباح",
+      "portal_button_title": "تداول العملات المشفرة",
+      "portal_click": "انقر",
+      "portal_days_left": "الأيام المتبقية:",
+      "portal_processing": "جاري المعالجة...",
+      "portal_limit_reached": "تم الوصول إلى الحد (3/3)",
+      "portal_vip_active": "✅ نشط",
+      "portal_vip_buy": "شراء",
+      "portal_vip_no_funds": "أموال غير كافية"
     },
     "ja": {
       "brand_name": "Litcash",
@@ -1031,7 +1160,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "本日利用可能な視聴数: {count}",
       "progress_login_required": "ログインが必要です",
-      "progress_loading_error": "読み込みエラー"
+      "progress_loading_error": "読み込みエラー",
+
+      "portal_title": "🚀 暗号取引ポータル",
+      "portal_balance": "あなたの残高",
+      "portal_active_vip": "アクティブVIP:",
+      "portal_claim_profit": "💰 利益を受け取る",
+      "portal_choose_vip": "📊 VIPレベルを選択",
+      "portal_profit_history": "📈 利益履歴",
+      "portal_no_profits": "利益なし",
+      "portal_button_title": "暗号取引",
+      "portal_click": "クリック",
+      "portal_days_left": "残り日数:",
+      "portal_processing": "処理中...",
+      "portal_limit_reached": "制限に達しました (3/3)",
+      "portal_vip_active": "✅ アクティブ",
+      "portal_vip_buy": "購入",
+      "portal_vip_no_funds": "資金不足"
     },
     "ko": {
       "brand_name": "Litcash",
@@ -1144,7 +1289,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "오늘 이용 가능한 시청 수: {count}",
       "progress_login_required": "로그인 필요",
-      "progress_loading_error": "로딩 오류"
+      "progress_loading_error": "로딩 오류",
+
+      "portal_title": "🚀 암호화폐 트레이딩 포털",
+      "portal_balance": "귀하의 잔액",
+      "portal_active_vip": "활성 VIP:",
+      "portal_claim_profit": "💰 수익 청구",
+      "portal_choose_vip": "📊 VIP 레벨 선택",
+      "portal_profit_history": "📈 수익 내역",
+      "portal_no_profits": "수익 없음",
+      "portal_button_title": "암호화폐 트레이딩",
+      "portal_click": "클릭",
+      "portal_days_left": "남은 일수:",
+      "portal_processing": "처리 중...",
+      "portal_limit_reached": "한도 도달 (3/3)",
+      "portal_vip_active": "✅ 활성",
+      "portal_vip_buy": "구매",
+      "portal_vip_no_funds": "자금 부족"
     },
     "tr": {
       "brand_name": "Litcash",
@@ -1257,7 +1418,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "Bugün kullanılabilir görüntüleme: {count}",
       "progress_login_required": "Giriş gerekli",
-      "progress_loading_error": "Yükleme hatası"
+      "progress_loading_error": "Yükleme hatası",
+
+      "portal_title": "🚀 Kripto Ticaret Portalı",
+      "portal_balance": "Bakiyeniz",
+      "portal_active_vip": "Aktif VIP:",
+      "portal_claim_profit": "💰 Karı Talep Et",
+      "portal_choose_vip": "📊 VIP Seviyesi Seçin",
+      "portal_profit_history": "📈 Kar Geçmişi",
+      "portal_no_profits": "Kar yok",
+      "portal_button_title": "Kripto Ticaret",
+      "portal_click": "TIKLA",
+      "portal_days_left": "Kalan gün:",
+      "portal_processing": "İşleniyor...",
+      "portal_limit_reached": "Limit aşıldı (3/3)",
+      "portal_vip_active": "✅ Aktif",
+      "portal_vip_buy": "Satın Al",
+      "portal_vip_no_funds": "Yetersiz bakiye"
     },
     "it": {
       "brand_name": "Litcash",
@@ -1370,7 +1547,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "Visualizzazioni disponibili oggi: {count}",
       "progress_login_required": "Accesso richiesto",
-      "progress_loading_error": "Errore di caricamento"
+      "progress_loading_error": "Errore di caricamento",
+
+      "portal_title": "🚀 Portale Trading Crypto",
+      "portal_balance": "Il Tuo Saldo",
+      "portal_active_vip": "VIP Attivo:",
+      "portal_claim_profit": "💰 Richiedi Profitto",
+      "portal_choose_vip": "📊 Scegli Livello VIP",
+      "portal_profit_history": "📈 Cronologia Profitti",
+      "portal_no_profits": "Nessun profitto",
+      "portal_button_title": "Trading Crypto",
+      "portal_click": "CLICCA",
+      "portal_days_left": "Giorni rimanenti:",
+      "portal_processing": "Elaborazione...",
+      "portal_limit_reached": "Limite raggiunto (3/3)",
+      "portal_vip_active": "✅ Attivo",
+      "portal_vip_buy": "Acquista",
+      "portal_vip_no_funds": "Fondi insufficienti"
     },
     "hi": {
       "brand_name": "Litcash",
@@ -1483,7 +1676,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "आज उपलब्ध दृश्य: {count}",
       "progress_login_required": "लॉगिन आवश्यक",
-      "progress_loading_error": "लोडिंग त्रुटि"
+      "progress_loading_error": "लोडिंग त्रुटि",
+
+      "portal_title": "🚀 क्रिप्टो ट्रेडिंग पोर्टल",
+      "portal_balance": "आपका बैलेंस",
+      "portal_active_vip": "सक्रिय VIP:",
+      "portal_claim_profit": "💰 लाभ प्राप्त करें",
+      "portal_choose_vip": "📊 VIP स्तर चुनें",
+      "portal_profit_history": "📈 लाभ इतिहास",
+      "portal_no_profits": "कोई लाभ नहीं",
+      "portal_button_title": "क्रिप्टो ट्रेडिंग",
+      "portal_click": "क्लिक",
+      "portal_days_left": "शेष दिन:",
+      "portal_processing": "प्रसंस्करण...",
+      "portal_limit_reached": "सीमा पूरी (3/3)",
+      "portal_vip_active": "✅ सक्रिय",
+      "portal_vip_buy": "खरीदें",
+      "portal_vip_no_funds": "अपर्याप्त धन"
     },
     "pl": {
       "brand_name": "Litcash",
@@ -1596,7 +1805,23 @@ window.LC_I18N = (function(){
 
       "progress_views_left": "Dostępne wyświetlenia dziś: {count}",
       "progress_login_required": "Wymagane logowanie",
-      "progress_loading_error": "Błąd ładowania"
+      "progress_loading_error": "Błąd ładowania",
+
+      "portal_title": "🚀 Portal Handlu Kryptowalutami",
+      "portal_balance": "Twoje Saldo",
+      "portal_active_vip": "Aktywny VIP:",
+      "portal_claim_profit": "💰 Odbierz Zysk",
+      "portal_choose_vip": "📊 Wybierz Poziom VIP",
+      "portal_profit_history": "📈 Historia Zysków",
+      "portal_no_profits": "Brak zysków",
+      "portal_button_title": "Handel Kryptowalutami",
+      "portal_click": "KLIKNIJ",
+      "portal_days_left": "Pozostałe dni:",
+      "portal_processing": "Przetwarzanie...",
+      "portal_limit_reached": "Osiągnięto limit (3/3)",
+      "portal_vip_active": "✅ Aktywny",
+      "portal_vip_buy": "Kup",
+      "portal_vip_no_funds": "Niewystarczające środki"
     }
   };
 
