@@ -1,87 +1,1133 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
   <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#09141d">
+  <meta name="theme-color" content="#0a1a14">
 
-<!-- iOS -->
-<link rel="apple-touch-icon" href="/icons/litcash-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- iOS -->
+  <link rel="apple-touch-icon" href="/icons/litcash-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Вывод — Litcash</title>
-<link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
-<style>
-:root{ --bg:#0f1115; --bg-2:#0b0e13; --card:#161a22; --muted:#8d96a7; --text:#e6e9ef; --accent:#00eaff; --accent-2:#1e88e5; --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35); }
-*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,var(--bg-2),var(--bg));color:var(--text);font:15px/1.6 Inter,system-ui}
-.container{width:min(1100px,92vw);margin:0 auto;padding:24px 0}
-.card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);padding:20px}
-.grid{display:grid;gap:16px} .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))} @media (max-width:900px){.grid-2{grid-template-columns:1fr}}
-.btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(0,234,255,.18), rgba(30,136,229,.18));color:#fff;font-weight:700;cursor:pointer}
-.btn.bad{background:linear-gradient(180deg, rgba(220,20,60,.25), rgba(255,99,71,.25));border-color:rgba(255,99,71,.35)}
-.input{width:100%;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--text);padding:0 12px}
-.header{position:sticky;top:0;background:rgba(10,12,18,.6);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid rgba(255,255,255,.08)}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0} .nav a{color:#cfe9ff;margin-right:12px;text-decoration:none}
-.table-wrap{overflow-x:auto}
-.table{min-width:560px}
-.pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px}
-.pill.paid{background:rgba(16,185,129,.15)} .pill.rejected{background:rgba(239,68,68,.15)} .pill.pending{background:rgba(30,136,229,.15)}
-.right{text-align:right}.small{font-size:12px}
-.lc-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center}
-.lc-toast__item{background:#0b0e13;border:1px solid rgba(255,255,255,.12);color:#cfe9ff;padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
-</style>
+  <!-- PWA init -->
+  <script defer src="/app-install.js"></script>
+  
+  <title>Вывод — Litcash</title>
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
+
+  <style>
+  /* === ОСНОВНЫЕ СТИЛИ === */
+  :root {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --primary-light: #34d399;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --bg: #0a1a14;
+    --bg-gradient: linear-gradient(135deg, #0a1a14 0%, #0d2c1f 50%, #0a1a14 100%);
+    --bg-card: rgba(255, 255, 255, 0.08);
+    --text: #ffffff;
+    --text-secondary: #a7f3d0;
+    --border: rgba(16, 185, 129, 0.3);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --radius: 12px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    height: 100%;
+    overflow-x: hidden;
+    background: var(--bg);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text);
+    line-height: 1.4;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    -webkit-text-size-adjust: 100%;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Анимация крипторынка на фоне */
+  .crypto-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .crypto-logo {
+    position: absolute;
+    font-size: 18px;
+    font-weight: 800;
+    color: rgba(16, 185, 129, 0.9);
+    opacity: 0;
+    animation: float 20s linear infinite;
+    text-shadow: 0 0 25px rgba(16, 185, 129, 1);
+    z-index: 1;
+  }
+
+  .trading-bot {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle, var(--primary) 0%, transparent 60%);
+    border-radius: 50%;
+    opacity: 0;
+    animation: trade 25s ease-in-out infinite;
+    filter: blur(1px);
+    box-shadow: 0 0 35px var(--primary);
+    opacity: 0.8;
+  }
+
+  .price-line {
+    position: absolute;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+    opacity: 0;
+    animation: priceMove 15s linear infinite;
+    box-shadow: 0 0 25px var(--primary);
+    opacity: 0.6;
+  }
+
+  .exchange-logo {
+    position: absolute;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(52, 211, 153, 0.9);
+    opacity: 0;
+    animation: exchangeFloat 30s linear infinite;
+    padding: 4px 8px;
+    background: rgba(16, 185, 129, 0.35);
+    border-radius: 4px;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+  }
+
+  .crypto-chart {
+    position: absolute;
+    width: 100px;
+    height: 45px;
+    border: 2px solid rgba(16, 185, 129, 0.7);
+    opacity: 0;
+    animation: chartFloat 40s linear infinite;
+    background: rgba(16, 185, 129, 0.25);
+  }
+
+  .crypto-chart::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, transparent 100%);
+    clip-path: polygon(0% 100%, 10% 80%, 20% 60%, 30% 70%, 40% 40%, 50% 50%, 60% 30%, 70% 60%, 80% 20%, 90% 40%, 100% 10%, 100% 100%, 0% 100%);
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(100vh) rotate(0deg) scale(0.5);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.9;
+    }
+    90% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translateY(-100px) rotate(360deg) scale(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes trade {
+    0%, 100% {
+      transform: translate(0, 0) scale(0.8);
+      opacity: 0;
+    }
+    20% {
+      transform: translate(200px, 150px) scale(1);
+      opacity: 0.8;
+    }
+    40% {
+      transform: translate(400px, 80px) scale(0.7);
+      opacity: 0.8;
+    }
+    60% {
+      transform: translate(600px, 200px) scale(0.9);
+      opacity: 0.8;
+    }
+    80% {
+      transform: translate(800px, 120px) scale(0.6);
+      opacity: 0.8;
+    }
+  }
+
+  @keyframes priceMove {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.6;
+    }
+    90% {
+      opacity: 0.6;
+    }
+    100% {
+      transform: translateX(100vw);
+      opacity: 0;
+    }
+  }
+
+  @keyframes exchangeFloat {
+    0% {
+      transform: translateX(100vw) translateY(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.8;
+    }
+    90% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateX(-100px) translateY(80px) rotate(180deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes chartFloat {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.4;
+    }
+    90% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(-100px) rotate(10deg);
+      opacity: 0;
+    }
+  }
+
+  .pulse-dot {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    animation: pulse 3s ease-in-out infinite;
+    box-shadow: 0 0 30px var(--primary);
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.4;
+    }
+    50% {
+      transform: scale(2.5);
+      opacity: 0.3;
+    }
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+    width: 100%;
+  }
+
+  /* Header */
+  .header {
+    background: rgba(10, 26, 20, 0.98);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    flex-shrink: 0;
+    padding-top: var(--safe-top);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 50px;
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    flex-shrink: 0;
+    z-index: 1001;
+  }
+
+  .logo {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    animation: logoGlow 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes logoGlow {
+    0% {
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+    100% {
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6);
+    }
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-links a {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 6px 0;
+    font-size: 12px;
+    position: relative;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .nav-links a:hover {
+    color: var(--primary-light);
+  }
+
+  .nav-links a.active {
+    color: var(--primary);
+  }
+
+  .nav-links a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  .nav-cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Кнопки */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 11px;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  }
+
+  .btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: var(--primary);
+    color: white;
+  }
+
+  .btn.primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    transform: translateY(-1px);
+    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+  }
+
+  .btn.bad {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+    color: white;
+  }
+
+  .btn.bad:hover {
+    background: linear-gradient(135deg, #dc2626, #ef4444);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 25px rgba(239, 68, 68, 0.4);
+  }
+
+  /* Основной контент */
+  .main {
+    padding: 15px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 120px);
+    overflow-y: auto;
+    width: 100%;
+    position: relative;
+  }
+
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  /* Карточки */
+  .card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 15px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .card:hover::before {
+    left: 100%;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+    border-color: rgba(16, 185, 129, 0.5);
+  }
+
+  .card h1, .card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card h1:before, .card h2:before {
+    content: '';
+    width: 3px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  /* Сетка */
+  .grid {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Формы */
+  .input {
+    width: 100%;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    font-size: 11px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Утилиты */
+  .muted {
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
+  .flex {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  /* Footer */
+  .footer {
+    background: rgba(10, 26, 20, 0.8);
+    border-top: 1px solid var(--border);
+    padding: 15px 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    backdrop-filter: blur(20px);
+    flex-shrink: 0;
+    padding-bottom: calc(15px + var(--safe-bottom));
+  }
+
+  /* Иконки для заголовков */
+  .icon {
+    width: 18px;
+    height: 18px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  /* Бургер меню для мобильных */
+  .burger {
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1001;
+  }
+
+  .burger span {
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    transition: all 0.3s;
+    border-radius: 1px;
+  }
+
+  /* Мобильное меню */
+  .mobile-menu {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    right: 0;
+    background: rgba(10, 26, 20, 0.98);
+    backdrop-filter: blur(30px);
+    border-bottom: 1px solid var(--border);
+    padding: 15px;
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+  }
+
+  .mobile-menu.active {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .mobile-menu a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .mobile-menu a:hover,
+  .mobile-menu a.active {
+    color: var(--primary);
+  }
+
+  .mobile-menu a:last-child {
+    border-bottom: none;
+  }
+
+  /* Таблицы */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 10px;
+  }
+
+  .table {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 6px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  .table tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Pills */
+  .pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  .pill.paid {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--primary-light);
+  }
+
+  .pill.rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+  }
+
+  .pill.pending {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+  }
+
+  /* Toast */
+  .lc-toast {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 18px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .lc-toast__item {
+    background: rgba(10, 26, 20, 0.95);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    font-size: 11px;
+  }
+
+  /* Right align */
+  .right {
+    text-align: right;
+  }
+
+  .small {
+    font-size: 9px;
+  }
+
+  /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
+  @media (max-width: 768px) {
+    html, body {
+      background: var(--bg);
+      position: relative;
+      height: auto;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      padding: 0 10px;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .nav {
+      height: 50px;
+      padding: 0 8px;
+      gap: 8px;
+    }
+
+    .brand {
+      font-size: 15px;
+    }
+
+    .logo {
+      width: 26px;
+      height: 26px;
+      font-size: 11px;
+    }
+
+    .nav-cta {
+      gap: 6px;
+    }
+
+    .btn {
+      height: 32px;
+      padding: 0 10px;
+      font-size: 10px;
+    }
+
+    .main {
+      padding: 10px 0;
+      min-height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+
+    .grid {
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .card {
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+
+    .card h1, .card h2 {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .input {
+      height: 30px;
+      font-size: 10px;
+    }
+
+    /* Скрываем обычное меню, показываем бургер */
+    .nav-links {
+      display: none !important;
+    }
+    
+    .burger {
+      display: flex;
+    }
+
+    /* Таблицы на мобильных */
+    .table {
+      font-size: 10px;
+    }
+
+    .table th,
+    .table td {
+      padding: 6px 4px;
+    }
+
+    /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
+    .crypto-logo {
+      font-size: 16px !important;
+      animation-duration: 18s !important;
+      color: rgba(16, 185, 129, 0.95) !important;
+      text-shadow: 0 0 30px rgba(16, 185, 129, 1) !important;
+    }
+
+    .trading-bot {
+      width: 30px !important;
+      height: 30px !important;
+      animation-duration: 22s !important;
+      box-shadow: 0 0 40px var(--primary) !important;
+      opacity: 0.9 !important;
+    }
+
+    .crypto-chart {
+      width: 90px !important;
+      height: 40px !important;
+      animation-duration: 35s !important;
+      border: 2px solid rgba(16, 185, 129, 0.8) !important;
+      background: rgba(16, 185, 129, 0.3) !important;
+    }
+
+    .price-line {
+      animation-duration: 16s !important;
+      height: 3px !important;
+      box-shadow: 0 0 30px var(--primary) !important;
+      opacity: 0.7 !important;
+    }
+
+    .exchange-logo {
+      animation-duration: 28s !important;
+      color: rgba(52, 211, 153, 0.95) !important;
+      background: rgba(16, 185, 129, 0.4) !important;
+      font-size: 12px !important;
+      padding: 3px 7px !important;
+    }
+
+    .pulse-dot {
+      width: 9px !important;
+      height: 9px !important;
+      box-shadow: 0 0 35px var(--primary) !important;
+    }
+  }
+
+  /* Для очень маленьких экранов */
+  @media (max-width: 480px) {
+    .container {
+      padding: 0 8px;
+    }
+
+    .nav {
+      padding: 0 5px;
+    }
+
+    .card h1, .card h2 {
+      font-size: 13px;
+    }
+
+    .card {
+      padding: 10px;
+    }
+
+    .btn {
+      padding: 0 8px;
+      font-size: 9px;
+    }
+
+    .table {
+      font-size: 9px;
+    }
+  }
+
+  /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
+  @media (prefers-reduced-motion: reduce) {
+    .crypto-logo,
+    .trading-bot,
+    .price-line,
+    .exchange-logo,
+    .crypto-chart,
+    .pulse-dot,
+    .logo,
+    .card::before {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+  </style>
+
+  <!-- Language switcher styles -->
+  <style>
+  .lc-lang{position:relative;display:inline-flex;align-items:center}
+  .lc-lang__btn{height:28px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)!important;background:var(--bg-card)!important;color:var(--text)!important;display:inline-flex;gap:4px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:all 0.3s ease}
+  .lc-lang__btn:hover{border-color:var(--primary)!important;color:var(--primary)!important;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .lc-lang__icon{width:12px;height:12px}
+  .lc-lang__label{font-size:9px;line-height:1}
+  </style>
 </head>
-<body data-balance-container>
-<div style="position:sticky;top:0;background:#fff;padding:.5rem;border-bottom:1px solid #eee">Баланс: <strong data-balance>0.00 $</strong></div>
 
-<header class="header noscript-header">
-  <div class="container nav">
-    <a class="brand" href="index.html"><span class="logo"></span><span>Litcash</span></a>
-    <nav class="nav-links">
-      <a href="index.html">Главная</a>
-      <a href="dashboard_single.html">Личный кабинет</a>
-      <a href="deposit_single.html">Пополнение</a>
-      <a href="withdraw_single.html">Вывод</a>
-      <a href="faq_single.html">FAQ</a>
-      <a href="settings_single.html">Настройки</a>
+<body>
+<!-- Анимированный фон с крипто-элементами -->
+<div class="crypto-background" id="cryptoBackground">
+  <!-- Элементы добавляются через JavaScript -->
+</div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Главная</a>
+  <a href="dashboard_single.html">Личный кабинет</a>
+  <a href="deposit_single.html">Пополнение</a>
+  <a href="withdraw_single.html" class="active">Вывод</a>
+  <a href="faq_single.html">FAQ</a>
+  <a href="settings_single.html">Настройки</a>
+</div>
+
+<header class="header">
+  <div class="container">
+    <nav class="nav">
+      <a class="brand" href="index.html">
+        <div class="logo">LC</div>
+        <span>Litcash</span>
+      </a>
+      
+      <div class="nav-links">
+        <a href="index.html">Главная</a>
+        <a href="dashboard_single.html">Личный кабинет</a>
+        <a href="deposit_single.html">Пополнение</a>
+        <a href="withdraw_single.html" class="active">Вывод</a>
+        <a href="faq_single.html">FAQ</a>
+        <a href="settings_single.html">Настройки</a>
+      </div>
+
+      <div class="nav-cta">
+        <div class="lc-lang">
+          <button class="lc-lang__btn">
+            <svg class="lc-lang__icon" viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+            </svg>
+            <span class="lc-lang__label">RU</span>
+          </button>
+        </div>
+        
+        <a class="btn" href="login_single.html">Вход</a>
+        <a class="btn primary" href="register_single.html">Регистрация</a>
+      </div>
+
+      <div class="burger" id="burgerBtn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </nav>
-    <div class="nav-cta">
-      <a class="btn ghost" href="login_single.html">Вход</a>
-      <a class="btn primary" href="register_single.html">Регистрация</a>
-    </div>
   </div>
 </header>
 
-<main class="container">
-  <div class="card">
-    <h1>Заявка на вывод</h1>
-    <div class="grid">
-      <input class="input" id="wallet" placeholder="TRC20-кошелёк" type="text"/>
-      <input class="input" id="withAmount" placeholder="Сумма к выводу, USDT" step="0.01" type="number"/>
-      <button class="btn" id="withSubmit">Отправить заявку</button>
-      <p class="muted">Первый вывод — через 5 дней после активации. Далее — не чаще 1 раза в 24 часа.</p>
+<main class="main">
+  <div class="container main-content">
+    <div style="position:sticky;top:50px;background:var(--bg-card);padding:8px;border-radius:var(--radius);margin-bottom:12px;border:1px solid var(--border);backdrop-filter:blur(10px);z-index:10">
+      Баланс: <strong data-balance style="color:var(--primary-light)">0.00 $</strong>
     </div>
-  </div>
 
-  <div class="card" id="wd-history-card">
-    <h2 class="section-title">История заявок</h2>
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr><th>Дата</th><th class="right">Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
-        </thead>
-        <tbody id="wd-table-body">
-          <tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
-        </tbody>
-      </table>
+    <div class="card">
+      <h1><span class="icon">💸</span>Заявка на вывод</h1>
+      <div class="grid">
+        <input class="input" id="wallet" placeholder="TRC20-кошелёк" type="text"/>
+        <input class="input" id="withAmount" placeholder="Сумма к выводу, USDT" step="0.01" type="number"/>
+        <button class="btn primary" id="withSubmit">Отправить заявку</button>
+        <p class="muted">Первый вывод — через 5 дней после активации. Далее — не чаще 1 раза в 24 часа.</p>
+      </div>
+    </div>
+
+    <div class="card" id="wd-history-card">
+      <h2><span class="icon">📋</span>История заявок</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Дата</th><th class="right">Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
+          </thead>
+          <tbody id="wd-table-body">
+            <tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </main>
 
-<footer class="footer"><div class="container">© 2025 Litcash</div></footer>
+<footer class="footer">
+  <div class="container">
+    © 2025 Litcash. Все права защищены.
+  </div>
+</footer>
+
+<script>
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.getRegistration('/')
+      .then((reg) => {
+        if (!reg) {
+          return navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        }
+      })
+      .catch(console.error);
+  });
+}
+
+// Mobile Menu
+document.addEventListener('DOMContentLoaded', () => {
+  const burgerBtn = document.getElementById('burgerBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  
+  if (burgerBtn && mobileMenu) {
+    burgerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      mobileMenu.classList.toggle('active');
+      burgerBtn.classList.toggle('active');
+    });
+    
+    const mobileLinks = mobileMenu.querySelectorAll('a');
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('active');
+        burgerBtn.classList.remove('active');
+      });
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
+        mobileMenu.classList.remove('active');
+        burgerBtn.classList.remove('active');
+      }
+    });
+  }
+});
+
+// Crypto Background Animation
+document.addEventListener('DOMContentLoaded', () => {
+  const cryptoBackground = document.getElementById('cryptoBackground');
+  if (!cryptoBackground) return;
+
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  
+  const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
+  const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
+  
+  const cryptoLogoCount = isMobile ? 8 : 12;
+  const exchangeLogoCount = isMobile ? 6 : 8;
+  const botCount = isMobile ? 4 : 6;
+  const lineCount = isMobile ? 6 : 8;
+  const chartCount = isMobile ? 3 : 4;
+  const dotCount = isMobile ? 8 : 10;
+  
+  // Create crypto logos
+  for (let i = 0; i < cryptoLogoCount; i++) {
+    const element = document.createElement('div');
+    element.className = 'crypto-logo';
+    element.textContent = cryptoLogos[i % cryptoLogos.length];
+    element.style.left = Math.random() * 90 + 5 + '%';
+    element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
+    element.style.fontSize = (Math.random() * 8 + 14) + 'px';
+    cryptoBackground.appendChild(element);
+  }
+  
+  // Create exchange logos
+  for (let i = 0; i < exchangeLogoCount; i++) {
+    const element = document.createElement('div');
+    element.className = 'exchange-logo';
+    element.textContent = exchangeLogos[i % exchangeLogos.length];
+    element.style.top = Math.random() * 80 + 10 + '%';
+    element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
+    cryptoBackground.appendChild(element);
+  }
+  
+  // Create trading bots
+  for (let i = 0; i < botCount; i++) {
+    const bot = document.createElement('div');
+    bot.className = 'trading-bot';
+    bot.style.left = Math.random() * 80 + 10 + '%';
+    bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
+    cryptoBackground.appendChild(bot);
+  }
+  
+  // Create price lines
+  for (let i = 0; i < lineCount; i++) {
+    const line = document.createElement('div');
+    line.className = 'price-line';
+    line.style.top = Math.random() * 80 + 10 + '%';
+    line.style.width = (Math.random() * 200 + 100) + 'px';
+    line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
+    cryptoBackground.appendChild(line);
+  }
+
+  // Create crypto charts
+  for (let i = 0; i < chartCount; i++) {
+    const chart = document.createElement('div');
+    chart.className = 'crypto-chart';
+    chart.style.left = Math.random() * 80 + 10 + '%';
+    chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
+    cryptoBackground.appendChild(chart);
+  }
+
+  // Create pulse dots
+  for (let i = 0; i < dotCount; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'pulse-dot';
+    dot.style.left = Math.random() * 95 + '%';
+    dot.style.top = Math.random() * 95 + '%';
+    dot.style.animationDelay = (i * 0.3) + 's';
+    cryptoBackground.appendChild(dot);
+  }
+});
+</script>
 
 <!-- Supabase -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -263,12 +1309,6 @@
   });
 })();
 </script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
-  }
-</script>
-<script src="/app-install.js" defer></script>
 
 </body>
 </html>
