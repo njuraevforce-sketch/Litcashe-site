@@ -87,8 +87,7 @@
     display: flex;
     align-items: center;
     z-index: 1001;
-    margin-left: auto;
-    margin-right: 10px;
+    margin-left: 10px;
   }
 
   .lang-btn-header {
@@ -129,7 +128,7 @@
   .lang-dropdown-header {
     position: absolute;
     top: 100%;
-    right: 0;
+    left: 0;
     margin-top: 5px;
     background: var(--bg);
     border: 1px solid var(--border);
@@ -1000,6 +999,7 @@
     }
 
     .nav-cta {
+      display: flex;
       gap: 6px;
     }
 
@@ -1099,26 +1099,11 @@
 
     /* ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ДЛЯ МОБИЛЬНЫХ */
     .language-switcher-header {
-      margin-right: 5px;
-    }
-
-    .lang-btn-header {
-      height: 28px;
-      padding: 0 8px;
-      font-size: 10px;
-    }
-
-    .lang-code-header {
-      font-size: 10px;
-    }
-
-    .lang-dropdown-header {
-      min-width: 140px;
-      right: -10px;
+      display: none;
     }
 
     .nav-cta {
-      display: none;
+      display: flex;
     }
 
     /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
@@ -1213,20 +1198,6 @@
       width: 20px;
       height: 20px;
     }
-
-    /* ДОПОЛНИТЕЛЬНАЯ ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ */
-    .language-switcher-header {
-      margin-right: 3px;
-    }
-
-    .lang-btn-header {
-      height: 26px;
-      padding: 0 6px;
-    }
-
-    .lang-code-header {
-      font-size: 9px;
-    }
   }
 
   /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
@@ -1270,7 +1241,7 @@
         <span data-i18n="brand_name">Litcash</span>
       </a>
 
-      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ -->
+      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ - ПЕРЕНЕСЕН ВЛЕВО -->
       <div class="language-switcher-header" id="languageSwitcher">
         <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
           <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
