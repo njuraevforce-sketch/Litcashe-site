@@ -15,7 +15,7 @@
   <!-- PWA init -->
   <script defer src="/app-install.js"></script>
   
-  <title>Вывод — Litcash</title>
+  <title data-i18n="page_title_withdraw">Вывод — Litcash</title>
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
 
   <style>
@@ -65,6 +65,180 @@
     flex-direction: column;
     width: 100%;
     overflow-x: hidden;
+  }
+
+  /* === ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ === */
+  .language-switcher-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    z-index: 1001;
+    margin-left: auto;
+    margin-right: 10px;
+  }
+
+  .lang-btn-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+  }
+
+  .lang-btn-header:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  }
+
+  .lang-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .lang-code-header {
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .lang-dropdown-header {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px;
+    min-width: 160px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1002;
+  }
+
+  .language-switcher-header.active .lang-dropdown-header {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .lang-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .lang-item:hover {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--primary-light);
+  }
+
+  .lang-item.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .lang-flag {
+    width: 16px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+
+  .lang-name {
+    flex: 1;
+    text-align: left;
+  }
+
+  .lang-code {
+    font-size: 10px;
+    opacity: 0.7;
+    font-weight: 600;
+  }
+
+  /* Флаги языков */
+  .lang-flag.ru { background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%); }
+  .lang-flag.en { background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%); }
+  .lang-flag.cn { background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%); }
+  .lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
+  .lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
+  .lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
+  .lang-flag.pt { background: linear-gradient(to right, #006600 40%, #ff0000 40%, #ff0000 60%, #ffcc00 60%); }
+  .lang-flag.ar { background: linear-gradient(to bottom, #ce1126 33%, #ffffff 33%, #ffffff 66%, #000000 66%); }
+  .lang-flag.jp { background: radial-gradient(circle, #bc002d 30%, white 30%); }
+  .lang-flag.kr { background: linear-gradient(to bottom, #ffffff 50%, #000000 50%); }
+  .lang-flag.tr { background: linear-gradient(to bottom, #e30a17 0%, #e30a17 100%); }
+  .lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
+  .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
+  .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
+
+  /* Мобильный языковой переключатель */
+  .mobile-lang-switcher {
+    padding: 15px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+
+  .mobile-lang-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text);
+    padding: 0 5px;
+  }
+
+  .mobile-lang-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .mobile-lang-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .mobile-lang-item:hover {
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  .mobile-lang-item.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--primary);
+    font-weight: 600;
   }
 
   /* Анимация крипторынка на фоне */
@@ -804,6 +978,30 @@
       display: flex;
     }
 
+    /* ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ДЛЯ МОБИЛЬНЫХ */
+    .language-switcher-header {
+      margin-right: 5px;
+    }
+
+    .lang-btn-header {
+      height: 28px;
+      padding: 0 8px;
+      font-size: 10px;
+    }
+
+    .lang-code-header {
+      font-size: 10px;
+    }
+
+    .lang-dropdown-header {
+      min-width: 140px;
+      right: -10px;
+    }
+
+    .nav-cta {
+      display: none;
+    }
+
     /* Таблицы на мобильных */
     .table {
       font-size: 10px;
@@ -886,6 +1084,20 @@
     .table {
       font-size: 9px;
     }
+
+    /* ДОПОЛНИТЕЛЬНАЯ ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ */
+    .language-switcher-header {
+      margin-right: 3px;
+    }
+
+    .lang-btn-header {
+      height: 26px;
+      padding: 0 6px;
+    }
+
+    .lang-code-header {
+      font-size: 9px;
+    }
   }
 
   /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
@@ -903,15 +1115,6 @@
     }
   }
   </style>
-
-  <!-- Language switcher styles -->
-  <style>
-  .lc-lang{position:relative;display:inline-flex;align-items:center}
-  .lc-lang__btn{height:28px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)!important;background:var(--bg-card)!important;color:var(--text)!important;display:inline-flex;gap:4px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:all 0.3s ease}
-  .lc-lang__btn:hover{border-color:var(--primary)!important;color:var(--primary)!important;box-shadow:0 2px 10px rgba(0,0,0,.3)}
-  .lc-lang__icon{width:12px;height:12px}
-  .lc-lang__label{font-size:9px;line-height:1}
-  </style>
 </head>
 
 <body>
@@ -922,12 +1125,43 @@
 
 <!-- Мобильное меню -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="index.html">Главная</a>
-  <a href="dashboard_single.html">Личный кабинет</a>
-  <a href="deposit_single.html">Пополнение</a>
-  <a href="withdraw_single.html" class="active">Вывод</a>
-  <a href="faq_single.html">FAQ</a>
-  <a href="settings_single.html">Настройки</a>
+  <a href="index.html" data-i18n="nav_home">Главная</a>
+  <a href="dashboard_single.html" data-i18n="nav_dashboard">Личный кабинет</a>
+  <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
+  <a href="withdraw_single.html" class="active" data-i18n="nav_withdraw">Вывод</a>
+  <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
+  <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
+  
+  <!-- Мобильный переключатель языков -->
+  <div class="mobile-lang-switcher">
+    <div class="mobile-lang-title" data-i18n="language_switch">Выбор языка</div>
+    <div class="mobile-lang-list">
+      <div class="mobile-lang-item active" data-lang="ru">
+        <span class="lang-flag ru"></span>
+        <span class="lang-name">Русский</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="en">
+        <span class="lang-flag en"></span>
+        <span class="lang-name">English</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="cn">
+        <span class="lang-flag cn"></span>
+        <span class="lang-name">中文</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="es">
+        <span class="lang-flag es"></span>
+        <span class="lang-name">Español</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="fr">
+        <span class="lang-flag fr"></span>
+        <span class="lang-name">Français</span>
+      </div>
+      <div class="mobile-lang-item" data-lang="de">
+        <span class="lang-flag de"></span>
+        <span class="lang-name">Deutsch</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <header class="header">
@@ -935,30 +1169,106 @@
     <nav class="nav">
       <a class="brand" href="index.html">
         <div class="logo">LC</div>
-        <span>Litcash</span>
+        <span data-i18n="brand_name">Litcash</span>
       </a>
+
+      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ -->
+      <div class="language-switcher-header" id="languageSwitcher">
+        <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
+          <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+                  fill="none" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+          <span class="lang-code-header">RU</span>
+        </button>
+        
+        <div class="lang-dropdown-header" id="langDropdown">
+          <div class="lang-list">
+            <div class="lang-item active" data-lang="ru">
+              <span class="lang-flag ru"></span>
+              <span class="lang-name">Русский</span>
+              <span class="lang-code">RU</span>
+            </div>
+            <div class="lang-item" data-lang="en">
+              <span class="lang-flag en"></span>
+              <span class="lang-name">English</span>
+              <span class="lang-code">EN</span>
+            </div>
+            <div class="lang-item" data-lang="cn">
+              <span class="lang-flag cn"></span>
+              <span class="lang-name">中文</span>
+              <span class="lang-code">CN</span>
+            </div>
+            <div class="lang-item" data-lang="es">
+              <span class="lang-flag es"></span>
+              <span class="lang-name">Español</span>
+              <span class="lang-code">ES</span>
+            </div>
+            <div class="lang-item" data-lang="fr">
+              <span class="lang-flag fr"></span>
+              <span class="lang-name">Français</span>
+              <span class="lang-code">FR</span>
+            </div>
+            <div class="lang-item" data-lang="de">
+              <span class="lang-flag de"></span>
+              <span class="lang-name">Deutsch</span>
+              <span class="lang-code">DE</span>
+            </div>
+            <div class="lang-item" data-lang="pt">
+              <span class="lang-flag pt"></span>
+              <span class="lang-name">Português</span>
+              <span class="lang-code">PT</span>
+            </div>
+            <div class="lang-item" data-lang="ar">
+              <span class="lang-flag ar"></span>
+              <span class="lang-name">العربية</span>
+              <span class="lang-code">AR</span>
+            </div>
+            <div class="lang-item" data-lang="ja">
+              <span class="lang-flag jp"></span>
+              <span class="lang-name">日本語</span>
+              <span class="lang-code">JA</span>
+            </div>
+            <div class="lang-item" data-lang="ko">
+              <span class="lang-flag kr"></span>
+              <span class="lang-name">한국어</span>
+              <span class="lang-code">KO</span>
+            </div>
+            <div class="lang-item" data-lang="tr">
+              <span class="lang-flag tr"></span>
+              <span class="lang-name">Türkçe</span>
+              <span class="lang-code">TR</span>
+            </div>
+            <div class="lang-item" data-lang="it">
+              <span class="lang-flag it"></span>
+              <span class="lang-name">Italiano</span>
+              <span class="lang-code">IT</span>
+            </div>
+            <div class="lang-item" data-lang="hi">
+              <span class="lang-flag in"></span>
+              <span class="lang-name">हिन्दी</span>
+              <span class="lang-code">HI</span>
+            </div>
+            <div class="lang-item" data-lang="pl">
+              <span class="lang-flag pl"></span>
+              <span class="lang-name">Polski</span>
+              <span class="lang-code">PL</span>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div class="nav-links">
-        <a href="index.html">Главная</a>
-        <a href="dashboard_single.html">Личный кабинет</a>
-        <a href="deposit_single.html">Пополнение</a>
-        <a href="withdraw_single.html" class="active">Вывод</a>
-        <a href="faq_single.html">FAQ</a>
-        <a href="settings_single.html">Настройки</a>
+        <a href="index.html" data-i18n="nav_home">Главная</a>
+        <a href="dashboard_single.html" data-i18n="nav_dashboard">Личный кабинет</a>
+        <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
+        <a href="withdraw_single.html" class="active" data-i18n="nav_withdraw">Вывод</a>
+        <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
       </div>
 
       <div class="nav-cta">
-        <div class="lc-lang">
-          <button class="lc-lang__btn">
-            <svg class="lc-lang__icon" viewBox="0 0 24 24">
-              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
-            </svg>
-            <span class="lc-lang__label">RU</span>
-          </button>
-        </div>
-        
-        <a class="btn" href="login_single.html">Вход</a>
-        <a class="btn primary" href="register_single.html">Регистрация</a>
+        <a class="btn" href="login_single.html" data-i18n="nav_login">Вход</a>
+        <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
       </div>
 
       <div class="burger" id="burgerBtn">
@@ -973,28 +1283,35 @@
 <main class="main">
   <div class="container main-content">
     <div style="position:sticky;top:50px;background:var(--bg-card);padding:8px;border-radius:var(--radius);margin-bottom:12px;border:1px solid var(--border);backdrop-filter:blur(10px);z-index:10">
-      Баланс: <strong data-balance style="color:var(--primary-light)">0.00 $</strong>
+      <span data-i18n="withdraw_balance_label">Баланс:</span> <strong data-balance style="color:var(--primary-light)">0.00 $</strong>
     </div>
 
     <div class="card">
-      <h1><span class="icon">💸</span>Заявка на вывод</h1>
+      <h1><span class="icon">💸</span><span data-i18n="withdraw_title">Заявка на вывод</span></h1>
       <div class="grid">
-        <input class="input" id="wallet" placeholder="TRC20-кошелёк" type="text"/>
-        <input class="input" id="withAmount" placeholder="Сумма к выводу, USDT" step="0.01" type="number"/>
-        <button class="btn primary" id="withSubmit">Отправить заявку</button>
-        <p class="muted">Первый вывод — через 5 дней после активации. Далее — не чаще 1 раза в 24 часа.</p>
+        <input class="input" id="wallet" placeholder="TRC20-кошелёк" type="text" data-i18n-placeholder="withdraw_wallet_placeholder"/>
+        <input class="input" id="withAmount" placeholder="Сумма к выводу, USDT" step="0.01" type="number" data-i18n-placeholder="withdraw_amount_placeholder"/>
+        <button class="btn primary" id="withSubmit" data-i18n="withdraw_submit_btn">Отправить заявку</button>
+        <p class="muted" data-i18n="withdraw_note">Первый вывод — через 5 дней после активации. Далее — не чаще 1 раза в 24 часа.</p>
       </div>
     </div>
 
     <div class="card" id="wd-history-card">
-      <h2><span class="icon">📋</span>История заявок</h2>
+      <h2><span class="icon">📋</span><span data-i18n="withdraw_history_title">История заявок</span></h2>
       <div class="table-wrap">
         <table class="table">
           <thead>
-            <tr><th>Дата</th><th class="right">Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
+            <tr>
+              <th data-i18n="withdraw_table_date">Дата</th>
+              <th class="right" data-i18n="withdraw_table_amount">Сумма</th>
+              <th data-i18n="withdraw_table_network">Сеть</th>
+              <th data-i18n="withdraw_table_status">Статус</th>
+              <th data-i18n="withdraw_table_tx">TX</th>
+              <th data-i18n="withdraw_table_action">Действие</th>
+            </tr>
           </thead>
           <tbody id="wd-table-body">
-            <tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
+            <tr><td colspan="6" style="text-align:center;padding:10px 0;" data-i18n="withdraw_loading">Загрузка…</td></tr>
           </tbody>
         </table>
       </div>
@@ -1004,7 +1321,7 @@
 
 <footer class="footer">
   <div class="container">
-    © 2025 Litcash. Все права защищены.
+    <span data-i18n="footer_copyright">© 2025 Litcash. Все права защищены.</span>
   </div>
 </footer>
 
@@ -1022,31 +1339,75 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Mobile Menu
-document.addEventListener('DOMContentLoaded', () => {
+// Бургер-меню и языковой переключатель
+document.addEventListener('DOMContentLoaded', function() {
   const burgerBtn = document.getElementById('burgerBtn');
   const mobileMenu = document.getElementById('mobileMenu');
   
   if (burgerBtn && mobileMenu) {
-    burgerBtn.addEventListener('click', (e) => {
+    burgerBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       mobileMenu.classList.toggle('active');
       burgerBtn.classList.toggle('active');
     });
     
+    // Закрытие меню при клике на ссылку
     const mobileLinks = mobileMenu.querySelectorAll('a');
     mobileLinks.forEach(link => {
-      link.addEventListener('click', () => {
+      link.addEventListener('click', function() {
         mobileMenu.classList.remove('active');
         burgerBtn.classList.remove('active');
       });
     });
     
-    document.addEventListener('click', (e) => {
+    // Закрытие меню при клике вне его
+    document.addEventListener('click', function(e) {
       if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
         mobileMenu.classList.remove('active');
         burgerBtn.classList.remove('active');
       }
+    });
+
+    // Мобильный переключатель языка
+    const mobileLangItems = mobileMenu.querySelectorAll('.mobile-lang-item');
+    mobileLangItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const lang = this.getAttribute('data-lang');
+        if (window.LanguageSwitcher) {
+          window.LanguageSwitcher.setLang(lang);
+        }
+        mobileMenu.classList.remove('active');
+        burgerBtn.classList.remove('active');
+      });
+    });
+  }
+
+  // Инициализация языкового переключателя
+  const langSwitcher = document.getElementById('languageSwitcher');
+  const langBtn = document.getElementById('langBtn');
+  const langDropdown = document.getElementById('langDropdown');
+  
+  if (langBtn && langDropdown) {
+    langBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      langSwitcher.classList.toggle('active');
+    });
+    
+    // Закрытие при клике вне переключателя
+    document.addEventListener('click', function() {
+      langSwitcher.classList.remove('active');
+    });
+    
+    // Выбор языка
+    const langItems = langDropdown.querySelectorAll('.lang-item');
+    langItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const lang = this.getAttribute('data-lang');
+        if (window.LanguageSwitcher) {
+          window.LanguageSwitcher.setLang(lang);
+        }
+        langSwitcher.classList.remove('active');
+      });
     });
   }
 });
@@ -1132,6 +1493,8 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- Supabase -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
+<script defer src="assets/js/i18n.js"></script>
+<script defer src="assets/js/language-switcher.js"></script>
 <script defer src="app_supabase.js"></script>
 
 <script>
@@ -1141,9 +1504,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const fmtUSD = (c)=> (Number(c||0)/100).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2})+' $';
   const statusLabel = (s)=>{
     s = String(s||'pending').toLowerCase();
-    if(s==='paid') return '<span class="pill paid">подтверждено</span>';
-    if(s==='rejected') return '<span class="pill rejected">отклонено</span>';
-    return '<span class="pill pending">ожидание</span>';
+    if(s==='paid') return '<span class="pill paid" data-i18n="withdraw_status_paid">подтверждено</span>';
+    if(s==='rejected') return '<span class="pill rejected" data-i18n="withdraw_status_rejected">отклонено</span>';
+    return '<span class="pill pending" data-i18n="withdraw_status_pending">ожидание</span>';
   };
   function toast(msg){
     let t = $('#toast') || Object.assign(document.body.appendChild(document.createElement('div')), { id:'toast', className:'lc-toast' });
@@ -1179,7 +1542,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = $('#wd-table-body'); if(!body){ _rendering=false; return; }
     body.innerHTML='';
     if(!rows || !rows.length){
-      body.innerHTML = '<tr><td colspan="6" class="muted" style="text-align:center;padding:12px 0;">Пока нет заявок</td></tr>';
+      body.innerHTML = '<tr><td colspan="6" class="muted" style="text-align:center;padding:12px 0;" data-i18n="withdraw_no_data">Пока нет заявок</td></tr>';
       _rendering=false; return;
     }
     for(const r of rows){
@@ -1192,14 +1555,14 @@ document.addEventListener('DOMContentLoaded', () => {
         '<td>'+ (r.network||'—') +'</td>' +
         '<td>'+ statusLabel(r.status) +'</td>' +
         '<td>'+ (r.txid ? ('<code>'+String(r.txid).slice(0,6)+'…'+String(r.txid).slice(-4)+'</code>') : '—') +'</td>' +
-        '<td>'+ (canCancel ? ('<button class="btn bad" data-cancel="'+r.id+'">Отменить</button>') : '<span class="small muted">—</span>') +'</td>';
+        '<td>'+ (canCancel ? ('<button class="btn bad" data-cancel="'+r.id+'" data-i18n="withdraw_cancel_btn">Отменить</button>') : '<span class="small muted">—</span>') +'</td>';
       body.appendChild(tr);
     }
     _rendering=false;
   }
 
   async function loadHistory(sb, uid){
-    const body = $('#wd-table-body'); if(body) body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>';
+    const body = $('#wd-table-body'); if(body) body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:10px 0;" data-i18n="withdraw_loading">Загрузка…</td></tr>';
     const { data, error } = await sb
       .from('withdrawals')
       .select('id, created_at, amount_cents, fee_cents, network, status, txid')
