@@ -1024,6 +1024,541 @@
     border-bottom: none;
   }
 
+  /* ===== СТИЛИ ДЛЯ CRYPTO TRADING PORTAL ===== */
+  .crypto-portal-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(10px);
+  }
+
+  .crypto-portal-modal-content {
+    background: var(--bg-gradient);
+    margin: 2% auto;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 95%;
+    max-width: 900px;
+    box-shadow: var(--shadow);
+    color: var(--text);
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+
+  @keyframes modalSlideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .crypto-portal-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .crypto-portal-modal-header h2 {
+    margin: 0;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 24px;
+  }
+
+  .crypto-portal-close {
+    color: var(--text);
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  .crypto-portal-close:hover {
+    color: var(--primary);
+  }
+
+  /* Торговая панель */
+  .trading-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .balance-info {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .balance-card, .active-vip {
+    background: var(--bg-card);
+    padding: 15px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+  }
+
+  .balance-card strong, .active-vip strong {
+    display: block;
+    font-size: 1.4em;
+    margin-top: 5px;
+    color: var(--primary-light);
+  }
+
+  /* Анимация торговли */
+  .trading-animation-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+    height: 140px;
+  }
+
+  .price-ticker {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    animation: tickerScroll 25s linear infinite;
+  }
+
+  @keyframes tickerScroll {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  .ticker-item {
+    padding: 5px 10px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .trading-chart {
+    height: 80px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chart-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(90deg, transparent 49%, rgba(16, 185, 129, 0.1) 49%, rgba(16, 185, 129, 0.1) 51%, transparent 51%),
+      linear-gradient(transparent 49%, rgba(16, 185, 129, 0.1) 49%, rgba(16, 185, 129, 0.1) 51%, transparent 51%);
+    background-size: 20px 20px;
+  }
+
+  .price-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    animation: priceFlow 3s ease-in-out infinite;
+  }
+
+  @keyframes priceFlow {
+    0%, 100% { transform: translateX(-100%); opacity: 0; }
+    50% { transform: translateX(100%); opacity: 1; }
+  }
+
+  .trade-signals {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .signal {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    animation: signalPulse 2s infinite;
+  }
+
+  .signal.buy { background: #22c55e; color: white; }
+  .signal.sell { background: #ef4444; color: white; }
+  .signal.profit { background: #f59e0b; color: white; }
+
+  @keyframes signalPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+  }
+
+  /* Кнопка получения прибыли */
+  .claim-profit-btn {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    margin: 10px auto;
+    display: block;
+    width: 200px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .claim-profit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+  }
+
+  .claim-profit-btn:active {
+    transform: translateY(0);
+  }
+
+  .claim-profit-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .claim-profit-btn.loading {
+    pointer-events: none;
+  }
+
+  .claim-profit-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: loading 5s linear;
+  }
+
+  @keyframes loading {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  /* VIP уровни */
+  .vip-levels-section h3 {
+    margin-bottom: 15px;
+    color: var(--text);
+  }
+
+  .vip-levels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .vip-level-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 15px 10px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .vip-level-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .vip-level-card:hover::before {
+    left: 100%;
+  }
+
+  .vip-level-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .vip-level-card.active {
+    border-color: gold;
+    background: rgba(255, 215, 0, 0.1);
+  }
+
+  .vip-level-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: var(--primary);
+  }
+
+  .vip-profit-range {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .vip-price {
+    font-size: 18px;
+    font-weight: bold;
+    color: gold;
+    margin: 8px 0;
+  }
+
+  .buy-vip-btn {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 12px;
+  }
+
+  .buy-vip-btn:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+  }
+
+  .buy-vip-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .buy-vip-btn.owned {
+    background: #22c55e;
+  }
+
+  /* История начислений */
+  .profit-history h3 {
+    margin-bottom: 15px;
+    color: var(--text);
+  }
+
+  .profit-list {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .profit-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: profitSlideIn 0.3s ease;
+    font-size: 12px;
+  }
+
+  @keyframes profitSlideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .profit-amount {
+    color: #22c55e;
+    font-weight: bold;
+  }
+
+  .profit-percent {
+    color: var(--text-secondary);
+    font-size: 10px;
+  }
+
+  .profit-time {
+    color: var(--text-secondary);
+    font-size: 10px;
+  }
+
+  .no-profit {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 20px;
+  }
+
+  /* Анимация прибыли */
+  @keyframes floatUp {
+    0% { 
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    100% { 
+      opacity: 0;
+      transform: translate(-50%, -100px) scale(1.5);
+    }
+  }
+  
+  .profit-animation {
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+  }
+
+  /* Trading robots */
+  .trading-robot {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: robotTrade 8s ease-in-out infinite;
+    box-shadow: 0 0 15px var(--primary);
+    z-index: 2;
+  }
+
+  @keyframes robotTrade {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 0.8;
+    }
+    25% {
+      transform: translate(50px, 30px) scale(1.2);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(100px, 10px) scale(0.8);
+      opacity: 0.6;
+    }
+    75% {
+      transform: translate(30px, 50px) scale(1.1);
+      opacity: 0.9;
+    }
+  }
+
+  /* Адаптивность */
+  @media (max-width: 768px) {
+    .crypto-portal-modal-content {
+      margin: 1% auto;
+      padding: 15px;
+      width: 98%;
+      max-height: 98vh;
+    }
+    
+    .vip-levels-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    
+    .balance-info {
+      flex-direction: column;
+    }
+    
+    .trading-chart {
+      height: 60px;
+    }
+
+    .vip-level-card {
+      padding: 10px 6px;
+      min-height: 140px;
+    }
+
+    .vip-level-card h4 {
+      font-size: 14px;
+    }
+
+    .vip-profit-range {
+      font-size: 10px;
+    }
+
+    .vip-price {
+      font-size: 14px;
+    }
+
+    .buy-vip-btn {
+      font-size: 10px;
+      padding: 6px;
+    }
+
+    .trading-animation-panel {
+      height: 120px;
+    }
+
+    .price-ticker {
+      gap: 10px;
+    }
+
+    .ticker-item {
+      font-size: 10px;
+      padding: 4px 8px;
+    }
+
+    .claim-profit-btn {
+      width: 180px;
+      padding: 12px 20px;
+      font-size: 14px;
+    }
+
+    .profit-item {
+      font-size: 11px;
+      padding: 8px;
+    }
+  }
+
+  /* Для очень маленьких экранов */
+  @media (max-width: 480px) {
+    .vip-levels-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .vip-level-card {
+      min-height: 130px;
+    }
+
+    .crypto-portal-modal-content {
+      padding: 10px;
+    }
+
+    .trading-animation-panel {
+      height: 100px;
+    }
+
+    .trading-chart {
+      height: 50px;
+    }
+  }
+
   /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
   @media (max-width: 768px) {
     .container {
@@ -1354,7 +1889,7 @@
   <!-- Элементы добавляются через JavaScript -->
 </div>
 
-<!-- Мобильное меню -->
+<!-- Модальное окно -->
 <div class="mobile-menu" id="mobileMenu">
   <a href="dashboard_single.html" class="active" data-i18n="nav_dashboard">Личный кабинет</a>
   <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
@@ -1368,6 +1903,90 @@
 <!-- Уведомление -->
 <div class="notification" id="notification">
   Текст уведомления
+</div>
+
+<!-- Crypto Trading Portal Modal -->
+<div id="cryptoPortalModal" class="crypto-portal-modal">
+  <div class="crypto-portal-modal-content">
+    <div class="crypto-portal-modal-header">
+      <h2>🚀 Crypto Trading Portal</h2>
+      <span class="crypto-portal-close">&times;</span>
+    </div>
+    
+    <div class="crypto-portal-modal-body">
+      <!-- Торговая панель -->
+      <div class="trading-panel">
+        <div class="balance-info">
+          <div class="balance-card">
+            <span>Ваш баланс</span>
+            <strong id="portalBalance">$0.00</strong>
+          </div>
+          <div class="active-vip" id="activeVipInfo" style="display: none;">
+            <span>Активный VIP:</span>
+            <strong id="currentVipLevel">-</strong>
+            <div id="daysLeft" style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;"></div>
+          </div>
+        </div>
+
+        <!-- Анимация торговли -->
+        <div class="trading-animation-panel" id="tradingAnimation">
+          <div class="price-ticker">
+            <div class="ticker-item">BTC ↗</div>
+            <div class="ticker-item">ETH ↗</div>
+            <div class="ticker-item">SOL ↗</div>
+            <div class="ticker-item">BNB ↗</div>
+            <div class="ticker-item">XRP ↗</div>
+            <div class="ticker-item">ADA ↗</div>
+            <div class="ticker-item">DOT ↗</div>
+            <div class="ticker-item">MATIC ↗</div>
+            <div class="ticker-item">LTC ↗</div>
+            <div class="ticker-item">LINK ↗</div>
+            <div class="ticker-item">UNI ↗</div>
+            <div class="ticker-item">DOGE ↗</div>
+            <div class="ticker-item">AVAX ↗</div>
+            <div class="ticker-item">ATOM ↗</div>
+            <div class="ticker-item">NEAR ↗</div>
+            <div class="ticker-item">ALGO ↗</div>
+            <div class="ticker-item">FIL ↗</div>
+            <div class="ticker-item">ETC ↗</div>
+            <div class="ticker-item">XLM ↗</div>
+            <div class="ticker-item">BCH ↗</div>
+          </div>
+          <div class="trading-chart">
+            <div class="chart-grid"></div>
+            <div class="price-line"></div>
+            <div class="trade-signals">
+              <div class="signal buy">BUY</div>
+              <div class="signal sell">SELL</div>
+              <div class="signal profit">PROFIT</div>
+            </div>
+            <!-- Trading robots will be added here by JS -->
+          </div>
+        </div>
+
+        <!-- Кнопка получения прибыли -->
+        <button class="claim-profit-btn" id="claimProfitBtn" style="display: none;">
+          💰 Забрать прибыль
+        </button>
+
+        <!-- VIP уровни -->
+        <div class="vip-levels-section">
+          <h3>📊 Выберите VIP уровень</h3>
+          <div class="vip-levels-grid" id="vipLevelsGrid">
+            <!-- VIP уровни будут добавлены через JS -->
+          </div>
+        </div>
+
+        <!-- История начислений -->
+        <div class="profit-history">
+          <h3>📈 История начислений</h3>
+          <div class="profit-list" id="profitList">
+            <div class="no-profit">Нет начислений</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <header class="header">
@@ -1495,9 +2114,10 @@
         <div class="value" data-balance>$0.00</div>
       </div>
       
-      <div class="card stat-card">
-        <div class="muted" data-i18n="dashboard_views">Просмотры</div>
-        <div class="value" data-views>0</div>
+      <!-- ЗАМЕНА: Вторая карточка теперь Crypto Trading Portal -->
+      <div class="card stat-card" id="openCryptoPortal" style="cursor: pointer;">
+        <div class="muted">Crypto Trading</div>
+        <div class="value">🚀 Portal</div>
       </div>
       
       <div class="card stat-card">
@@ -1773,48 +2393,342 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+});
 
-  // ===== ИСПРАВЛЕНИЕ РЕФЕРАЛЬНОЙ ССЫЛКИ =====
-  // Добавляем код для установки реферальной ссылки
-  (async function() {
-    const sb = window.sb || window._supabase;
-    if (!sb) return;
+// ===== CRYPTO TRADING PORTAL SYSTEM =====
+document.addEventListener('DOMContentLoaded', function() {
+  const portalModal = document.getElementById('cryptoPortalModal');
+  const openPortalBtn = document.getElementById('openCryptoPortal');
+  const closePortalBtn = document.querySelector('.crypto-portal-close');
+  const claimProfitBtn = document.getElementById('claimProfitBtn');
+  
+  // VIP уровни
+  const vipLevels = [
+    { id: 1, name: "Vip1", minPercent: 2.5, maxPercent: 3, price: 100 },
+    { id: 2, name: "Vip2", minPercent: 3, maxPercent: 4, price: 250 },
+    { id: 3, name: "Vip3", minPercent: 4, maxPercent: 5, price: 1000 },
+    { id: 4, name: "Vip4", minPercent: 5, maxPercent: 6, price: 5000 },
+    { id: 5, name: "Vip5", minPercent: 6, maxPercent: 7, price: 12000 },
+    { id: 6, name: "Vip6", minPercent: 7, maxPercent: 10, price: 50000 }
+  ];
 
-    try {
-      const { data: { user } } = await sb.auth.getUser();
-      if (user) {
-        // Получение ref_code из таблицы profiles
-        const { data: profile, error } = await sb
-          .from('profiles')
-          .select('ref_code')
-          .eq('id', user.id)
-          .single();
+  let userVipData = {
+    activeVip: null,
+    profits: [],
+    claimsToday: 0,
+    totalClaims: 0,
+    activationDate: null,
+    daysActive: 0
+  };
 
-        const refLink = document.getElementById('refLink');
-        if (refLink) {
-          if (profile && profile.ref_code) {
-            // Используем ref_code из профиля
-            refLink.value = window.location.origin + '/register_single.html?ref=' + profile.ref_code;
-          } else {
-            // Fallback на случайную генерацию если ref_code нет
-            refLink.value = window.location.origin + '/register_single.html?ref=' + Math.random().toString(36).substr(2, 9);
-          }
-        }
-
-        // Копирование реферальной ссылки
-        const btnCopyRef = document.getElementById('btnCopyRef');
-        if (btnCopyRef) {
-          btnCopyRef.addEventListener('click', function() {
-            refLink.select();
-            document.execCommand('copy');
-            window.LC_TOAST?.ok('✅ Реферальная ссылка скопирована!');
-          });
-        }
-      }
-    } catch(e) {
-      console.warn('Error setting referral link:', e);
+  // Инициализация данных
+  if (!localStorage.getItem('userVipData')) {
+    localStorage.setItem('userVipData', JSON.stringify(userVipData));
+  } else {
+    userVipData = JSON.parse(localStorage.getItem('userVipData'));
+    // Обновляем дни активности
+    if (userVipData.activationDate) {
+      const activationDate = new Date(userVipData.activationDate);
+      const today = new Date();
+      const diffTime = Math.abs(today - activationDate);
+      userVipData.daysActive = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      localStorage.setItem('userVipData', JSON.stringify(userVipData));
     }
-  })();
+  }
+
+  // Открытие портала
+  openPortalBtn.addEventListener('click', openCryptoPortal);
+  closePortalBtn.addEventListener('click', closeCryptoPortal);
+
+  // Закрытие при клике вне модального окна
+  window.addEventListener('click', function(event) {
+    if (event.target === portalModal) {
+      closeCryptoPortal();
+    }
+  });
+
+  function openCryptoPortal() {
+    portalModal.style.display = 'block';
+    updatePortalData();
+    renderVipLevels();
+    startTradingAnimation();
+    createTradingRobots();
+  }
+
+  function closeCryptoPortal() {
+    portalModal.style.display = 'none';
+    stopTradingAnimation();
+  }
+
+  function updatePortalData() {
+    const balance = document.querySelector('[data-balance]').textContent;
+    document.getElementById('portalBalance').textContent = balance;
+    
+    // Загрузка данных VIP из localStorage
+    const savedVipData = localStorage.getItem('userVipData');
+    if (savedVipData) {
+      userVipData = JSON.parse(savedVipData);
+    }
+    
+    updateVipDisplay();
+    renderProfitHistory();
+  }
+
+  function updateVipDisplay() {
+    const activeVipInfo = document.getElementById('activeVipInfo');
+    const currentVipLevel = document.getElementById('currentVipLevel');
+    const daysLeft = document.getElementById('daysLeft');
+    const claimProfitBtn = document.getElementById('claimProfitBtn');
+    
+    if (userVipData.activeVip) {
+      activeVipInfo.style.display = 'block';
+      currentVipLevel.textContent = userVipData.activeVip.name;
+      
+      // Расчет оставшихся дней
+      const daysRemaining = 30 - userVipData.daysActive;
+      daysLeft.textContent = `Осталось дней: ${Math.max(0, daysRemaining)}`;
+      
+      claimProfitBtn.style.display = 'block';
+      
+      // Проверяем лимит нажатий (3 раза в день)
+      const today = new Date().toDateString();
+      const lastClaimDate = localStorage.getItem('lastClaimDate');
+      
+      if (lastClaimDate !== today) {
+        userVipData.claimsToday = 0;
+        localStorage.setItem('lastClaimDate', today);
+        localStorage.setItem('userVipData', JSON.stringify(userVipData));
+      }
+      
+      if (userVipData.claimsToday >= 3) {
+        claimProfitBtn.disabled = true;
+        claimProfitBtn.textContent = 'Лимит исчерпан (3/3)';
+      } else {
+        claimProfitBtn.disabled = false;
+        claimProfitBtn.textContent = `💰 Забрать прибыль (${userVipData.claimsToday}/3)`;
+      }
+    } else {
+      activeVipInfo.style.display = 'none';
+      claimProfitBtn.style.display = 'none';
+    }
+  }
+
+  function renderVipLevels() {
+    const vipLevelsGrid = document.getElementById('vipLevelsGrid');
+    vipLevelsGrid.innerHTML = '';
+    
+    vipLevels.forEach(vip => {
+      const isActive = userVipData.activeVip && userVipData.activeVip.id === vip.id;
+      const isOwned = userVipData.activeVip && userVipData.activeVip.id === vip.id;
+      const userBalance = parseFloat(document.querySelector('[data-balance]').textContent.replace('$', '').replace(',', ''));
+      const canAfford = userBalance >= vip.price;
+      
+      const vipCard = document.createElement('div');
+      vipCard.className = `vip-level-card ${isActive ? 'active' : ''}`;
+      vipCard.innerHTML = `
+        <h4>${vip.name}</h4>
+        <div class="vip-profit-range">${vip.minPercent}% - ${vip.maxPercent}% в день</div>
+        <div class="vip-price">${vip.price} USDT</div>
+        <button class="buy-vip-btn ${isOwned ? 'owned' : ''}" 
+                data-vip-id="${vip.id}"
+                ${isOwned ? 'disabled' : !canAfford ? 'disabled' : ''}>
+          ${isOwned ? '✅ Активен' : canAfford ? 'Купить' : 'Недостаточно средств'}
+        </button>
+      `;
+      vipLevelsGrid.appendChild(vipCard);
+    });
+
+    // Добавляем обработчики для кнопок покупки
+    document.querySelectorAll('.buy-vip-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const vipId = parseInt(this.getAttribute('data-vip-id'));
+        buyVipLevel(vipId);
+      });
+    });
+  }
+
+  function renderProfitHistory() {
+    const profitList = document.getElementById('profitList');
+    
+    if (userVipData.profits.length === 0) {
+      profitList.innerHTML = '<div class="no-profit">Нет начислений</div>';
+      return;
+    }
+    
+    profitList.innerHTML = '';
+    userVipData.profits.slice(-10).reverse().forEach(profit => {
+      const profitItem = document.createElement('div');
+      profitItem.className = 'profit-item';
+      profitItem.innerHTML = `
+        <div>
+          <div class="profit-amount">+$${profit.amount.toFixed(2)}</div>
+          <div class="profit-percent">${profit.percent.toFixed(2)}% от ${profit.vip}</div>
+        </div>
+        <div class="profit-time">${profit.time}</div>
+      `;
+      profitList.appendChild(profitItem);
+    });
+  }
+
+  // Покупка VIP уровня
+  function buyVipLevel(vipId) {
+    const vip = vipLevels.find(v => v.id === vipId);
+    const userBalance = parseFloat(document.querySelector('[data-balance]').textContent.replace('$', '').replace(',', ''));
+    
+    if (userBalance < vip.price) {
+      showNotification('❌ Недостаточно средств!', 'error');
+      return;
+    }
+    
+    // Списание средств
+    const newBalance = userBalance - vip.price;
+    document.querySelector('[data-balance]').textContent = '$' + newBalance.toFixed(2);
+    document.getElementById('portalBalance').textContent = '$' + newBalance.toFixed(2);
+    
+    // Активация VIP на 30 дней
+    userVipData.activeVip = vip;
+    userVipData.claimsToday = 0;
+    userVipData.totalClaims = 0;
+    userVipData.activationDate = new Date().toISOString();
+    userVipData.daysActive = 0;
+    userVipData.profits = [];
+    
+    localStorage.setItem('userVipData', JSON.stringify(userVipData));
+    localStorage.setItem('lastClaimDate', new Date().toDateString());
+    
+    showNotification(`✅ ${vip.name} успешно активирован на 30 дней!`, 'success');
+    updateVipDisplay();
+    renderVipLevels();
+    renderProfitHistory();
+  }
+
+  // Получение прибыли
+  claimProfitBtn.addEventListener('click', function() {
+    if (!userVipData.activeVip || userVipData.claimsToday >= 3) return;
+    
+    const claimBtn = this;
+    claimBtn.disabled = true;
+    claimBtn.classList.add('loading');
+    claimBtn.textContent = '⏳ Процесс идет...';
+    
+    // Анимация загрузки 5 секунд
+    setTimeout(() => {
+      processProfitClaim(claimBtn);
+    }, 5000);
+  });
+
+  function processProfitClaim(claimBtn) {
+    const vip = userVipData.activeVip;
+    
+    // Расчет дохода: возврат тела + процент
+    const dailyReturn = vip.price / 30; // Возврат тела за день
+    const randomPercent = Math.random() * (vip.maxPercent - vip.minPercent) + vip.minPercent;
+    const profitFromPercent = (vip.price * randomPercent) / 100 / 3; // Процент за 1 клик из 3
+    
+    const totalProfit = dailyReturn + profitFromPercent;
+    
+    // Начисление прибыли
+    const currentBalance = parseFloat(document.querySelector('[data-balance]').textContent.replace('$', '').replace(',', ''));
+    const newBalance = currentBalance + totalProfit;
+    
+    document.querySelector('[data-balance]').textContent = '$' + newBalance.toFixed(2);
+    document.getElementById('portalBalance').textContent = '$' + newBalance.toFixed(2);
+    
+    // Сохранение в историю
+    userVipData.profits.push({
+      amount: totalProfit,
+      percent: randomPercent,
+      vip: vip.name,
+      time: new Date().toLocaleTimeString(),
+      type: 'profit'
+    });
+    
+    userVipData.claimsToday++;
+    userVipData.totalClaims++;
+    localStorage.setItem('userVipData', JSON.stringify(userVipData));
+    
+    // Сброс кнопки
+    claimBtn.classList.remove('loading');
+    claimBtn.disabled = userVipData.claimsToday >= 3;
+    claimBtn.textContent = userVipData.claimsToday >= 3 ? 
+      'Лимит исчерпан (3/3)' : 
+      `💰 Забрать прибыль (${userVipData.claimsToday}/3)`;
+    
+    // Анимация начисления
+    animateProfit(totalProfit);
+    showNotification(`💰 +$${totalProfit.toFixed(2)} (${randomPercent.toFixed(2)}% + возврат тела)`, 'success');
+    
+    updateVipDisplay();
+    renderProfitHistory();
+  }
+
+  function animateProfit(amount) {
+    const profitElement = document.createElement('div');
+    profitElement.className = 'profit-animation';
+    profitElement.textContent = `+$${amount.toFixed(2)}`;
+    profitElement.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      font-weight: bold;
+      color: #22c55e;
+      z-index: 1001;
+      animation: floatUp 1.5s ease-out forwards;
+    `;
+    
+    document.body.appendChild(profitElement);
+    
+    setTimeout(() => {
+      profitElement.remove();
+    }, 1500);
+  }
+
+  // Анимации торговли
+  let animationInterval;
+  
+  function startTradingAnimation() {
+    animationInterval = setInterval(() => {
+      const signals = document.querySelectorAll('.signal');
+      signals.forEach(signal => {
+        signal.style.animation = 'none';
+        setTimeout(() => {
+          signal.style.animation = 'signalPulse 2s infinite';
+        }, 10);
+      });
+    }, 4000);
+  }
+  
+  function stopTradingAnimation() {
+    if (animationInterval) {
+      clearInterval(animationInterval);
+    }
+  }
+
+  // Создание торговых роботов
+  function createTradingRobots() {
+    const tradingChart = document.querySelector('.trading-chart');
+    const robotsCount = 5;
+    
+    for (let i = 0; i < robotsCount; i++) {
+      const robot = document.createElement('div');
+      robot.className = 'trading-robot';
+      robot.style.left = Math.random() * 80 + 10 + '%';
+      robot.style.top = Math.random() * 60 + 20 + '%';
+      robot.style.animationDelay = (i * 1.5) + 's';
+      tradingChart.appendChild(robot);
+    }
+  }
+
+  function showNotification(message, type = 'info') {
+    // Используем существующую систему уведомлений
+    if (window.LC_TOAST) {
+      window.LC_TOAST.ok(message);
+    } else {
+      alert(message);
+    }
+  }
 });
 
 // ===== ПЕРЕНЕСЕННЫЕ ВЫЗОВЫ ИЗ СТАРОГО ФАЙЛА =====
@@ -1841,6 +2755,47 @@ window.LC_TOAST = (function(){
   }
   return{ok:show,err:show};
 })();
+
+// Реферальная ссылка - ИДЕНТИЧНО СТАРОМУ ФАЙЛУ (из таблицы profiles)
+document.addEventListener('DOMContentLoaded', async () => {
+  const sb = window.sb || window._supabase;
+  if (!sb) return;
+
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (user) {
+      // ВЗЯТО ИЗ СТАРОГО ФАЙЛА - получение ref_code из таблицы profiles
+      const { data: profile, error } = await sb
+        .from('profiles')
+        .select('ref_code')
+        .eq('id', user.id)
+        .single();
+
+      const refLink = document.getElementById('refLink');
+      if (refLink) {
+        if (profile && profile.ref_code) {
+          // Используем ref_code из профиля
+          refLink.value = window.location.origin + '/ref/' + profile.ref_code;
+        } else {
+          // Fallback на случайную генерацию если ref_code нет
+          refLink.value = window.location.origin + '/ref/' + Math.random().toString(36).substr(2, 9);
+        }
+      }
+
+      // Копирование реферальной ссылки - идентично старому файлу
+      const btnCopyRef = document.getElementById('btnCopyRef');
+      if (btnCopyRef) {
+        btnCopyRef.addEventListener('click', function() {
+          refLink.select();
+          document.execCommand('copy');
+          window.LC_TOAST?.ok('✅ Реферальная ссылка скопирована!');
+        });
+      }
+    }
+  } catch(e) {
+    console.warn('Error setting referral link:', e);
+  }
+});
 
 // Видео просмотры - ИДЕНТИЧНО СТАРОМУ ФАЙЛУ
 document.addEventListener('DOMContentLoaded', async () => {
