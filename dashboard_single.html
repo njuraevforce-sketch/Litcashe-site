@@ -1773,6 +1773,48 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+
+  // ===== ИСПРАВЛЕНИЕ РЕФЕРАЛЬНОЙ ССЫЛКИ =====
+  // Добавляем код для установки реферальной ссылки
+  (async function() {
+    const sb = window.sb || window._supabase;
+    if (!sb) return;
+
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (user) {
+        // Получение ref_code из таблицы profiles
+        const { data: profile, error } = await sb
+          .from('profiles')
+          .select('ref_code')
+          .eq('id', user.id)
+          .single();
+
+        const refLink = document.getElementById('refLink');
+        if (refLink) {
+          if (profile && profile.ref_code) {
+            // Используем ref_code из профиля
+            refLink.value = window.location.origin + '/register_single.html?ref=' + profile.ref_code;
+          } else {
+            // Fallback на случайную генерацию если ref_code нет
+            refLink.value = window.location.origin + '/register_single.html?ref=' + Math.random().toString(36).substr(2, 9);
+          }
+        }
+
+        // Копирование реферальной ссылки
+        const btnCopyRef = document.getElementById('btnCopyRef');
+        if (btnCopyRef) {
+          btnCopyRef.addEventListener('click', function() {
+            refLink.select();
+            document.execCommand('copy');
+            window.LC_TOAST?.ok('✅ Реферальная ссылка скопирована!');
+          });
+        }
+      }
+    } catch(e) {
+      console.warn('Error setting referral link:', e);
+    }
+  })();
 });
 
 // ===== ПЕРЕНЕСЕННЫЕ ВЫЗОВЫ ИЗ СТАРОГО ФАЙЛА =====
@@ -1799,47 +1841,6 @@ window.LC_TOAST = (function(){
   }
   return{ok:show,err:show};
 })();
-
-// Реферальная ссылка - ИДЕНТИЧНО СТАРОМУ ФАЙЛУ (из таблицы profiles)
-document.addEventListener('DOMContentLoaded', async () => {
-  const sb = window.sb || window._supabase;
-  if (!sb) return;
-
-  try {
-    const { data: { user } } = await sb.auth.getUser();
-    if (user) {
-      // ВЗЯТО ИЗ СТАРОГО ФАЙЛА - получение ref_code из таблицы profiles
-      const { data: profile, error } = await sb
-        .from('profiles')
-        .select('ref_code')
-        .eq('id', user.id)
-        .single();
-
-      const refLink = document.getElementById('refLink');
-      if (refLink) {
-        if (profile && profile.ref_code) {
-          // Используем ref_code из профиля
-          refLink.value = window.location.origin + '/ref/' + profile.ref_code;
-        } else {
-          // Fallback на случайную генерацию если ref_code нет
-          refLink.value = window.location.origin + '/ref/' + Math.random().toString(36).substr(2, 9);
-        }
-      }
-
-      // Копирование реферальной ссылки - идентично старому файлу
-      const btnCopyRef = document.getElementById('btnCopyRef');
-      if (btnCopyRef) {
-        btnCopyRef.addEventListener('click', function() {
-          refLink.select();
-          document.execCommand('copy');
-          window.LC_TOAST?.ok('✅ Реферальная ссылка скопирована!');
-        });
-      }
-    }
-  } catch(e) {
-    console.warn('Error setting referral link:', e);
-  }
-});
 
 // Видео просмотры - ИДЕНТИЧНО СТАРОМУ ФАЙЛУ
 document.addEventListener('DOMContentLoaded', async () => {
