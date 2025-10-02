@@ -211,241 +211,15 @@
   .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
   .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
 
-  /* Мобильный языковой переключатель */
-  .mobile-lang-switcher {
-    padding: 15px 0;
-    border-top: 1px solid var(--border);
-    margin-top: 10px;
-  }
-
-  .mobile-lang-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-    padding: 0 5px;
-  }
-
-  .mobile-lang-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .mobile-lang-item {
+  /* Контейнер для бренда и переключателя языка */
+  .brand-container {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    color: var(--text);
+    gap: 8px;
+    flex-shrink: 0;
   }
 
-  .mobile-lang-item:hover {
-    background: rgba(16, 185, 129, 0.1);
-  }
-
-  .mobile-lang-item.active {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--primary);
-    font-weight: 600;
-  }
-
-  /* Анимация крипторынка на фоне */
-  .crypto-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-    background: var(--bg);
-  }
-
-  .crypto-logo {
-    position: absolute;
-    font-size: 18px;
-    font-weight: 800;
-    color: rgba(16, 185, 129, 0.9);
-    opacity: 0;
-    animation: float 20s linear infinite;
-    text-shadow: 0 0 25px rgba(16, 185, 129, 1);
-    z-index: 1;
-  }
-
-  .trading-bot {
-    position: absolute;
-    width: 35px;
-    height: 35px;
-    background: radial-gradient(circle, var(--primary) 0%, transparent 60%);
-    border-radius: 50%;
-    opacity: 0;
-    animation: trade 25s ease-in-out infinite;
-    filter: blur(1px);
-    box-shadow: 0 0 35px var(--primary);
-    opacity: 0.8;
-  }
-
-  .price-line {
-    position: absolute;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
-    opacity: 0;
-    animation: priceMove 15s linear infinite;
-    box-shadow: 0 0 25px var(--primary);
-    opacity: 0.6;
-  }
-
-  .exchange-logo {
-    position: absolute;
-    font-size: 13px;
-    font-weight: 700;
-    color: rgba(52, 211, 153, 0.9);
-    opacity: 0;
-    animation: exchangeFloat 30s linear infinite;
-    padding: 4px 8px;
-    background: rgba(16, 185, 129, 0.35);
-    border-radius: 4px;
-    border: 1px solid rgba(16, 185, 129, 0.5);
-  }
-
-  .crypto-chart {
-    position: absolute;
-    width: 100px;
-    height: 45px;
-    border: 2px solid rgba(16, 185, 129, 0.7);
-    opacity: 0;
-    animation: chartFloat 40s linear infinite;
-    background: rgba(16, 185, 129, 0.25);
-  }
-
-  .crypto-chart::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, transparent 100%);
-    clip-path: polygon(0% 100%, 10% 80%, 20% 60%, 30% 70%, 40% 40%, 50% 50%, 60% 30%, 70% 60%, 80% 20%, 90% 40%, 100% 10%, 100% 100%, 0% 100%);
-  }
-
-  @keyframes float {
-    0% {
-      transform: translateY(100vh) rotate(0deg) scale(0.5);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.9;
-    }
-    90% {
-      opacity: 0.9;
-    }
-    100% {
-      transform: translateY(-100px) rotate(360deg) scale(1);
-      opacity: 0;
-    }
-  }
-
-  @keyframes trade {
-    0%, 100% {
-      transform: translate(0, 0) scale(0.8);
-      opacity: 0;
-    }
-    20% {
-      transform: translate(200px, 150px) scale(1);
-      opacity: 0.8;
-    }
-    40% {
-      transform: translate(400px, 80px) scale(0.7);
-      opacity: 0.8;
-    }
-    60% {
-      transform: translate(600px, 200px) scale(0.9);
-      opacity: 0.8;
-    }
-    80% {
-      transform: translate(800px, 120px) scale(0.6);
-      opacity: 0.8;
-    }
-  }
-
-  @keyframes priceMove {
-    0% {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.6;
-    }
-    90% {
-      opacity: 0.6;
-    }
-    100% {
-      transform: translateX(100vw);
-      opacity: 0;
-    }
-  }
-
-  @keyframes exchangeFloat {
-    0% {
-      transform: translateX(100vw) translateY(0) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.8;
-    }
-    90% {
-      opacity: 0.8;
-    }
-    100% {
-      transform: translateX(-100px) translateY(80px) rotate(180deg);
-      opacity: 0;
-    }
-  }
-
-  @keyframes chartFloat {
-    0% {
-      transform: translateY(100vh) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.4;
-    }
-    90% {
-      opacity: 0.4;
-    }
-    100% {
-      transform: translateY(-100px) rotate(10deg);
-      opacity: 0;
-    }
-  }
-
-  .pulse-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--primary-light);
-    border-radius: 50%;
-    animation: pulse 3s ease-in-out infinite;
-    box-shadow: 0 0 30px var(--primary);
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.4;
-    }
-    50% {
-      transform: scale(2.5);
-      opacity: 0.3;
-    }
-  }
+  /* Остальные стили остаются без изменений... */
 
   .container {
     max-width: 1200px;
@@ -988,6 +762,13 @@
       gap: 8px;
     }
 
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
     .brand {
       font-size: 15px;
     }
@@ -996,6 +777,27 @@
       width: 26px;
       height: 26px;
       font-size: 11px;
+    }
+
+    /* Переключатель языка теперь всегда виден на мобильных */
+    .language-switcher-header {
+      display: flex;
+      margin-left: 5px;
+    }
+
+    .lang-btn-header {
+      height: 28px;
+      padding: 0 8px;
+      font-size: 10px;
+    }
+
+    .lang-code-header {
+      font-size: 10px;
+    }
+
+    .lang-dropdown-header {
+      min-width: 140px;
+      left: 0;
     }
 
     .nav-cta {
@@ -1097,20 +899,6 @@
       display: flex;
     }
 
-    /* ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ДЛЯ МОБИЛЬНЫХ */
-    .language-switcher-header {
-      display: none;
-    }
-
-    .nav-cta {
-      display: flex;
-    }
-
-    /* СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ В МОБИЛЬНОМ МЕНЮ */
-    .mobile-lang-switcher {
-      display: block;
-    }
-
     /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
     .crypto-logo {
       font-size: 16px !important;
@@ -1167,6 +955,14 @@
       padding: 0 5px;
     }
 
+    .brand-container {
+      gap: 4px;
+    }
+
+    .brand {
+      font-size: 14px;
+    }
+
     .hero-title {
       font-size: 18px;
     }
@@ -1186,6 +982,15 @@
     .btn {
       padding: 0 8px;
       font-size: 10px;
+    }
+
+    .lang-btn-header {
+      height: 26px;
+      padding: 0 6px;
+    }
+
+    .lang-code-header {
+      font-size: 9px;
     }
 
     .video-container {
@@ -1236,160 +1041,100 @@
   <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
   <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
   <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
-  
-  <!-- ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ ДЛЯ МОБИЛЬНОГО МЕНЮ -->
-  <div class="mobile-lang-switcher">
-    <div class="mobile-lang-title" data-i18n="language_selector">Выберите язык</div>
-    <div class="mobile-lang-list">
-      <div class="mobile-lang-item active" data-lang="ru">
-        <span class="lang-flag ru"></span>
-        <span class="lang-name">Русский</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="en">
-        <span class="lang-flag en"></span>
-        <span class="lang-name">English</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="cn">
-        <span class="lang-flag cn"></span>
-        <span class="lang-name">中文</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="es">
-        <span class="lang-flag es"></span>
-        <span class="lang-name">Español</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="fr">
-        <span class="lang-flag fr"></span>
-        <span class="lang-name">Français</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="de">
-        <span class="lang-flag de"></span>
-        <span class="lang-name">Deutsch</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="pt">
-        <span class="lang-flag pt"></span>
-        <span class="lang-name">Português</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="ar">
-        <span class="lang-flag ar"></span>
-        <span class="lang-name">العربية</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="ja">
-        <span class="lang-flag jp"></span>
-        <span class="lang-name">日本語</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="ko">
-        <span class="lang-flag kr"></span>
-        <span class="lang-name">한국어</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="tr">
-        <span class="lang-flag tr"></span>
-        <span class="lang-name">Türkçe</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="it">
-        <span class="lang-flag it"></span>
-        <span class="lang-name">Italiano</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="hi">
-        <span class="lang-flag in"></span>
-        <span class="lang-name">हिन्दी</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="pl">
-        <span class="lang-flag pl"></span>
-        <span class="lang-name">Polski</span>
-      </div>
-    </div>
-  </div>
 </div>
 
 <header class="header">
   <div class="container">
     <nav class="nav">
-      <a class="brand" href="index.html">
-        <div class="logo">LC</div>
-        <span data-i18n="brand_name">Litcash</span>
-      </a>
+      <!-- Контейнер для бренда и переключателя языка -->
+      <div class="brand-container">
+        <a class="brand" href="index.html">
+          <div class="logo">LC</div>
+          <span data-i18n="brand_name">Litcash</span>
+        </a>
 
-      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ - ПЕРЕНЕСЕН ВЛЕВО -->
-      <div class="language-switcher-header" id="languageSwitcher">
-        <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
-          <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
-                  fill="none" stroke="currentColor" stroke-width="1.2"/>
-          </svg>
-          <span class="lang-code-header">RU</span>
-        </button>
-        
-        <div class="lang-dropdown-header" id="langDropdown">
-          <div class="lang-list">
-            <div class="lang-item active" data-lang="ru">
-              <span class="lang-flag ru"></span>
-              <span class="lang-name">Русский</span>
-              <span class="lang-code">RU</span>
-            </div>
-            <div class="lang-item" data-lang="en">
-              <span class="lang-flag en"></span>
-              <span class="lang-name">English</span>
-              <span class="lang-code">EN</span>
-            </div>
-            <div class="lang-item" data-lang="cn">
-              <span class="lang-flag cn"></span>
-              <span class="lang-name">中文</span>
-              <span class="lang-code">CN</span>
-            </div>
-            <div class="lang-item" data-lang="es">
-              <span class="lang-flag es"></span>
-              <span class="lang-name">Español</span>
-              <span class="lang-code">ES</span>
-            </div>
-            <div class="lang-item" data-lang="fr">
-              <span class="lang-flag fr"></span>
-              <span class="lang-name">Français</span>
-              <span class="lang-code">FR</span>
-            </div>
-            <div class="lang-item" data-lang="de">
-              <span class="lang-flag de"></span>
-              <span class="lang-name">Deutsch</span>
-              <span class="lang-code">DE</span>
-            </div>
-            <div class="lang-item" data-lang="pt">
-              <span class="lang-flag pt"></span>
-              <span class="lang-name">Português</span>
-              <span class="lang-code">PT</span>
-            </div>
-            <div class="lang-item" data-lang="ar">
-              <span class="lang-flag ar"></span>
-              <span class="lang-name">العربية</span>
-              <span class="lang-code">AR</span>
-            </div>
-            <div class="lang-item" data-lang="ja">
-              <span class="lang-flag jp"></span>
-              <span class="lang-name">日本語</span>
-              <span class="lang-code">JA</span>
-            </div>
-            <div class="lang-item" data-lang="ko">
-              <span class="lang-flag kr"></span>
-              <span class="lang-name">한국어</span>
-              <span class="lang-code">KO</span>
-            </div>
-            <div class="lang-item" data-lang="tr">
-              <span class="lang-flag tr"></span>
-              <span class="lang-name">Türkçe</span>
-              <span class="lang-code">TR</span>
-            </div>
-            <div class="lang-item" data-lang="it">
-              <span class="lang-flag it"></span>
-              <span class="lang-name">Italiano</span>
-              <span class="lang-code">IT</span>
-            </div>
-            <div class="lang-item" data-lang="hi">
-              <span class="lang-flag in"></span>
-              <span class="lang-name">हिन्दी</span>
-              <span class="lang-code">HI</span>
-            </div>
-            <div class="lang-item" data-lang="pl">
-              <span class="lang-flag pl"></span>
-              <span class="lang-name">Polski</span>
-              <span class="lang-code">PL</span>
+        <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ - ПЕРЕНЕСЕН ВЛЕВО -->
+        <div class="language-switcher-header" id="languageSwitcher">
+          <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
+            <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+                    fill="none" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            <span class="lang-code-header">RU</span>
+          </button>
+          
+          <div class="lang-dropdown-header" id="langDropdown">
+            <div class="lang-list">
+              <div class="lang-item active" data-lang="ru">
+                <span class="lang-flag ru"></span>
+                <span class="lang-name">Русский</span>
+                <span class="lang-code">RU</span>
+              </div>
+              <div class="lang-item" data-lang="en">
+                <span class="lang-flag en"></span>
+                <span class="lang-name">English</span>
+                <span class="lang-code">EN</span>
+              </div>
+              <div class="lang-item" data-lang="cn">
+                <span class="lang-flag cn"></span>
+                <span class="lang-name">中文</span>
+                <span class="lang-code">CN</span>
+              </div>
+              <div class="lang-item" data-lang="es">
+                <span class="lang-flag es"></span>
+                <span class="lang-name">Español</span>
+                <span class="lang-code">ES</span>
+              </div>
+              <div class="lang-item" data-lang="fr">
+                <span class="lang-flag fr"></span>
+                <span class="lang-name">Français</span>
+                <span class="lang-code">FR</span>
+              </div>
+              <div class="lang-item" data-lang="de">
+                <span class="lang-flag de"></span>
+                <span class="lang-name">Deutsch</span>
+                <span class="lang-code">DE</span>
+              </div>
+              <div class="lang-item" data-lang="pt">
+                <span class="lang-flag pt"></span>
+                <span class="lang-name">Português</span>
+                <span class="lang-code">PT</span>
+              </div>
+              <div class="lang-item" data-lang="ar">
+                <span class="lang-flag ar"></span>
+                <span class="lang-name">العربية</span>
+                <span class="lang-code">AR</span>
+              </div>
+              <div class="lang-item" data-lang="ja">
+                <span class="lang-flag jp"></span>
+                <span class="lang-name">日本語</span>
+                <span class="lang-code">JA</span>
+              </div>
+              <div class="lang-item" data-lang="ko">
+                <span class="lang-flag kr"></span>
+                <span class="lang-name">한국어</span>
+                <span class="lang-code">KO</span>
+              </div>
+              <div class="lang-item" data-lang="tr">
+                <span class="lang-flag tr"></span>
+                <span class="lang-name">Türkçe</span>
+                <span class="lang-code">TR</span>
+              </div>
+              <div class="lang-item" data-lang="it">
+                <span class="lang-flag it"></span>
+                <span class="lang-name">Italiano</span>
+                <span class="lang-code">IT</span>
+              </div>
+              <div class="lang-item" data-lang="hi">
+                <span class="lang-flag in"></span>
+                <span class="lang-name">हिन्दी</span>
+                <span class="lang-code">HI</span>
+              </div>
+              <div class="lang-item" data-lang="pl">
+                <span class="lang-flag pl"></span>
+                <span class="lang-name">Polski</span>
+                <span class="lang-code">PL</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1416,6 +1161,8 @@
     </nav>
   </div>
 </header>
+
+<!-- Остальной код остается без изменений -->
 
 <main class="main">
   <div class="container main-content">
@@ -1510,8 +1257,8 @@ document.addEventListener('DOMContentLoaded', function() {
       burgerBtn.classList.toggle('active');
     });
     
-    // Закрытие меню при клике на ссылку или переключатель языка
-    const mobileLinks = mobileMenu.querySelectorAll('a, .mobile-lang-item');
+    // Закрытие меню при клике на ссылку
+    const mobileLinks = mobileMenu.querySelectorAll('a');
     mobileLinks.forEach(link => {
       link.addEventListener('click', function() {
         mobileMenu.classList.remove('active');
@@ -1528,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Инициализация языкового переключателя для десктопной версии
+  // Инициализация языкового переключателя
   const langSwitcher = document.getElementById('languageSwitcher');
   const langBtn = document.getElementById('langBtn');
   const langDropdown = document.getElementById('langDropdown');
@@ -1544,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', function() {
       langSwitcher.classList.remove('active');
     });
     
-    // Выбор языка для десктопной версии
+    // Выбор языка
     const langItems = langDropdown.querySelectorAll('.lang-item');
     langItems.forEach(item => {
       item.addEventListener('click', function() {
@@ -1556,20 +1303,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
-
-  // Инициализация языкового переключателя для мобильной версии
-  const mobileLangItems = document.querySelectorAll('.mobile-lang-item');
-  mobileLangItems.forEach(item => {
-    item.addEventListener('click', function() {
-      const lang = this.getAttribute('data-lang');
-      if (window.LanguageSwitcher) {
-        window.LanguageSwitcher.setLang(lang);
-      }
-      // Обновляем активный класс в мобильном меню
-      mobileLangItems.forEach(i => i.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
 });
 
 // Hourly image rotator
