@@ -81,6 +81,67 @@
     overflow-x: hidden;
   }
 
+  /* === МОБИЛЬНЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ === */
+  .mobile-lang-toggle {
+    display: none;
+    position: relative;
+    z-index: 1001;
+  }
+
+  .mobile-lang-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+
+  .mobile-lang-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  }
+
+  .mobile-lang-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mobile-lang-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 5px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px;
+    min-width: 160px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1002;
+  }
+
+  .mobile-lang-toggle.active .mobile-lang-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
   /* === ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ === */
   .language-switcher-header {
     position: relative;
@@ -210,49 +271,6 @@
   .lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
   .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
   .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
-
-  /* Мобильный языковой переключатель */
-  .mobile-lang-switcher {
-    padding: 15px 0;
-    border-top: 1px solid var(--border);
-    margin-top: 10px;
-  }
-
-  .mobile-lang-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-    padding: 0 5px;
-  }
-
-  .mobile-lang-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .mobile-lang-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    color: var(--text);
-  }
-
-  .mobile-lang-item:hover {
-    background: rgba(16, 185, 129, 0.1);
-  }
-
-  .mobile-lang-item.active {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--primary);
-    font-weight: 600;
-  }
 
   /* Анимация крипторынка на фоне */
   .crypto-background {
@@ -1106,6 +1124,11 @@
       display: flex;
     }
 
+    /* ПОКАЗЫВАЕМ МОБИЛЬНЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ */
+    .mobile-lang-toggle {
+      display: block;
+    }
+
     /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
     .crypto-logo {
       font-size: 16px !important;
@@ -1241,7 +1264,92 @@
         <span data-i18n="brand_name">Litcash</span>
       </a>
 
-      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ - ПЕРЕНЕСЕН ВЛЕВО -->
+      <!-- МОБИЛЬНЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ -->
+      <div class="mobile-lang-toggle" id="mobileLangToggle">
+        <button class="mobile-lang-btn" id="mobileLangBtn" aria-label="Выбор языка">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+                  fill="none" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </button>
+        
+        <div class="mobile-lang-dropdown" id="mobileLangDropdown">
+          <div class="lang-list">
+            <div class="lang-item active" data-lang="ru">
+              <span class="lang-flag ru"></span>
+              <span class="lang-name">Русский</span>
+              <span class="lang-code">RU</span>
+            </div>
+            <div class="lang-item" data-lang="en">
+              <span class="lang-flag en"></span>
+              <span class="lang-name">English</span>
+              <span class="lang-code">EN</span>
+            </div>
+            <div class="lang-item" data-lang="cn">
+              <span class="lang-flag cn"></span>
+              <span class="lang-name">中文</span>
+              <span class="lang-code">CN</span>
+            </div>
+            <div class="lang-item" data-lang="es">
+              <span class="lang-flag es"></span>
+              <span class="lang-name">Español</span>
+              <span class="lang-code">ES</span>
+            </div>
+            <div class="lang-item" data-lang="fr">
+              <span class="lang-flag fr"></span>
+              <span class="lang-name">Français</span>
+              <span class="lang-code">FR</span>
+            </div>
+            <div class="lang-item" data-lang="de">
+              <span class="lang-flag de"></span>
+              <span class="lang-name">Deutsch</span>
+              <span class="lang-code">DE</span>
+            </div>
+            <div class="lang-item" data-lang="pt">
+              <span class="lang-flag pt"></span>
+              <span class="lang-name">Português</span>
+              <span class="lang-code">PT</span>
+            </div>
+            <div class="lang-item" data-lang="ar">
+              <span class="lang-flag ar"></span>
+              <span class="lang-name">العربية</span>
+              <span class="lang-code">AR</span>
+            </div>
+            <div class="lang-item" data-lang="ja">
+              <span class="lang-flag jp"></span>
+              <span class="lang-name">日本語</span>
+              <span class="lang-code">JA</span>
+            </div>
+            <div class="lang-item" data-lang="ko">
+              <span class="lang-flag kr"></span>
+              <span class="lang-name">한국어</span>
+              <span class="lang-code">KO</span>
+            </div>
+            <div class="lang-item" data-lang="tr">
+              <span class="lang-flag tr"></span>
+              <span class="lang-name">Türkçe</span>
+              <span class="lang-code">TR</span>
+            </div>
+            <div class="lang-item" data-lang="it">
+              <span class="lang-flag it"></span>
+              <span class="lang-name">Italiano</span>
+              <span class="lang-code">IT</span>
+            </div>
+            <div class="lang-item" data-lang="hi">
+              <span class="lang-flag in"></span>
+              <span class="lang-name">हिन्दी</span>
+              <span class="lang-code">HI</span>
+            </div>
+            <div class="lang-item" data-lang="pl">
+              <span class="lang-flag pl"></span>
+              <span class="lang-name">Polski</span>
+              <span class="lang-code">PL</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ДЕСКТОПНЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ -->
       <div class="language-switcher-header" id="languageSwitcher">
         <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
           <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1460,7 +1568,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Инициализация языкового переключателя
+  // Инициализация языкового переключателя для десктопа
   const langSwitcher = document.getElementById('languageSwitcher');
   const langBtn = document.getElementById('langBtn');
   const langDropdown = document.getElementById('langDropdown');
@@ -1485,6 +1593,35 @@ document.addEventListener('DOMContentLoaded', function() {
           window.LanguageSwitcher.setLang(lang);
         }
         langSwitcher.classList.remove('active');
+      });
+    });
+  }
+
+  // Инициализация мобильного языкового переключателя
+  const mobileLangToggle = document.getElementById('mobileLangToggle');
+  const mobileLangBtn = document.getElementById('mobileLangBtn');
+  const mobileLangDropdown = document.getElementById('mobileLangDropdown');
+  
+  if (mobileLangBtn && mobileLangDropdown) {
+    mobileLangBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      mobileLangToggle.classList.toggle('active');
+    });
+    
+    // Закрытие при клике вне переключателя
+    document.addEventListener('click', function() {
+      mobileLangToggle.classList.remove('active');
+    });
+    
+    // Выбор языка для мобильного переключателя
+    const mobileLangItems = mobileLangDropdown.querySelectorAll('.lang-item');
+    mobileLangItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const lang = this.getAttribute('data-lang');
+        if (window.LanguageSwitcher) {
+          window.LanguageSwitcher.setLang(lang);
+        }
+        mobileLangToggle.classList.remove('active');
       });
     });
   }
