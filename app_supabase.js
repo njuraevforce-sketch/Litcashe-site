@@ -397,7 +397,7 @@
     } catch(_){}
     try {
       const r1 = await sb.rpc('get_level_info');
-      if (!r1.error && r1.data) return Array.isArray(r1.data) ? r2.data[0] : r1.data;
+      if (!r1.error && r1.data) return Array.isArray(r1.data) ? r1.data[0] : r1.data;
     } catch(_){}
     return null;
   };
@@ -428,10 +428,16 @@
     if (target) target.textContent = safe;
   }
 
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ refreshLevelInfo - убраны дублирующие вызовы
   LC.refreshLevelInfo = async function() {
     try {
-      const info = await LC.getLevelInfo(); if (!info) return;
-      const set = (sel, val) => { const el = $(sel); if (el) el.textContent = String(val); };
+      const info = await LC.getLevelInfo(); 
+      if (!info) return;
+      
+      const set = (sel, val) => { 
+        const el = $(sel); 
+        if (el) el.textContent = String(val); 
+      };
 
       const perView = pickNum(info.reward_per_view_cents)/100;
       const daily   = pickNum(info.daily_reward_cents)/100;
@@ -442,11 +448,12 @@
       set('[data-level-name]', info.level_name ?? '');
       set('[data-views-left]', info.views_left_today ?? 0);
       set('[data-reward-per-view]', `${perView.toFixed(2)} USDT`);
-      set('[data-daily-reward]',    `${daily.toFixed(2)} USDT`);
-      set('[data-level-base]',      `$${base.toFixed(2)}`);
-      set('[data-level-percent]',   `${rate.toFixed(2)} %`);
+      set('[data-daily-reward]', `${daily.toFixed(2)} USDT`);
+      set('[data-level-base]', `$${base.toFixed(2)}`);
+      set('[data-level-percent]', `${rate.toFixed(2)}%`);
 
-      const badge = $('#perViewBadge'); if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
+      const badge = $('#perViewBadge'); 
+      if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
 
       // Обновляем дополнительные поля
       const levelEl = $('[data-level]');
@@ -466,22 +473,19 @@
       const baseCapEl = $('#baseCapCell');
       if (baseCapEl) baseCapEl.textContent = `$${base.toFixed(2)}`;
 
-      try {
-        const r = await sb.rpc('next_level_goal');
-        if (!r.error && r.data) {
-          const row = Array.isArray(r.data) ? r.data[0] : r.data;
-          if (row && row.goal_text) { 
-            renderNextLevelGoal(row.goal_text); 
-            const nextTargetEl = $('#nextTargetCell');
-            if (nextTargetEl) nextTargetEl.textContent = row.goal_text;
-            return; 
-          }
-        }
-      } catch(_) {}
-      renderNextLevelGoal('—');
-      const nextTargetEl = $('#nextTargetCell');
-      if (nextTargetEl) nextTargetEl.textContent = '—';
-    } catch(e) { console.error('[LC] refreshLevelInfo', e); }
+      // УБРАН ДУБЛИРУЮЩИЙ ВЫЗОВ - используем данные из info
+      if (info.next_level_goal) {
+        renderNextLevelGoal(info.next_level_goal);
+        const nextTargetEl = $('#nextTargetCell');
+        if (nextTargetEl) nextTargetEl.textContent = info.next_level_goal;
+      } else {
+        renderNextLevelGoal('—');
+        const nextTargetEl = $('#nextTargetCell');
+        if (nextTargetEl) nextTargetEl.textContent = '—';
+      }
+    } catch(e) { 
+      console.error('[LC] refreshLevelInfo', e); 
+    }
   };
 
   // ===== Начисление за просмотр ==============================================
@@ -654,6 +658,41 @@
   const LC_VIDEO_LIST = ['/assets/videos/ad1.MP4','/assets/videos/ad2.MP4','/assets/videos/ad3.MP4','/assets/videos/ad4.MP4','/assets/videos/ad5.MP4','/assets/videos/ad6.MP4','/assets/videos/ad7.MP4','/assets/videos/ad8.MP4','/assets/videos/ad9.MP4','/assets/videos/ad10.MP4','/assets/videos/ad11.MP4','/assets/videos/ad12.MP4','/assets/videos/ad13.mp4','/assets/videos/ad14.mp4','/assets/videos/ad15.mp4','/assets/videos/ad16.mp4','/assets/videos/ad17.mp4','/assets/videos/ad18.MP4','/assets/videos/ad19.MP4','/assets/videos/ad20.MP4'];
   const LC_MIN_SECONDS = 10;
 
+  // НОВАЯ ФУНКЦИЯ: Проверка доступности видео
+  const checkVideoAvailability = async () => {
+    const startBtn = document.getElementById('startBtn');
+    const txt = document.getElementById('progressText');
+    const overlay = document.getElementById('limitOverlay');
+    
+    if (!startBtn || !txt) return;
+
+    const isActive = await LC.isActiveUser();
+    const viewsLeft = parseInt(document.querySelector('[data-views-left]')?.textContent || 0);
+    
+    if (!isActive) {
+      txt.textContent = 'Пополните баланс от $29 для заработка';
+      startBtn.disabled = true;
+      startBtn.textContent = '❌ Неактивный аккаунт';
+      if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.textContent = 'Для заработка пополните баланс от $29';
+      }
+    } else if (viewsLeft <= 0) {
+      txt.textContent = 'Лимит просмотров исчерпан';
+      startBtn.disabled = true;
+      startBtn.textContent = '⏳ Лимит исчерпан';
+      if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.textContent = 'Лимит просмотров исчерпан';
+      }
+    } else {
+      txt.textContent = 'Нажмите «Заработать за просмотр»';
+      startBtn.disabled = false;
+      startBtn.textContent = '🎬 Заработать за просмотр';
+      if (overlay) overlay.style.display = 'none';
+    }
+  };
+
   LC.initVideoWatch = function () {
     const video    = document.getElementById('promoVid');
     const startBtn = document.getElementById('startBtn');
@@ -680,34 +719,8 @@
       startBtn.disabled = false; 
       startBtn.textContent = '🎬 Заработать за просмотр';
       
-      // Проверяем активность пользователя при сбросе
-      setTimeout(async () => {
-        const isActive = await LC.isActiveUser();
-        const viewsLeft = parseInt(document.querySelector('[data-views-left]')?.textContent || 0);
-        
-        if (!isActive) {
-          ui('Пополните баланс от $29 для заработка');
-          startBtn.disabled = true;
-          startBtn.textContent = '❌ Неактивный аккаунт';
-          if (overlay) {
-            overlay.style.display = 'flex';
-            overlay.textContent = 'Для заработка пополните баланс от $29';
-          }
-        } else if (viewsLeft <= 0) {
-          ui('Лимит просмотров исчерпан');
-          startBtn.disabled = true;
-          startBtn.textContent = '⏳ Лимит исчерпан';
-          if (overlay) {
-            overlay.style.display = 'flex';
-            overlay.textContent = 'Лимит просмотров исчерпан';
-          }
-        } else {
-          ui('Нажмите «Заработать за просмотр»');
-          startBtn.disabled = false;
-          startBtn.textContent = '🎬 Заработать за просмотр';
-          if (overlay) overlay.style.display = 'none';
-        }
-      }, 100);
+      // Проверяем доступность видео после сброса
+      setTimeout(checkVideoAvailability, 100);
     };
 
     video.addEventListener('loadedmetadata', ()=> {
@@ -777,6 +790,8 @@
       if (overlay) overlay.style.display = 'none';
     });
 
+    // Инициализируем проверку доступности при загрузке
+    setTimeout(checkVideoAvailability, 500);
     reset();
   };
 
