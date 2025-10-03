@@ -143,22 +143,29 @@
     }
   };
 
-// ===== СИСТЕМА УРОВНЕЙ ===================================================
-LC.getLevelInfo = async function() {
-  try {
-    const { data, error } = await sb.rpc('get_level_info'); // ВОЗВРАЩАЕМ СТАРОЕ ИМЯ
-    if (error) throw error;
-    return Array.isArray(data) ? data[0] : data;
-  } catch(e) {
-    console.warn('[LC] getLevelInfo', e);
-    return null;
-  }
-};
-  
+  // ===== СИСТЕМА УРОВНЕЙ ===================================================
+  LC.getLevelInfo = async function() {
+    try {
+      const { data, error } = await sb.rpc('get_level_info');
+      if (error) throw error;
+      
+      // Функция возвращает таблицу, берем первую строку
+      const row = Array.isArray(data) ? data[0] : data;
+      console.log('Level info response:', row);
+      
+      return row;
+    } catch(e) {
+      console.warn('[LC] getLevelInfo', e);
+      return null;
+    }
+  };
+
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
       if (!info) return;
+      
+      console.log('Refreshing level info:', info);
       
       const set = (sel, val) => { 
         const el = $(sel); 
@@ -210,381 +217,400 @@ LC.getLevelInfo = async function() {
   };
 
   // ===== НАЧИСЛЕНИЕ ЗА ПРОСМОТР =============================================
-LC.creditView = async function(videoId, watchedSeconds) {
-  const user = await getUser(); 
-  if (!user) { 
-    alert('Войдите в аккаунт'); 
-    return null; 
-  }
-
-  // Проверяем активность пользователя
-  const isActive = await LC.isActiveUser();
-  if (!isActive) {
-    alert('Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
-    return null;
-  }
-
-  console.log('Calling credit_view with:', { videoId, watchedSeconds });
-
-  try {
-    const { data, error } = await sb.rpc('credit_view', {
-      p_video_id: String(videoId || 'video'),
-      p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
-    });
-    
-    if (error) { 
-      console.error('Credit view error:', error); 
-      alert(error.message || 'Ошибка начисления'); 
+  LC.creditView = async function(videoId, watchedSeconds) {
+    const user = await getUser(); 
+    if (!user) { 
+      alert('Войдите в аккаунт'); 
       return null; 
     }
-    
-    console.log('Credit view response:', data);
-    
-    const row = Array.isArray(data) ? data[0] : data;
-    if (!row?.ok) { 
-      alert(row?.message || 'Начисление отклонено'); 
-      return null; 
-    }
-    
-    // Обновляем интерфейс
-    if (typeof row.views_left === 'number') {
-      const el = document.querySelector('[data-views-left]');
-      if (el) el.textContent = String(row.views_left);
-    }
-    
-    // Обновляем данные
-    await LC.refreshBalance();
-    await LC.refreshLevelInfo();
-    await LC.loadReferralEarnings();
-    
-    // Показываем уведомление о начислении
-    if (row.reward_cents) {
-      const reward = (row.reward_cents / 100).toFixed(2);
-      alert(`✅ Начислено $${reward} за просмотр!`);
-    }
-    
-    return row;
-  } catch (error) {
-    console.error('Exception in creditView:', error);
-    alert('Ошибка при начислении: ' + error.message);
-    return null;
-  }
-};
 
-// ===== РЕФЕРАЛЬНАЯ СИСТЕМА ===============================================
-LC.ensureProfile = async function() {
-  try {
-    const user = await getUser(); 
-    if (!user) return;
-
-    // Проверяем существующий профиль
-    const { data: existingProfile } = await sb
-      .from('profiles')
-      .select('user_id, ref_code')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (existingProfile) return;
-
-    // Генерируем уникальный реферальный код
-    const refCode = 'LC' + Math.random().toString(36).substr(2, 8).toUpperCase();
-    
-    // Создаем профиль с реферальным кодом
-    const { error } = await sb
-      .from('profiles')
-      .insert({ 
-        user_id: user.id, 
-        ref_code: refCode,
-        created_at: new Date().toISOString()
-      });
-
-    if (error && error.code !== '23505') {
-      console.warn('[LC] ensureProfile insert error', error);
-    }
-  } catch(e) { 
-    console.warn('[LC] ensureProfile', e?.message||e); 
-  }
-};
-
-LC.applyReferral = async function() {
-  try {
-    const params = new URLSearchParams(location.search);
-    const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
-    if (!refParam) return;
-
-    const user = await getUser();
-    if (!user) {
-      // Сохраняем код для применения после регистрации
-      localStorage.setItem('lc_ref_code', refParam);
-      return;
-    }
-
-    // Применяем реферальный код
-    const { error } = await sb.rpc('apply_referral', { 
-      p_ref_code: refParam 
-    });
-
-    if (!error) {
-      localStorage.removeItem('lc_ref_code');
-    }
-  } catch(e) {
-    console.warn('[LC] applyReferral', e?.message||e);
-  }
-};
-
-LC.mountReferral = async function() {
-  try {
-    const wrap = document.querySelector('#refLinkWrap');
-    const input = document.querySelector('#refLink');
-    if (!wrap || !input) return;
-
-    const user = await getUser();
-    if (!user) return;
-
-    // Получаем реферальный код пользователя
-    const { data: profile } = await sb
-      .from('profiles')
-      .select('ref_code')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (!profile?.ref_code) return;
-
-    // Формируем реферальную ссылку
-    const url = new URL(location.origin + '/register_single.html');
-    url.searchParams.set('ref', profile.ref_code);
-    input.value = url.toString();
-    wrap.style.display = 'block';
-
-    // Настраиваем копирование
-    const btn = document.querySelector('#btnCopyRef');
-    if (btn) {
-      btn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(input.value);
-          btn.textContent = 'Скопировано!';
-          setTimeout(() => btn.textContent = 'Копировать', 2000);
-        } catch (err) {
-          // Fallback для старых браузеров
-          input.select();
-          document.execCommand('copy');
-          btn.textContent = 'Скопировано!';
-          setTimeout(() => btn.textContent = 'Копировать', 2000);
-        }
-      });
-    }
-  } catch(e) { 
-    console.error('[LC] mountReferral', e?.message||e); 
-  }
-};
-
-// ИСПРАВЛЕННЫЕ ФУНКЦИИ - используем новые функции без фильтра по балансу
-LC.getActiveReferralCounts = async function() {
-  try {
-    const { data, error } = await sb.rpc('get_referral_counts_active');
-    if (error) throw error;
-    const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
-    return { 
-      gen1: Number(row.gen1||0), 
-      gen2: Number(row.gen2||0), 
-      gen3: Number(row.gen3||0) 
-    };
-  } catch (e) {
-    console.warn('[LC] getActiveReferralCounts', e);
-    return { gen1:0, gen2:0, gen3:0 };
-  }
-};
-
-LC.getActiveReferrals = async function(level = 1) {
-  try {
-    const { data, error } = await sb.rpc('get_referrals_by_generation', {
-      p_level: level
-    });
-    if (error) throw error;
-    return Array.isArray(data) ? data : (data ? [data] : []);
-  } catch (e) {
-    console.warn('[LC] getActiveReferrals', e);
-    return [];
-  }
-};
-
-LC.loadReferralEarnings = async function() {
-  try {
-    const user = await getUser(); 
-    if (!user) return;
-
-    const { data, error } = await sb.rpc('get_referral_earnings');
-    if (error) throw error;
-    const earnings = Array.isArray(data) ? data : (data ? [data] : []);
-
-    const gen1 = earnings.find(e => e.generation === 1) || {};
-    const gen2 = earnings.find(e => e.generation === 2) || {};
-    const gen3 = earnings.find(e => e.generation === 3) || {};
-
-    const set = (sel, val) => { const el = $(sel); if (el) el.textContent = val; };
-    set('#gen1Cell', fmtMoney(pickNum(gen1.total_cents)/100));
-    set('#gen2Cell', fmtMoney(pickNum(gen2.total_cents)/100));
-    set('#gen3Cell', fmtMoney(pickNum(gen3.total_cents)/100));
-
-    const total = (pickNum(gen1.total_cents) + pickNum(gen2.total_cents) + pickNum(gen3.total_cents)) / 100;
-    set('#refTotalCell', fmtMoney(total));
-
-    // Загружаем последние начисления
-    const { data: recentData, error: recentError } = await sb.rpc('get_recent_referral_earnings');
-    if (!recentError && recentData) {
-      const list = $('#refList');
-      if (list) {
-        list.innerHTML = '';
-        const rows = Array.isArray(recentData) ? recentData : (recentData ? [recentData] : []);
-        if (!rows.length) {
-          list.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:10px 0;">Нет данных</td></tr>`;
-        } else {
-          rows.slice(0, 20).forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${fmtDate(r.created_at)}</td>
-                            <td>${r.generation || 1}</td>
-                            <td>${fmtMoney(pickNum(r.amount_cents)/100)}</td>
-                            <td>${r.source_email || r.user_email || '—'}</td>`;
-            list.appendChild(tr);
-          });
-        }
-      }
-    }
-  } catch(e) { 
-    console.error('[LC] loadReferralEarnings', e); 
-  }
-};
-
-// ===== ВИДЕО ПЛЕЙЕР =======================================================
-const LC_VIDEO_LIST = [
-  '/assets/videos/ad1.MP4','/assets/videos/ad2.MP4','/assets/videos/ad3.MP4',
-  '/assets/videos/ad4.MP4','/assets/videos/ad5.MP4','/assets/videos/ad6.MP4',
-  '/assets/videos/ad7.MP4','/assets/videos/ad8.MP4','/assets/videos/ad9.MP4',
-  '/assets/videos/ad10.MP4','/assets/videos/ad11.MP4','/assets/videos/ad12.MP4'
-];
-
-LC.initVideoWatch = function () {
-  const video    = document.getElementById('promoVid');
-  const startBtn = document.getElementById('startBtn');
-  const bar      = document.getElementById('progressFill');
-  const txt      = document.getElementById('progressText');
-  const overlay  = document.getElementById('limitOverlay');
-  
-  if (!video || !startBtn) return;
-
-  if (video.dataset.lcInit === '1') return;
-  video.dataset.lcInit = '1';
-
-  let allowed = false, credited = false, acc = 0, lastT = 0;
-
-  const ui = (m)=> { if (txt) txt.textContent = m; };
-  const setBar = (p)=> { if (bar) bar.style.width = Math.max(0, Math.min(100, p)) + '%'; };
-  const pickVideo = ()=> LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)];
-
-  const reset = ()=> {
-    allowed = false; credited = false; acc = 0; lastT = 0;
-    video.currentTime = 0; video.pause();
-    setBar(0); 
-    startBtn.disabled = false; 
-    startBtn.textContent = '🎬 Заработать за просмотр';
-    checkVideoAvailability();
-  };
-
-  const checkVideoAvailability = async () => {
+    // Проверяем активность пользователя
     const isActive = await LC.isActiveUser();
-    const viewsLeft = parseInt(document.querySelector('[data-views-left]')?.textContent || 0);
-    
     if (!isActive) {
-      ui('Пополните баланс от $29 для заработка');
-      startBtn.disabled = true;
-      startBtn.textContent = '❌ Неактивный аккаунт';
-      if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.textContent = 'Для заработка пополните баланс от $29';
+      alert('Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
+      return null;
+    }
+
+    console.log('Calling credit_view with:', { videoId, watchedSeconds, userId: user.id });
+
+    try {
+      // Сначала проверим текущий уровень и лимиты
+      const levelInfo = await LC.getLevelInfo();
+      console.log('Current level info before credit:', levelInfo);
+      
+      if (levelInfo && levelInfo.views_left_today <= 0) {
+        alert('Лимит просмотров на сегодня исчерпан');
+        return null;
       }
-    } else if (viewsLeft <= 0) {
-      ui('Лимит просмотров исчерпан');
-      startBtn.disabled = true;
-      startBtn.textContent = '⏳ Лимит исчерпан';
-      if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.textContent = 'Лимит просмотров исчерпан';
+
+      const { data, error } = await sb.rpc('credit_view', {
+        p_video_id: String(videoId || 'video'),
+        p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
+      });
+      
+      if (error) { 
+        console.error('Credit view error:', error); 
+        alert(error.message || 'Ошибка начисления'); 
+        return null; 
       }
-    } else {
-      ui('Нажмите «Заработать за просмотр»');
-      startBtn.disabled = false;
-      startBtn.textContent = '🎬 Заработать за просмотр';
-      if (overlay) overlay.style.display = 'none';
+      
+      console.log('Credit view response:', data);
+      
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row?.ok) { 
+        alert(row?.message || 'Начисление отклонено'); 
+        return null; 
+      }
+      
+      // Обновляем интерфейс
+      if (typeof row.views_left === 'number') {
+        const el = document.querySelector('[data-views-left]');
+        if (el) el.textContent = String(row.views_left);
+      }
+      
+      // Обновляем данные
+      await LC.refreshBalance();
+      await LC.refreshLevelInfo();
+      await LC.loadReferralEarnings();
+      
+      // Показываем уведомление о начислении
+      if (row.reward_cents) {
+        const reward = (row.reward_cents / 100).toFixed(2);
+        alert(`✅ Начислено $${reward} за просмотр!`);
+      }
+      
+      return row;
+    } catch (error) {
+      console.error('Exception in creditView:', error);
+      alert('Ошибка при начислении: ' + error.message);
+      return null;
     }
   };
 
-  video.addEventListener('timeupdate', ()=> {
-    if (!allowed) return;
-    const t = video.currentTime, dur = video.duration;
-    if (t < 0 || !dur || dur < 1) return;
-    const p = Math.max(0, Math.min(100, (t/dur)*100));
-    setBar(p);
-    if (t > lastT) { acc += (t - lastT); lastT = t; }
-    
-    // Начисляем после 10 секунд просмотра
-    if (acc >= LC.config.MIN_VIEW_SECONDS && !credited) {
-      credited = true; 
-      console.log('Calling creditView with seconds:', Math.floor(acc));
-      LC.creditView(video.src.split('/').pop() || 'video', Math.floor(acc));
+  // ===== РЕФЕРАЛЬНАЯ СИСТЕМА ===============================================
+  LC.ensureProfile = async function() {
+    try {
+      const user = await getUser(); 
+      if (!user) return;
+
+      // Проверяем существующий профиль
+      const { data: existingProfile } = await sb
+        .from('profiles')
+        .select('user_id, ref_code')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingProfile) return;
+
+      // Генерируем уникальный реферальный код
+      const refCode = 'LC' + Math.random().toString(36).substr(2, 8).toUpperCase();
+      
+      // Создаем профиль с реферальным кодом
+      const { error } = await sb
+        .from('profiles')
+        .insert({ 
+          user_id: user.id, 
+          ref_code: refCode,
+          created_at: new Date().toISOString()
+        });
+
+      if (error && error.code !== '23505') {
+        console.warn('[LC] ensureProfile insert error', error);
+      }
+    } catch(e) { 
+      console.warn('[LC] ensureProfile', e?.message||e); 
     }
+  };
+
+  LC.applyReferral = async function() {
+    try {
+      const params = new URLSearchParams(location.search);
+      const refParam = params.get('ref') || localStorage.getItem('lc_ref_code');
+      if (!refParam) return;
+
+      const user = await getUser();
+      if (!user) {
+        // Сохраняем код для применения после регистрации
+        localStorage.setItem('lc_ref_code', refParam);
+        return;
+      }
+
+      // Применяем реферальный код
+      const { error } = await sb.rpc('apply_referral', { 
+        p_ref_code: refParam 
+      });
+
+      if (!error) {
+        localStorage.removeItem('lc_ref_code');
+      }
+    } catch(e) {
+      console.warn('[LC] applyReferral', e?.message||e);
+    }
+  };
+
+  LC.mountReferral = async function() {
+    try {
+      const wrap = document.querySelector('#refLinkWrap');
+      const input = document.querySelector('#refLink');
+      if (!wrap || !input) return;
+
+      const user = await getUser();
+      if (!user) return;
+
+      // Получаем реферальный код пользователя
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('ref_code')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!profile?.ref_code) return;
+
+      // Формируем реферальную ссылку
+      const url = new URL(location.origin + '/register_single.html');
+      url.searchParams.set('ref', profile.ref_code);
+      input.value = url.toString();
+      wrap.style.display = 'block';
+
+      // Настраиваем копирование
+      const btn = document.querySelector('#btnCopyRef');
+      if (btn) {
+        btn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(input.value);
+            btn.textContent = 'Скопировано!';
+            setTimeout(() => btn.textContent = 'Копировать', 2000);
+          } catch (err) {
+            // Fallback для старых браузеров
+            input.select();
+            document.execCommand('copy');
+            btn.textContent = 'Скопировано!';
+            setTimeout(() => btn.textContent = 'Копировать', 2000);
+          }
+        });
+      }
+    } catch(e) { 
+      console.error('[LC] mountReferral', e?.message||e); 
+    }
+  };
+
+  // ИСПРАВЛЕННЫЕ ФУНКЦИИ - используем новые функции без фильтра по балансу
+  LC.getActiveReferralCounts = async function() {
+    try {
+      const { data, error } = await sb.rpc('get_referral_counts_active');
+      if (error) throw error;
+      const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
+      return { 
+        gen1: Number(row.gen1||0), 
+        gen2: Number(row.gen2||0), 
+        gen3: Number(row.gen3||0) 
+      };
+    } catch (e) {
+      console.warn('[LC] getActiveReferralCounts', e);
+      return { gen1:0, gen2:0, gen3:0 };
+    }
+  };
+
+  LC.getActiveReferrals = async function(level = 1) {
+    try {
+      const { data, error } = await sb.rpc('get_referrals_by_generation', {
+        p_level: level
+      });
+      if (error) throw error;
+      return Array.isArray(data) ? data : (data ? [data] : []);
+    } catch (e) {
+      console.warn('[LC] getActiveReferrals', e);
+      return [];
+    }
+  };
+
+  LC.loadReferralEarnings = async function() {
+    try {
+      const user = await getUser(); 
+      if (!user) return;
+
+      const { data, error } = await sb.rpc('get_referral_earnings');
+      if (error) throw error;
+      const earnings = Array.isArray(data) ? data : (data ? [data] : []);
+
+      const gen1 = earnings.find(e => e.generation === 1) || {};
+      const gen2 = earnings.find(e => e.generation === 2) || {};
+      const gen3 = earnings.find(e => e.generation === 3) || {};
+
+      const set = (sel, val) => { const el = $(sel); if (el) el.textContent = val; };
+      set('#gen1Cell', fmtMoney(pickNum(gen1.total_cents)/100));
+      set('#gen2Cell', fmtMoney(pickNum(gen2.total_cents)/100));
+      set('#gen3Cell', fmtMoney(pickNum(gen3.total_cents)/100));
+
+      const total = (pickNum(gen1.total_cents) + pickNum(gen2.total_cents) + pickNum(gen3.total_cents)) / 100;
+      set('#refTotalCell', fmtMoney(total));
+
+      // Загружаем последние начисления
+      const { data: recentData, error: recentError } = await sb.rpc('get_recent_referral_earnings');
+      if (!recentError && recentData) {
+        const list = $('#refList');
+        if (list) {
+          list.innerHTML = '';
+          const rows = Array.isArray(recentData) ? recentData : (recentData ? [recentData] : []);
+          if (!rows.length) {
+            list.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:10px 0;">Нет данных</td></tr>`;
+          } else {
+            rows.slice(0, 20).forEach(r => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `<td>${fmtDate(r.created_at)}</td>
+                              <td>${r.generation || 1}</td>
+                              <td>${fmtMoney(pickNum(r.amount_cents)/100)}</td>
+                              <td>${r.source_email || r.user_email || '—'}</td>`;
+              list.appendChild(tr);
+            });
+          }
+        }
+      }
+    } catch(e) { 
+      console.error('[LC] loadReferralEarnings', e); 
+    }
+  };
+
+  // ===== ВИДЕО ПЛЕЙЕР =======================================================
+  const LC_VIDEO_LIST = [
+    '/assets/videos/ad1.MP4','/assets/videos/ad2.MP4','/assets/videos/ad3.MP4',
+    '/assets/videos/ad4.MP4','/assets/videos/ad5.MP4','/assets/videos/ad6.MP4',
+    '/assets/videos/ad7.MP4','/assets/videos/ad8.MP4','/assets/videos/ad9.MP4',
+    '/assets/videos/ad10.MP4','/assets/videos/ad11.MP4','/assets/videos/ad12.MP4'
+  ];
+
+  LC.initVideoWatch = function () {
+    const video    = document.getElementById('promoVid');
+    const startBtn = document.getElementById('startBtn');
+    const bar      = document.getElementById('progressFill');
+    const txt      = document.getElementById('progressText');
+    const overlay  = document.getElementById('limitOverlay');
     
-    if (t >= dur - 0.5) {
+    if (!video || !startBtn) return;
+
+    if (video.dataset.lcInit === '1') return;
+    video.dataset.lcInit = '1';
+
+    let allowed = false, credited = false, acc = 0, lastT = 0;
+
+    const ui = (m)=> { if (txt) txt.textContent = m; };
+    const setBar = (p)=> { if (bar) bar.style.width = Math.max(0, Math.min(100, p)) + '%'; };
+    const pickVideo = ()=> LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)];
+
+    const reset = ()=> {
+      allowed = false; credited = false; acc = 0; lastT = 0;
+      video.currentTime = 0; video.pause();
+      setBar(0); 
+      startBtn.disabled = false; 
+      startBtn.textContent = '🎬 Заработать за просмотр';
+      checkVideoAvailability();
+    };
+
+    const checkVideoAvailability = async () => {
+      try {
+        const isActive = await LC.isActiveUser();
+        const levelInfo = await LC.getLevelInfo();
+        const viewsLeft = levelInfo ? levelInfo.views_left_today : 0;
+        
+        console.log('Video availability check:', { isActive, viewsLeft, levelInfo });
+        
+        if (!isActive) {
+          ui('Пополните баланс от $29 для заработка');
+          startBtn.disabled = true;
+          startBtn.textContent = '❌ Неактивный аккаунт';
+          if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.textContent = 'Для заработка пополните баланс от $29';
+          }
+        } else if (viewsLeft <= 0) {
+          ui('Лимит просмотров исчерпан');
+          startBtn.disabled = true;
+          startBtn.textContent = '⏳ Лимит исчерпан';
+          if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.textContent = 'Лимит просмотров исчерпан';
+          }
+        } else {
+          ui(`Нажмите «Заработать за просмотр» (осталось: ${viewsLeft})`);
+          startBtn.disabled = false;
+          startBtn.textContent = '🎬 Заработать за просмотр';
+          if (overlay) overlay.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error checking video availability:', error);
+      }
+    };
+
+    video.addEventListener('timeupdate', ()=> {
+      if (!allowed) return;
+      const t = video.currentTime, dur = video.duration;
+      if (t < 0 || !dur || dur < 1) return;
+      const p = Math.max(0, Math.min(100, (t/dur)*100));
+      setBar(p);
+      if (t > lastT) { acc += (t - lastT); lastT = t; }
+      
+      // Начисляем после 10 секунд просмотра
+      if (acc >= LC.config.MIN_VIEW_SECONDS && !credited) {
+        credited = true; 
+        console.log('Calling creditView with seconds:', Math.floor(acc));
+        LC.creditView(video.src.split('/').pop() || 'video', Math.floor(acc));
+      }
+      
+      if (t >= dur - 0.5) {
+        video.pause();
+        ui('Начисление завершено');
+        setTimeout(reset, 1500);
+      }
+    });
+
+    video.addEventListener('ended', ()=> {
+      if (!allowed) return;
       video.pause();
       ui('Начисление завершено');
       setTimeout(reset, 1500);
-    }
-  });
+    });
 
-  video.addEventListener('ended', ()=> {
-    if (!allowed) return;
-    video.pause();
-    ui('Начисление завершено');
-    setTimeout(reset, 1500);
-  });
+    startBtn.addEventListener('click', async (e)=> {
+      e.preventDefault();
+      if (allowed) return;
+      
+      const isActive = await LC.isActiveUser();
+      const levelInfo = await LC.getLevelInfo();
+      const viewsLeft = levelInfo ? levelInfo.views_left_today : 0;
+      
+      console.log('Start button clicked:', { isActive, viewsLeft });
+      
+      if (!isActive) {
+        alert('Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
+        return;
+      }
+      
+      if (viewsLeft <= 0) {
+        alert('Лимит просмотров на сегодня исчерпан');
+        return;
+      }
+      
+      video.src = pickVideo(); 
+      video.load();
+      allowed = true; credited = false; acc = 0; lastT = 0;
+      
+      try {
+        await video.play();
+        ui('Смотрите видео до конца'); 
+        setBar(0);
+        startBtn.disabled = true; 
+        startBtn.textContent = '⏳ Ожидание...';
+        if (overlay) overlay.style.display = 'none';
+      } catch (err) {
+        console.warn('Autoplay failed:', err);
+        reset();
+      }
+    });
 
-  startBtn.addEventListener('click', async (e)=> {
-    e.preventDefault();
-    if (allowed) return;
-    
-    const isActive = await LC.isActiveUser();
-    const viewsLeft = parseInt(document.querySelector('[data-views-left]')?.textContent || 0);
-    
-    if (!isActive) {
-      alert('Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
-      return;
-    }
-    
-    if (viewsLeft <= 0) {
-      alert('Лимит просмотров на сегодня исчерпан');
-      return;
-    }
-    
-    video.src = pickVideo(); 
-    video.load();
-    allowed = true; credited = false; acc = 0; lastT = 0;
-    
-    try {
-      await video.play();
-      ui('Смотрите видео до конца'); 
-      setBar(0);
-      startBtn.disabled = true; 
-      startBtn.textContent = '⏳ Ожидание...';
-      if (overlay) overlay.style.display = 'none';
-    } catch (err) {
-      console.warn('Autoplay failed:', err);
-      reset();
-    }
-  });
-
-  // Инициализация проверки доступности
-  setTimeout(checkVideoAvailability, 500);
-  reset();
-};
+    // Инициализация проверки доступности
+    setTimeout(checkVideoAvailability, 500);
+    reset();
+  };
 
   // ===== ВЫВОД СРЕДСТВ =====================================================
   LC.bindWithdrawControls = function () {
