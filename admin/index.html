@@ -729,11 +729,16 @@ class AdminPanel {
         this.currentUser = null;
         this.currentPage = 'dashboard';
         this.isLimitedAdmin = false;
+        this.isAuthenticated = false;
         this.init();
     }
 
     async init() {
-        await this.checkAuth();
+        const isAuthenticated = await this.checkAuth();
+        if (!isAuthenticated) {
+            return;
+        }
+        
         this.setupEventListeners();
         await this.loadDashboard();
     }
@@ -744,16 +749,18 @@ class AdminPanel {
             
             if (error || !session) {
                 this.showLoginModal();
-                return;
+                return false;
             }
 
             this.currentUser = session.user;
+            this.isAuthenticated = true;
             document.getElementById('userEmail').textContent = this.currentUser.email;
             
-            await this.checkAdminRights();
+            return await this.checkAdminRights();
         } catch (error) {
             console.error('Auth error:', error);
             this.showLoginModal();
+            return false;
         }
     }
 
@@ -765,7 +772,7 @@ class AdminPanel {
             if (!limitedError && limitedData) {
                 this.isLimitedAdmin = true;
                 this.setupLimitedAdminUI();
-                return;
+                return true;
             }
 
             // Если не limited, проверяем обычные админские права
@@ -773,14 +780,48 @@ class AdminPanel {
             
             if (error || !data) {
                 this.showError('Доступ запрещен. Недостаточно прав.');
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.style.display = 'none';
-                });
-                return;
+                this.blockUI();
+                return false;
             }
+            
+            return true;
         } catch (error) {
             console.error('Admin check error:', error);
             this.showError('Ошибка проверки прав доступа');
+            this.blockUI();
+            return false;
+        }
+    }
+
+    blockUI() {
+        // Блокируем весь интерфейс
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        document.querySelectorAll('.page').forEach(page => {
+            page.style.display = 'none';
+        });
+        
+        // Скрываем топбар
+        const topbar = document.querySelector('.topbar');
+        if (topbar) {
+            topbar.style.display = 'none';
+        }
+        
+        // Показываем сообщение о необходимости авторизации
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) {
+            contentArea.innerHTML = `
+                <div style="text-align: center; padding: 4rem; background: white; border-radius: 12px; margin: 2rem 0; border: 1px solid var(--border);">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🔒</div>
+                    <h2 style="color: var(--dark); margin-bottom: 1rem;">Доступ запрещен</h2>
+                    <p style="color: var(--muted); margin-bottom: 2rem;">У вас недостаточно прав для доступа к админ-панели</p>
+                    <button class="btn btn-primary" onclick="admin.logout()">
+                        Выйти и войти с другими правами
+                    </button>
+                </div>
+            `;
         }
     }
 
@@ -811,22 +852,80 @@ class AdminPanel {
     }
 
     showLoginModal() {
-        const email = prompt('Введите email администратора:');
-        if (!email) {
-            this.showError('Требуется авторизация');
-            return;
-        }
-
-        const password = prompt('Введите пароль:');
-        if (!password) {
-            this.showError('Требуется авторизация');
-            return;
-        }
-
-        this.login(email, password);
+        // Создаем модальное окно для входа
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3 style="margin-bottom: 1.5rem; text-align: center;">Вход в админ-панель</h3>
+                <div class="form-group">
+                    <label>Email администратора</label>
+                    <input type="email" id="loginEmail" placeholder="admin@example.com" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;">
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="loginPassword" placeholder="Введите пароль" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;">
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button class="btn btn-outline" onclick="admin.closeLoginModal()">Отмена</button>
+                    <button class="btn btn-primary" onclick="admin.handleLogin()">Войти</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Фокусируемся на поле email
+        setTimeout(() => {
+            const emailInput = document.getElementById('loginEmail');
+            if (emailInput) emailInput.focus();
+        }, 100);
+        
+        // Добавляем обработчик Enter
+        document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.handleLogin();
+            }
+        });
     }
 
-    async login(email, password) {
+    closeLoginModal() {
+        const modal = document.querySelector('.modal');
+        if (modal) {
+            modal.remove();
+        }
+        // Если модальное окно закрыто и пользователь не авторизован, показываем сообщение
+        if (!this.isAuthenticated) {
+            this.showBlockedUI();
+        }
+    }
+
+    showBlockedUI() {
+        // Блокируем весь интерфейс и показываем сообщение о необходимости входа
+        document.querySelector('.admin-layout').innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--light);">
+                <div style="text-align: center; padding: 3rem; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px; width: 90%;">
+                    <div style="font-size: 4rem; margin-bottom: 1.5rem;">🔒</div>
+                    <h2 style="color: var(--dark); margin-bottom: 1rem;">Админ-панель</h2>
+                    <p style="color: var(--muted); margin-bottom: 2rem;">Для доступа требуется авторизация</p>
+                    <button class="btn btn-primary" onclick="admin.showLoginModal()" style="width: 100%; padding: 12px;">
+                        Войти в систему
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    async handleLogin() {
+        const email = document.getElementById('loginEmail')?.value;
+        const password = document.getElementById('loginPassword')?.value;
+        
+        if (!email || !password) {
+            this.showError('Введите email и пароль');
+            return;
+        }
+        
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
@@ -836,6 +935,8 @@ class AdminPanel {
             if (error) throw error;
 
             this.currentUser = data.user;
+            this.isAuthenticated = true;
+            this.closeLoginModal();
             location.reload();
         } catch (error) {
             this.showError('Ошибка входа: ' + error.message);
@@ -935,13 +1036,27 @@ class AdminPanel {
     }
 
     async loadDashboard() {
+        // Проверяем авторизацию перед загрузкой данных
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            this.showBlockedUI();
+            return;
+        }
+        
         try {
             this.showLoading('dashboardStats', 8);
             this.showLoading('recentActivities', 1);
 
             const { data: stats, error } = await supabase.rpc('get_admin_dashboard_stats');
             
-            if (error) throw error;
+            if (error) {
+                // Если ошибка доступа, показываем блокировку
+                if (error.message.includes('permission') || error.message.includes('auth')) {
+                    this.blockUI();
+                    return;
+                }
+                throw error;
+            }
 
             this.renderDashboardStats(stats);
             
@@ -954,7 +1069,13 @@ class AdminPanel {
             }
         } catch (error) {
             console.error('Dashboard load error:', error);
-            this.showError('Ошибка загрузки дашборда: ' + error.message);
+            
+            // При ошибках аутентификации блокируем UI
+            if (error.message.includes('auth') || error.message.includes('permission')) {
+                this.blockUI();
+            } else {
+                this.showError('Ошибка загрузки дашборда: ' + error.message);
+            }
         }
     }
 
@@ -1038,7 +1159,7 @@ class AdminPanel {
             infoMessage.style.border = '1px solid #e2e8f0';
             infoMessage.innerHTML = `
                 <strong>Limited Admin Mode</strong><br>
-                Вы видите статистику только по вашим рефералам (1-3 поколение)
+                Вы видите статистику только по вашим рефералам (все поколения)
             `;
             statsGrid.parentNode.insertBefore(infoMessage, statsGrid.nextSibling);
         }
