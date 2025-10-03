@@ -15,7 +15,7 @@
   <!-- PWA init -->
   <script defer src="/app-install.js"></script>
   
-  <title data-i18n="page_title_withdraw">Вывод — Litcash</title>
+  <title>Вывод — Litcash</title>
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
 
   <style>
@@ -65,180 +65,6 @@
     flex-direction: column;
     width: 100%;
     overflow-x: hidden;
-  }
-
-  /* === ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ === */
-  .language-switcher-header {
-    position: relative;
-    display: flex;
-    align-items: center;
-    z-index: 1001;
-    margin-left: auto;
-    margin-right: 10px;
-  }
-
-  .lang-btn-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 32px;
-    padding: 0 10px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    white-space: nowrap;
-  }
-
-  .lang-btn-header:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
-  }
-
-  .lang-icon {
-    width: 14px;
-    height: 14px;
-  }
-
-  .lang-code-header {
-    font-size: 11px;
-    font-weight: 600;
-  }
-
-  .lang-dropdown-header {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 5px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 8px;
-    min-width: 160px;
-    max-height: 300px;
-    overflow-y: auto;
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(20px);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
-    z-index: 1002;
-  }
-
-  .language-switcher-header.active .lang-dropdown-header {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
-  .lang-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text);
-  }
-
-  .lang-item:hover {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--primary-light);
-  }
-
-  .lang-item.active {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--primary);
-    font-weight: 600;
-  }
-
-  .lang-flag {
-    width: 16px;
-    height: 12px;
-    border-radius: 2px;
-    border: 1px solid rgba(255,255,255,0.2);
-    flex-shrink: 0;
-  }
-
-  .lang-name {
-    flex: 1;
-    text-align: left;
-  }
-
-  .lang-code {
-    font-size: 10px;
-    opacity: 0.7;
-    font-weight: 600;
-  }
-
-  /* Флаги языков */
-  .lang-flag.ru { background: linear-gradient(to bottom, #fff 33%, #0039a6 33%, #0039a6 66%, #d52b1e 66%); }
-  .lang-flag.en { background: linear-gradient(135deg, #012169 0%, #012169 40%, #C8102E 40%, #C8102E 60%, #FFFFFF 60%, #FFFFFF 100%); }
-  .lang-flag.cn { background: linear-gradient(to bottom, #de2910 0%, #de2910 50%, #ffde00 50%, #ffde00 100%); }
-  .lang-flag.es { background: linear-gradient(to bottom, #aa151b 25%, #f1bf00 25%, #f1bf00 75%, #aa151b 75%); }
-  .lang-flag.fr { background: linear-gradient(to right, #0055a4 33%, #ffffff 33%, #ffffff 66%, #ef4135 66%); }
-  .lang-flag.de { background: linear-gradient(to bottom, #000000 33%, #dd0000 33%, #dd0000 66%, #ffce00 66%); }
-  .lang-flag.pt { background: linear-gradient(to right, #006600 40%, #ff0000 40%, #ff0000 60%, #ffcc00 60%); }
-  .lang-flag.ar { background: linear-gradient(to bottom, #ce1126 33%, #ffffff 33%, #ffffff 66%, #000000 66%); }
-  .lang-flag.jp { background: radial-gradient(circle, #bc002d 30%, white 30%); }
-  .lang-flag.kr { background: linear-gradient(to bottom, #ffffff 50%, #000000 50%); }
-  .lang-flag.tr { background: linear-gradient(to bottom, #e30a17 0%, #e30a17 100%); }
-  .lang-flag.it { background: linear-gradient(to right, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%); }
-  .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
-  .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
-
-  /* Мобильный языковой переключатель */
-  .mobile-lang-switcher {
-    padding: 15px 0;
-    border-top: 1px solid var(--border);
-    margin-top: 10px;
-  }
-
-  .mobile-lang-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-    padding: 0 5px;
-  }
-
-  .mobile-lang-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .mobile-lang-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    color: var(--text);
-  }
-
-  .mobile-lang-item:hover {
-    background: rgba(16, 185, 129, 0.1);
-  }
-
-  .mobile-lang-item.active {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--primary);
-    font-weight: 600;
   }
 
   /* Анимация крипторынка на фоне */
@@ -978,30 +804,6 @@
       display: flex;
     }
 
-    /* ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ДЛЯ МОБИЛЬНЫХ */
-    .language-switcher-header {
-      margin-right: 5px;
-    }
-
-    .lang-btn-header {
-      height: 28px;
-      padding: 0 8px;
-      font-size: 10px;
-    }
-
-    .lang-code-header {
-      font-size: 10px;
-    }
-
-    .lang-dropdown-header {
-      min-width: 140px;
-      right: -10px;
-    }
-
-    .nav-cta {
-      display: none;
-    }
-
     /* Таблицы на мобильных */
     .table {
       font-size: 10px;
@@ -1084,20 +886,6 @@
     .table {
       font-size: 9px;
     }
-
-    /* ДОПОЛНИТЕЛЬНАЯ ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ */
-    .language-switcher-header {
-      margin-right: 3px;
-    }
-
-    .lang-btn-header {
-      height: 26px;
-      padding: 0 6px;
-    }
-
-    .lang-code-header {
-      font-size: 9px;
-    }
   }
 
   /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
@@ -1115,6 +903,15 @@
     }
   }
   </style>
+
+  <!-- Language switcher styles -->
+  <style>
+  .lc-lang{position:relative;display:inline-flex;align-items:center}
+  .lc-lang__btn{height:28px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)!important;background:var(--bg-card)!important;color:var(--text)!important;display:inline-flex;gap:4px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:all 0.3s ease}
+  .lc-lang__btn:hover{border-color:var(--primary)!important;color:var(--primary)!important;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .lc-lang__icon{width:12px;height:12px}
+  .lc-lang__label{font-size:9px;line-height:1}
+  </style>
 </head>
 
 <body>
@@ -1125,43 +922,12 @@
 
 <!-- Мобильное меню -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="index.html" data-i18n="nav_home">Главная</a>
-  <a href="dashboard_single.html" data-i18n="nav_dashboard">Личный кабинет</a>
-  <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
-  <a href="withdraw_single.html" class="active" data-i18n="nav_withdraw">Вывод</a>
-  <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
-  <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
-  
-  <!-- Мобильный переключатель языков -->
-  <div class="mobile-lang-switcher">
-    <div class="mobile-lang-title" data-i18n="language_switch">Выбор языка</div>
-    <div class="mobile-lang-list">
-      <div class="mobile-lang-item active" data-lang="ru">
-        <span class="lang-flag ru"></span>
-        <span class="lang-name">Русский</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="en">
-        <span class="lang-flag en"></span>
-        <span class="lang-name">English</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="cn">
-        <span class="lang-flag cn"></span>
-        <span class="lang-name">中文</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="es">
-        <span class="lang-flag es"></span>
-        <span class="lang-name">Español</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="fr">
-        <span class="lang-flag fr"></span>
-        <span class="lang-name">Français</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="de">
-        <span class="lang-flag de"></span>
-        <span class="lang-name">Deutsch</span>
-      </div>
-    </div>
-  </div>
+  <a href="index.html">Главная</a>
+  <a href="dashboard_single.html">Личный кабинет</a>
+  <a href="deposit_single.html">Пополнение</a>
+  <a href="withdraw_single.html" class="active">Вывод</a>
+  <a href="faq_single.html">FAQ</a>
+  <a href="settings_single.html">Настройки</a>
 </div>
 
 <header class="header">
@@ -1169,106 +935,30 @@
     <nav class="nav">
       <a class="brand" href="index.html">
         <div class="logo">LC</div>
-        <span data-i18n="brand_name">Litcash</span>
+        <span>Litcash</span>
       </a>
-
-      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ -->
-      <div class="language-switcher-header" id="languageSwitcher">
-        <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
-          <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
-                  fill="none" stroke="currentColor" stroke-width="1.2"/>
-          </svg>
-          <span class="lang-code-header">RU</span>
-        </button>
-        
-        <div class="lang-dropdown-header" id="langDropdown">
-          <div class="lang-list">
-            <div class="lang-item active" data-lang="ru">
-              <span class="lang-flag ru"></span>
-              <span class="lang-name">Русский</span>
-              <span class="lang-code">RU</span>
-            </div>
-            <div class="lang-item" data-lang="en">
-              <span class="lang-flag en"></span>
-              <span class="lang-name">English</span>
-              <span class="lang-code">EN</span>
-            </div>
-            <div class="lang-item" data-lang="cn">
-              <span class="lang-flag cn"></span>
-              <span class="lang-name">中文</span>
-              <span class="lang-code">CN</span>
-            </div>
-            <div class="lang-item" data-lang="es">
-              <span class="lang-flag es"></span>
-              <span class="lang-name">Español</span>
-              <span class="lang-code">ES</span>
-            </div>
-            <div class="lang-item" data-lang="fr">
-              <span class="lang-flag fr"></span>
-              <span class="lang-name">Français</span>
-              <span class="lang-code">FR</span>
-            </div>
-            <div class="lang-item" data-lang="de">
-              <span class="lang-flag de"></span>
-              <span class="lang-name">Deutsch</span>
-              <span class="lang-code">DE</span>
-            </div>
-            <div class="lang-item" data-lang="pt">
-              <span class="lang-flag pt"></span>
-              <span class="lang-name">Português</span>
-              <span class="lang-code">PT</span>
-            </div>
-            <div class="lang-item" data-lang="ar">
-              <span class="lang-flag ar"></span>
-              <span class="lang-name">العربية</span>
-              <span class="lang-code">AR</span>
-            </div>
-            <div class="lang-item" data-lang="ja">
-              <span class="lang-flag jp"></span>
-              <span class="lang-name">日本語</span>
-              <span class="lang-code">JA</span>
-            </div>
-            <div class="lang-item" data-lang="ko">
-              <span class="lang-flag kr"></span>
-              <span class="lang-name">한국어</span>
-              <span class="lang-code">KO</span>
-            </div>
-            <div class="lang-item" data-lang="tr">
-              <span class="lang-flag tr"></span>
-              <span class="lang-name">Türkçe</span>
-              <span class="lang-code">TR</span>
-            </div>
-            <div class="lang-item" data-lang="it">
-              <span class="lang-flag it"></span>
-              <span class="lang-name">Italiano</span>
-              <span class="lang-code">IT</span>
-            </div>
-            <div class="lang-item" data-lang="hi">
-              <span class="lang-flag in"></span>
-              <span class="lang-name">हिन्दी</span>
-              <span class="lang-code">HI</span>
-            </div>
-            <div class="lang-item" data-lang="pl">
-              <span class="lang-flag pl"></span>
-              <span class="lang-name">Polski</span>
-              <span class="lang-code">PL</span>
-            </div>
-          </div>
-        </div>
-      </div>
       
       <div class="nav-links">
-        <a href="index.html" data-i18n="nav_home">Главная</a>
-        <a href="dashboard_single.html" data-i18n="nav_dashboard">Личный кабинет</a>
-        <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
-        <a href="withdraw_single.html" class="active" data-i18n="nav_withdraw">Вывод</a>
-        <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
+        <a href="index.html">Главная</a>
+        <a href="dashboard_single.html">Личный кабинет</a>
+        <a href="deposit_single.html">Пополнение</a>
+        <a href="withdraw_single.html" class="active">Вывод</a>
+        <a href="faq_single.html">FAQ</a>
+        <a href="settings_single.html">Настройки</a>
       </div>
 
       <div class="nav-cta">
-        <a class="btn" href="login_single.html" data-i18n="nav_login">Вход</a>
-        <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
+        <div class="lc-lang">
+          <button class="lc-lang__btn">
+            <svg class="lc-lang__icon" viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
+            </svg>
+            <span class="lc-lang__label">RU</span>
+          </button>
+        </div>
+        
+        <a class="btn" href="login_single.html">Вход</a>
+        <a class="btn primary" href="register_single.html">Регистрация</a>
       </div>
 
       <div class="burger" id="burgerBtn">
@@ -1283,35 +973,35 @@
 <main class="main">
   <div class="container main-content">
     <div style="position:sticky;top:50px;background:var(--bg-card);padding:8px;border-radius:var(--radius);margin-bottom:12px;border:1px solid var(--border);backdrop-filter:blur(10px);z-index:10">
-      <span data-i18n="withdraw_balance_label">Баланс:</span> <strong data-balance style="color:var(--primary-light)">0.00 $</strong>
+      Баланс: <strong data-balance style="color:var(--primary-light)">0.00 $</strong>
     </div>
 
     <div class="card">
-      <h1><span class="icon">💸</span><span data-i18n="withdraw_title">Заявка на вывод</span></h1>
+      <h1><span class="icon">💸</span>Заявка на вывод</h1>
       <div class="grid">
-        <input class="input" id="wallet" placeholder="TRC20-кошелёк" type="text" data-i18n-placeholder="withdraw_wallet_placeholder"/>
-        <input class="input" id="withAmount" placeholder="Сумма к выводу, USDT" step="0.01" type="number" data-i18n-placeholder="withdraw_amount_placeholder"/>
-        <button class="btn primary" id="withSubmit" data-i18n="withdraw_submit_btn">Отправить заявку</button>
-        <p class="muted" data-i18n="withdraw_note">Первый вывод — через 5 дней после активации. Далее — не чаще 1 раза в 24 часа.</p>
+        <input class="input" id="wallet" placeholder="TRC20-кошелёк USDT (начинается с T)" type="text"/>
+        <input class="input" id="withAmount" placeholder="Сумма к выводу, USDT" step="0.01" min="29" type="number"/>
+        <button class="btn primary" id="withSubmit">Отправить заявку</button>
+        <div class="muted">
+          <p>✅ Минимальная сумма: $29</p>
+          <p>✅ Только TRC20 (USDT)</p>
+          <p>✅ Адрес должен начинаться с T</p>
+          <p>⏳ Первый вывод - через 5 дней после регистрации</p>
+          <p>🔄 Последующие выводы - не чаще 1 раза в 24 часа</p>
+          <p>⏰ Обработка заявки администратором: до 24 часов</p>
+        </div>
       </div>
     </div>
 
     <div class="card" id="wd-history-card">
-      <h2><span class="icon">📋</span><span data-i18n="withdraw_history_title">История заявок</span></h2>
+      <h2><span class="icon">📋</span>История заявок</h2>
       <div class="table-wrap">
         <table class="table">
           <thead>
-            <tr>
-              <th data-i18n="withdraw_table_date">Дата</th>
-              <th class="right" data-i18n="withdraw_table_amount">Сумма</th>
-              <th data-i18n="withdraw_table_network">Сеть</th>
-              <th data-i18n="withdraw_table_status">Статус</th>
-              <th data-i18n="withdraw_table_tx">TX</th>
-              <th data-i18n="withdraw_table_action">Действие</th>
-            </tr>
+            <tr><th>Дата</th><th class="right">Сумма</th><th>Сеть</th><th>Статус</th><th>TX</th><th>Действие</th></tr>
           </thead>
           <tbody id="wd-table-body">
-            <tr><td colspan="6" style="text-align:center;padding:10px 0;" data-i18n="withdraw_loading">Загрузка…</td></tr>
+            <tr><td colspan="6" style="text-align:center;padding:10px 0;">Загрузка…</td></tr>
           </tbody>
         </table>
       </div>
@@ -1321,7 +1011,7 @@
 
 <footer class="footer">
   <div class="container">
-    <span data-i18n="footer_copyright">© 2025 Litcash. Все права защищены.</span>
+    © 2025 Litcash. Все права защищены.
   </div>
 </footer>
 
@@ -1339,75 +1029,31 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Бургер-меню и языковой переключатель
-document.addEventListener('DOMContentLoaded', function() {
+// Mobile Menu
+document.addEventListener('DOMContentLoaded', () => {
   const burgerBtn = document.getElementById('burgerBtn');
   const mobileMenu = document.getElementById('mobileMenu');
   
   if (burgerBtn && mobileMenu) {
-    burgerBtn.addEventListener('click', function(e) {
+    burgerBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       mobileMenu.classList.toggle('active');
       burgerBtn.classList.toggle('active');
     });
     
-    // Закрытие меню при клике на ссылку
     const mobileLinks = mobileMenu.querySelectorAll('a');
     mobileLinks.forEach(link => {
-      link.addEventListener('click', function() {
+      link.addEventListener('click', () => {
         mobileMenu.classList.remove('active');
         burgerBtn.classList.remove('active');
       });
     });
     
-    // Закрытие меню при клике вне его
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', (e) => {
       if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
         mobileMenu.classList.remove('active');
         burgerBtn.classList.remove('active');
       }
-    });
-
-    // Мобильный переключатель языка
-    const mobileLangItems = mobileMenu.querySelectorAll('.mobile-lang-item');
-    mobileLangItems.forEach(item => {
-      item.addEventListener('click', function() {
-        const lang = this.getAttribute('data-lang');
-        if (window.LanguageSwitcher) {
-          window.LanguageSwitcher.setLang(lang);
-        }
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      });
-    });
-  }
-
-  // Инициализация языкового переключателя
-  const langSwitcher = document.getElementById('languageSwitcher');
-  const langBtn = document.getElementById('langBtn');
-  const langDropdown = document.getElementById('langDropdown');
-  
-  if (langBtn && langDropdown) {
-    langBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      langSwitcher.classList.toggle('active');
-    });
-    
-    // Закрытие при клике вне переключателя
-    document.addEventListener('click', function() {
-      langSwitcher.classList.remove('active');
-    });
-    
-    // Выбор языка
-    const langItems = langDropdown.querySelectorAll('.lang-item');
-    langItems.forEach(item => {
-      item.addEventListener('click', function() {
-        const lang = this.getAttribute('data-lang');
-        if (window.LanguageSwitcher) {
-          window.LanguageSwitcher.setLang(lang);
-        }
-        langSwitcher.classList.remove('active');
-      });
     });
   }
 });
@@ -1493,183 +1139,429 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- Supabase -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
-<script defer src="assets/js/i18n.js"></script>
-<script defer src="assets/js/language-switcher.js"></script>
 <script defer src="app_supabase.js"></script>
 
 <script>
+// ===== ВЫВОД СРЕДСТВ =====================================================
 (function(){
-  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
-  const $ = (s,r=document)=>r.querySelector(s);
-  const fmtUSD = (c)=> (Number(c||0)/100).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2})+' $';
-  const statusLabel = (s)=>{
-    s = String(s||'pending').toLowerCase();
-    if(s==='paid') return '<span class="pill paid" data-i18n="withdraw_status_paid">подтверждено</span>';
-    if(s==='rejected') return '<span class="pill rejected" data-i18n="withdraw_status_rejected">отклонено</span>';
-    return '<span class="pill pending" data-i18n="withdraw_status_pending">ожидание</span>';
-  };
-  function toast(msg){
-    let t = $('#toast') || Object.assign(document.body.appendChild(document.createElement('div')), { id:'toast', className:'lc-toast' });
-    const el = document.createElement('div'); el.className='lc-toast__item'; el.textContent = msg; t.appendChild(el);
-    setTimeout(()=>{ el.remove(); }, 3000);
-  }
-  async function refreshBalance(sb, uid){
-    try{
-      const { data, error } = await sb.from('wallets').select('balance_cents').eq('user_id', uid).maybeSingle();
-      if(!error && data && typeof data.balance_cents==='number'){
-        const node = $('[data-balance]'); if(node) node.textContent = (data.balance_cents/100).toFixed(2) + ' $';
+  // Глобальные переменные для предотвращения дублирования
+  let withdrawalInProgress = false;
+  let lastWithdrawalTime = 0;
+  
+  // Утилиты
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => document.querySelectorAll(s);
+  
+  // Функция для проверки возможности вывода
+  async function checkWithdrawalEligibility(userId) {
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) return { eligible: false, reason: 'База данных недоступна' };
+      
+      // Получаем профиль пользователя для проверки даты регистрации
+      const { data: profile, error: profileError } = await sb
+        .from('profiles')
+        .select('created_at')
+        .eq('user_id', userId)
+        .single();
+      
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        return { eligible: false, reason: 'Ошибка получения данных профиля' };
       }
-    }catch(_){}
-  }
-
-  // Debounced loader to avoid thrash/loops
-  function makeDebounced(fn, delay){
-    let timer=null, pending=false;
-    return function(...args){
-      if(pending) return;
-      pending=true;
-      timer && clearTimeout(timer);
-      timer = setTimeout(async ()=>{
-        try{ await fn.apply(this,args); } finally { pending=false; }
-      }, delay||120);
-    }
-  }
-
-  let _rendering=false;
-  function renderRows(rows){
-    if(_rendering) return;
-    _rendering = true;
-    const body = $('#wd-table-body'); if(!body){ _rendering=false; return; }
-    body.innerHTML='';
-    if(!rows || !rows.length){
-      body.innerHTML = '<tr><td colspan="6" class="muted" style="text-align:center;padding:12px 0;" data-i18n="withdraw_no_data">Пока нет заявок</td></tr>';
-      _rendering=false; return;
-    }
-    for(const r of rows){
-      const tr = document.createElement('tr');
-      const total = (r.amount_cents||0) + (r.fee_cents||0);
-      const canCancel = (String(r.status||'')==='pending') && (Date.now()-new Date(r.created_at).getTime() <= 5*3600*1000);
-      tr.innerHTML =
-        '<td>'+ new Date(r.created_at).toLocaleString() +'</td>' +
-        '<td class="right">'+ fmtUSD(total) +'</td>' +
-        '<td>'+ (r.network||'—') +'</td>' +
-        '<td>'+ statusLabel(r.status) +'</td>' +
-        '<td>'+ (r.txid ? ('<code>'+String(r.txid).slice(0,6)+'…'+String(r.txid).slice(-4)+'</code>') : '—') +'</td>' +
-        '<td>'+ (canCancel ? ('<button class="btn bad" data-cancel="'+r.id+'" data-i18n="withdraw_cancel_btn">Отменить</button>') : '<span class="small muted">—</span>') +'</td>';
-      body.appendChild(tr);
-    }
-    _rendering=false;
-  }
-
-  async function loadHistory(sb, uid){
-    const body = $('#wd-table-body'); if(body) body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:10px 0;" data-i18n="withdraw_loading">Загрузка…</td></tr>';
-    const { data, error } = await sb
-      .from('withdrawals')
-      .select('id, created_at, amount_cents, fee_cents, network, status, txid')
-      .eq('user_id', uid)
-      .order('created_at', { ascending: false })
-      .limit(200);
-    if(error){ if(body) body.innerHTML = '<tr><td colspan="6" style="color:#ffb4b4">'+(error.message||error)+'</td></tr>'; return; }
-    renderRows(data||[]);
-  }
-  const debouncedLoad = makeDebounced(loadHistory, 140);
-
-  function attachCancelHandler(sb, uid){
-    const tbody = $('#wd-table-body') || document.body;
-    tbody.addEventListener('click', async (e)=>{
-      const btn = e.target.closest('[data-cancel]'); if(!btn) return;
-      const id = btn.getAttribute('data-cancel'); if(!id) return;
-      btn.disabled = true;
-      try{
-        const { error } = await sb.rpc('user_cancel_withdrawal', { p_id: id });
-        if(error) throw error;
-        toast('Заявка отменена и средства возвращены на баланс');
-      }catch(err){ alert(err.message||err); }
-      finally{
-        await Promise.all([debouncedLoad(sb, uid), refreshBalance(sb, uid)]);
-        btn.disabled = false;
+      
+      const registrationDate = new Date(profile.created_at);
+      const now = new Date();
+      const daysSinceRegistration = Math.floor((now - registrationDate) / (1000 * 60 * 60 * 24));
+      
+      // Проверяем первый вывод (минимум 5 дней после регистрации)
+      const { data: previousWithdrawals, error: withdrawalsError } = await sb
+        .from('withdrawals')
+        .select('id, created_at, status')
+        .eq('user_id', userId)
+        .in('status', ['paid', 'pending'])
+        .order('created_at', { ascending: false });
+      
+      if (withdrawalsError) {
+        console.error('Withdrawals error:', withdrawalsError);
+        return { eligible: false, reason: 'Ошибка проверки истории выводов' };
       }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', async function(){
-    try{
-      const sb = window._supabase || window.supabaseClient || window.sb || window.supabase;
-      if(!sb || !sb.auth || !sb.from){ console.warn('Supabase client not found'); return; }
-      const { data: ud } = await sb.auth.getUser();
-      const user = ud && ud.user ? ud.user : null;
-      if(!user){ try{ location.href = 'login_single.html'; }catch(_){ } return; }
-      const uid = user.id;
-
-      // Prefer site's own realtime subscription if it exists; otherwise use ours
-      let weSubscribed = false;
-      if(!(window.LC && typeof window.LC.subscribeWithdrawalStatus === 'function')){
-        try{
-          sb.channel('wd-user-'+uid)
-            .on('postgres_changes', { event:'*', schema:'public', table:'withdrawals', filter:'user_id=eq.'+uid }, ()=>{ debouncedLoad(sb, uid); refreshBalance(sb, uid); })
-            .subscribe();
-          weSubscribed = true;
-        }catch(_){}
+      
+      const hasPreviousWithdrawals = previousWithdrawals && previousWithdrawals.length > 0;
+      
+      // Если это первый вывод, проверяем 5 дней
+      if (!hasPreviousWithdrawals && daysSinceRegistration < 5) {
+        const daysLeft = 5 - daysSinceRegistration;
+        return { 
+          eligible: false, 
+          reason: `Первый вывод доступен через ${daysLeft} ${daysLeft === 1 ? 'день' : 'дня'} после регистрации` 
+        };
       }
-      // Wrap site renderer only once, without creating loops
-      try{
-        if(window.LC && typeof LC.loadWithdrawalsList === 'function'){
-          const orig = LC.loadWithdrawalsList;
-          LC.loadWithdrawalsList = async function(){
-            try{ await orig.apply(this, arguments); }catch(_){}
-            debouncedLoad(sb, uid);
+      
+      // Проверяем последний вывод (не чаще 1 раза в 24 часа)
+      if (hasPreviousWithdrawals) {
+        const lastWithdrawal = previousWithdrawals[0];
+        const lastWithdrawalDate = new Date(lastWithdrawal.created_at);
+        const hoursSinceLastWithdrawal = Math.floor((now - lastWithdrawalDate) / (1000 * 60 * 60));
+        
+        if (hoursSinceLastWithdrawal < 24) {
+          const hoursLeft = 24 - hoursSinceLastWithdrawal;
+          return { 
+            eligible: false, 
+            reason: `Следующий вывод доступен через ${hoursLeft} ${hoursLeft === 1 ? 'час' : 'часов'}` 
           };
         }
-      }catch(_){}
+      }
+      
+      return { eligible: true };
+      
+    } catch (error) {
+      console.error('Withdrawal eligibility check error:', error);
+      return { eligible: false, reason: 'Ошибка проверки возможности вывода' };
+    }
+  }
 
-      // Initial paint
-      await Promise.all([debouncedLoad(sb, uid), refreshBalance(sb, uid)]);
-
-      attachCancelHandler(sb, uid);
-    }catch(e){ console.error(e); }
-  });
-})();
-</script>
-
-<script defer src="assets/js/guard.js"></script>
-
-<script>
-// === Wire up Withdraw submit to LC.requestWithdrawal (CORE-aligned) ===
-(function(){
-  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
-  ready(function(){
-    try{
-      var btn = document.getElementById('withSubmit');
-      var amt = document.getElementById('withAmount');
-      var wal = document.getElementById('wallet');
-      var sb  = window.sb || window.supabaseClient || window._supabase || window.supabase;
-      if(!btn || !amt || !wal || !sb) return;
-
-      function toCents(x){ var n = parseFloat(String(x).replace(',', '.')); if(!isFinite(n) || n<=0) return 0; return Math.round(n*100); }
-
-      btn.addEventListener('click', async function(){
-        btn.disabled = true;
-        try{
-          var cents = toCents(amt.value);
-          var address = (wal.value||'').trim();
-          if(!cents){ alert('Введите сумму вывода'); return; }
-          if(!address){ alert('Укажите TRC20-кошелёк'); return; }
-          if (!window.LC || typeof window.LC.requestWithdrawal !== 'function'){
-            alert('Функция вывода не инициализирована'); return;
-          }
-          var res = await window.LC.requestWithdrawal(cents, 'TRC20', address);
-          if(res){ try{ alert('Заявка создана'); }catch(_){}
-            // refresh history + balance (helpers defined on this page)
-            try{ if (typeof refreshBalance==='function'){ const { data: ud } = await sb.auth.getUser(); await refreshBalance(sb, ud?.user?.id); } }catch(_){}
-            try{ if (typeof debouncedLoad==='function'){ const { data: ud } = await sb.auth.getUser(); await debouncedLoad(sb, ud?.user?.id); } }catch(_){}
-            // clear inputs
-            amt.value = ''; wal.value = '';
-          }
-        }catch(e){ alert(e.message||e); }
-        finally{ btn.disabled = false; }
+  // Основная функция вывода
+  async function requestWithdrawal(amountCents, method = 'TRC20', address = '') {
+    if (withdrawalInProgress) {
+      alert('Заявка уже обрабатывается...');
+      return null;
+    }
+    
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) {
+        alert('Ошибка подключения к базе данных');
+        return null;
+      }
+      
+      // Получаем текущего пользователя
+      const { data: { user }, error: userError } = await sb.auth.getUser();
+      if (userError || !user) {
+        alert('Войдите в аккаунт');
+        return null;
+      }
+      
+      // Проверяем возможность вывода
+      const eligibility = await checkWithdrawalEligibility(user.id);
+      if (!eligibility.eligible) {
+        alert(eligibility.reason);
+        return null;
+      }
+      
+      // Устанавливаем флаг выполнения
+      withdrawalInProgress = true;
+      lastWithdrawalTime = Date.now();
+      
+      console.log('Requesting withdrawal:', { amountCents, method, address, userId: user.id });
+      
+      // Используем существующую RPC функцию
+      const { data, error } = await sb.rpc('request_withdrawal', {
+        p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
+        p_network: String(method || 'TRC20'),
+        p_address: String(address || ''),
+        p_currency: 'USDT'
       });
-    }catch(e){ console.warn('[withdraw-submit-wireup]', e); }
+      
+      if (error) {
+        console.error('Withdrawal RPC error:', error);
+        throw new Error(error.message || 'Ошибка создания заявки');
+      }
+      
+      console.log('Withdrawal response:', data);
+      
+      // Обрабатываем ответ от RPC функции
+      const result = Array.isArray(data) ? data[0] : data;
+      
+      if (!result?.ok) {
+        throw new Error(result?.message || 'Заявка отклонена системой');
+      }
+      
+      // Успешное создание заявки
+      return result;
+      
+    } catch (error) {
+      console.error('Withdrawal request error:', error);
+      throw error;
+    } finally {
+      // Сбрасываем флаг выполнения с задержкой для предотвращения дублирования
+      setTimeout(() => {
+        withdrawalInProgress = false;
+      }, 3000);
+    }
+  }
+
+  // Функция загрузки списка выводов
+  async function loadWithdrawalsList() {
+    const tbody = document.getElementById('wd-table-body');
+    if (!tbody) return;
+    
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка подключения</td></tr>';
+        return;
+      }
+      
+      // Получаем текущего пользователя
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Войдите в аккаунт</td></tr>';
+        return;
+      }
+      
+      // Загружаем заявки пользователя
+      const { data, error } = await sb
+        .from('withdrawals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      
+      tbody.innerHTML = '';
+      
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Пока нет заявок</td></tr>';
+        return;
+      }
+      
+      // Рендерим таблицу
+      data.forEach(withdrawal => {
+        const tr = document.createElement('tr');
+        const amount = (withdrawal.amount_cents / 100).toFixed(2);
+        const date = new Date(withdrawal.created_at).toLocaleString();
+        const fee = withdrawal.fee_cents ? (withdrawal.fee_cents / 100).toFixed(2) : '0.00';
+        const total = ((withdrawal.amount_cents + (withdrawal.fee_cents || 0)) / 100).toFixed(2);
+        
+        // Статусы
+        let statusBadge = '';
+        switch (withdrawal.status) {
+          case 'paid':
+            statusBadge = '<span class="pill paid">Выплачено</span>';
+            break;
+          case 'rejected':
+            statusBadge = '<span class="pill rejected">Отклонено</span>';
+            break;
+          case 'cancelled':
+            statusBadge = '<span class="pill rejected">Отменено</span>';
+            break;
+          default:
+            statusBadge = '<span class="pill pending">Ожидание</span>';
+        }
+        
+        // Можно отменить только pending заявки в течение 5 часов
+        const canCancel = withdrawal.status === 'pending' && 
+          (Date.now() - new Date(withdrawal.created_at).getTime()) < 5 * 3600 * 1000;
+        
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td class="right">${total} $</td>
+          <td>${withdrawal.network || 'TRC20'}</td>
+          <td>${statusBadge}</td>
+          <td>${withdrawal.txid ? `<code title="${withdrawal.txid}">${withdrawal.txid.substring(0, 8)}...</code>` : '—'}</td>
+          <td>
+            ${canCancel ? 
+              `<button class="btn bad" data-cancel="${withdrawal.id}">Отменить</button>` : 
+              '<span class="small muted">—</span>'
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      // Добавляем обработчики для кнопок отмены
+      tbody.querySelectorAll('[data-cancel]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const withdrawalId = e.target.getAttribute('data-cancel');
+          await cancelWithdrawal(withdrawalId);
+        });
+      });
+      
+    } catch (error) {
+      console.error('Load withdrawals error:', error);
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка загрузки</td></tr>';
+    }
+  }
+  
+  // Функция отмены вывода
+  async function cancelWithdrawal(withdrawalId) {
+    if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
+      return;
+    }
+    
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) {
+        alert('Ошибка подключения к базе данных');
+        return;
+      }
+      
+      // Используем RPC функцию для отмены
+      const { data, error } = await sb.rpc('user_cancel_withdrawal', {
+        p_id: withdrawalId
+      });
+      
+      if (error) {
+        console.error('Cancel withdrawal error:', error);
+        alert('Ошибка отмены заявки: ' + error.message);
+        return;
+      }
+      
+      alert('✅ Заявка отменена');
+      
+      // Обновляем интерфейс
+      if (window.LC && typeof window.LC.refreshBalance === 'function') {
+        await window.LC.refreshBalance();
+      }
+      await loadWithdrawalsList();
+      
+    } catch (error) {
+      console.error('Cancel withdrawal error:', error);
+      alert('Ошибка отмены заявки: ' + error.message);
+    }
+  }
+  
+  // Real-time подписка на изменения выводов
+  async function subscribeToWithdrawals() {
+    const sb = window.sb || window.supabase;
+    if (!sb) return;
+    
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    
+    // Создаем подписку
+    const channel = sb.channel('withdrawals-' + user.id)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'withdrawals',
+          filter: `user_id=eq.${user.id}`
+        }, 
+        (payload) => {
+          console.log('Withdrawal update received:', payload);
+          // Обновляем список и баланс
+          loadWithdrawalsList();
+          if (window.LC && typeof window.LC.refreshBalance === 'function') {
+            window.LC.refreshBalance();
+          }
+        }
+      )
+      .subscribe();
+    
+    return channel;
+  }
+  
+  // Инициализация страницы вывода
+  async function initWithdrawPage() {
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) {
+        console.error('Supabase not available');
+        return;
+      }
+      
+      // Проверяем авторизацию
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        window.location.href = 'login_single.html';
+        return;
+      }
+      
+      // Обновляем баланс
+      if (window.LC && typeof window.LC.refreshBalance === 'function') {
+        await window.LC.refreshBalance();
+      }
+      
+      // Загружаем историю выводов
+      await loadWithdrawalsList();
+      
+      // Инициализируем real-time подписку
+      await subscribeToWithdrawals();
+      
+      // Настраиваем обработчик формы
+      const btn = document.getElementById('withSubmit');
+      const amountInput = document.getElementById('withAmount');
+      const walletInput = document.getElementById('wallet');
+      
+      if (btn && amountInput && walletInput) {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          
+          const amount = parseFloat(amountInput.value);
+          const address = walletInput.value.trim();
+          
+          // Валидация суммы
+          if (!amount || amount < 29) {
+            alert('Минимальная сумма вывода: $29');
+            return;
+          }
+          
+          if (amount > 10000) {
+            alert('Максимальная сумма вывода: $10,000');
+            return;
+          }
+          
+          // Валидация адреса TRC20
+          if (!address || !address.startsWith('T') || address.length < 20) {
+            alert('Введите корректный TRC20-адрес USDT\n(должен начинаться с T)');
+            return;
+          }
+          
+          // Блокируем кнопку
+          btn.disabled = true;
+          btn.textContent = 'Создание заявки...';
+          
+          try {
+            const result = await requestWithdrawal(
+              Math.round(amount * 100), 
+              'TRC20', 
+              address
+            );
+            
+            if (result) {
+              alert('✅ Заявка на вывод создана и ожидает подтверждения администратора');
+              // Очищаем форму
+              amountInput.value = '';
+              walletInput.value = '';
+              
+              // Обновляем интерфейс
+              if (window.LC && typeof window.LC.refreshBalance === 'function') {
+                await window.LC.refreshBalance();
+              }
+              await loadWithdrawalsList();
+            }
+            
+          } catch (error) {
+            alert(error.message || 'Ошибка при создании заявки');
+          } finally {
+            // Разблокируем кнопку
+            btn.disabled = false;
+            btn.textContent = 'Отправить заявку';
+          }
+        });
+      }
+      
+    } catch (error) {
+      console.error('Withdraw page init error:', error);
+    }
+  }
+  
+  // Запускаем инициализацию при загрузке страницы
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(initWithdrawPage, 1000);
   });
+  
+  // Экспортируем функции в глобальную область видимости
+  window.LC = window.LC || {};
+  window.LC.requestWithdrawal = requestWithdrawal;
+  window.LC.loadWithdrawalsList = loadWithdrawalsList;
+  window.LC.cancelWithdrawal = cancelWithdrawal;
+  window.LC.subscribeToWithdrawals = subscribeToWithdrawals;
+  window.LC.initWithdrawPage = initWithdrawPage;
+  
 })();
 </script>
 
