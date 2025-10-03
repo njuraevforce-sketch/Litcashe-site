@@ -623,6 +623,35 @@ LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '
 
         console.log('Requesting withdrawal:', { amountCents, method, address, userId: user.id });
 
+        // Проверяем минимальную сумму
+        if (amountCents < 2900) {
+            alert('Минимальная сумма вывода: $29');
+            return null;
+        }
+
+        // Проверяем баланс
+        const { data: wallet, error: walletError } = await sb.from('wallets')
+            .select('balance_cents')
+            .eq('user_id', user.id)
+            .single();
+
+        if (walletError || !wallet) {
+            alert('Ошибка проверки баланса');
+            return null;
+        }
+
+        if (wallet.balance_cents < amountCents) {
+            alert('Недостаточно средств на балансе');
+            return null;
+        }
+
+        // Проверяем возможность вывода по времени
+        const eligibility = await LC.checkWithdrawalEligibility(user.id);
+        if (!eligibility.eligible) {
+            alert(eligibility.reason);
+            return null;
+        }
+
         // Используем существующую RPC функцию из админ-панели
         const { data, error } = await sb.rpc('request_withdrawal', {
             p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
@@ -661,6 +690,86 @@ LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '
         alert('Ошибка при создании заявки: ' + error.message);
         return null;
     }
+};
+
+// Функция проверки возможности вывода
+LC.checkWithdrawalEligibility = async function(userId) {
+    try {
+        // Получаем профиль пользователя для проверки даты регистрации
+        const { data: profile, error: profileError } = await sb
+            .from('profiles')
+            .select('created_at')
+            .eq('user_id', userId)
+            .single();
+        
+        if (profileError) {
+            console.error('Profile error:', profileError);
+            return { eligible: false, reason: 'Ошибка получения данных профиля' };
+        }
+        
+        const registrationDate = new Date(profile.created_at);
+        const now = new Date();
+        const daysSinceRegistration = Math.floor((now - registrationDate) / (1000 * 60 * 60 * 24));
+        
+        // Проверяем историю выводов
+        const { data: withdrawals, error: withdrawalsError } = await sb
+            .from('withdrawals')
+            .select('id, created_at, status')
+            .eq('user_id', userId)
+            .in('status', ['paid', 'pending'])
+            .order('created_at', { ascending: false });
+        
+        if (withdrawalsError) {
+            console.error('Withdrawals error:', withdrawalsError);
+            return { eligible: false, reason: 'Ошибка проверки истории выводов' };
+        }
+        
+        const successfulWithdrawals = withdrawals.filter(w => w.status === 'paid');
+        const hasSuccessfulWithdrawals = successfulWithdrawals.length > 0;
+        
+        // Если НЕТ успешных выводов - проверяем 5 дней с регистрации
+        if (!hasSuccessfulWithdrawals) {
+            if (daysSinceRegistration < 5) {
+                const daysLeft = 5 - daysSinceRegistration;
+                return { 
+                    eligible: false, 
+                    reason: `Первый вывод доступен через ${daysLeft} ${this.getDaysText(daysLeft)} после регистрации` 
+                };
+            }
+        } else {
+            // Если ЕСТЬ успешные выводы - проверяем 24 часа с последнего
+            const lastWithdrawal = successfulWithdrawals[0];
+            const lastWithdrawalDate = new Date(lastWithdrawal.created_at);
+            const hoursSinceLastWithdrawal = Math.floor((now - lastWithdrawalDate) / (1000 * 60 * 60));
+            
+            if (hoursSinceLastWithdrawal < 24) {
+                const hoursLeft = 24 - hoursSinceLastWithdrawal;
+                return { 
+                    eligible: false, 
+                    reason: `Следующий вывод доступен через ${hoursLeft} ${this.getHoursText(hoursLeft)}` 
+                };
+            }
+        }
+        
+        return { eligible: true };
+        
+    } catch (error) {
+        console.error('Withdrawal eligibility check error:', error);
+        return { eligible: false, reason: 'Ошибка проверки возможности вывода' };
+    }
+};
+
+// Вспомогательные функции для текста
+LC.getDaysText = function(days) {
+    if (days === 1) return 'день';
+    if (days >= 2 && days <= 4) return 'дня';
+    return 'дней';
+};
+
+LC.getHoursText = function(hours) {
+    if (hours === 1) return 'час';
+    if (hours >= 2 && hours <= 4) return 'часа';
+    return 'часов';
 };
 
 LC.loadWithdrawalsList = async function() {
@@ -811,6 +920,82 @@ LC.subscribeToWithdrawals = async function() {
         });
 };
 
+// Инициализация страницы вывода с дополнительными проверками
+LC.initWithdrawPage = async function() {
+    try {
+        const user = await getUser(); 
+        if (!user) { 
+            location.href = '/login_single.html'; 
+            return; 
+        }
+        
+        await LC.refreshBalance();
+        await LC.loadWithdrawalsList();
+        
+        // Инициализируем real-time подписку
+        await LC.subscribeToWithdrawals();
+        
+        // Добавляем проверку перед отправкой формы
+        const withdrawBtn = document.getElementById('withSubmit');
+        if (withdrawBtn) {
+            withdrawBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                const amountInput = document.getElementById('withAmount');
+                const walletInput = document.getElementById('wallet');
+                
+                if (!amountInput || !walletInput) return;
+                
+                const amount = parseFloat(amountInput.value);
+                const address = walletInput.value.trim();
+                
+                // Проверка минимальной суммы
+                if (!amount || amount < 29) {
+                    alert('Минимальная сумма вывода: $29');
+                    return;
+                }
+                
+                // Проверка TRC20 адреса
+                if (!address || !address.startsWith('T') || address.length < 20) {
+                    alert('Введите корректный TRC20-адрес USDT (должен начинаться с T)');
+                    return;
+                }
+                
+                // Проверяем возможность вывода
+                const eligibility = await LC.checkWithdrawalEligibility(user.id);
+                if (!eligibility.eligible) {
+                    alert(eligibility.reason);
+                    return;
+                }
+                
+                // Если все проверки пройдены, создаем заявку
+                withdrawBtn.disabled = true;
+                withdrawBtn.textContent = 'Создание заявки...';
+                
+                try {
+                    await LC.requestWithdrawal(
+                        Math.round(amount * 100), 
+                        'TRC20', 
+                        address
+                    );
+                    
+                    // Очищаем форму после успеха
+                    amountInput.value = '';
+                    walletInput.value = '';
+                    
+                } catch (error) {
+                    console.error('Withdrawal error:', error);
+                } finally {
+                    withdrawBtn.disabled = false;
+                    withdrawBtn.textContent = 'Отправить заявку';
+                }
+            });
+        }
+        
+    } catch(e) { 
+        console.error('[LC] initWithdrawPage', e); 
+    }
+};
   // ===== VIP TRADING PORTAL =================================================
   LC.getUserVipData = async function() {
     try {
