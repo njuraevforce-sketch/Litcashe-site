@@ -143,18 +143,18 @@
     }
   };
 
-  // ===== СИСТЕМА УРОВНЕЙ ===================================================
-  LC.getLevelInfo = async function() {
-    try {
-      const { data, error } = await sb.rpc('get_level_info_v2');
-      if (error) throw error;
-      return Array.isArray(data) ? data[0] : data;
-    } catch(e) {
-      console.warn('[LC] getLevelInfo', e);
-      return null;
-    }
-  };
-
+// ===== СИСТЕМА УРОВНЕЙ ===================================================
+LC.getLevelInfo = async function() {
+  try {
+    const { data, error } = await sb.rpc('get_level_info'); // ВОЗВРАЩАЕМ СТАРОЕ ИМЯ
+    if (error) throw error;
+    return Array.isArray(data) ? data[0] : data;
+  } catch(e) {
+    console.warn('[LC] getLevelInfo', e);
+    return null;
+  }
+};
+  
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
