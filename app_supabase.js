@@ -770,26 +770,37 @@
       const user = await getUser(); 
       if (!user) return;
 
-      const [counts, refs] = await Promise.all([
-        LC.getActiveReferralCounts(),
-        LC.getActiveReferrals(1)
+      // Загружаем все 3 поколения рефералов
+      const [refs1, refs2, refs3] = await Promise.all([
+        LC.getActiveReferrals(1),
+        LC.getActiveReferrals(2), 
+        LC.getActiveReferrals(3)
       ]);
+
+      const counts = {
+        gen1: refs1.length,
+        gen2: refs2.length,
+        gen3: refs3.length
+      };
 
       const set = (sel, val) => { const el = $(sel); if (el) el.textContent = String(val); };
       set('#gen1Count', counts.gen1);
       set('#gen2Count', counts.gen2);
       set('#gen3Count', counts.gen3);
 
+      // Объединяем все рефералы для таблицы
+      const allRefs = [...refs1, ...refs2, ...refs3];
+      
       const tbody = $('#refTree');
       if (tbody) {
         tbody.innerHTML = '';
-        if (!refs.length) {
+        if (!allRefs.length) {
           tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Нет активных рефералов</td></tr>`;
         } else {
-          refs.slice(0, 20).forEach(r => {
+          allRefs.slice(0, 20).forEach(r => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${r.generation || 1}</td>
-                            <td>${r.email || r.user_email || '—'}</td>
+                            <td>${r.user_email || '—'}</td>
                             <td>${fmtMoney(pickNum(r.capital_cents)/100)}</td>
                             <td>${r.level_name || '—'}</td>
                             <td>${fmtDate(r.created_at)}</td>`;
