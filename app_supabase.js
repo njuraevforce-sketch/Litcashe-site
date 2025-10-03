@@ -612,138 +612,204 @@
     reset();
   };
 
-  // ===== ВЫВОД СРЕДСТВ =====================================================
-  LC.bindWithdrawControls = function () {
-    const form = document.getElementById('withdrawForm');
-    if (form && !form.dataset.lcInit) {
-      form.dataset.lcInit = '1';
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const amount  = parseFloat(document.getElementById('amount')?.value || '0');
-        const method  = document.getElementById('method')?.value || 'TRC20';
-        const address = document.getElementById('address')?.value || '';
-        await LC.requestWithdrawal(Math.round(amount * 100), method, address);
-      });
-    }
-
-    const btn = document.getElementById('withSubmit');
-    if (btn && !btn.dataset.lcInit) {
-      btn.dataset.lcInit = '1';
-      btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        btn.disabled = true;
-        const amount  = parseFloat(document.getElementById('withAmount')?.value || '0');
-        const address = document.getElementById('wallet')?.value || '';
-        try {
-          await LC.requestWithdrawal(Math.round(amount * 100), 'TRC20', address);
-        } finally {
-          setTimeout(()=>{ 
-            btn.disabled = false; 
-            btn.textContent = 'Отправить заявку'; 
-          }, 1200);
+// ===== ВЫВОД СРЕДСТВ =====================================================
+LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '') {
+    try {
+        const user = await getUser();
+        if (!user) {
+            alert('Войдите в аккаунт');
+            return null;
         }
-      });
-    }
-  };
 
-  LC.requestWithdrawal = async function(amountCents, method='TRC20', address='') {
-    const user = await getUser(); 
-    if (!user) { 
-      alert('Войдите в аккаунт'); 
-      return; 
-    }
-    
-    const { data, error } = await sb.rpc('request_withdrawal', {
-      p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
-      p_network: String(method || 'TRC20'),
-      p_address: String(address || ''),
-      p_currency: 'USDT'
-    });
-    
-    if (error) { 
-      console.error(error); 
-      alert('Ошибка запроса вывода'); 
-      return; 
-    }
-    
-    const row = Array.isArray(data) ? data[0] : data;
-    if (!row?.ok) { 
-      alert(row?.message || 'Заявка отклонена'); 
-      return; 
-    }
-    
-    await LC.refreshBalance();
-    alert('Заявка на вывод создана');
-    return row;
-  };
+        console.log('Requesting withdrawal:', { amountCents, method, address, userId: user.id });
 
-  LC.loadWithdrawalsList = async function () {
+        // Используем существующую RPC функцию из админ-панели
+        const { data, error } = await sb.rpc('request_withdrawal', {
+            p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
+            p_network: String(method || 'TRC20'),
+            p_address: String(address || ''),
+            p_currency: 'USDT'
+        });
+
+        if (error) {
+            console.error('Withdrawal RPC error:', error);
+            alert('Ошибка создания заявки: ' + error.message);
+            return null;
+        }
+
+        console.log('Withdrawal response:', data);
+
+        // Обрабатываем ответ от RPC функции
+        const result = Array.isArray(data) ? data[0] : data;
+        
+        if (!result?.ok) {
+            alert(result?.message || 'Заявка отклонена системой');
+            return null;
+        }
+
+        // Успешное создание заявки
+        alert('✅ Заявка на вывод создана и ожидает подтверждения администратора');
+        
+        // Обновляем интерфейс
+        await LC.refreshBalance();
+        await LC.loadWithdrawalsList();
+        
+        return result;
+
+    } catch (error) {
+        console.error('Withdrawal request error:', error);
+        alert('Ошибка при создании заявки: ' + error.message);
+        return null;
+    }
+};
+
+LC.loadWithdrawalsList = async function() {
     const tbody = document.getElementById('wd-table-body');
-    const list  = document.getElementById('wdList');
-    if (!tbody && !list) return;
+    if (!tbody) return;
 
     try {
-      const user = await getUser();
-      if (!user) return;
+        const user = await getUser();
+        if (!user) return;
 
-      const { data, error } = await sb
-        .from('withdrawals')
-        .select('id, created_at, amount_cents, status, txid, network, address')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+        // Загружаем заявки пользователя
+        const { data, error } = await sb
+            .from('withdrawals')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(50);
 
-      if (error) throw error;
-      const rows = Array.isArray(data) ? data : [];
+        if (error) throw error;
 
-      const renderStatus = (s) => {
-        s = String(s||'').toLowerCase();
-        if (s === 'paid') return 'подтверждено';
-        if (s === 'rejected') return 'отменено';
-        return 'ожидание';
-      };
-      
-      const fmtAmt = (c) => (Number(c||0)/100).toLocaleString('ru-RU', {minimumFractionDigits: 0, maximumFractionDigits: 2});
-
-      if (tbody) {
         tbody.innerHTML = '';
-        if (!rows.length) {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Пока нет заявок</td></tr>`;
-        } else {
-          rows.forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${new Date(r.created_at).toLocaleString()}</td>
-                            <td>${fmtAmt(r.amount_cents)} USDT</td>
-                            <td>${(r.network||'TRC20')}</td>
-                            <td>${renderStatus(r.status)}</td>
-                            <td>${r.txid? `<code>${r.txid}</code>` : '—'}</td>`;
-            tbody.appendChild(tr);
-          });
-        }
-      }
 
-      if (list) {
-        list.innerHTML = '';
-        if (!rows.length) {
-          list.innerHTML = `<div class="empty">Пока нет заявок</div>`;
-        } else {
-          rows.forEach(r => {
-            const item = document.createElement('div');
-            item.className = 'wd-item';
-            item.innerHTML = `<div class="wd-row">
-                                <div class="wd-date">${new Date(r.created_at).toLocaleString()}</div>
-                                <div class="wd-amount">${fmtAmt(r.amount_cents)} USDT</div>
-                                <div class="wd-status">${renderStatus(r.status)}</div>
-                                <div class="wd-tx">${r.txid? `<code>${r.txid}</code>` : ''}</div>
-                              </div>`;
-            list.appendChild(item);
-          });
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Пока нет заявок</td></tr>';
+            return;
         }
-      }
-    } catch (e) {
-      console.warn('[LC] loadWithdrawalsList', e?.message || e);
+
+        // Рендерим таблицу
+        data.forEach(withdrawal => {
+            const tr = document.createElement('tr');
+            const amount = (withdrawal.amount_cents / 100).toFixed(2);
+            const date = new Date(withdrawal.created_at).toLocaleString();
+            const fee = withdrawal.fee_cents ? (withdrawal.fee_cents / 100).toFixed(2) : '0.00';
+            const total = ((withdrawal.amount_cents + (withdrawal.fee_cents || 0)) / 100).toFixed(2);
+            
+            // Статусы согласно админ-панели
+            let statusBadge = '';
+            switch (withdrawal.status) {
+                case 'paid':
+                    statusBadge = '<span class="pill paid">Выплачено</span>';
+                    break;
+                case 'rejected':
+                    statusBadge = '<span class="pill rejected">Отклонено</span>';
+                    break;
+                case 'cancelled':
+                    statusBadge = '<span class="pill rejected">Отменено</span>';
+                    break;
+                default:
+                    statusBadge = '<span class="pill pending">Ожидание</span>';
+            }
+
+            // Можно отменить только pending заявки в течение 5 часов
+            const canCancel = withdrawal.status === 'pending' && 
+                (Date.now() - new Date(withdrawal.created_at).getTime()) < 5 * 3600 * 1000;
+
+            tr.innerHTML = `
+                <td>${date}</td>
+                <td class="right">${total} $</td>
+                <td>${withdrawal.network || 'TRC20'}</td>
+                <td>${statusBadge}</td>
+                <td>${withdrawal.txid ? `<code title="${withdrawal.txid}">${withdrawal.txid.substring(0, 8)}...</code>` : '—'}</td>
+                <td>
+                    ${canCancel ? 
+                        `<button class="btn bad" onclick="LC.cancelWithdrawal(${withdrawal.id})">Отменить</button>` : 
+                        '<span class="small muted">—</span>'
+                    }
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+    } catch (error) {
+        console.error('Load withdrawals error:', error);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка загрузки</td></tr>';
     }
-  };
+};
+
+LC.cancelWithdrawal = async function(withdrawalId) {
+    if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
+        return;
+    }
+
+    try {
+        const user = await getUser();
+        if (!user) return;
+
+        // Используем RPC функцию для отмены (если есть) или прямую отмену
+        const { data, error } = await sb.rpc('user_cancel_withdrawal', {
+            p_id: withdrawalId
+        });
+
+        if (error) {
+            // Если RPC функции нет, делаем прямую отмену
+            console.warn('RPC cancel not available, using direct update:', error);
+            
+            const { error: updateError } = await sb.from('withdrawals')
+                .update({
+                    status: 'cancelled',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', withdrawalId)
+                .eq('user_id', user.id)
+                .eq('status', 'pending');
+
+            if (updateError) throw updateError;
+        }
+
+        alert('✅ Заявка отменена');
+        
+        // Обновляем интерфейс
+        await LC.refreshBalance();
+        await LC.loadWithdrawalsList();
+
+    } catch (error) {
+        console.error('Cancel withdrawal error:', error);
+        alert('Ошибка отмены заявки: ' + error.message);
+    }
+};
+
+// Real-time подписка на изменения статусов выводов
+LC.subscribeToWithdrawals = async function() {
+    const user = await getUser();
+    if (!user) return;
+
+    // Отписываемся от предыдущей подписки если есть
+    if (this.withdrawalChannel) {
+        await sb.removeChannel(this.withdrawalChannel);
+    }
+
+    // Создаем новую подписку
+    this.withdrawalChannel = sb.channel('withdrawals-' + user.id)
+        .on('postgres_changes', 
+            { 
+                event: '*', 
+                schema: 'public', 
+                table: 'withdrawals',
+                filter: `user_id=eq.${user.id}`
+            }, 
+            (payload) => {
+                console.log('Withdrawal update received:', payload);
+                // Обновляем список и баланс при любых изменениях
+                LC.loadWithdrawalsList();
+                LC.refreshBalance();
+            }
+        )
+        .subscribe((status) => {
+            console.log('Withdrawal subscription status:', status);
+        });
+};
 
   // ===== VIP TRADING PORTAL =================================================
   LC.getUserVipData = async function() {
