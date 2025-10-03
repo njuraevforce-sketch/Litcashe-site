@@ -612,6 +612,8 @@ setTimeout(checkVideoAvailability, 500);
 reset();
 };
 
+// ===== СИСТЕМА ВЫВОДА СРЕДСТВ =====
+
 // Полная рабочая функция запроса вывода
 LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '') {
     try {
@@ -635,36 +637,30 @@ LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '
             address
         });
 
-        // Проверяем баланс
-        const { data: wallet, error: walletError } = await sb
-            .from('wallets')
-            .select('balance_cents')
-            .eq('user_id', user.id)
-            .single();
-            
-        if (walletError || !wallet) {
-            alert('❌ Ошибка проверки баланса');
-            return null;
-        }
-        
-        if (wallet.balance_cents < amountCents) {
-            alert('❌ Недостаточно средств на балансе');
-            return null;
-        }
-
-        // Используем конкретную сигнатуру - integer, text, text, text
+        // Используем RPC функцию
         const { data, error } = await sb.rpc('request_withdrawal', {
-            p_amount_cents: parseInt(amountCents), // integer
-            p_network: String(method), // text  
-            p_address: String(address), // text
-            p_currency: 'USDT' // text
+            p_amount_cents: parseInt(amountCents),
+            p_network: String(method),
+            p_address: String(address),
+            p_currency: 'USDT'
         });
 
         if (error) {
             console.error('❌ Withdrawal RPC error:', error);
             
-            // Если RPC функция не работает, создаем заявку напрямую
+            // Fallback: создаем заявку напрямую
             console.log('🔄 Пробуем создать заявку напрямую...');
+            
+            const { data: wallet } = await sb
+                .from('wallets')
+                .select('balance_cents')
+                .eq('user_id', user.id)
+                .single();
+                
+            if (!wallet || wallet.balance_cents < amountCents) {
+                alert('❌ Недостаточно средств на балансе');
+                return null;
+            }
             
             const { data: directData, error: directError } = await sb
                 .from('withdrawals')
@@ -687,12 +683,16 @@ LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '
                 return null;
             }
             
-            console.log('✅ Заявка создана напрямую:', directData);
+            // Списываем средства
+            await sb
+                .from('wallets')
+                .update({ 
+                    balance_cents: wallet.balance_cents - amountCents,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', user.id);
             
-            // Обновляем баланс
-            if (typeof LC.refreshBalance === 'function') {
-                await LC.refreshBalance();
-            }
+            console.log('✅ Заявка создана напрямую:', directData);
             
             return { 
                 ok: true, 
@@ -704,16 +704,11 @@ LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '
         console.log('✅ Ответ от RPC функции:', data);
         
         // Обрабатываем ответ от RPC функции
-        const result = Array.isArray(data) ? data[0] : data;
+        const result = typeof data === 'object' ? data : JSON.parse(data);
         
         if (!result?.ok) {
             alert('❌ ' + (result?.message || 'Заявка отклонена системой'));
             return null;
-        }
-        
-        // Обновляем баланс
-        if (typeof LC.refreshBalance === 'function') {
-            await LC.refreshBalance();
         }
         
         return result;
@@ -816,22 +811,19 @@ LC.checkWithdrawalEligibility = async function(userId) {
 
 // Функция загрузки истории выводов
 LC.loadWithdrawalsList = async function() {
-    const tbody = document.getElementById('wd-table-body');
-    if (!tbody) return;
-    
     try {
         const sb = window.sb || window.supabase;
         if (!sb) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка подключения</td></tr>';
+            console.error('❌ Supabase not available');
             return;
         }
         
         // Получаем текущего пользователя
         const { data: { user } } = await sb.auth.getUser();
-        if (!user) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Войдите в аккаунт</td></tr>';
-            return;
-        }
+        if (!user) return;
+        
+        const tbody = document.getElementById('wd-table-body');
+        if (!tbody) return;
         
         // Загружаем заявки пользователя
         const { data, error } = await sb
@@ -904,7 +896,10 @@ LC.loadWithdrawalsList = async function() {
         
     } catch (error) {
         console.error('❌ Load withdrawals error:', error);
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка загрузки</td></tr>';
+        const tbody = document.getElementById('wd-table-body');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка загрузки</td></tr>';
+        }
     }
 };
 
@@ -921,29 +916,20 @@ LC.cancelWithdrawal = async function(withdrawalId) {
             return;
         }
         
-        // Используем RPC функцию для отмены или обновляем напрямую
+        // Используем RPC функцию для отмены
         const { data, error } = await sb.rpc('user_cancel_withdrawal', {
             p_id: withdrawalId
         });
         
         if (error) {
             console.error('❌ Cancel withdrawal RPC error:', error);
-            
-            // Если RPC не работает, отменяем напрямую
-            const { data: updateData, error: updateError } = await sb
-                .from('withdrawals')
-                .update({ status: 'cancelled' })
-                .eq('id', withdrawalId)
-                .eq('status', 'pending')
-                .select();
-                
-            if (updateError) {
-                throw new Error('Не удалось отменить заявку: ' + updateError.message);
-            }
-            
-            if (!updateData || updateData.length === 0) {
-                throw new Error('Заявка не найдена или уже обработана');
-            }
+            throw new Error('Не удалось отменить заявку: ' + error.message);
+        }
+        
+        const result = typeof data === 'object' ? data : JSON.parse(data);
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Ошибка отмены заявки');
         }
         
         alert('✅ Заявка отменена');
@@ -960,33 +946,37 @@ LC.cancelWithdrawal = async function(withdrawalId) {
 
 // Real-time подписка на выводы
 LC.subscribeToWithdrawals = async function() {
-    const sb = window.sb || window.supabase;
-    if (!sb) return;
-    
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return;
-    
-    console.log('🔔 Подписываемся на обновления выводов для пользователя:', user.id);
-    
-    const channel = sb.channel('withdrawals-' + user.id)
-        .on('postgres_changes', 
-            { 
-                event: '*', 
-                schema: 'public', 
-                table: 'withdrawals',
-                filter: `user_id=eq.${user.id}`
-            }, 
-            (payload) => {
-                console.log('🔄 Получено обновление вывода:', payload);
-                LC.loadWithdrawalsList();
-                LC.refreshBalance();
-            }
-        )
-        .subscribe((status) => {
-            console.log('📡 Статус подписки на выводы:', status);
-        });
-    
-    return channel;
+    try {
+        const sb = window.sb || window.supabase;
+        if (!sb) return;
+        
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) return;
+        
+        console.log('🔔 Подписываемся на обновления выводов для пользователя:', user.id);
+        
+        const channel = sb.channel('withdrawals-' + user.id)
+            .on('postgres_changes', 
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'withdrawals',
+                    filter: `user_id=eq.${user.id}`
+                }, 
+                (payload) => {
+                    console.log('🔄 Получено обновление вывода:', payload);
+                    LC.loadWithdrawalsList();
+                    LC.refreshBalance();
+                }
+            )
+            .subscribe((status) => {
+                console.log('📡 Статус подписки на выводы:', status);
+            });
+        
+        return channel;
+    } catch (error) {
+        console.error('❌ Subscribe to withdrawals error:', error);
+    }
 };
 
 // Инициализация страницы вывода
@@ -1016,83 +1006,7 @@ LC.initWithdrawPage = async function() {
         // Инициализируем real-time подписку
         await LC.subscribeToWithdrawals();
         
-        // Настраиваем обработчик формы
-        const btn = document.getElementById('withSubmit');
-        const amountInput = document.getElementById('withAmount');
-        const walletInput = document.getElementById('wallet');
-        
-        if (btn && amountInput && walletInput) {
-            btn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                
-                const amount = parseFloat(amountInput.value);
-                const address = walletInput.value.trim();
-                
-                // Валидация суммы
-                if (!amount || amount < 29) {
-                    alert('❌ Минимальная сумма вывода: $29');
-                    amountInput.focus();
-                    return;
-                }
-                
-                if (amount > 10000) {
-                    alert('❌ Максимальная сумма вывода: $10,000');
-                    amountInput.focus();
-                    return;
-                }
-                
-                // Валидация адреса TRC20
-                if (!address) {
-                    alert('❌ Введите адрес кошелька TRC20');
-                    walletInput.focus();
-                    return;
-                }
-                
-                if (!address.startsWith('T') || address.length < 20) {
-                    alert('❌ Введите корректный TRC20-адрес USDT\n(должен начинаться с T и содержать не менее 20 символов)');
-                    walletInput.focus();
-                    return;
-                }
-                
-                // Проверяем возможность вывода
-                const eligibility = await LC.checkWithdrawalEligibility(user.id);
-                if (!eligibility.eligible) {
-                    alert('❌ ' + eligibility.reason);
-                    return;
-                }
-                
-                // Блокируем кнопку
-                btn.disabled = true;
-                btn.textContent = 'Создание заявки...';
-                
-                try {
-                    const result = await LC.requestWithdrawal(
-                        Math.round(amount * 100), 
-                        'TRC20', 
-                        address
-                    );
-                    
-                    if (result) {
-                        alert('✅ Заявка на вывод создана и отправлена на обработку администратору');
-                        
-                        // Очищаем форму
-                        amountInput.value = '';
-                        walletInput.value = '';
-                        
-                        // Обновляем интерфейс
-                        await LC.loadWithdrawalsList();
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Ошибка при создании заявки:', error);
-                    alert('❌ ' + (error.message || 'Ошибка при создании заявки'));
-                } finally {
-                    // Разблокируем кнопку
-                    btn.disabled = false;
-                    btn.textContent = 'Отправить заявку';
-                }
-            });
-        }
+        console.log('✅ Страница вывода успешно инициализирована');
         
     } catch (error) {
         console.error('❌ Withdraw page init error:', error);
