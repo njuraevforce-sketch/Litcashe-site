@@ -612,52 +612,17 @@
     reset();
   };
 
-// ===== ВЫВОД СРЕДСТВ =====================================================
+// Простой вариант - используем точные типы
 LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '') {
     try {
-        const user = await getUser();
-        if (!user) {
-            alert('Войдите в аккаунт');
-            return null;
-        }
+        // ... предыдущие проверки ...
 
-        console.log('Requesting withdrawal:', { amountCents, method, address, userId: user.id });
-
-        // Проверяем минимальную сумму
-        if (amountCents < 2900) {
-            alert('Минимальная сумма вывода: $29');
-            return null;
-        }
-
-        // Проверяем баланс
-        const { data: wallet, error: walletError } = await sb.from('wallets')
-            .select('balance_cents')
-            .eq('user_id', user.id)
-            .single();
-
-        if (walletError || !wallet) {
-            alert('Ошибка проверки баланса');
-            return null;
-        }
-
-        if (wallet.balance_cents < amountCents) {
-            alert('Недостаточно средств на балансе');
-            return null;
-        }
-
-        // Проверяем возможность вывода по времени
-        const eligibility = await LC.checkWithdrawalEligibility(user.id);
-        if (!eligibility.eligible) {
-            alert(eligibility.reason);
-            return null;
-        }
-
-        // Используем новую простую функцию без конфликта типов
-        const { data, error } = await sb.rpc('create_withdrawal_simple', {
-            p_user_id: user.id,
-            p_amount_cents: Number(amountCents),
-            p_network: String(method || 'TRC20'),
-            p_address: String(address || '')
+        // Используем конкретную сигнатуру - integer, text, text, text
+        const { data, error } = await sb.rpc('request_withdrawal', {
+            p_amount_cents: parseInt(amountCents), // integer
+            p_network: String(method), // text  
+            p_address: String(address), // text
+            p_currency: 'USDT' // text
         });
 
         if (error) {
@@ -666,198 +631,12 @@ LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '
             return null;
         }
 
-        console.log('Withdrawal response:', data);
-
-        // Обрабатываем ответ от RPC функции
-        const result = Array.isArray(data) ? data[0] : data;
+        // ... обработка результата ...
         
-        if (!result?.ok) {
-            alert(result?.message || 'Заявка отклонена системой');
-            return null;
-        }
-
-        // Успешное создание заявки
-        alert('✅ Заявка на вывод создана и ожидает подтверждения администратора');
-        
-        // Обновляем интерфейс
-        await LC.refreshBalance();
-        await LC.loadWithdrawalsList();
-        
-        return result;
-
     } catch (error) {
         console.error('Withdrawal request error:', error);
         alert('Ошибка при создании заявки: ' + error.message);
         return null;
-    }
-};
-
-// Остальные функции остаются без изменений
-LC.checkWithdrawalEligibility = async function(userId) {
-    try {
-        // Получаем профиль пользователя для проверки даты регистрации
-        const { data: profile, error: profileError } = await sb
-            .from('profiles')
-            .select('created_at')
-            .eq('user_id', userId)
-            .single();
-        
-        if (profileError) {
-            console.error('Profile error:', profileError);
-            return { eligible: false, reason: 'Ошибка получения данных профиля' };
-        }
-        
-        const registrationDate = new Date(profile.created_at);
-        const now = new Date();
-        const daysSinceRegistration = Math.floor((now - registrationDate) / (1000 * 60 * 60 * 24));
-        
-        // Проверяем историю выводов
-        const { data: withdrawals, error: withdrawalsError } = await sb
-            .from('withdrawals')
-            .select('id, created_at, status')
-            .eq('user_id', userId)
-            .in('status', ['paid', 'pending'])
-            .order('created_at', { ascending: false });
-        
-        if (withdrawalsError) {
-            console.error('Withdrawals error:', withdrawalsError);
-            return { eligible: false, reason: 'Ошибка проверки истории выводов' };
-        }
-        
-        const successfulWithdrawals = withdrawals ? withdrawals.filter(w => w.status === 'paid') : [];
-        const hasSuccessfulWithdrawals = successfulWithdrawals.length > 0;
-        
-        // Если НЕТ успешных выводов - проверяем 5 дней с регистрации
-        if (!hasSuccessfulWithdrawals) {
-            if (daysSinceRegistration < 5) {
-                const daysLeft = 5 - daysSinceRegistration;
-                return { 
-                    eligible: false, 
-                    reason: `Первый вывод доступен через ${daysLeft} ${LC.getDaysText(daysLeft)} после регистрации` 
-                };
-            }
-        } else {
-            // Если ЕСТЬ успешные выводы - проверяем 24 часа с последнего
-            const lastWithdrawal = successfulWithdrawals[0];
-            const lastWithdrawalDate = new Date(lastWithdrawal.created_at);
-            const hoursSinceLastWithdrawal = Math.floor((now - lastWithdrawalDate) / (1000 * 60 * 60));
-            
-            if (hoursSinceLastWithdrawal < 24) {
-                const hoursLeft = 24 - hoursSinceLastWithdrawal;
-                return { 
-                    eligible: false, 
-                    reason: `Следующий вывод доступен через ${hoursLeft} ${LC.getHoursText(hoursLeft)}` 
-                };
-            }
-        }
-        
-        return { eligible: true };
-        
-    } catch (error) {
-        console.error('Withdrawal eligibility check error:', error);
-        return { eligible: false, reason: 'Ошибка проверки возможности вывода' };
-    }
-};
-
-LC.getDaysText = function(days) {
-    if (days === 1) return 'день';
-    if (days >= 2 && days <= 4) return 'дня';
-    return 'дней';
-};
-
-LC.getHoursText = function(hours) {
-    if (hours === 1) return 'час';
-    if (hours >= 2 && hours <= 4) return 'часа';
-    return 'часов';
-};
-
-// Остальные функции (loadWithdrawalsList, cancelWithdrawal, subscribeToWithdrawals, initWithdrawPage) 
-// остаются БЕЗ ИЗМЕНЕНИЙ из предыдущего кода
-// Удаляем несуществующую функцию и исправляем инициализацию
-LC.bindWithdrawControls = function() {
-    // Эта функция больше не нужна, логика перенесена в initWithdrawPage
-    console.log('bindWithdrawControls is deprecated');
-};
-
-// Исправленная инициализация страницы вывода
-LC.initWithdrawPage = async function() {
-    try {
-        const user = await getUser(); 
-        if (!user) { 
-            location.href = '/login_single.html'; 
-            return; 
-        }
-        
-        await LC.refreshBalance();
-        await LC.loadWithdrawalsList();
-        
-        // Инициализируем real-time подписку
-        await LC.subscribeToWithdrawals();
-        
-        // Добавляем обработчик для кнопки вывода
-        const withdrawBtn = document.getElementById('withSubmit');
-        if (withdrawBtn && !withdrawBtn.dataset.lcBound) {
-            withdrawBtn.dataset.lcBound = 'true';
-            
-            withdrawBtn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                
-                const amountInput = document.getElementById('withAmount');
-                const walletInput = document.getElementById('wallet');
-                
-                if (!amountInput || !walletInput) return;
-                
-                const amount = parseFloat(amountInput.value);
-                const address = walletInput.value.trim();
-                
-                // Проверка минимальной суммы
-                if (!amount || amount < 29) {
-                    alert('Минимальная сумма вывода: $29');
-                    return;
-                }
-                
-                // Проверка TRC20 адреса
-                if (!address || !address.startsWith('T') || address.length < 20) {
-                    alert('Введите корректный TRC20-адрес USDT (должен начинаться с T)');
-                    return;
-                }
-                
-                // Блокируем кнопку
-                withdrawBtn.disabled = true;
-                withdrawBtn.textContent = 'Проверка...';
-                
-                try {
-                    // Проверяем возможность вывода
-                    const eligibility = await LC.checkWithdrawalEligibility(user.id);
-                    if (!eligibility.eligible) {
-                        alert(eligibility.reason);
-                        return;
-                    }
-                    
-                    withdrawBtn.textContent = 'Создание заявки...';
-                    
-                    // Создаем заявку
-                    await LC.requestWithdrawal(
-                        Math.round(amount * 100), 
-                        'TRC20', 
-                        address
-                    );
-                    
-                    // Очищаем форму после успеха
-                    amountInput.value = '';
-                    walletInput.value = '';
-                    
-                } catch (error) {
-                    console.error('Withdrawal error:', error);
-                } finally {
-                    withdrawBtn.disabled = false;
-                    withdrawBtn.textContent = 'Отправить заявку';
-                }
-            });
-        }
-        
-    } catch(e) { 
-        console.error('[LC] initWithdrawPage', e); 
     }
 };
   // ===== VIP TRADING PORTAL =================================================
