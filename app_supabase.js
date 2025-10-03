@@ -652,18 +652,44 @@ LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '
             return null;
         }
 
+        // Преобразуем типы для совместимости с RPC функцией
+        const p_amount_cents = Number(amountCents); // integer
+        const p_network = String(method || 'TRC20'); // text
+        const p_address = String(address || ''); // text  
+        const p_currency = 'USDT'; // text
+
+        console.log('Calling RPC with:', { p_amount_cents, p_network, p_address, p_currency });
+
         // Используем существующую RPC функцию из админ-панели
         const { data, error } = await sb.rpc('request_withdrawal', {
-            p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
-            p_network: String(method || 'TRC20'),
-            p_address: String(address || ''),
-            p_currency: 'USDT'
+            p_amount_cents: p_amount_cents,
+            p_network: p_network,
+            p_address: p_address,
+            p_currency: p_currency
         });
 
         if (error) {
             console.error('Withdrawal RPC error:', error);
-            alert('Ошибка создания заявки: ' + error.message);
-            return null;
+            
+            // Пробуем альтернативный вызов с другими типами
+            try {
+                console.log('Trying alternative call...');
+                const { data: altData, error: altError } = await sb.rpc('request_withdrawal', {
+                    p_amount_cents: BigInt(amountCents), // bigint
+                    p_network: p_network,
+                    p_address: p_address, 
+                    p_currency: p_currency
+                });
+                
+                if (altError) throw altError;
+                
+                console.log('Alternative call success:', altData);
+                data = altData;
+            } catch (altError) {
+                console.error('Alternative call failed:', altError);
+                alert('Ошибка создания заявки: ' + (error.message || error));
+                return null;
+            }
         }
 
         console.log('Withdrawal response:', data);
@@ -724,7 +750,7 @@ LC.checkWithdrawalEligibility = async function(userId) {
             return { eligible: false, reason: 'Ошибка проверки истории выводов' };
         }
         
-        const successfulWithdrawals = withdrawals.filter(w => w.status === 'paid');
+        const successfulWithdrawals = withdrawals ? withdrawals.filter(w => w.status === 'paid') : [];
         const hasSuccessfulWithdrawals = successfulWithdrawals.length > 0;
         
         // Если НЕТ успешных выводов - проверяем 5 дней с регистрации
@@ -733,7 +759,7 @@ LC.checkWithdrawalEligibility = async function(userId) {
                 const daysLeft = 5 - daysSinceRegistration;
                 return { 
                     eligible: false, 
-                    reason: `Первый вывод доступен через ${daysLeft} ${this.getDaysText(daysLeft)} после регистрации` 
+                    reason: `Первый вывод доступен через ${daysLeft} ${LC.getDaysText(daysLeft)} после регистрации` 
                 };
             }
         } else {
@@ -746,7 +772,7 @@ LC.checkWithdrawalEligibility = async function(userId) {
                 const hoursLeft = 24 - hoursSinceLastWithdrawal;
                 return { 
                     eligible: false, 
-                    reason: `Следующий вывод доступен через ${hoursLeft} ${this.getHoursText(hoursLeft)}` 
+                    reason: `Следующий вывод доступен через ${hoursLeft} ${LC.getHoursText(hoursLeft)}` 
                 };
             }
         }
@@ -920,7 +946,13 @@ LC.subscribeToWithdrawals = async function() {
         });
 };
 
-// Инициализация страницы вывода с дополнительными проверками
+// Удаляем несуществующую функцию и исправляем инициализацию
+LC.bindWithdrawControls = function() {
+    // Эта функция больше не нужна, логика перенесена в initWithdrawPage
+    console.log('bindWithdrawControls is deprecated');
+};
+
+// Исправленная инициализация страницы вывода
 LC.initWithdrawPage = async function() {
     try {
         const user = await getUser(); 
@@ -935,9 +967,11 @@ LC.initWithdrawPage = async function() {
         // Инициализируем real-time подписку
         await LC.subscribeToWithdrawals();
         
-        // Добавляем проверку перед отправкой формы
+        // Добавляем обработчик для кнопки вывода
         const withdrawBtn = document.getElementById('withSubmit');
-        if (withdrawBtn) {
+        if (withdrawBtn && !withdrawBtn.dataset.lcBound) {
+            withdrawBtn.dataset.lcBound = 'true';
+            
             withdrawBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
                 
@@ -961,18 +995,21 @@ LC.initWithdrawPage = async function() {
                     return;
                 }
                 
-                // Проверяем возможность вывода
-                const eligibility = await LC.checkWithdrawalEligibility(user.id);
-                if (!eligibility.eligible) {
-                    alert(eligibility.reason);
-                    return;
-                }
-                
-                // Если все проверки пройдены, создаем заявку
+                // Блокируем кнопку
                 withdrawBtn.disabled = true;
-                withdrawBtn.textContent = 'Создание заявки...';
+                withdrawBtn.textContent = 'Проверка...';
                 
                 try {
+                    // Проверяем возможность вывода
+                    const eligibility = await LC.checkWithdrawalEligibility(user.id);
+                    if (!eligibility.eligible) {
+                        alert(eligibility.reason);
+                        return;
+                    }
+                    
+                    withdrawBtn.textContent = 'Создание заявки...';
+                    
+                    // Создаем заявку
                     await LC.requestWithdrawal(
                         Math.round(amount * 100), 
                         'TRC20', 
