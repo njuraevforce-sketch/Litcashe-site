@@ -717,7 +717,7 @@
         </div>
     </div>
 
-    <script>
+<script>
 // Инициализация Supabase
 const supabase = window.supabase.createClient(
     'https://einpfuegfsilnoiareco.supabase.co',
@@ -728,6 +728,7 @@ class AdminPanel {
     constructor() {
         this.currentUser = null;
         this.currentPage = 'dashboard';
+        this.isLimitedAdmin = false;
         this.init();
     }
 
@@ -758,6 +759,16 @@ class AdminPanel {
 
     async checkAdminRights() {
         try {
+            // Сначала проверяем, является ли пользователь limited админом
+            const { data: limitedData, error: limitedError } = await supabase.rpc('lc_is_limited_admin');
+            
+            if (!limitedError && limitedData) {
+                this.isLimitedAdmin = true;
+                this.setupLimitedAdminUI();
+                return;
+            }
+
+            // Если не limited, проверяем обычные админские права
             const { data, error } = await supabase.rpc('lc_is_admin');
             
             if (error || !data) {
@@ -770,6 +781,32 @@ class AdminPanel {
         } catch (error) {
             console.error('Admin check error:', error);
             this.showError('Ошибка проверки прав доступа');
+        }
+    }
+
+    setupLimitedAdminUI() {
+        // Скрываем все элементы навигации кроме дашборда
+        document.querySelectorAll('.nav-item:not([data-page="dashboard"])').forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        // Добавляем пометку в заголовок
+        document.getElementById('pageTitle').textContent += ' (Limited Mode)';
+        
+        // Обновляем заголовок бренда
+        const brandElement = document.querySelector('.brand span:last-child');
+        if (brandElement) {
+            brandElement.textContent = 'LC Limited Admin';
+        }
+        
+        // Добавляем информацию о limited режиме
+        const userInfo = document.querySelector('.user-info');
+        if (userInfo) {
+            const limitedBadge = document.createElement('span');
+            limitedBadge.className = 'badge badge-info';
+            limitedBadge.textContent = 'Limited';
+            limitedBadge.style.marginLeft = '10px';
+            userInfo.appendChild(limitedBadge);
         }
     }
 
@@ -809,6 +846,11 @@ class AdminPanel {
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
+                // Для limited админа разрешаем только дашборд
+                if (this.isLimitedAdmin && item.dataset.page !== 'dashboard') {
+                    this.showError('Доступ запрещен для limited администратора');
+                    return;
+                }
                 this.switchPage(item.dataset.page);
             });
         });
@@ -843,6 +885,12 @@ class AdminPanel {
     }
 
     switchPage(page) {
+        // Для limited админа блокируем все страницы кроме дашборда
+        if (this.isLimitedAdmin && page !== 'dashboard') {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         this.currentPage = page;
         
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -863,25 +911,25 @@ class AdminPanel {
                 this.loadDashboard();
                 break;
             case 'users':
-                this.loadUsers();
+                if (!this.isLimitedAdmin) this.loadUsers();
                 break;
             case 'withdrawals':
-                this.loadWithdrawals('pending');
+                if (!this.isLimitedAdmin) this.loadWithdrawals('pending');
                 break;
             case 'deposits':
-                this.loadDeposits();
+                if (!this.isLimitedAdmin) this.loadDeposits();
                 break;
             case 'rewards':
-                this.loadRewards();
+                if (!this.isLimitedAdmin) this.loadRewards();
                 break;
             case 'referrals':
-                this.loadReferrals();
+                if (!this.isLimitedAdmin) this.loadReferrals();
                 break;
             case 'vip':
-                this.loadVipData();
+                if (!this.isLimitedAdmin) this.loadVipData();
                 break;
             case 'settings':
-                this.loadSettings();
+                if (!this.isLimitedAdmin) this.loadSettings();
                 break;
         }
     }
@@ -896,7 +944,14 @@ class AdminPanel {
             if (error) throw error;
 
             this.renderDashboardStats(stats);
-            await this.loadRecentActivities();
+            
+            // Для limited админа не загружаем последние действия
+            if (!this.isLimitedAdmin) {
+                await this.loadRecentActivities();
+            } else {
+                document.getElementById('recentActivities').innerHTML = 
+                    '<tr><td colspan="5" class="text-center text-muted">Недоступно в limited режиме</td></tr>';
+            }
         } catch (error) {
             console.error('Dashboard load error:', error);
             this.showError('Ошибка загрузки дашборда: ' + error.message);
@@ -906,53 +961,60 @@ class AdminPanel {
     renderDashboardStats(stats) {
         const statsGrid = document.getElementById('dashboardStats');
         
+        // Для limited админа добавляем пометку к меткам
+        const limitedSuffix = this.isLimitedAdmin ? ' (ваших рефералов)' : '';
+        
         const statCards = [
             {
-                label: 'Всего пользователей',
+                label: 'Всего пользователей' + limitedSuffix,
                 value: stats.total_users || 0,
-                change: `+${stats.today_registrations || 0} за сегодня`,
+                change: this.isLimitedAdmin ? 'Ваши рефералы' : `+${stats.today_registrations || 0} за сегодня`,
                 icon: '👥'
             },
             {
-                label: 'Активные пользователи',
+                label: 'Активные пользователи' + limitedSuffix,
                 value: stats.active_users || 0,
-                change: 'Баланс ≥ $29',
+                change: this.isLimitedAdmin ? 'Баланс ≥ $29' : 'Баланс ≥ $29',
                 icon: '✅'
             },
             {
-                label: 'Общий баланс',
+                label: 'Общий баланс' + limitedSuffix,
                 value: `$${((stats.total_balance || 0) / 100).toLocaleString()}`,
-                change: 'В системе',
+                change: this.isLimitedAdmin ? 'Ваших рефералов' : 'В системе',
                 icon: '💰'
             },
             {
-                label: 'Заявки на вывод',
+                label: 'Заявки на вывод' + limitedSuffix,
                 value: stats.pending_withdrawals || 0,
-                change: 'Ожидают обработки',
+                change: this.isLimitedAdmin ? 'Ваших рефералов' : 'Ожидают обработки',
                 icon: '⏳'
             },
             {
-                label: 'Всего выплачено',
+                label: 'Всего выплачено' + limitedSuffix,
                 value: `$${((stats.total_withdrawn || 0) / 100).toLocaleString()}`,
-                change: 'За все время',
+                change: this.isLimitedAdmin ? 'Вашим рефералам' : 'За все время',
                 icon: '💸'
             },
             {
-                label: 'Всего пополнений',
+                label: 'Всего пополнений' + limitedSuffix,
                 value: `$${((stats.total_deposits || 0) / 100).toLocaleString()}`,
-                change: 'За все время',
+                change: this.isLimitedAdmin ? 'Ваших рефералов' : 'За все время',
                 icon: '📈'
             },
             {
-                label: 'Просмотры сегодня',
+                label: 'Просмотры сегодня' + limitedSuffix,
                 value: stats.today_views || 0,
-                change: `${((stats.today_rewards || 0) / 100).toFixed(2)} USDT начислено`,
+                change: this.isLimitedAdmin ? 
+                    `${((stats.today_rewards || 0) / 100).toFixed(2)} USDT вашим рефералам` : 
+                    `${((stats.today_rewards || 0) / 100).toFixed(2)} USDT начислено`,
                 icon: '🎬'
             },
             {
-                label: 'Пополнения сегодня',
+                label: 'Пополнения сегодня' + limitedSuffix,
                 value: stats.today_deposits || 0,
-                change: `Выплаты: ${stats.today_withdrawals || 0}`,
+                change: this.isLimitedAdmin ? 
+                    `Выплаты: ${stats.today_withdrawals || 0} вашим рефералам` : 
+                    `Выплаты: ${stats.today_withdrawals || 0}`,
                 icon: '🔄'
             }
         ];
@@ -964,6 +1026,22 @@ class AdminPanel {
                 <div class="stat-change">${card.change}</div>
             </div>
         `).join('');
+
+        // Добавляем информационное сообщение для limited админа
+        if (this.isLimitedAdmin) {
+            const infoMessage = document.createElement('div');
+            infoMessage.className = 'text-center text-muted';
+            infoMessage.style.marginTop = '1rem';
+            infoMessage.style.padding = '1rem';
+            infoMessage.style.backgroundColor = '#f8fafc';
+            infoMessage.style.borderRadius = '8px';
+            infoMessage.style.border = '1px solid #e2e8f0';
+            infoMessage.innerHTML = `
+                <strong>Limited Admin Mode</strong><br>
+                Вы видите статистику только по вашим рефералам (1-3 поколение)
+            `;
+            statsGrid.parentNode.insertBefore(infoMessage, statsGrid.nextSibling);
+        }
     }
 
     async loadRecentActivities() {
@@ -1007,6 +1085,11 @@ class AdminPanel {
     }
 
     async loadUsers() {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         try {
             this.showLoading('usersTable', 5);
             
@@ -1063,6 +1146,11 @@ class AdminPanel {
     }
 
     async loadWithdrawals(status = 'pending') {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         try {
             this.showLoading('withdrawalsTable', 5);
             
@@ -1123,6 +1211,11 @@ class AdminPanel {
     }
 
     async loadDeposits() {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         try {
             this.showLoading('depositsTable', 5);
             
@@ -1183,6 +1276,11 @@ class AdminPanel {
     }
 
     async loadRewards() {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         try {
             this.showLoading('rewardsTable', 5);
             
@@ -1236,6 +1334,11 @@ class AdminPanel {
     }
 
     async approveWithdrawal(id) {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         if (!confirm('Подтвердить выплату?')) return;
 
         try {
@@ -1261,6 +1364,11 @@ class AdminPanel {
     }
 
     async rejectWithdrawal(id) {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         const reason = prompt('Причина отклонения:');
         if (!reason) return;
 
@@ -1285,6 +1393,11 @@ class AdminPanel {
     }
 
     openAdjustBalance(userId, userEmail, currentBalance) {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         document.getElementById('adjustUserEmail').value = userEmail;
         document.getElementById('adjustCurrentBalance').value = (currentBalance / 100).toFixed(2);
         document.getElementById('adjustAmount').value = '';
@@ -1295,6 +1408,11 @@ class AdminPanel {
     }
 
     async applyBalanceAdjustment() {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
+
         const userId = document.getElementById('adjustBalanceModal').dataset.userId;
         const amount = parseFloat(document.getElementById('adjustAmount').value);
         const reason = document.getElementById('adjustReason').value.trim();
@@ -1447,6 +1565,10 @@ class AdminPanel {
     }
 
     async exportData(type) {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
         this.showSuccess(`Экспорт ${type} запущен...`);
     }
 
@@ -1456,22 +1578,42 @@ class AdminPanel {
     }
 
     viewUserDetail(userId) {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
         this.showSuccess(`Просмотр пользователя: ${userId}`);
     }
 
     viewReferrals(userId) {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
         this.showSuccess(`Рефералы пользователя: ${userId}`);
     }
 
     async loadReferrals() {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
         this.showSuccess('Загрузка реферальной системы...');
     }
 
     async loadVipData() {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
         this.showSuccess('Загрузка VIP системы...');
     }
 
     async loadSettings() {
+        if (this.isLimitedAdmin) {
+            this.showError('Доступ запрещен для limited администратора');
+            return;
+        }
         this.showSuccess('Загрузка настроек...');
     }
 }
@@ -1479,10 +1621,9 @@ class AdminPanel {
 const admin = new AdminPanel();
 window.admin = admin;
 
-
-// Глобальные функции для обработчиков событий
+console.log('Admin panel loading...');
+</script>
+const admin = new AdminPanel();
 window.admin = admin;
-        console.log('Admin panel loading...');
-    </script>
 </body>
 </html>
