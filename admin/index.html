@@ -1,888 +1,1536 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>LC • Admin Panel</title>
-  <link rel="icon" href="data:,">
-  <!-- Supabase client -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-  <style>
-    :root {
-      --primary: #3b82f6;
-      --primary-dark: #1d4ed8;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --dark: #1f2937;
-      --light: #f8fafc;
-      --border: #e5e7eb;
-      --muted: #6b7280;
-      --sidebar: #1e293b;
-      --sidebar-hover: #334155;
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--light);
-      color: var(--dark);
-      line-height: 1.6;
-    }
-    
-    .admin-layout {
-      display: flex;
-      min-height: 100vh;
-    }
-    
-    /* Sidebar */
-    .sidebar {
-      width: 260px;
-      background: var(--sidebar);
-      color: white;
-      transition: all 0.3s;
-    }
-    
-    .sidebar-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid #374151;
-    }
-    
-    .brand {
-      font-size: 1.25rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .nav-menu {
-      padding: 1rem 0;
-    }
-    
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1.5rem;
-      color: #d1d5db;
-      text-decoration: none;
-      transition: all 0.2s;
-      border-left: 3px solid transparent;
-    }
-    
-    .nav-item:hover, .nav-item.active {
-      background: var(--sidebar-hover);
-      color: white;
-      border-left-color: var(--primary);
-    }
-    
-    .nav-item i {
-      width: 20px;
-      text-align: center;
-    }
-    
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .topbar {
-      background: white;
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .user-menu {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    
-    .content-area {
-      flex: 1;
-      padding: 1.5rem;
-      overflow: auto;
-    }
-    
-    /* Cards */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .stat-value {
-      font-size: 2rem;
-      font-weight: 700;
-      margin: 0.5rem 0;
-    }
-    
-    .stat-label {
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-    
-    /* Tables */
-    .table-container {
-      background: white;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-    }
-    
-    .table-header {
-      padding: 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: between;
-      align-items: center;
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    
-    th, td {
-      padding: 1rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    th {
-      background: #f9fafb;
-      font-weight: 600;
-      font-size: 0.875rem;
-      color: var(--muted);
-    }
-    
-    /* Buttons */
-    .btn {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-    
-    .btn-success {
-      background: var(--success);
-      color: white;
-    }
-    
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-    
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--dark);
-    }
-    
-    /* Forms */
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
-    
-    input, select, textarea {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 1rem;
-    }
-    
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    /* Badges */
-    .badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    
-    .badge-success {
-      background: #d1fae5;
-      color: #065f46;
-    }
-    
-    .badge-warning {
-      background: #fef3c7;
-      color: #92400e;
-    }
-    
-    .badge-danger {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-    
-    /* Tabs */
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 1.5rem;
-    }
-    
-    .tab {
-      padding: 0.75rem 1.5rem;
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    
-    .tab.active {
-      border-bottom-color: var(--primary);
-      color: var(--primary);
-    }
-    
-    /* Loading */
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #f3f3f3;
-      border-top: 2px solid var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-      .admin-layout {
-        flex-direction: column;
-      }
-      
-      .sidebar {
-        width: 100%;
-      }
-      
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LC Admin Panel</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f8fafc;
+            --border: #e5e7eb;
+            --muted: #6b7280;
+            --sidebar: #1e293b;
+            --sidebar-hover: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar);
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #374151;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            color: #d1d5db;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left-color: var(--primary);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .topbar {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow: auto;
+            background: #f1f5f9;
+        }
+
+        /* Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+            color: var(--dark);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        /* Tables */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 1rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--dark);
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-box {
+            width: 300px;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            padding: 0 1.5rem;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--muted);
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .tab:hover {
+            color: var(--dark);
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+        }
+
+        /* Utility */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-muted { color: var(--muted); }
+        .font-mono { font-family: 'Monaco', 'Consolas', monospace; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .hidden { display: none; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: auto;
+        }
+    </style>
 </head>
 <body>
-  <div class="admin-layout">
-    <!-- Sidebar -->
-    <nav class="sidebar">
-      <div class="sidebar-header">
-        <div class="brand">
-          <span>🚀 LC Admin</span>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span>🚀</span>
+                    <span>LC Admin</span>
+                </div>
+            </div>
+            
+            <div class="nav-menu">
+                <a class="nav-item active" data-page="dashboard">
+                    <span>📊</span> Дашборд
+                </a>
+                <a class="nav-item" data-page="users">
+                    <span>👥</span> Пользователи
+                </a>
+                <a class="nav-item" data-page="withdrawals">
+                    <span>💸</span> Заявки на вывод
+                </a>
+                <a class="nav-item" data-page="deposits">
+                    <span>💰</span> Пополнения
+                </a>
+                <a class="nav-item" data-page="rewards">
+                    <span>🎁</span> Начисления
+                </a>
+                <a class="nav-item" data-page="referrals">
+                    <span>🔗</span> Рефералы
+                </a>
+                <a class="nav-item" data-page="vip">
+                    <span>⭐</span> VIP система
+                </a>
+                <a class="nav-item" data-page="settings">
+                    <span>⚙️</span> Настройки
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header class="topbar">
+                <h1 id="pageTitle">Дашборд</h1>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span id="userEmail" class="text-muted">Загрузка...</span>
+                    </div>
+                    <button class="btn btn-outline" id="logoutBtn">
+                        <span>🚪</span> Выйти
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <div class="stats-grid" id="dashboardStats">
+                        <!-- Статистика будет загружена через JS -->
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-header">
+                            <h3>Последние действия</h3>
+                            <button class="btn btn-outline" onclick="admin.exportData('activities')">
+                                <span>📤</span> Экспорт
+                            </button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Время</th>
+                                    <th>Пользователь</th>
+                                    <th>Действие</th>
+                                    <th>Сумма</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentActivities">
+                                <tr><td colspan="5" class="text-center">Загрузка...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Users Page -->
+                <div id="users-page" class="page">
+                    <div class="table-header">
+                        <h3>Управление пользователями</h3>
+                        <div class="table-actions">
+                            <input type="text" id="userSearch" class="search-box" placeholder="Поиск пользователей...">
+                            <button class="btn btn-primary" onclick="admin.loadUsers()">
+                                <span>🔍</span> Поиск
+                            </button>
+                            <button class="btn btn-outline" onclick="admin.exportData('users')">
+                                <span>📤</span> Экспорт CSV
+                            </button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Телефон</th>
+                                <th>Баланс</th>
+                                <th>Реф-код</th>
+                                <th>Статус</th>
+                                <th>Регистрация</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <tr><td colspan="8" class="text-center">Загрузка...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Withdrawals Page -->
+                <div id="withdrawals-page" class="page">
+                    <div class="tabs">
+                        <div class="tab active" data-status="pending">⏳ Ожидание</div>
+                        <div class="tab" data-status="paid">✅ Выплачено</div>
+                        <div class="tab" data-status="rejected">❌ Отклонено</div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Пользователь</th>
+                                    <th>Сумма</th>
+                                    <th>Кошелек</th>
+                                    <th>Дата</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawalsTable">
+                                <tr><td colspan="7" class="text-center">Загрузка...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Deposits Page -->
+                <div id="deposits-page" class="page">
+                    <div class="table-header">
+                        <h3>История пополнений</h3>
+                        <div class="table-actions">
+                            <input type="text" id="depositSearch" class="search-box" placeholder="Поиск пополнений...">
+                            <button class="btn btn-outline" onclick="admin.exportData('deposits')">
+                                <span>📤</span> Экспорт CSV
+                            </button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Пользователь</th>
+                                <th>Сумма</th>
+                                <th>Сеть</th>
+                                <th>Статус</th>
+                                <th>Дата</th>
+                                <th>TX Hash</th>
+                            </tr>
+                        </thead>
+                        <tbody id="depositsTable">
+                            <tr><td colspan="7" class="text-center">Загрузка...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Rewards Page -->
+                <div id="rewards-page" class="page">
+                    <div class="table-header">
+                        <h3>История начислений</h3>
+                        <div class="table-actions">
+                            <select id="rewardTypeFilter">
+                                <option value="">Все типы</option>
+                                <option value="video_view">Просмотры видео</option>
+                                <option value="referral_bonus">Реферальные бонусы</option>
+                                <option value="vip_profit">VIP прибыль</option>
+                            </select>
+                            <button class="btn btn-outline" onclick="admin.exportData('rewards')">
+                                <span>📤</span> Экспорт CSV
+                            </button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Тип</th>
+                                <th>Пользователь</th>
+                                <th>Сумма</th>
+                                <th>Описание</th>
+                                <th>Уровень</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rewardsTable">
+                            <tr><td colspan="6" class="text-center">Загрузка...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Добавьте остальные страницы по аналогии -->
+                
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно для корректировки баланса -->
+    <div class="modal" id="adjustBalanceModal">
+        <div class="modal-content">
+            <h3>Корректировка баланса</h3>
+            <div class="form-group">
+                <label>Пользователь</label>
+                <input type="text" id="adjustUserEmail" readonly>
+            </div>
+            <div class="form-group">
+                <label>Текущий баланс (USDT)</label>
+                <input type="text" id="adjustCurrentBalance" readonly>
+            </div>
+            <div class="form-group">
+                <label>Изменение (±USDT)</label>
+                <input type="number" id="adjustAmount" step="0.01" placeholder="Например: 10 или -5">
+            </div>
+            <div class="form-group">
+                <label>Причина</label>
+                <textarea id="adjustReason" placeholder="Обоснование изменения баланса"></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn btn-outline" onclick="admin.closeModal('adjustBalanceModal')">Отмена</button>
+                <button class="btn btn-primary" onclick="admin.applyBalanceAdjustment()">Применить</button>
+            </div>
         </div>
-      </div>
-      
-      <div class="nav-menu">
-        <a href="#" class="nav-item active" data-page="dashboard">
-          <span>📊</span> Дашборд
-        </a>
-        <a href="#" class="nav-item" data-page="users">
-          <span>👥</span> Пользователи
-        </a>
-        <a href="#" class="nav-item" data-page="withdrawals">
-          <span>💸</span> Заявки на вывод
-        </a>
-        <a href="#" class="nav-item" data-page="deposits">
-          <span>💰</span> Пополнения
-        </a>
-        <a href="#" class="nav-item" data-page="rewards">
-          <span>🎁</span> Начисления
-        </a>
-        <a href="#" class="nav-item" data-page="referrals">
-          <span>🔗</span> Рефералы
-        </a>
-        <a href="#" class="nav-item" data-page="vip">
-          <span>⭐</span> VIP система
-        </a>
-        <a href="#" class="nav-item" data-page="settings">
-          <span>⚙️</span> Настройки
-        </a>
-      </div>
-    </nav>
+    </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Topbar -->
-      <header class="topbar">
-        <h1 id="pageTitle">Дашборд</h1>
-        <div class="user-menu">
-          <span id="userEmail">admin@lc.com</span>
-          <button class="btn btn-outline" id="logoutBtn">Выйти</button>
-        </div>
-      </header>
+    <script>
+        <script>
+// Инициализация Supabase
+const supabase = window.supabase.createClient(
+    'https://einpfuegfsilnoiareco.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w'
+);
 
-      <!-- Content Area -->
-      <div class="content-area">
-        <!-- Dashboard Page -->
-        <div id="dashboard-page" class="page active">
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-label">Всего пользователей</div>
-              <div class="stat-value" id="totalUsers">0</div>
-              <div class="stat-change" id="usersChange">+0 за сегодня</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Активные пользователи</div>
-              <div class="stat-value" id="activeUsers">0</div>
-              <div class="stat-change">Баланс ≥ $29</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Общий баланс</div>
-              <div class="stat-value" id="totalBalance">$0</div>
-              <div class="stat-change">В системе</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Заявки на вывод</div>
-              <div class="stat-value" id="pendingWithdrawals">0</div>
-              <div class="stat-change">Ожидают обработки</div>
-            </div>
-          </div>
-
-          <div class="table-container">
-            <div class="table-header">
-              <h3>Последние действия</h3>
-              <button class="btn btn-outline">Экспорт</button>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Время</th>
-                  <th>Пользователь</th>
-                  <th>Действие</th>
-                  <th>Сумма</th>
-                  <th>Статус</th>
-                </tr>
-              </thead>
-              <tbody id="recentActivities">
-                <!-- Будет заполнено JavaScript -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Users Page -->
-        <div id="users-page" class="page">
-          <div class="table-header">
-            <h3>Управление пользователями</h3>
-            <div style="display: flex; gap: 1rem;">
-              <input type="text" id="userSearch" placeholder="Поиск пользователей..." style="width: 300px;">
-              <button class="btn btn-primary" id="exportUsers">Экспорт CSV</button>
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Email</th>
-                <th>Телефон</th>
-                <th>Баланс</th>
-                <th>Реф-код</th>
-                <th>Статус</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody id="usersTable">
-              <!-- Будет заполнено JavaScript -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Withdrawals Page -->
-        <div id="withdrawals-page" class="page">
-          <div class="tabs">
-            <div class="tab active" data-status="pending">Ожидание</div>
-            <div class="tab" data-status="paid">Выплачено</div>
-            <div class="tab" data-status="rejected">Отклонено</div>
-          </div>
-          
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Пользователь</th>
-                  <th>Сумма</th>
-                  <th>Кошелек</th>
-                  <th>Дата</th>
-                  <th>Статус</th>
-                  <th>Действия</th>
-                </tr>
-              </thead>
-              <tbody id="withdrawalsTable">
-                <!-- Будет заполнено JavaScript -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Добавьте остальные страницы по аналогии -->
-        
-      </div>
-    </main>
-  </div>
-
-  <!-- Модальные окна будут добавляться по мере необходимости -->
-
-  <script>
-    // Инициализация Supabase
-    const supabase = window.supabase.createClient(
-      'https://einpfuegfsilnoiareco.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbnBmdWVnZnNpbG5vaWFyZWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjM3NzAsImV4cCI6MjA2OTk5OTc3MH0.6wF-8yaV38LrXH6Ptm3KIO34wRklJKbNCVoqIGNKh_w'
-    );
-
-    class AdminPanel {
-      constructor() {
+class AdminPanel {
+    constructor() {
         this.currentUser = null;
+        this.currentPage = 'dashboard';
         this.init();
-      }
+    }
 
-      async init() {
+    async init() {
         await this.checkAuth();
         this.setupEventListeners();
-        this.loadDashboard();
-      }
+        await this.loadDashboard();
+    }
 
-      async checkAuth() {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error || !session) {
-          this.showLoginModal();
-          return;
-        }
-
-        this.currentUser = session.user;
-        document.getElementById('userEmail').textContent = this.currentUser.email;
-        
-        // Проверяем права администратора
-        await this.checkAdminRights();
-      }
-
-      async checkAdminRights() {
+    async checkAuth() {
         try {
-          const { data, error } = await supabase.rpc('lc_is_admin');
-          
-          if (error || !data) {
-            this.showError('Доступ запрещен. Недостаточно прав.');
-            return;
-          }
-        } catch (error) {
-          this.showError('Ошибка проверки прав доступа');
-        }
-      }
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (error || !session) {
+                this.showLoginModal();
+                return;
+            }
 
-      showLoginModal() {
-        // Реализация модального окна входа
+            this.currentUser = session.user;
+            document.getElementById('userEmail').textContent = this.currentUser.email;
+            
+            // Проверяем права администратора
+            await this.checkAdminRights();
+        } catch (error) {
+            console.error('Auth error:', error);
+            this.showLoginModal();
+        }
+    }
+
+    async checkAdminRights() {
+        try {
+            const { data, error } = await supabase.rpc('lc_is_admin');
+            
+            if (error || !data) {
+                this.showError('Доступ запрещен. Недостаточно прав.');
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.style.display = 'none';
+                });
+                return;
+            }
+        } catch (error) {
+            console.error('Admin check error:', error);
+            this.showError('Ошибка проверки прав доступа');
+        }
+    }
+
+    showLoginModal() {
         const email = prompt('Введите email администратора:');
-        if (!email) return;
+        if (!email) {
+            this.showError('Требуется авторизация');
+            return;
+        }
 
         const password = prompt('Введите пароль:');
-        if (!password) return;
+        if (!password) {
+            this.showError('Требуется авторизация');
+            return;
+        }
 
         this.login(email, password);
-      }
+    }
 
-      async login(email, password) {
+    async login(email, password) {
         try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-          });
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
 
-          if (error) throw error;
+            if (error) throw error;
 
-          this.currentUser = data.user;
-          location.reload();
+            this.currentUser = data.user;
+            location.reload();
         } catch (error) {
-          this.showError('Ошибка входа: ' + error.message);
+            this.showError('Ошибка входа: ' + error.message);
         }
-      }
+    }
 
-      setupEventListeners() {
+    setupEventListeners() {
         // Навигация
         document.querySelectorAll('.nav-item').forEach(item => {
-          item.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.switchPage(item.dataset.page);
-          });
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.switchPage(item.dataset.page);
+            });
         });
 
         // Выход
         document.getElementById('logoutBtn').addEventListener('click', () => {
-          this.logout();
+            this.logout();
         });
 
         // Табы заявок на вывод
         document.querySelectorAll('.tab').forEach(tab => {
-          tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            this.loadWithdrawals(tab.dataset.status);
-          });
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                this.loadWithdrawals(tab.dataset.status);
+            });
         });
-      }
 
-      switchPage(page) {
+        // Поиск пользователей
+        document.getElementById('userSearch').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.loadUsers();
+            }
+        });
+
+        // Поиск пополнений
+        document.getElementById('depositSearch').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.loadDeposits();
+            }
+        });
+
+        // Фильтр начислений
+        document.getElementById('rewardTypeFilter').addEventListener('change', () => {
+            this.loadRewards();
+        });
+    }
+
+    switchPage(page) {
+        this.currentPage = page;
+        
         // Скрываем все страницы
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
         // Показываем выбранную страницу
-        document.getElementById(`${page}-page`).classList.add('active');
+        const pageElement = document.getElementById(`${page}-page`);
+        if (pageElement) {
+            pageElement.classList.add('active');
+        }
+        
         document.querySelector(`[data-page="${page}"]`).classList.add('active');
         
         // Обновляем заголовок
-        document.getElementById('pageTitle').textContent = 
-          document.querySelector(`[data-page="${page}"]`).textContent;
+        const pageTitle = document.querySelector(`[data-page="${page}"]`).textContent;
+        document.getElementById('pageTitle').textContent = pageTitle;
 
         // Загружаем данные для страницы
         switch(page) {
-          case 'dashboard':
-            this.loadDashboard();
-            break;
-          case 'users':
-            this.loadUsers();
-            break;
-          case 'withdrawals':
-            this.loadWithdrawals('pending');
-            break;
-          case 'deposits':
-            this.loadDeposits();
-            break;
-          case 'rewards':
-            this.loadRewards();
-            break;
-          case 'referrals':
-            this.loadReferrals();
-            break;
-          case 'vip':
-            this.loadVipData();
-            break;
+            case 'dashboard':
+                this.loadDashboard();
+                break;
+            case 'users':
+                this.loadUsers();
+                break;
+            case 'withdrawals':
+                this.loadWithdrawals('pending');
+                break;
+            case 'deposits':
+                this.loadDeposits();
+                break;
+            case 'rewards':
+                this.loadRewards();
+                break;
+            case 'referrals':
+                this.loadReferrals();
+                break;
+            case 'vip':
+                this.loadVipData();
+                break;
+            case 'settings':
+                this.loadSettings();
+                break;
         }
-      }
+    }
 
-      async loadDashboard() {
+    // ==================== DASHBOARD ====================
+    async loadDashboard() {
         try {
-          // Загружаем статистику
-          const [users, balance, withdrawals] = await Promise.all([
-            this.getTotalUsers(),
-            this.getTotalBalance(),
-            this.getPendingWithdrawals()
-          ]);
+            this.showLoading('dashboardStats', 8);
+            this.showLoading('recentActivities', 1);
 
-          document.getElementById('totalUsers').textContent = users.total;
-          document.getElementById('usersChange').textContent = `+${users.today} за сегодня`;
-          document.getElementById('activeUsers').textContent = users.active;
-          document.getElementById('totalBalance').textContent = `$${(balance / 100).toLocaleString()}`;
-          document.getElementById('pendingWithdrawals').textContent = withdrawals;
+            // Загружаем статистику
+            const { data: stats, error } = await supabase.rpc('get_admin_dashboard_stats');
+            
+            if (error) throw error;
 
-          // Загружаем последние действия
-          await this.loadRecentActivities();
+            this.renderDashboardStats(stats);
+            await this.loadRecentActivities();
         } catch (error) {
-          this.showError('Ошибка загрузки дашборда');
+            console.error('Dashboard load error:', error);
+            this.showError('Ошибка загрузки дашборда: ' + error.message);
         }
-      }
+    }
 
-      async getTotalUsers() {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('user_id, created_at');
+    renderDashboardStats(stats) {
+        const statsGrid = document.getElementById('dashboardStats');
+        
+        const statCards = [
+            {
+                label: 'Всего пользователей',
+                value: stats.total_users || 0,
+                change: `+${stats.today_registrations || 0} за сегодня`,
+                icon: '👥'
+            },
+            {
+                label: 'Активные пользователи',
+                value: stats.active_users || 0,
+                change: 'Баланс ≥ $29',
+                icon: '✅'
+            },
+            {
+                label: 'Общий баланс',
+                value: `$${((stats.total_balance || 0) / 100).toLocaleString()}`,
+                change: 'В системе',
+                icon: '💰'
+            },
+            {
+                label: 'Заявки на вывод',
+                value: stats.pending_withdrawals || 0,
+                change: 'Ожидают обработки',
+                icon: '⏳'
+            },
+            {
+                label: 'Всего выплачено',
+                value: `$${((stats.total_withdrawn || 0) / 100).toLocaleString()}`,
+                change: 'За все время',
+                icon: '💸'
+            },
+            {
+                label: 'Всего пополнений',
+                value: `$${((stats.total_deposits || 0) / 100).toLocaleString()}`,
+                change: 'За все время',
+                icon: '📈'
+            },
+            {
+                label: 'Просмотры сегодня',
+                value: stats.today_views || 0,
+                change: `${((stats.today_rewards || 0) / 100).toFixed(2)} USDT начислено`,
+                icon: '🎬'
+            },
+            {
+                label: 'Пополнения сегодня',
+                value: stats.today_deposits || 0,
+                change: `Выплаты: ${stats.today_withdrawals || 0}`,
+                icon: '🔄'
+            }
+        ];
 
-        if (error) throw error;
-
-        const today = new Date().toISOString().split('T')[0];
-        const todayUsers = data.filter(user => 
-          user.created_at.startsWith(today)
-        ).length;
-
-        // Получаем активных пользователей (баланс ≥ $29)
-        const { data: activeUsers } = await supabase
-          .from('wallets')
-          .select('user_id')
-          .gte('balance_cents', 2900);
-
-        return {
-          total: data.length,
-          today: todayUsers,
-          active: activeUsers?.length || 0
-        };
-      }
-
-      async getTotalBalance() {
-        const { data, error } = await supabase
-          .from('wallets')
-          .select('balance_cents');
-
-        if (error) throw error;
-
-        return data.reduce((sum, wallet) => sum + (wallet.balance_cents || 0), 0);
-      }
-
-      async getPendingWithdrawals() {
-        const { data, error } = await supabase
-          .from('withdrawals')
-          .select('id')
-          .eq('status', 'pending');
-
-        if (error) throw error;
-
-        return data.length;
-      }
-
-      async loadRecentActivities() {
-        const { data, error } = await supabase
-          .from('transactions')
-          .select(`
-            created_at,
-            type,
-            amount_cents,
-            status,
-            profiles!inner(email)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        if (error) throw error;
-
-        const tbody = document.getElementById('recentActivities');
-        tbody.innerHTML = data.map(activity => `
-          <tr>
-            <td>${new Date(activity.created_at).toLocaleString()}</td>
-            <td>${activity.profiles.email}</td>
-            <td>${this.getActivityType(activity.type)}</td>
-            <td>$${(activity.amount_cents / 100).toFixed(2)}</td>
-            <td><span class="badge ${this.getStatusBadge(activity.status)}">${activity.status}</span></td>
-          </tr>
+        statsGrid.innerHTML = statCards.map(card => `
+            <div class="stat-card">
+                <div class="stat-label">${card.icon} ${card.label}</div>
+                <div class="stat-value">${card.value}</div>
+                <div class="stat-change">${card.change}</div>
+            </div>
         `).join('');
-      }
+    }
 
-      async loadUsers() {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select(`
-            user_id,
-            email,
-            phone,
-            ref_code,
-            created_at,
-            wallets!inner(balance_cents)
-          `)
-          .order('created_at', { ascending: false });
+    async loadRecentActivities() {
+        try {
+            const { data, error } = await supabase
+                .from('transactions')
+                .select(`
+                    created_at,
+                    type,
+                    amount_cents,
+                    status,
+                    profiles!inner(email)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(10);
 
-        if (error) throw error;
+            if (error) throw error;
 
+            const tbody = document.getElementById('recentActivities');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Нет данных</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(activity => `
+                <tr>
+                    <td class="text-sm">${new Date(activity.created_at).toLocaleString()}</td>
+                    <td>${activity.profiles.email}</td>
+                    <td>
+                        <span class="badge ${this.getActivityBadge(activity.type)}">
+                            ${this.getActivityType(activity.type)}
+                        </span>
+                    </td>
+                    <td class="text-right">$${((activity.amount_cents || 0) / 100).toFixed(2)}</td>
+                    <td>
+                        <span class="badge ${this.getStatusBadge(activity.status)}">
+                            ${this.getStatusText(activity.status)}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Recent activities error:', error);
+            document.getElementById('recentActivities').innerHTML = 
+                '<tr><td colspan="5" class="text-center text-muted">Ошибка загрузки</td></tr>';
+        }
+    }
+
+    // ==================== USERS ====================
+    async loadUsers() {
+        try {
+            this.showLoading('usersTable', 5);
+            
+            const searchText = document.getElementById('userSearch').value.trim();
+            
+            const { data, error } = await supabase.rpc('admin_search_users', {
+                search_text: searchText || null,
+                limit_count: 100,
+                offset_count: 0
+            });
+
+            if (error) throw error;
+
+            this.renderUsersTable(data);
+        } catch (error) {
+            console.error('Users load error:', error);
+            this.showError('Ошибка загрузки пользователей: ' + error.message);
+        }
+    }
+
+    renderUsersTable(users) {
         const tbody = document.getElementById('usersTable');
-        tbody.innerHTML = data.map(user => `
-          <tr>
-            <td><code>${user.user_id.substring(0, 8)}...</code></td>
-            <td>${user.email || '—'}</td>
-            <td>${user.phone || '—'}</td>
-            <td>$${(user.wallets.balance_cents / 100).toFixed(2)}</td>
-            <td>${user.ref_code || '—'}</td>
-            <td>
-              <span class="badge ${user.wallets.balance_cents >= 2900 ? 'badge-success' : 'badge-warning'}">
-                ${user.wallets.balance_cents >= 2900 ? 'Активный' : 'Неактивный'}
-              </span>
-            </td>
-            <td>
-              <button class="btn btn-outline" onclick="admin.viewUser('${user.user_id}')">Просмотр</button>
-              <button class="btn btn-outline" onclick="admin.adjustBalance('${user.user_id}')">Баланс</button>
-            </td>
-          </tr>
+        
+        if (!users || users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Пользователи не найдены</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map(user => `
+            <tr>
+                <td class="font-mono text-xs">${user.user_id.substring(0, 8)}...</td>
+                <td>${user.email || '—'}</td>
+                <td>${user.phone || '—'}</td>
+                <td class="text-right">$${((user.balance_cents || 0) / 100).toFixed(2)}</td>
+                <td class="font-mono text-xs">${user.ref_code || '—'}</td>
+                <td>
+                    <span class="badge ${(user.balance_cents || 0) >= 2900 ? 'badge-success' : 'badge-warning'}">
+                        ${(user.balance_cents || 0) >= 2900 ? 'Активный' : 'Неактивный'}
+                    </span>
+                </td>
+                <td class="text-sm">${new Date(user.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-outline btn-sm" onclick="admin.viewUserDetail('${user.user_id}')">
+                            👁️
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="admin.openAdjustBalance('${user.user_id}', '${user.email}', ${user.balance_cents})">
+                            💰
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="admin.viewReferrals('${user.user_id}')">
+                            🔗
+                        </button>
+                    </div>
+                </td>
+            </tr>
         `).join('');
-      }
+    }
 
-      async loadWithdrawals(status = 'pending') {
-        const { data, error } = await supabase
-          .from('withdrawals')
-          .select(`
-            id,
-            amount_cents,
-            network,
-            address,
-            status,
-            created_at,
-            profiles!inner(email)
-          `)
-          .eq('status', status)
-          .order('created_at', { ascending: false });
+    // ==================== WITHDRAWALS ====================
+    async loadWithdrawals(status = 'pending') {
+        try {
+            this.showLoading('withdrawalsTable', 5);
+            
+            const { data, error } = await supabase
+                .from('v_admin_withdrawals')
+                .select('*')
+                .eq('status', status)
+                .order('created_at', { ascending: false })
+                .limit(100);
 
-        if (error) throw error;
+            if (error) throw error;
 
+            this.renderWithdrawalsTable(data, status);
+        } catch (error) {
+            console.error('Withdrawals load error:', error);
+            this.showError('Ошибка загрузки заявок: ' + error.message);
+        }
+    }
+
+    renderWithdrawalsTable(withdrawals, status) {
         const tbody = document.getElementById('withdrawalsTable');
-        tbody.innerHTML = data.map(withdrawal => `
-          <tr>
-            <td>${withdrawal.id}</td>
-            <td>${withdrawal.profiles.email}</td>
-            <td>$${(withdrawal.amount_cents / 100).toFixed(2)}</td>
-            <td><code>${withdrawal.address}</code> (${withdrawal.network})</td>
-            <td>${new Date(withdrawal.created_at).toLocaleString()}</td>
-            <td><span class="badge ${this.getStatusBadge(withdrawal.status)}">${this.getStatusText(withdrawal.status)}</span></td>
-            <td>
-              ${status === 'pending' ? `
-                <button class="btn btn-success" onclick="admin.approveWithdrawal(${withdrawal.id})">Одобрить</button>
-                <button class="btn btn-danger" onclick="admin.rejectWithdrawal(${withdrawal.id})">Отклонить</button>
-              ` : ''}
-            </td>
-          </tr>
+        
+        if (!withdrawals || withdrawals.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Заявки не найдены</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = withdrawals.map(w => `
+            <tr>
+                <td class="font-mono text-xs">${w.id}</td>
+                <td>
+                    <div>${w.user_email}</div>
+                    <div class="text-xs text-muted">${w.user_phone || '—'}</div>
+                </td>
+                <td class="text-right">
+                    <strong>$${(w.amount_usdt || 0).toFixed(2)}</strong>
+                </td>
+                <td>
+                    <div class="font-mono text-xs">${w.address}</div>
+                    <div class="text-xs text-muted">${w.network}</div>
+                </td>
+                <td class="text-sm">${new Date(w.created_at).toLocaleString()}</td>
+                <td>
+                    <span class="badge ${this.getStatusBadge(w.status)}">
+                        ${w.status_text}
+                    </span>
+                </td>
+                <td>
+                    ${status === 'pending' ? `
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-success btn-sm" onclick="admin.approveWithdrawal(${w.id})">
+                                ✅ Одобрить
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="admin.rejectWithdrawal(${w.id})">
+                                ❌ Отклонить
+                            </button>
+                        </div>
+                    ` : `
+                        <span class="text-muted text-sm">Обработано</span>
+                    `}
+                </td>
+            </tr>
         `).join('');
-      }
+    }
 
-      // Вспомогательные методы
-      getActivityType(type) {
-        const types = {
-          'deposit': 'Пополнение',
-          'withdrawal': 'Вывод',
-          'video_view': 'Просмотр видео',
-          'referral_bonus': 'Реферальный бонус',
-          'vip_profit': 'VIP прибыль'
-        };
-        return types[type] || type;
-      }
+    // ==================== DEPOSITS ====================
+    async loadDeposits() {
+        try {
+            this.showLoading('depositsTable', 5);
+            
+            const searchText = document.getElementById('depositSearch').value.trim();
+            
+            let query = supabase
+                .from('v_admin_deposits')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(100);
 
-      getStatusBadge(status) {
-        const badges = {
-          'pending': 'badge-warning',
-          'paid': 'badge-success',
-          'rejected': 'badge-danger',
-          'completed': 'badge-success'
-        };
-        return badges[status] || 'badge-warning';
-      }
+            if (searchText) {
+                query = query.or(`user_email.ilike.%${searchText}%,user_phone.ilike.%${searchText}%,tx_hash.ilike.%${searchText}%`);
+            }
 
-      getStatusText(status) {
-        const texts = {
-          'pending': 'Ожидание',
-          'paid': 'Выплачено',
-          'rejected': 'Отклонено',
-          'completed': 'Завершено'
-        };
-        return texts[status] || status;
-      }
+            const { data, error } = await query;
 
-      // Методы действий
-      async approveWithdrawal(id) {
+            if (error) throw error;
+
+            this.renderDepositsTable(data);
+        } catch (error) {
+            console.error('Deposits load error:', error);
+            this.showError('Ошибка загрузки пополнений: ' + error.message);
+        }
+    }
+
+    renderDepositsTable(deposits) {
+        const tbody = document.getElementById('depositsTable');
+        
+        if (!deposits || deposits.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Пополнения не найдены</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = deposits.map(deposit => `
+            <tr>
+                <td class="font-mono text-xs">${deposit.id}</td>
+                <td>
+                    <div>${deposit.user_email}</div>
+                    <div class="text-xs text-muted">${deposit.user_phone || '—'}</div>
+                </td>
+                <td class="text-right">
+                    <strong>$${(deposit.amount_usdt || 0).toFixed(2)}</strong>
+                </td>
+                <td>
+                    <span class="badge badge-info">${deposit.network}</span>
+                </td>
+                <td>
+                    <span class="badge ${this.getStatusBadge(deposit.status)}">
+                        ${deposit.status_text}
+                    </span>
+                </td>
+                <td class="text-sm">${new Date(deposit.created_at).toLocaleString()}</td>
+                <td class="font-mono text-xs">
+                    ${deposit.tx_hash ? 
+                        `<span title="${deposit.tx_hash}">${deposit.tx_hash.substring(0, 10)}...</span>` : 
+                        '—'
+                    }
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // ==================== REWARDS ====================
+    async loadRewards() {
+        try {
+            this.showLoading('rewardsTable', 5);
+            
+            const filterType = document.getElementById('rewardTypeFilter').value;
+            
+            let query = supabase
+                .from('v_admin_rewards')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            if (filterType) {
+                query = query.eq('reward_type', filterType);
+            }
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+
+            this.renderRewardsTable(data);
+        } catch (error) {
+            console.error('Rewards load error:', error);
+            this.showError('Ошибка загрузки начислений: ' + error.message);
+        }
+    }
+
+    renderRewardsTable(rewards) {
+        const tbody = document.getElementById('rewardsTable');
+        
+        if (!rewards || rewards.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Начисления не найдены</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = rewards.map(reward => `
+            <tr>
+                <td class="text-sm">${new Date(reward.created_at).toLocaleString()}</td>
+                <td>
+                    <span class="badge ${this.getRewardTypeBadge(reward.reward_type)}">
+                        ${this.getRewardTypeText(reward.reward_type)}
+                    </span>
+                </td>
+                <td class="font-mono text-xs">${reward.target_user_id.substring(0, 8)}...</td>
+                <td class="text-right">$${((reward.amount_cents || 0) / 100).toFixed(2)}</td>
+                <td class="text-sm">${reward.note || '—'}</td>
+                <td>
+                    ${reward.level ? `L${reward.level}` : '—'}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // ==================== ACTIONS ====================
+    async approveWithdrawal(id) {
         if (!confirm('Подтвердить выплату?')) return;
 
         try {
-          const { error } = await supabase
-            .from('withdrawals')
-            .update({ status: 'paid' })
-            .eq('id', id);
+            const txid = prompt('Введите TXID транзакции (опционально):');
+            
+            const { data, error } = await supabase.rpc('admin_approve_withdrawal', {
+                withdrawal_id: id,
+                txid: txid || null
+            });
 
-          if (error) throw error;
+            if (error) throw error;
 
-          this.showSuccess('Выплата подтверждена');
-          this.loadWithdrawals('pending');
+            if (data.success) {
+                this.showSuccess('Выплата подтверждена');
+                this.loadWithdrawals('pending');
+            } else {
+                this.showError(data.error || 'Ошибка подтверждения');
+            }
         } catch (error) {
-          this.showError('Ошибка подтверждения выплаты');
+            console.error('Approve withdrawal error:', error);
+            this.showError('Ошибка подтверждения выплаты: ' + error.message);
         }
-      }
+    }
 
-      async rejectWithdrawal(id) {
+    async rejectWithdrawal(id) {
         const reason = prompt('Причина отклонения:');
         if (!reason) return;
 
         try {
-          const { error } = await supabase
-            .from('withdrawals')
-            .update({ 
-              status: 'rejected',
-              note: reason 
-            })
-            .eq('id', id);
+            const { data, error } = await supabase.rpc('admin_reject_withdrawal', {
+                withdrawal_id: id,
+                reason: reason
+            });
 
-          if (error) throw error;
+            if (error) throw error;
 
-          this.showSuccess('Заявка отклонена');
-          this.loadWithdrawals('pending');
+            if (data.success) {
+                this.showSuccess('Заявка отклонена');
+                this.loadWithdrawals('pending');
+            } else {
+                this.showError(data.error || 'Ошибка отклонения');
+            }
         } catch (error) {
-          this.showError('Ошибка отклонения заявки');
+            console.error('Reject withdrawal error:', error);
+            this.showError('Ошибка отклонения заявки: ' + error.message);
         }
-      }
-
-      viewUser(userId) {
-        // Открыть модальное окно с детальной информацией о пользователе
-        alert(`Просмотр пользователя: ${userId}`);
-        // Реализовать модальное окно с полной информацией
-      }
-
-      adjustBalance(userId) {
-        const amount = prompt('Изменение баланса (USDT, + для пополнения, - для списания):');
-        if (!amount) return;
-
-        // Реализовать изменение баланса через RPC функцию
-        alert(`Изменение баланса пользователя ${userId} на ${amount} USDT`);
-      }
-
-      showError(message) {
-        // Реализовать красивые уведомления
-        alert('Ошибка: ' + message);
-      }
-
-      showSuccess(message) {
-        // Реализовать красивые уведомления
-        alert('Успех: ' + message);
-      }
-
-      async logout() {
-        await supabase.auth.signOut();
-        location.reload();
-      }
     }
 
-    // Инициализация панели администратора
-    const admin = new AdminPanel();
-  </script>
+    openAdjustBalance(userId, userEmail, currentBalance) {
+        document.getElementById('adjustUserEmail').value = userEmail;
+        document.getElementById('adjustCurrentBalance').value = (currentBalance / 100).toFixed(2);
+        document.getElementById('adjustAmount').value = '';
+        document.getElementById('adjustReason').value = '';
+        document.getElementById('adjustBalanceModal').dataset.userId = userId;
+        
+        this.openModal('adjustBalanceModal');
+    }
+
+    async applyBalanceAdjustment() {
+        const userId = document.getElementById('adjustBalanceModal').dataset.userId;
+        const amount = parseFloat(document.getElementById('adjustAmount').value);
+        const reason = document.getElementById('adjustReason').value.trim();
+
+        if (!amount || isNaN(amount)) {
+            this.showError('Введите корректную сумму');
+            return;
+        }
+
+        if (!reason) {
+            this.showError('Укажите причину изменения');
+            return;
+        }
+
+        try {
+            const amountCents = Math.round(amount * 100);
+            
+            const { data, error } = await supabase.rpc('admin_adjust_balance', {
+                target_user_id: userId,
+                amount_cents: amountCents,
+                reason: reason
+            });
+
+            if (error) throw error;
+
+            if (data.success) {
+                this.showSuccess(`Баланс изменен на ${amount} USDT`);
+                this.closeModal('adjustBalanceModal');
+                
+                // Обновляем данные на текущей странице
+                if (this.currentPage === 'users') {
+                    this.loadUsers();
+                }
+                if (this.currentPage === 'dashboard') {
+                    this.loadDashboard();
+                }
+            } else {
+                this.showError(data.error || 'Ошибка изменения баланса');
+            }
+        } catch (error) {
+            console.error('Adjust balance error:', error);
+            this.showError('Ошибка изменения баланса: ' + error.message);
+        }
+    }
+
+    // ==================== UTILITIES ====================
+    getActivityType(type) {
+        const types = {
+            'deposit': 'Пополнение',
+            'withdrawal': 'Вывод',
+            'video_view': 'Просмотр видео',
+            'referral_bonus': 'Реферальный бонус',
+            'vip_profit': 'VIP прибыль',
+            'manual_adjustment': 'Корректировка',
+            'withdrawal_refund': 'Возврат вывода'
+        };
+        return types[type] || type;
+    }
+
+    getActivityBadge(type) {
+        const badges = {
+            'deposit': 'badge-success',
+            'withdrawal': 'badge-warning',
+            'video_view': 'badge-info',
+            'referral_bonus': 'badge-success',
+            'vip_profit': 'badge-info',
+            'manual_adjustment': 'badge-warning'
+        };
+        return badges[type] || 'badge-info';
+    }
+
+    getRewardTypeText(type) {
+        const types = {
+            'video_view': 'Просмотр видео',
+            'referral_bonus': 'Реферальный бонус',
+            'vip_profit': 'VIP прибыль'
+        };
+        return types[type] || type;
+    }
+
+    getRewardTypeBadge(type) {
+        const badges = {
+            'video_view': 'badge-info',
+            'referral_bonus': 'badge-success',
+            'vip_profit': 'badge-warning'
+        };
+        return badges[type] || 'badge-info';
+    }
+
+    getStatusBadge(status) {
+        const badges = {
+            'pending': 'badge-warning',
+            'paid': 'badge-success',
+            'rejected': 'badge-danger',
+            'completed': 'badge-success',
+            'failed': 'badge-danger'
+        };
+        return badges[status] || 'badge-warning';
+    }
+
+    getStatusText(status) {
+        const texts = {
+            'pending': 'Ожидание',
+            'paid': 'Выплачено',
+            'rejected': 'Отклонено',
+            'completed': 'Завершено',
+            'failed': 'Ошибка'
+        };
+        return texts[status] || status;
+    }
+
+    showLoading(elementId, rows = 5) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        const skeletonRows = Array(rows).fill().map(() => `
+            <tr>
+                ${Array(this.getColumnCount(elementId)).fill().map(() => `
+                    <td><div class="skeleton" style="height: 20px;"></div></td>
+                `).join('')}
+            </tr>
+        `).join('');
+
+        element.innerHTML = skeletonRows;
+    }
+
+    getColumnCount(elementId) {
+        const counts = {
+            'usersTable': 8,
+            'withdrawalsTable': 7,
+            'depositsTable': 7,
+            'rewardsTable': 6,
+            'recentActivities': 5
+        };
+        return counts[elementId] || 5;
+    }
+
+    openModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    }
+
+    closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
+
+    showError(message) {
+        alert('❌ ' + message);
+    }
+
+    showSuccess(message) {
+        alert('✅ ' + message);
+    }
+
+    async exportData(type) {
+        this.showSuccess(`Экспорт ${type} запущен...`);
+        // Реализация экспорта в CSV
+        console.log(`Exporting ${type} data...`);
+    }
+
+    async logout() {
+        await supabase.auth.signOut();
+        location.reload();
+    }
+
+    // Заглушки для будущей реализации
+    viewUserDetail(userId) {
+        this.showSuccess(`Просмотр пользователя: ${userId}`);
+        // Реализовать детальный просмотр
+    }
+
+    viewReferrals(userId) {
+        this.showSuccess(`Рефералы пользователя: ${userId}`);
+        // Реализовать просмотр рефералов
+    }
+
+    async loadReferrals() {
+        this.showSuccess('Загрузка реферальной системы...');
+        // Реализовать загрузку рефералов
+    }
+
+    async loadVipData() {
+        this.showSuccess('Загрузка VIP системы...');
+        // Реализовать загрузку VIP данных
+    }
+
+    async loadSettings() {
+        this.showSuccess('Загрузка настроек...');
+        // Реализовать загрузку настроек
+    }
+}
+
+// Инициализация панели администратора
+const admin = new AdminPanel();
+
+// Глобальные функции для обработчиков событий
+window.admin = admin;
+        console.log('Admin panel loading...');
+    </script>
 </body>
 </html>
