@@ -1146,7 +1146,6 @@ document.addEventListener('DOMContentLoaded', () => {
 (function(){
   // Глобальные переменные для предотвращения дублирования
   let withdrawalInProgress = false;
-  let lastWithdrawalTime = 0;
   
   // Утилиты
   const $ = (s) => document.querySelector(s);
@@ -1251,11 +1250,10 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Устанавливаем флаг выполнения
       withdrawalInProgress = true;
-      lastWithdrawalTime = Date.now();
       
       console.log('Requesting withdrawal:', { amountCents, method, address, userId: user.id });
       
-      // Используем существующую RPC функцию
+      // Используем RPC функцию request_withdrawal
       const { data, error } = await sb.rpc('request_withdrawal', {
         p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
         p_network: String(method || 'TRC20'),
@@ -1271,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Withdrawal response:', data);
       
       // Обрабатываем ответ от RPC функции
-      const result = Array.isArray(data) ? data[0] : data;
+      const result = typeof data === 'object' ? data : JSON.parse(data);
       
       if (!result?.ok) {
         throw new Error(result?.message || 'Заявка отклонена системой');
@@ -1406,6 +1404,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error) {
         console.error('Cancel withdrawal error:', error);
         alert('Ошибка отмены заявки: ' + error.message);
+        return;
+      }
+      
+      const result = typeof data === 'object' ? data : JSON.parse(data);
+      
+      if (!result.success) {
+        alert('Ошибка отмены заявки: ' + result.error);
         return;
       }
       
