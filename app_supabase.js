@@ -69,16 +69,12 @@
   );
   window.sb = sb; window.supabaseClient = sb;
 
-  // ===== Утилиты =============================================================
+  // ===== УТИЛИТЫ =============================================================
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
   const fmtMoney = (v) => `$${Number(v || 0).toFixed(2)}`;
   const fmtDate = (iso) => { try { return new Date(iso).toLocaleString(); } catch { return iso || ''; } };
-  const pickNum = (v, d=0) => { 
-    if (v === null || v === undefined) return d;
-    const n = Number(v); 
-    return Number.isFinite(n) ? n : d; 
-  };
+  const pickNum = (v, d=0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
 
   async function getUser() {
     const { data, error } = await sb.auth.getUser();
@@ -150,7 +146,7 @@
   // ===== СИСТЕМА УРОВНЕЙ ===================================================
   LC.getLevelInfo = async function() {
     try {
-      const { data, error } = await sb.rpc('get_level_info');
+      const { data, error } = await sb.rpc('get_level_info_v2');
       if (error) throw error;
       return Array.isArray(data) ? data[0] : data;
     } catch(e) {
@@ -169,11 +165,10 @@
         if (el) el.textContent = String(val); 
       };
 
-      // Явно преобразуем к числам
-      const perView = Number(pickNum(info.reward_per_view_cents))/100;
-      const daily   = Number(pickNum(info.daily_reward_cents))/100;
-      const base    = Number(pickNum(info.base_amount_cents))/100;
-      const rate    = Number(pickNum(info.level_percent));
+      const perView = pickNum(info.reward_per_view_cents)/100;
+      const daily   = pickNum(info.daily_reward_cents)/100;
+      const base    = pickNum(info.base_amount_cents)/100;
+      const rate    = pickNum(info.level_percent);
 
       set('[data-level-name]', info.level_name ?? '');
       set('[data-views-left]', info.views_left_today ?? 0);
@@ -229,13 +224,13 @@
       return null;
     }
 
-    const { data, error } = await sb.rpc('credit_view', {
+    const { data, error } = await sb.rpc('credit_view_v3', {
       p_video_id: String(videoId || 'video'),
       p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
     });
     
     if (error) { 
-      console.error(error); 
+      console.error('Credit view error:', error); 
       alert(error.message || 'Ошибка начисления'); 
       return null; 
     }
@@ -246,13 +241,23 @@
       return null; 
     }
     
+    // Обновляем интерфейс
     if (typeof row.views_left === 'number') {
       const el = document.querySelector('[data-views-left]');
       if (el) el.textContent = String(row.views_left);
     }
     
+    // Обновляем данные
     await LC.refreshBalance();
     await LC.refreshLevelInfo();
+    await LC.loadReferralEarnings();
+    
+    // Показываем уведомление о начислении
+    if (row.reward_cents) {
+      const reward = (row.reward_cents / 100).toFixed(2);
+      alert(`✅ Начислено $${reward} за просмотр!`);
+    }
+    
     return row;
   };
 
@@ -366,7 +371,7 @@
   // ИСПРАВЛЕННЫЕ ФУНКЦИИ - используем новые функции без фильтра по балансу
   LC.getActiveReferralCounts = async function() {
     try {
-      const { data, error } = await sb.rpc('get_referral_counts_active');
+      const { data, error } = await sb.rpc('get_all_referral_counts');
       if (error) throw error;
       const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
       return { 
@@ -382,8 +387,9 @@
 
   LC.getActiveReferrals = async function(level = 1) {
     try {
-      const { data, error } = await sb.rpc('get_referrals_by_generation', {
+      const { data, error } = await sb.rpc('get_all_referrals_by_generation', {
         p_level: level
+        // УБРАН параметр p_min_cents - теперь показываем всех рефералов
       });
       if (error) throw error;
       return Array.isArray(data) ? data : (data ? [data] : []);
@@ -460,26 +466,15 @@
     if (video.dataset.lcInit === '1') return;
     video.dataset.lcInit = '1';
 
-    let allowed = false, credited = false, watchInterval;
-    const requiredSeconds = 10; // Минимум 10 секунд просмотра
+    let allowed = false, credited = false, acc = 0, lastT = 0;
 
     const ui = (m)=> { if (txt) txt.textContent = m; };
     const setBar = (p)=> { if (bar) bar.style.width = Math.max(0, Math.min(100, p)) + '%'; };
-
-    const pickVideo = ()=> {
-      const videos = LC_VIDEO_LIST.filter(v => v); // Фильтруем undefined
-      return videos[Math.floor(Math.random() * videos.length)] || '/assets/videos/ad1.MP4';
-    };
+    const pickVideo = ()=> LC_VIDEO_LIST[Math.floor(Math.random() * LC_VIDEO_LIST.length)];
 
     const reset = ()=> {
-      allowed = false; 
-      credited = false;
-      if (watchInterval) {
-        clearInterval(watchInterval);
-        watchInterval = null;
-      }
-      video.currentTime = 0; 
-      video.pause();
+      allowed = false; credited = false; acc = 0; lastT = 0;
+      video.currentTime = 0; video.pause();
       setBar(0); 
       startBtn.disabled = false; 
       startBtn.textContent = '🎬 Заработать за просмотр';
@@ -514,7 +509,36 @@
       }
     };
 
-    const startWatching = async () => {
+    video.addEventListener('timeupdate', ()=> {
+      if (!allowed) return;
+      const t = video.currentTime, dur = video.duration;
+      if (t < 0 || !dur || dur < 1) return;
+      const p = Math.max(0, Math.min(100, (t/dur)*100));
+      setBar(p);
+      if (t > lastT) { acc += (t - lastT); lastT = t; }
+      
+      // Начисляем после 10 секунд просмотра
+      if (acc >= LC.config.MIN_VIEW_SECONDS && !credited) {
+        credited = true; 
+        LC.creditView(video.src.split('/').pop() || 'video', Math.floor(acc));
+      }
+      
+      if (t >= dur - 0.5) {
+        video.pause();
+        ui('Начисление завершено');
+        setTimeout(reset, 1500);
+      }
+    });
+
+    video.addEventListener('ended', ()=> {
+      if (!allowed) return;
+      video.pause();
+      ui('Начисление завершено');
+      setTimeout(reset, 1500);
+    });
+
+    startBtn.addEventListener('click', async (e)=> {
+      e.preventDefault();
       if (allowed) return;
       
       const isActive = await LC.isActiveUser();
@@ -530,98 +554,21 @@
         return;
       }
       
-      // Загружаем случайное видео
       video.src = pickVideo(); 
       video.load();
-      allowed = true; 
-      credited = false;
+      allowed = true; credited = false; acc = 0; lastT = 0;
       
       try {
         await video.play();
         ui('Смотрите видео до конца'); 
         setBar(0);
         startBtn.disabled = true; 
-        startBtn.textContent = '⏳ Просмотр...';
+        startBtn.textContent = '⏳ Ожидание...';
         if (overlay) overlay.style.display = 'none';
-        
-        let watchedSeconds = 0;
-        let progressUpdateTime = 0;
-        
-        // Запускаем отсчет времени просмотра
-        watchInterval = setInterval(() => {
-          if (!allowed || !video.duration) return;
-          
-          const currentTime = video.currentTime;
-          const duration = video.duration;
-          
-          // Обновляем прогресс-бар
-          if (currentTime > progressUpdateTime) {
-            const progress = (currentTime / duration) * 100;
-            setBar(progress);
-            progressUpdateTime = currentTime;
-          }
-          
-          // Считаем просмотренные секунды
-          if (currentTime > watchedSeconds) {
-            watchedSeconds = currentTime;
-          }
-          
-          // Начисляем после 10 секунд просмотра
-          if (watchedSeconds >= requiredSeconds && !credited) {
-            credited = true;
-            LC.creditView(video.src.split('/').pop() || 'video', Math.floor(watchedSeconds))
-              .then(result => {
-                if (result && result.ok) {
-                  ui('Начисление завершено!');
-                  setBar(100);
-                  
-                  // Автоматически перезапускаем через 2 секунды
-                  setTimeout(() => {
-                    if (video.currentTime >= video.duration - 1) {
-                      reset();
-                    }
-                  }, 2000);
-                }
-              })
-              .catch(error => {
-                console.error('Ошибка начисления:', error);
-                ui('Ошибка начисления');
-              });
-          }
-          
-          // Если видео закончилось
-          if (currentTime >= duration - 0.5) {
-            clearInterval(watchInterval);
-            if (!credited) {
-              // Если не начислили (пользователь пропустил)
-              LC.creditView(video.src.split('/').pop() || 'video', Math.floor(watchedSeconds))
-                .then(result => {
-                  ui(result?.ok ? 'Начисление завершено!' : 'Просмотр не засчитан');
-                  setTimeout(reset, 2000);
-                });
-            }
-          }
-        }, 1000);
-        
       } catch (err) {
         console.warn('Autoplay failed:', err);
         reset();
       }
-    };
-
-    video.addEventListener('ended', ()=> {
-      if (!allowed) return;
-      clearInterval(watchInterval);
-      video.pause();
-      if (!credited) {
-        ui('Просмотр завершен');
-        setTimeout(reset, 2000);
-      }
-    });
-
-    startBtn.addEventListener('click', (e)=> {
-      e.preventDefault();
-      startWatching();
     });
 
     // Инициализация проверки доступности
