@@ -2259,51 +2259,53 @@
         </div>
       </div>
 
-      <!-- Реферальная панель -->
-      <div class="card">
-        <h2><span class="icon">👥</span><span data-i18n="dashboard_referral_panel">Реферальная панель</span></h2>
-        
-        <div class="flex" style="margin-bottom: 12px">
-          <input class="input" id="refLink" readonly value="" style="flex: 1">
-          <button class="btn" id="btnCopyRef" data-i18n="dashboard_copy">📋 Копировать</button>
-        </div>
-
-        <div class="grid grid-3" style="margin-bottom: 12px">
-          <div class="card stat-card">
-            <div class="muted" data-i18n="dashboard_gen1">1 поколение</div>
-            <div class="value" id="gen1Count">0</div>
-          </div>
-          <div class="card stat-card">
-            <div class="muted" data-i18n="dashboard_gen2">2 поколение</div>
-            <div class="value" id="gen2Count">0</div>
-          </div>
-          <div class="card stat-card">
-            <div class="muted" data-i18n="dashboard_gen3">3 поколение</div>
-            <div class="value" id="gen3Count">0</div>
-          </div>
-        </div>
-
-        <div style="overflow-x: auto;">
-          <table class="table">
-            <thead>
-              <tr>
-                <th data-i18n="dashboard_generation">Поколение</th>
-                <th data-i18n="dashboard_email">Email</th>
-                <th data-i18n="dashboard_capital">Капитал</th>
-                <th data-i18n="dashboard_level">Уровень</th>
-                <th data-i18n="dashboard_date">Дата</th>
-              </tr>
-            </thead>
-            <tbody id="refTree">
-              <tr>
-                <td colspan="5" class="text-center muted" data-i18n="no_data">Нет данных</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <!-- Реферальная панель -->
+<div class="card">
+  <h2><span class="icon">👥</span><span data-i18n="dashboard_referral_panel">Реферальная панель</span></h2>
+  
+  <!-- ДОБАВЛЕНО: обертка refLinkWrap -->
+  <div id="refLinkWrap">
+    <div class="flex" style="margin-bottom: 12px">
+      <input class="input" id="refLink" readonly value="" style="flex: 1">
+      <button class="btn" id="btnCopyRef" data-i18n="dashboard_copy">📋 Копировать</button>
     </div>
+  </div>
 
+  <div class="grid grid-3" style="margin-bottom: 12px">
+    <div class="card stat-card">
+      <div class="muted" data-i18n="dashboard_gen1">1 поколение</div>
+      <div class="value" id="gen1Count">0</div>
+    </div>
+    <div class="card stat-card">
+      <div class="muted" data-i18n="dashboard_gen2">2 поколение</div>
+      <div class="value" id="gen2Count">0</div>
+    </div>
+    <div class="card stat-card">
+      <div class="muted" data-i18n="dashboard_gen3">3 поколение</div>
+      <div class="value" id="gen3Count">0</div>
+    </div>
+  </div>
+
+  <div style="overflow-x: auto;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th data-i18n="dashboard_generation">Поколение</th>
+          <th data-i18n="dashboard_email">Email</th>
+          <th data-i18n="dashboard_capital">Капитал</th>
+          <th data-i18n="dashboard_level">Уровень</th>
+          <th data-i18n="dashboard_date">Дата</th>
+        </tr>
+      </thead>
+      <tbody id="refTree">
+        <tr>
+          <td colspan="5" class="text-center muted" data-i18n="no_data">Нет данных</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+      
     <!-- Информационная таблица -->
     <div class="card">
       <h2><span class="icon">ℹ</span><span data-i18n="dashboard_info_table">Информационная таблица</span></h2>
