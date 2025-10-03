@@ -749,7 +749,6 @@ class AdminPanel {
             this.currentUser = session.user;
             document.getElementById('userEmail').textContent = this.currentUser.email;
             
-            // Проверяем права администратора
             await this.checkAdminRights();
         } catch (error) {
             console.error('Auth error:', error);
@@ -807,7 +806,6 @@ class AdminPanel {
     }
 
     setupEventListeners() {
-        // Навигация
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -815,12 +813,10 @@ class AdminPanel {
             });
         });
 
-        // Выход
         document.getElementById('logoutBtn').addEventListener('click', () => {
             this.logout();
         });
 
-        // Табы заявок на вывод
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -829,21 +825,18 @@ class AdminPanel {
             });
         });
 
-        // Поиск пользователей
         document.getElementById('userSearch').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.loadUsers();
             }
         });
 
-        // Поиск пополнений
         document.getElementById('depositSearch').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.loadDeposits();
             }
         });
 
-        // Фильтр начислений
         document.getElementById('rewardTypeFilter').addEventListener('change', () => {
             this.loadRewards();
         });
@@ -852,11 +845,9 @@ class AdminPanel {
     switchPage(page) {
         this.currentPage = page;
         
-        // Скрываем все страницы
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
-        // Показываем выбранную страницу
         const pageElement = document.getElementById(`${page}-page`);
         if (pageElement) {
             pageElement.classList.add('active');
@@ -864,11 +855,9 @@ class AdminPanel {
         
         document.querySelector(`[data-page="${page}"]`).classList.add('active');
         
-        // Обновляем заголовок
         const pageTitle = document.querySelector(`[data-page="${page}"]`).textContent;
         document.getElementById('pageTitle').textContent = pageTitle;
 
-        // Загружаем данные для страницы
         switch(page) {
             case 'dashboard':
                 this.loadDashboard();
@@ -897,13 +886,11 @@ class AdminPanel {
         }
     }
 
-    // ==================== DASHBOARD ====================
     async loadDashboard() {
         try {
             this.showLoading('dashboardStats', 8);
             this.showLoading('recentActivities', 1);
 
-            // Загружаем статистику
             const { data: stats, error } = await supabase.rpc('get_admin_dashboard_stats');
             
             if (error) throw error;
@@ -982,15 +969,8 @@ class AdminPanel {
     async loadRecentActivities() {
         try {
             const { data, error } = await supabase
-                .from('transactions')
-                .select(`
-                    created_at,
-                    type,
-                    amount_cents,
-                    status,
-                    profiles!inner(email)
-                `)
-                .order('created_at', { ascending: false })
+                .from('v_admin_recent_activities')
+                .select('*')
                 .limit(10);
 
             if (error) throw error;
@@ -1005,7 +985,7 @@ class AdminPanel {
             tbody.innerHTML = data.map(activity => `
                 <tr>
                     <td class="text-sm">${new Date(activity.created_at).toLocaleString()}</td>
-                    <td>${activity.profiles.email}</td>
+                    <td>${activity.user_email}</td>
                     <td>
                         <span class="badge ${this.getActivityBadge(activity.type)}">
                             ${this.getActivityType(activity.type)}
@@ -1026,7 +1006,6 @@ class AdminPanel {
         }
     }
 
-    // ==================== USERS ====================
     async loadUsers() {
         try {
             this.showLoading('usersTable', 5);
@@ -1034,14 +1013,12 @@ class AdminPanel {
             const searchText = document.getElementById('userSearch').value.trim();
             
             const { data, error } = await supabase.rpc('admin_search_users', {
-                search_text: searchText || null,
-                limit_count: 100,
-                offset_count: 0
+                p_search_text: searchText || null
             });
 
             if (error) throw error;
 
-            this.renderUsersTable(data);
+            this.renderUsersTable(data || []);
         } catch (error) {
             console.error('Users load error:', error);
             this.showError('Ошибка загрузки пользователей: ' + error.message);
@@ -1052,7 +1029,7 @@ class AdminPanel {
         const tbody = document.getElementById('usersTable');
         
         if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Пользователи не найдены</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Пользователи не найдены</td></tr>';
             return;
         }
 
@@ -1060,7 +1037,6 @@ class AdminPanel {
             <tr>
                 <td class="font-mono text-xs">${user.user_id.substring(0, 8)}...</td>
                 <td>${user.email || '—'}</td>
-                <td>${user.phone || '—'}</td>
                 <td class="text-right">$${((user.balance_cents || 0) / 100).toFixed(2)}</td>
                 <td class="font-mono text-xs">${user.ref_code || '—'}</td>
                 <td>
@@ -1086,7 +1062,6 @@ class AdminPanel {
         `).join('');
     }
 
-    // ==================== WITHDRAWALS ====================
     async loadWithdrawals(status = 'pending') {
         try {
             this.showLoading('withdrawalsTable', 5);
@@ -1100,7 +1075,7 @@ class AdminPanel {
 
             if (error) throw error;
 
-            this.renderWithdrawalsTable(data, status);
+            this.renderWithdrawalsTable(data || [], status);
         } catch (error) {
             console.error('Withdrawals load error:', error);
             this.showError('Ошибка загрузки заявок: ' + error.message);
@@ -1111,17 +1086,14 @@ class AdminPanel {
         const tbody = document.getElementById('withdrawalsTable');
         
         if (!withdrawals || withdrawals.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Заявки не найдены</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Заявки не найдены</td></tr>';
             return;
         }
 
         tbody.innerHTML = withdrawals.map(w => `
             <tr>
                 <td class="font-mono text-xs">${w.id}</td>
-                <td>
-                    <div>${w.user_email}</div>
-                    <div class="text-xs text-muted">${w.user_phone || '—'}</div>
-                </td>
+                <td>${w.user_email}</td>
                 <td class="text-right">
                     <strong>$${(w.amount_usdt || 0).toFixed(2)}</strong>
                 </td>
@@ -1130,11 +1102,6 @@ class AdminPanel {
                     <div class="text-xs text-muted">${w.network}</div>
                 </td>
                 <td class="text-sm">${new Date(w.created_at).toLocaleString()}</td>
-                <td>
-                    <span class="badge ${this.getStatusBadge(w.status)}">
-                        ${w.status_text}
-                    </span>
-                </td>
                 <td>
                     ${status === 'pending' ? `
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -1146,14 +1113,15 @@ class AdminPanel {
                             </button>
                         </div>
                     ` : `
-                        <span class="text-muted text-sm">Обработано</span>
+                        <span class="badge ${this.getStatusBadge(w.status)}">
+                            ${w.status === 'paid' ? 'Выплачено' : w.status === 'rejected' ? 'Отклонено' : w.status}
+                        </span>
                     `}
                 </td>
             </tr>
         `).join('');
     }
 
-    // ==================== DEPOSITS ====================
     async loadDeposits() {
         try {
             this.showLoading('depositsTable', 5);
@@ -1167,14 +1135,14 @@ class AdminPanel {
                 .limit(100);
 
             if (searchText) {
-                query = query.or(`user_email.ilike.%${searchText}%,user_phone.ilike.%${searchText}%,tx_hash.ilike.%${searchText}%`);
+                query = query.or(`user_email.ilike.%${searchText}%,tx_hash.ilike.%${searchText}%`);
             }
 
             const { data, error } = await query;
 
             if (error) throw error;
 
-            this.renderDepositsTable(data);
+            this.renderDepositsTable(data || []);
         } catch (error) {
             console.error('Deposits load error:', error);
             this.showError('Ошибка загрузки пополнений: ' + error.message);
@@ -1185,17 +1153,14 @@ class AdminPanel {
         const tbody = document.getElementById('depositsTable');
         
         if (!deposits || deposits.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Пополнения не найдены</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Пополнения не найдены</td></tr>';
             return;
         }
 
         tbody.innerHTML = deposits.map(deposit => `
             <tr>
                 <td class="font-mono text-xs">${deposit.id}</td>
-                <td>
-                    <div>${deposit.user_email}</div>
-                    <div class="text-xs text-muted">${deposit.user_phone || '—'}</div>
-                </td>
+                <td>${deposit.user_email}</td>
                 <td class="text-right">
                     <strong>$${(deposit.amount_usdt || 0).toFixed(2)}</strong>
                 </td>
@@ -1204,10 +1169,9 @@ class AdminPanel {
                 </td>
                 <td>
                     <span class="badge ${this.getStatusBadge(deposit.status)}">
-                        ${deposit.status_text}
+                        ${deposit.status === 'completed' ? 'Завершено' : deposit.status === 'pending' ? 'Ожидание' : deposit.status}
                     </span>
                 </td>
-                <td class="text-sm">${new Date(deposit.created_at).toLocaleString()}</td>
                 <td class="font-mono text-xs">
                     ${deposit.tx_hash ? 
                         `<span title="${deposit.tx_hash}">${deposit.tx_hash.substring(0, 10)}...</span>` : 
@@ -1218,7 +1182,6 @@ class AdminPanel {
         `).join('');
     }
 
-    // ==================== REWARDS ====================
     async loadRewards() {
         try {
             this.showLoading('rewardsTable', 5);
@@ -1239,7 +1202,7 @@ class AdminPanel {
 
             if (error) throw error;
 
-            this.renderRewardsTable(data);
+            this.renderRewardsTable(data || []);
         } catch (error) {
             console.error('Rewards load error:', error);
             this.showError('Ошибка загрузки начислений: ' + error.message);
@@ -1272,7 +1235,6 @@ class AdminPanel {
         `).join('');
     }
 
-    // ==================== ACTIONS ====================
     async approveWithdrawal(id) {
         if (!confirm('Подтвердить выплату?')) return;
 
@@ -1280,8 +1242,8 @@ class AdminPanel {
             const txid = prompt('Введите TXID транзакции (опционально):');
             
             const { data, error } = await supabase.rpc('admin_approve_withdrawal', {
-                withdrawal_id: id,
-                txid: txid || null
+                p_withdrawal_id: id,
+                p_txid: txid || null
             });
 
             if (error) throw error;
@@ -1304,8 +1266,8 @@ class AdminPanel {
 
         try {
             const { data, error } = await supabase.rpc('admin_reject_withdrawal', {
-                withdrawal_id: id,
-                reason: reason
+                p_withdrawal_id: id,
+                p_reason: reason
             });
 
             if (error) throw error;
@@ -1351,9 +1313,9 @@ class AdminPanel {
             const amountCents = Math.round(amount * 100);
             
             const { data, error } = await supabase.rpc('admin_adjust_balance', {
-                target_user_id: userId,
-                amount_cents: amountCents,
-                reason: reason
+                p_target_user_id: userId,
+                p_amount_cents: amountCents,
+                p_reason: reason
             });
 
             if (error) throw error;
@@ -1362,7 +1324,6 @@ class AdminPanel {
                 this.showSuccess(`Баланс изменен на ${amount} USDT`);
                 this.closeModal('adjustBalanceModal');
                 
-                // Обновляем данные на текущей странице
                 if (this.currentPage === 'users') {
                     this.loadUsers();
                 }
@@ -1378,7 +1339,6 @@ class AdminPanel {
         }
     }
 
-    // ==================== UTILITIES ====================
     getActivityType(type) {
         const types = {
             'deposit': 'Пополнение',
@@ -1461,9 +1421,9 @@ class AdminPanel {
 
     getColumnCount(elementId) {
         const counts = {
-            'usersTable': 8,
-            'withdrawalsTable': 7,
-            'depositsTable': 7,
+            'usersTable': 7,
+            'withdrawalsTable': 6,
+            'depositsTable': 6,
             'rewardsTable': 6,
             'recentActivities': 5
         };
@@ -1488,8 +1448,6 @@ class AdminPanel {
 
     async exportData(type) {
         this.showSuccess(`Экспорт ${type} запущен...`);
-        // Реализация экспорта в CSV
-        console.log(`Exporting ${type} data...`);
     }
 
     async logout() {
@@ -1497,35 +1455,30 @@ class AdminPanel {
         location.reload();
     }
 
-    // Заглушки для будущей реализации
     viewUserDetail(userId) {
         this.showSuccess(`Просмотр пользователя: ${userId}`);
-        // Реализовать детальный просмотр
     }
 
     viewReferrals(userId) {
         this.showSuccess(`Рефералы пользователя: ${userId}`);
-        // Реализовать просмотр рефералов
     }
 
     async loadReferrals() {
         this.showSuccess('Загрузка реферальной системы...');
-        // Реализовать загрузку рефералов
     }
 
     async loadVipData() {
         this.showSuccess('Загрузка VIP системы...');
-        // Реализовать загрузку VIP данных
     }
 
     async loadSettings() {
         this.showSuccess('Загрузка настроек...');
-        // Реализовать загрузку настроек
     }
 }
 
-// Инициализация панели администратора
 const admin = new AdminPanel();
+window.admin = admin;
+
 
 // Глобальные функции для обработчиков событий
 window.admin = admin;
