@@ -472,6 +472,90 @@
             max-height: 90vh;
             overflow: auto;
         }
+    
+        /* === MOBILE OVERRIDE - only additions below, do not touch above ===
+           The user requested that mobile screens open the page 'smaller than usual standard'.
+           These rules reduce visual scale & padding on small devices without altering other logic.
+        */
+        @media (max-width: 420px) {
+            /* Reduce base font size slightly for compactness */
+            body {
+                font-size: 14px;
+            }
+
+            /* Make the whole layout a bit smaller visually */
+            .admin-layout {
+                transform: scale(0.90);
+                transform-origin: top center;
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            /* Hide sidebar to free screen space on mobile */
+            .sidebar {
+                display: none !important;
+            }
+
+            /* Compact topbar */
+            .topbar {
+                padding: 0.6rem 0.9rem;
+            }
+            .topbar h1 {
+                font-size: 1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Reduce paddings in main content and cards */
+            .content-area {
+                padding: 1rem;
+            }
+            .stat-card {
+                padding: 1rem;
+            }
+            .stat-value {
+                font-size: 1.6rem;
+            }
+            .stat-label, .stat-change {
+                font-size: 0.75rem;
+            }
+
+            /* Tables: allow horizontal scroll and smaller cells */
+            table, th, td {
+                font-size: 0.75rem;
+            }
+            .table-container {
+                overflow-x: auto;
+            }
+            th, td {
+                padding: 0.6rem 0.75rem;
+            }
+
+            /* Buttons: smaller touch targets */
+            .btn {
+                padding: 0.45rem 0.75rem;
+                font-size: 0.78rem;
+            }
+
+            /* Search box full width */
+            .search-box {
+                width: 100% !important;
+            }
+
+            /* Modal: use most of viewport */
+            .modal-content {
+                padding: 1rem;
+                max-width: 95%;
+            }
+
+            /* Ensure fixed elements don't overflow the scaled layout */
+            html, body {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+        }
+
     </style>
 </head>
 <body>
