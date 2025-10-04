@@ -1399,7 +1399,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   }catch(_){}
 });
 
-// ✅ Точечное дополнение: обработка кнопки "Подтвердить пополнение"
+// ✅ ИСПРАВЛЕННЫЙ обработчик кнопки "Подтвердить пополнение"
 document.addEventListener('DOMContentLoaded', () => {
   const amountEl  = document.getElementById('depAmount');
   const txidEl    = document.getElementById('depTxid');
@@ -1407,7 +1407,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function handleSubmit() {
     try {
-      if (!window.LC || !window.sb) { alert('Инициализация не завершена'); return; }
+      // Проверяем авторизацию
+      const user = await getUser();
+      if (!user) {
+        alert('Войдите в аккаунт для пополнения');
+        window.location.href = 'login_single.html';
+        return;
+      }
 
       const amount = parseFloat(amountEl.value || '0');
       if (!Number.isFinite(amount) || amount <= 0) {
@@ -1418,23 +1424,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const cents = Math.round(amount * 100);
       const txid  = (txidEl.value || '').trim();
 
-      // 1) Создаём заявку
-      const dep = await window.LC.createDeposit(cents, 'TRC20', 'USDT', '');
-      if (!dep || !dep.id) {
-        alert('Не удалось создать заявку на пополнение');
+      // Минимальная сумма депозита
+      if (cents < 2900) {
+        alert('Минимальная сумма пополнения: $29');
         return;
       }
 
-      // 2) Если введён TXID — прикрепляем к только что созданной заявке
-      if (txid) {
-        await window.LC.attachTxToDeposit(dep.id, txid);
-        alert('Заявка создана и TXID прикреплён.');
-      } else {
-        alert('Заявка на пополнение создана.');
+      // Создаем депозит с TXID
+      const result = await LC.createDepositWithTx(cents, 'TRC20', 'USDT', txid);
+      
+      if (result && result.ok) {
+        alert('✅ Заявка на пополнение создана! После подтверждения сети баланс пополнится автоматически.');
+        amountEl.value = '';
+        txidEl.value   = '';
+        
+        // Обновляем баланс
+        await LC.refreshBalance();
       }
-
-      amountEl.value = '';
-      txidEl.value   = '';
     } catch (e) {
       console.error(e);
       alert(e?.message || 'Ошибка при создании пополнения');
@@ -1443,6 +1449,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (submitEl) submitEl.addEventListener('click', handleSubmit);
 });
+
+// Функция getUser для проверки авторизации
+async function getUser() {
+  try {
+    const sb = window.sb || window.supabase;
+    if (!sb) return null;
+    const { data, error } = await sb.auth.getUser();
+    if (error) throw error;
+    return data?.user || null;
+  } catch (e) {
+    console.error('Get user error:', e);
+    return null;
+  }
+}
 </script>
 
 <script defer src="assets/js/guard.js"></script>
