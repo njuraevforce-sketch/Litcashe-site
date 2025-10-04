@@ -45,7 +45,7 @@
   } catch (e) {}
 })();
 
-// app_supabase.js — полностью переработанный файл
+// app_supabase.js — исправленная версия
 ;(function () {
   if (window.__LC_SINGLETON__) {
     try { console.warn('[LC] main app already initialized:', window.__LC_SINGLETON__); } catch(_){}
@@ -903,7 +903,7 @@
     }
   };
 
-  // Функция отмены вывода
+  // ИСПРАВЛЕННАЯ Функция отмены вывода
   LC.cancelWithdrawal = async function(withdrawalId) {
     if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
       return;
@@ -918,7 +918,7 @@
       
       // Используем RPC функцию для отмены
       const { data, error } = await sb.rpc('user_cancel_withdrawal', {
-        p_id: withdrawalId
+        p_id: parseInt(withdrawalId)
       });
       
       if (error) {
@@ -926,17 +926,14 @@
         throw new Error('Не удалось отменить заявку: ' + error.message);
       }
       
-      const result = typeof data === 'object' ? data : JSON.parse(data);
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Ошибка отмены заявки');
+      if (!data.success) {
+        throw new Error(data.error || 'Ошибка отмены заявки');
       }
       
-      alert('✅ Заявка отменена');
+      alert('✅ ' + (data.message || 'Заявка отменена'));
       
       // Обновляем интерфейс
       await LC.refreshBalance();
-      await LC.loadWithdrawalsList();
       
     } catch (error) {
       console.error('❌ Cancel withdrawal error:', error);
