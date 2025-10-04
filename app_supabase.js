@@ -473,7 +473,7 @@
 
   // ===== ВИДЕО ПЛЕЙЕР =======================================================
   const LC_VIDEO_LIST = [
-    '/assets/videos/ad1.mp4'
+    '/assets/videos/ad1.MP4'
   ];
 
   LC.initVideoWatch = function () {
