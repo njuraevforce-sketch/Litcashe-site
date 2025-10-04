@@ -1383,8 +1383,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
- // Функция отмены вывода
-async function cancelWithdrawal(withdrawalId) {
+// Функция отмены вывода
+LC.cancelWithdrawal = async function(withdrawalId) {
     if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
         return;
     }
@@ -1396,9 +1396,9 @@ async function cancelWithdrawal(withdrawalId) {
             return;
         }
         
-        // Используем RPC функцию для отмены
+        // Используем p_id вместо p_withdrawal_id
         const { data, error } = await sb.rpc('user_cancel_withdrawal', {
-            p_withdrawal_id: parseInt(withdrawalId)
+            p_id: parseInt(withdrawalId)  // ИЗМЕНИТЕ НА p_id
         });
         
         if (error) {
@@ -1406,7 +1406,6 @@ async function cancelWithdrawal(withdrawalId) {
             throw new Error('Не удалось отменить заявку: ' + error.message);
         }
         
-        // data уже является объектом JSON
         if (!data.success) {
             throw new Error(data.error || 'Ошибка отмены заявки');
         }
@@ -1414,16 +1413,14 @@ async function cancelWithdrawal(withdrawalId) {
         alert('✅ ' + (data.message || 'Заявка отменена'));
         
         // Обновляем интерфейс
-        if (window.LC && typeof window.LC.refreshBalance === 'function') {
-            await window.LC.refreshBalance();
-        }
-        await loadWithdrawalsList();
+        await LC.refreshBalance();
+        await LC.loadWithdrawalsList();
         
     } catch (error) {
         console.error('❌ Cancel withdrawal error:', error);
         alert('❌ Ошибка отмены заявки: ' + error.message);
     }
-}
+};
   
   // Real-time подписка на изменения выводов
   async function subscribeToWithdrawals() {
