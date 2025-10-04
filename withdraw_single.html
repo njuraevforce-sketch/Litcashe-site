@@ -1151,6 +1151,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => document.querySelectorAll(s);
   
+  // Функция для обновления баланса
+  async function refreshBalanceDirectly() {
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) return;
+      
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+      
+      const { data, error } = await sb
+        .from('wallets')
+        .select('balance_cents')
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (error || !data) return;
+      
+      const balanceEl = document.querySelector('[data-balance]');
+      if (balanceEl) {
+        const formatted = (data.balance_cents / 100).toLocaleString('ru-RU', {
+          minimumFractionDigits: 0, 
+          maximumFractionDigits: 2
+        });
+        balanceEl.textContent = formatted;
+      }
+    } catch (e) {
+      console.warn('Direct balance refresh failed:', e);
+    }
+  }
+
   // Функция для проверки возможности вывода
   async function checkWithdrawalEligibility(userId) {
     try {
@@ -1288,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 3000);
     }
   }
-
+  
   // Функция загрузки списка выводов
   async function loadWithdrawalsList() {
     const tbody = document.getElementById('wd-table-body');
@@ -1383,42 +1413,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-// Функция отмены вывода
-LC.cancelWithdrawal = async function(withdrawalId) {
+  // Функция отмены вывода
+  async function cancelWithdrawal(withdrawalId) {
     if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
-        return;
+      return;
     }
     
     try {
-        const sb = window.sb || window.supabase;
-        if (!sb) {
-            alert('❌ Ошибка подключения к базе данных');
-            return;
-        }
-        
-        const { data, error } = await sb.rpc('user_cancel_withdrawal', {
-            p_id: parseInt(withdrawalId)
-        });
-        
-        if (error) {
-            console.error('❌ Cancel withdrawal RPC error:', error);
-            throw new Error('Не удалось отменить заявку: ' + error.message);
-        }
-        
-        if (!data.success) {
-            throw new Error(data.error || 'Ошибка отмены заявки');
-        }
-        
-        alert('✅ ' + (data.message || 'Заявка отменена'));
-        
-        // Обновляем интерфейс
-        await LC.refreshBalance();
-        
+      const sb = window.sb || window.supabase;
+      if (!sb) {
+        alert('❌ Ошибка подключения к базе данных');
+        return;
+      }
+      
+      // Используем RPC функцию для отмены
+      const { data, error } = await sb.rpc('user_cancel_withdrawal', {
+        p_id: parseInt(withdrawalId)
+      });
+      
+      if (error) {
+        console.error('❌ Cancel withdrawal RPC error:', error);
+        throw new Error('Не удалось отменить заявку: ' + error.message);
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Ошибка отмены заявки');
+      }
+      
+      alert('✅ ' + (data.message || 'Заявка отменена'));
+      
+      // Обновляем интерфейс
+      await refreshBalanceDirectly();
+      await loadWithdrawalsList();
+      
     } catch (error) {
-        console.error('❌ Cancel withdrawal error:', error);
-        alert('❌ Ошибка отмены заявки: ' + error.message);
+      console.error('❌ Cancel withdrawal error:', error);
+      alert('❌ Ошибка отмены заявки: ' + error.message);
     }
-};
+  }
   
   // Real-time подписка на изменения выводов
   async function subscribeToWithdrawals() {
@@ -1441,9 +1473,7 @@ LC.cancelWithdrawal = async function(withdrawalId) {
           console.log('Withdrawal update received:', payload);
           // Обновляем список и баланс
           loadWithdrawalsList();
-          if (window.LC && typeof window.LC.refreshBalance === 'function') {
-            window.LC.refreshBalance();
-          }
+          refreshBalanceDirectly();
         }
       )
       .subscribe();
@@ -1468,9 +1498,7 @@ LC.cancelWithdrawal = async function(withdrawalId) {
       }
       
       // Обновляем баланс
-      if (window.LC && typeof window.LC.refreshBalance === 'function') {
-        await window.LC.refreshBalance();
-      }
+      await refreshBalanceDirectly();
       
       // Загружаем историю выводов
       await loadWithdrawalsList();
@@ -1525,9 +1553,7 @@ LC.cancelWithdrawal = async function(withdrawalId) {
               walletInput.value = '';
               
               // Обновляем интерфейс
-              if (window.LC && typeof window.LC.refreshBalance === 'function') {
-                await window.LC.refreshBalance();
-              }
+              await refreshBalanceDirectly();
               await loadWithdrawalsList();
             }
             
@@ -1550,14 +1576,6 @@ LC.cancelWithdrawal = async function(withdrawalId) {
   document.addEventListener('DOMContentLoaded', function() {
     setTimeout(initWithdrawPage, 1000);
   });
-  
-  // Экспортируем функции в глобальную область видимости
-  window.LC = window.LC || {};
-  window.LC.requestWithdrawal = requestWithdrawal;
-  window.LC.loadWithdrawalsList = loadWithdrawalsList;
-  window.LC.cancelWithdrawal = cancelWithdrawal;
-  window.LC.subscribeToWithdrawals = subscribeToWithdrawals;
-  window.LC.initWithdrawPage = initWithdrawPage;
   
 })();
 </script>
