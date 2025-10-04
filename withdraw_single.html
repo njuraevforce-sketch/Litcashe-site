@@ -1383,39 +1383,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // Функция отмены вывода
-  async function cancelWithdrawal(withdrawalId) {
+ // Функция отмены вывода
+async function cancelWithdrawal(withdrawalId) {
     if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
-      return;
+        return;
     }
     
     try {
-      const sb = window.sb || window.supabase;
-      if (!sb) {
-        alert('Ошибка подключения к базе данных');
-        return;
-      }
-      
-      // Используем RPC функцию для отмены
-      const { data, error } = await sb.rpc('user_cancel_withdrawal', {
-        p_id: withdrawalId
-      });
-      
-      if (error) {
-        console.error('Cancel withdrawal error:', error);
-        alert('Ошибка отмены заявки: ' + error.message);
-        return;
-      }
-      
-      const result = typeof data === 'object' ? data : JSON.parse(data);
-      
-      if (!result.success) {
-        alert('Ошибка отмены заявки: ' + result.error);
-        return;
-      }
-      
-      alert('✅ Заявка отменена');
-      
+        const sb = window.sb || window.supabase;
+        if (!sb) {
+            alert('❌ Ошибка подключения к базе данных');
+            return;
+        }
+        
+        // Используем RPC функцию для отмены с явным указанием типа
+        const { data, error } = await sb.rpc('user_cancel_withdrawal', {
+            p_withdrawal_id: parseInt(withdrawalId)  // Явно указываем тип
+        });
+        
+        if (error) {
+            console.error('❌ Cancel withdrawal RPC error:', error);
+            throw new Error('Не удалось отменить заявку: ' + error.message);
+        }
+        
+        // data уже является объектом JSON
+        if (!data.success) {
+            throw new Error(data.error || 'Ошибка отмены заявки');
+        }
+        
+        alert('✅ Заявка отменена');
+        
+        // Обновляем интерфейс
+        if (window.LC && typeof window.LC.refreshBalance === 'function') {
+            await window.LC.refreshBalance();
+        }
+        await loadWithdrawalsList();
+        
+    } catch (error) {
+        console.error('❌ Cancel withdrawal error:', error);
+        alert('❌ Ошибка отмены заявки: ' + error.message);
+    }
+}
       // Обновляем интерфейс
       if (window.LC && typeof window.LC.refreshBalance === 'function') {
         await window.LC.refreshBalance();
