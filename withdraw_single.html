@@ -1396,7 +1396,6 @@ LC.cancelWithdrawal = async function(withdrawalId) {
             return;
         }
         
-        // Используем p_id вместо p_withdrawal_id
         const { data, error } = await sb.rpc('user_cancel_withdrawal', {
             p_id: parseInt(withdrawalId)
         });
@@ -1412,115 +1411,14 @@ LC.cancelWithdrawal = async function(withdrawalId) {
         
         alert('✅ ' + (data.message || 'Заявка отменена'));
         
-        // Обновляем интерфейс - используем существующие функции
+        // Обновляем интерфейс
         await LC.refreshBalance();
-        
-        // Если функция loadWithdrawalsList существует в LC, используем её
-        if (typeof LC.loadWithdrawalsList === 'function') {
-            await LC.loadWithdrawalsList();
-        } 
-        // Иначе если есть глобальная функция loadWithdrawalsList
-        else if (typeof window.loadWithdrawalsList === 'function') {
-            await window.loadWithdrawalsList();
-        }
-        // Иначе обновляем таблицу напрямую
-        else {
-            await refreshWithdrawalsTable();
-        }
         
     } catch (error) {
         console.error('❌ Cancel withdrawal error:', error);
         alert('❌ Ошибка отмены заявки: ' + error.message);
     }
 };
-
-// Вспомогательная функция для обновления таблицы выводов
-async function refreshWithdrawalsTable() {
-    try {
-        const sb = window.sb || window.supabase;
-        if (!sb) return;
-        
-        const { data: { user } } = await sb.auth.getUser();
-        if (!user) return;
-        
-        const { data, error } = await sb
-            .from('withdrawals')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(50);
-        
-        if (error) return;
-        
-        const tbody = document.getElementById('wd-table-body');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Пока нет заявок</td></tr>';
-            return;
-        }
-        
-        // Рендерим таблицу
-        data.forEach(withdrawal => {
-            const tr = document.createElement('tr');
-            const amount = (withdrawal.amount_cents / 100).toFixed(2);
-            const date = new Date(withdrawal.created_at).toLocaleString();
-            const fee = withdrawal.fee_cents ? (withdrawal.fee_cents / 100).toFixed(2) : '0.00';
-            const total = ((withdrawal.amount_cents + (withdrawal.fee_cents || 0)) / 100).toFixed(2);
-            
-            let statusBadge = '';
-            switch (withdrawal.status) {
-                case 'paid':
-                    statusBadge = '<span class="pill paid">Выплачено</span>';
-                    break;
-                case 'rejected':
-                    statusBadge = '<span class="pill rejected">Отклонено</span>';
-                    break;
-                case 'cancelled':
-                    statusBadge = '<span class="pill rejected">Отменено</span>';
-                    break;
-                default:
-                    statusBadge = '<span class="pill pending">Ожидание</span>';
-            }
-            
-            const canCancel = withdrawal.status === 'pending' && 
-                (Date.now() - new Date(withdrawal.created_at).getTime()) < 5 * 3600 * 1000;
-            
-            tr.innerHTML = `
-                <td>${date}</td>
-                <td class="right">${total} $</td>
-                <td>${withdrawal.network || 'TRC20'}</td>
-                <td>${statusBadge}</td>
-                <td>${withdrawal.txid ? `<code title="${withdrawal.txid}">${withdrawal.txid.substring(0, 8)}...</code>` : '—'}</td>
-                <td>
-                    ${canCancel ? 
-                        `<button class="btn bad" data-cancel="${withdrawal.id}">Отменить</button>` : 
-                        '<span class="small muted">—</span>'
-                    }
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-        
-        // Добавляем обработчики для кнопок отмены
-        tbody.querySelectorAll('[data-cancel]').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const withdrawalId = e.target.getAttribute('data-cancel');
-                await LC.cancelWithdrawal(withdrawalId);
-            });
-        });
-        
-    } catch (error) {
-        console.error('Refresh withdrawals table error:', error);
-    }
-}
-
-// Добавьте функцию loadWithdrawalsList в объект LC если её нет
-if (typeof LC.loadWithdrawalsList === 'undefined') {
-    LC.loadWithdrawalsList = refreshWithdrawalsTable;
-}
   
   // Real-time подписка на изменения выводов
   async function subscribeToWithdrawals() {
