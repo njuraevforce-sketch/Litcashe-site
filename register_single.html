@@ -1403,7 +1403,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if(ref && input) input.value = ref;
 })();
 
-// УПРОЩЕННАЯ РЕГИСТРАЦИЯ - ОСНОВНОЙ КОД
+// ИСПРАВЛЕННАЯ РЕГИСТРАЦИЯ - СИНХРОННАЯ С APP_SUPABASE.JS
 document.addEventListener('DOMContentLoaded', function() {
   const regForm = document.getElementById('regForm');
   
@@ -1411,13 +1411,24 @@ document.addEventListener('DOMContentLoaded', function() {
     regForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const email = document.getElementById('regEmail').value;
-      const phone = document.getElementById('regPhone').value;
+      const email = document.getElementById('regEmail').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
       const password = document.getElementById('regPass').value;
-      const refCode = document.getElementById('refId').value;
+      const refCode = document.getElementById('refId').value.trim();
       
       console.log('Начало регистрации:', { email, phone, refCode });
       
+      // Валидация
+      if (!email || !password) {
+        alert('Заполните email и пароль');
+        return;
+      }
+      
+      if (password.length < 6) {
+        alert('Пароль должен быть не менее 6 символов');
+        return;
+      }
+
       // Показываем загрузку
       const submitBtn = regForm.querySelector('button[type="submit"]');
       const originalText = submitBtn.textContent;
@@ -1425,9 +1436,12 @@ document.addEventListener('DOMContentLoaded', function() {
       submitBtn.disabled = true;
       
       try {
-        // Сохраняем реферальный код
+        // Сохраняем реферальный код и телефон
         if (refCode) {
           localStorage.setItem('lc_ref_code', refCode);
+        }
+        if (phone) {
+          localStorage.setItem('reg_phone', phone);
         }
         
         // Проверяем инициализацию Supabase
@@ -1451,79 +1465,70 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('Supabase client готов');
         
-// ЗАМЕНИТЕ ВСЮ ФУНКЦИЮ РЕГИСТРАЦИИ в register_single.html
-document.addEventListener('DOMContentLoaded', function() {
-  const regForm = document.getElementById('regForm');
-  
-  if (regForm) {
-    regForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      const email = document.getElementById('regEmail').value;
-      const phone = document.getElementById('regPhone').value;
-      const password = document.getElementById('regPass').value;
-      const refCode = document.getElementById('refId').value;
-      
-      console.log('Регистрация:', email);
-      
-      // Показываем загрузку
-      const submitBtn = regForm.querySelector('button[type="submit"]');
-      const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Регистрация...';
-      submitBtn.disabled = true;
-      
-      try {
-        // Сохраняем реферальный код
-        if (refCode) localStorage.setItem('lc_ref_code', refCode);
-        if (phone) localStorage.setItem('reg_phone', phone);
-        
-        // 1. Регистрируем пользователя
+        // Регистрация с данными пользователя
         const { data, error } = await window.sb.auth.signUp({
           email: email,
-          password: password
+          password: password,
+          options: {
+            data: {
+              phone: phone,
+              ref_code: refCode
+            }
+          }
         });
         
-        if (error) throw error;
+        console.log('Ответ от Supabase:', { data, error });
         
-        console.log('Пользователь создан:', data.user?.id);
-        
-        // 2. НЕМЕДЛЕННО создаем профиль и кошелек
-        if (data.user) {
-          const { data: profileData, error: profileError } = await window.sb
-            .from('profiles')
-            .insert({
-              user_id: data.user.id,
-              email: email,
-              ref_code: 'LC' + Math.random().toString(36).substr(2, 8).toUpperCase(),
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+        if (error) {
+          console.error('Ошибка Supabase Auth:', error);
           
-          if (profileError) console.log('Ошибка профиля:', profileError);
+          let errorMessage = 'Ошибка регистрации';
           
-          const { data: walletData, error: walletError } = await window.sb
-            .from('wallets')
-            .insert({
-              user_id: data.user.id,
-              balance_cents: 0,
-              updated_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+          if (error.message.includes('already registered')) {
+            errorMessage = 'Этот email уже зарегистрирован';
+          } else if (error.message.includes('password')) {
+            errorMessage = 'Слабый пароль. Используйте не менее 6 символов';
+          } else if (error.message.includes('email')) {
+            errorMessage = 'Неверный формат email';
+          } else if (error.message.includes('rate limit')) {
+            errorMessage = 'Слишком много попыток. Попробуйте позже';
+          } else {
+            errorMessage += ': ' + error.message;
+          }
           
-          if (walletError) console.log('Ошибка кошелька:', walletError);
-          
-          console.log('Профиль и кошелек созданы вручную');
+          throw new Error(errorMessage);
         }
         
-        alert('✅ Регистрация успешна! Можете войти.');
-        window.location.href = 'login_single.html';
+        if (data.user) {
+          console.log('Пользователь успешно создан:', data.user.id);
+          
+          // ВЫЗОВ НОВОЙ ФУНКЦИИ ДЛЯ СОЗДАНИЯ ПРОФИЛЯ И КОШЕЛЬКА
+          if (window.LC && window.LC.handlePostRegistration) {
+            console.log('Вызываем handlePostRegistration');
+            const postRegistrationSuccess = await window.LC.handlePostRegistration(data.user);
+            
+            if (postRegistrationSuccess) {
+              alert('✅ Регистрация успешна! Вы будете перенаправлены в кабинет.');
+              window.location.href = 'dashboard_single.html';
+            } else {
+              throw new Error('Не удалось создать профиль пользователя');
+            }
+          } else {
+            console.warn('LC.handlePostRegistration не доступен, пробуем стандартный редирект');
+            alert('✅ Регистрация успешна! Вы будете перенаправлены в кабинет.');
+            window.location.href = 'dashboard_single.html';
+          }
+        } else {
+          console.log('Требуется подтверждение email');
+          alert('📧 Регистрация завершена. Проверьте вашу почту для подтверждения.');
+          window.location.href = 'login_single.html';
+        }
         
       } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Полная ошибка регистрации:', error);
         alert('❌ ' + error.message);
       } finally {
+        // Восстанавливаем кнопку
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
       }
@@ -1536,6 +1541,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script defer src="supabaseConfig.js"></script>
 <script defer src="assets/js/i18n.js"></script>
 <script defer src="assets/js/language-switcher.js"></script>
+<script defer src="app_supabase.js"></script>
 
 <script>
   if ('serviceWorker' in navigator) {
