@@ -1402,96 +1402,112 @@ document.addEventListener('DOMContentLoaded', function() {
   const input = document.getElementById('refId');
   if(ref && input) input.value = ref;
 })();
+
+// УПРОЩЕННАЯ РЕГИСТРАЦИЯ - ОСНОВНОЙ КОД
+document.addEventListener('DOMContentLoaded', function() {
+  const regForm = document.getElementById('regForm');
+  
+  if (regForm) {
+    regForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('regEmail').value;
+      const phone = document.getElementById('regPhone').value;
+      const password = document.getElementById('regPass').value;
+      const refCode = document.getElementById('refId').value;
+      
+      console.log('Начало регистрации:', { email, phone, refCode });
+      
+      // Показываем загрузку
+      const submitBtn = regForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Регистрация...';
+      submitBtn.disabled = true;
+      
+      try {
+        // Сохраняем реферальный код
+        if (refCode) {
+          localStorage.setItem('lc_ref_code', refCode);
+        }
+        
+        // Проверяем инициализацию Supabase
+        if (!window.sb) {
+          if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+            window.sb = window.supabase.createClient(
+              window.SUPABASE_URL,
+              window.SUPABASE_ANON_KEY,
+              { 
+                auth: { 
+                  persistSession: true, 
+                  autoRefreshToken: true, 
+                  detectSessionInUrl: true 
+                } 
+              }
+            );
+          } else {
+            throw new Error('Supabase не настроен. Проверьте supabaseConfig.js');
+          }
+        }
+        
+        console.log('Supabase client готов');
+        
+        // Упрощенная регистрация - только email и password
+        const { data, error } = await window.sb.auth.signUp({
+          email: email,
+          password: password
+          // Убираем options.data чтобы избежать ошибок
+        });
+        
+        console.log('Ответ от Supabase:', { data, error });
+        
+        if (error) {
+          console.error('Ошибка Supabase Auth:', error);
+          
+          // Более понятные сообщения об ошибках
+          let errorMessage = 'Ошибка регистрации: ';
+          
+          if (error.message.includes('already registered')) {
+            errorMessage = 'Этот email уже зарегистрирован';
+          } else if (error.message.includes('password')) {
+            errorMessage = 'Слабый пароль. Используйте не менее 6 символов';
+          } else if (error.message.includes('email')) {
+            errorMessage = 'Неверный формат email';
+          } else if (error.message.includes('rate limit')) {
+            errorMessage = 'Слишком много попыток. Попробуйте позже';
+          } else {
+            errorMessage += error.message;
+          }
+          
+          throw new Error(errorMessage);
+        }
+        
+        if (data.user) {
+          console.log('Пользователь успешно создан:', data.user.id);
+          alert('✅ Регистрация успешна! Вы можете войти в систему.');
+          window.location.href = 'login_single.html';
+        } else {
+          console.log('Пользователь создан, но требует подтверждения email');
+          alert('📧 Регистрация завершена. Проверьте вашу почту для подтверждения.');
+          window.location.href = 'login_single.html';
+        }
+        
+      } catch (error) {
+        console.error('Полная ошибка регистрации:', error);
+        alert('❌ ' + error.message);
+      } finally {
+        // Восстанавливаем кнопку
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      }
+    });
+  }
+});
 </script>
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
 <script defer src="assets/js/i18n.js"></script>
 <script defer src="assets/js/language-switcher.js"></script>
-<script defer src="app_supabase.js"></script>
-<script defer src="assets/js/auth.js"></script>
-
-<!-- Referral guard script -->
-<script id="lc-ref-guard">
-// Minimal, non-breaking guard: requires a valid referral code before signup.
-// Validates against profiles.ref_code via Supabase. Runs in capture phase so it blocks other handlers if invalid.
-(function(){
-  function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); }
-  ready(function(){
-    try{
-      var form = document.getElementById('regForm');
-      var input = document.getElementById('refId');
-      if(!form || !input) return;
-
-      // Make field required in UI (doesn't break backend)
-      try{ input.setAttribute('required','required'); input.placeholder = 'Реферальный код'; }catch(_){}
-
-      // Reuse existing client if present; fallback create if needed
-      var sb = (function(){
-        try{
-          if (window.sb && window.sb.from) return window.sb;
-          if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-            return (window.sb = window.supabase.createClient(
-              window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
-              { auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } }
-            ));
-          }
-        }catch(_){}
-        return null;
-      })();
-
-      // Helper to get code from input / URL / localStorage
-      function getRef(){
-        var v = (input.value||'').trim();
-        if (v) return v;
-        try{
-          var p = new URLSearchParams(location.search).get('ref');
-          if (p) return p.trim();
-          var s = localStorage.getItem('lc_ref_code');
-          if (s) return (s||'').trim();
-        }catch(_){}
-        return '';
-      }
-
-      // Attach capture-phase listener to block invalid submits before other handlers
-      form.addEventListener('submit', async function(e){
-        try{
-          var code = getRef();
-          if(!code){
-            e.preventDefault(); e.stopImmediatePropagation();
-            alert('Введите актуальный реферальный код.');
-            input.focus();
-            return false;
-          }
-          if(!sb){
-            // If no client, be conservative and block (can't validate)
-            e.preventDefault(); e.stopImmediatePropagation();
-            alert('Не удалось проверить код. Обновите страницу и попробуйте снова.');
-            return false;
-          }
-          // Check existence in profiles.ref_code
-          var q = await sb.from('profiles').select('user_id').eq('ref_code', code).maybeSingle();
-          var ok = q && q.data && q.data.user_id;
-          if (!ok){
-            e.preventDefault(); e.stopImmediatePropagation();
-            alert('Неверный реферальный код. Проверьте и попробуйте снова.');
-            input.focus();
-            return false;
-          }
-          // Persist for post-signup apply_referral()
-          try{ localStorage.setItem('lc_ref_code', code); }catch(_){}
-          // allow original submit to proceed
-          return true;
-        }catch(err){
-          e.preventDefault(); e.stopImmediatePropagation();
-          alert('Ошибка проверки кода: ' + (err && err.message ? err.message : err));
-          return false;
-        }
-      }, true);
-    }catch(_){}
-  });
-})();
-</script>
 
 <script>
   if ('serviceWorker' in navigator) {
