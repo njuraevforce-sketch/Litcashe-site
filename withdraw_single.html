@@ -1396,9 +1396,9 @@ async function cancelWithdrawal(withdrawalId) {
             return;
         }
         
-        // Используем RPC функцию для отмены с явным указанием типа
+        // Используем RPC функцию для отмены
         const { data, error } = await sb.rpc('user_cancel_withdrawal', {
-            p_withdrawal_id: parseInt(withdrawalId)  // Явно указываем тип
+            p_withdrawal_id: parseInt(withdrawalId)
         });
         
         if (error) {
@@ -1411,7 +1411,7 @@ async function cancelWithdrawal(withdrawalId) {
             throw new Error(data.error || 'Ошибка отмены заявки');
         }
         
-        alert('✅ Заявка отменена');
+        alert('✅ ' + (data.message || 'Заявка отменена'));
         
         // Обновляем интерфейс
         if (window.LC && typeof window.LC.refreshBalance === 'function') {
@@ -1424,17 +1424,6 @@ async function cancelWithdrawal(withdrawalId) {
         alert('❌ Ошибка отмены заявки: ' + error.message);
     }
 }
-      // Обновляем интерфейс
-      if (window.LC && typeof window.LC.refreshBalance === 'function') {
-        await window.LC.refreshBalance();
-      }
-      await loadWithdrawalsList();
-      
-    } catch (error) {
-      console.error('Cancel withdrawal error:', error);
-      alert('Ошибка отмены заявки: ' + error.message);
-    }
-  }
   
   // Real-time подписка на изменения выводов
   async function subscribeToWithdrawals() {
