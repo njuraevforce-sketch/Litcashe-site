@@ -211,6 +211,62 @@
         const nextTargetEl = $('#nextTargetCell');
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
+
+      // ===== ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================================
+      try {
+        const levelCards = document.querySelectorAll('.level-card');
+        if (levelCards.length) {
+          // Берем реальные данные из конфига
+          const levelsConfig = LC.config.LEVELS;
+          
+          levelCards.forEach(card => {
+            const cardLevel = card.getAttribute('data-level');
+            const statusElement = card.querySelector('.level-status');
+            const percentageElement = card.querySelector('.level-percentage');
+            const capElement = card.querySelector('.level-cap');
+            
+            // Убираем активный класс у всех карточек
+            card.classList.remove('active');
+            
+            // Находим конфиг для текущего уровня
+            const levelConfig = levelsConfig.find(level => 
+              level.name.toLowerCase().replace(' ', '') === cardLevel
+            );
+            
+            // Обновляем данные карточки
+            if (levelConfig) {
+              if (percentageElement) {
+                percentageElement.textContent = `${levelConfig.percent}%`;
+              }
+              if (capElement) {
+                capElement.textContent = `до $${(levelConfig.cap / 100).toLocaleString()}`;
+              }
+            }
+            
+            // Обновляем статус
+            if (cardLevel === info.level_name?.toLowerCase().replace(' ', '')) {
+              card.classList.add('active');
+              if (statusElement) {
+                statusElement.textContent = 'Активен';
+                statusElement.setAttribute('data-i18n', 'level_active');
+              }
+            } else {
+              if (statusElement) {
+                statusElement.textContent = 'Неактивен';
+                statusElement.setAttribute('data-i18n', 'level_inactive');
+              }
+            }
+          });
+          
+          // Обновляем перевод
+          if (window.LanguageSwitcher) {
+            window.LanguageSwitcher.updatePageText();
+          }
+        }
+      } catch (error) {
+        console.error('Error updating level cards:', error);
+      }
+
     } catch(e) { 
       console.error('[LC] refreshLevelInfo', e); 
     }
