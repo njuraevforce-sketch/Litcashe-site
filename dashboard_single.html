@@ -737,7 +737,7 @@
   /* === НОВЫЙ СТИЛЬ КАРТОЧЕК УРОВНЕЙ === */
   .level-card {
     position: relative;
-    background: linear-gradient(135deg, #1a1200 0%, #2a1f00 50%, #1a1200 100%);
+    background: linear-gradient(135deg, #2a2200 0%, #3a2f00 50%, #2a2200 100%);
     border-radius: 8px;
     padding: 8px;
     margin-bottom: 8px;
@@ -761,7 +761,7 @@
 
   .level-card.active {
     border-color: #ffed4a;
-    background: linear-gradient(135deg, #2a1f00 0%, #3a2c00 50%, #2a1f00 100%);
+    background: linear-gradient(135deg, #3a2f00 0%, #4a3c00 50%, #3a2f00 100%);
     box-shadow: 0 6px 25px rgba(255, 215, 0, 0.4);
   }
 
@@ -781,57 +781,57 @@
     opacity: 1;
   }
 
-  /* VIP символы на фоне */
+  /* VIP символы в правом верхнем углу */
   .level-card[data-level="starter"]::after {
     content: 'VIP1';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 32px;
+    top: 4px;
+    right: 6px;
+    font-size: 10px;
     font-weight: 900;
-    color: rgba(255, 215, 0, 0.15);
-    z-index: 0;
+    color: rgba(255, 215, 0, 0.8);
+    z-index: 1;
     pointer-events: none;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
   }
 
   .level-card[data-level="advanced"]::after {
     content: 'VIP2';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 32px;
+    top: 4px;
+    right: 6px;
+    font-size: 10px;
     font-weight: 900;
-    color: rgba(255, 215, 0, 0.15);
-    z-index: 0;
+    color: rgba(255, 215, 0, 0.8);
+    z-index: 1;
     pointer-events: none;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
   }
 
   .level-card[data-level="proelite"]::after {
     content: 'VIP3';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 32px;
+    top: 4px;
+    right: 6px;
+    font-size: 10px;
     font-weight: 900;
-    color: rgba(255, 215, 0, 0.15);
-    z-index: 0;
+    color: rgba(255, 215, 0, 0.8);
+    z-index: 1;
     pointer-events: none;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
   }
 
   .level-card[data-level="titanium"]::after {
     content: 'VIP4';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 32px;
+    top: 4px;
+    right: 6px;
+    font-size: 10px;
     font-weight: 900;
-    color: rgba(255, 215, 0, 0.15);
-    z-index: 0;
+    color: rgba(255, 215, 0, 0.8);
+    z-index: 1;
     pointer-events: none;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
   }
 
   .level-icon {
@@ -1226,7 +1226,9 @@
     .level-card[data-level="advanced"]::after,
     .level-card[data-level="proelite"]::after,
     .level-card[data-level="titanium"]::after {
-        font-size: 24px;
+        font-size: 9px;
+        top: 3px;
+        right: 4px;
     }
   }
 
@@ -1258,7 +1260,9 @@
     .level-card[data-level="advanced"]::after,
     .level-card[data-level="proelite"]::after,
     .level-card[data-level="titanium"]::after {
-        font-size: 20px;
+        font-size: 8px;
+        top: 2px;
+        right: 3px;
     }
   }
 
