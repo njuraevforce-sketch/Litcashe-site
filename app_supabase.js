@@ -8,7 +8,7 @@
           { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
         );
       }
-    }
+    }1
   }catch(_){}
 })();
 
