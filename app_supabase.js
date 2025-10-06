@@ -103,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ ВСЕГДА ВИДИМЫ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ВСЕ КАРТОЧКИ ВИДНЫ, ТОЛЬКО ТЕКСТ "АКТИВЕН"
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -170,19 +170,14 @@
             const cardLevel = card.getAttribute('data-level');
             const statusElement = card.querySelector('.level-status');
             
-            // ВАЖНОЕ ИСПРАВЛЕНИЕ: ВСЕГДА ПОКАЗЫВАЕМ ВСЕ КАРТОЧКИ
+            // ВСЕГДА ПОКАЗЫВАЕМ ВСЕ КАРТОЧКИ - НИКОГДА НЕ СКРЫВАЕМ
             card.style.display = 'block';
             card.style.visibility = 'visible';
             card.style.opacity = '1';
-            card.style.position = 'relative';
             
-            // Убираем активный класс у всех
-            card.classList.remove('active');
-            
-            // Добавляем активный класс только текущему уровню
+            // Для активной карточки показываем статус, для остальных скрываем
             if (cardLevel === currentLevelName) {
               console.log('Setting active level:', cardLevel);
-              card.classList.add('active');
               if (statusElement) {
                 statusElement.textContent = 'Активен';
                 statusElement.style.display = 'block';
@@ -441,42 +436,12 @@
       if (!user) return;
 
       const { data, error } = await sb.rpc('get_referral_earnings');
-      if (error) {
-        console.error('Error getting referral earnings:', error);
-        // Fallback: создаем mock данные для тестирования
-        const mockEarnings = [
-          { generation: 1, total_cents: 1300 },
-          { generation: 2, total_cents: 500 },
-          { generation: 3, total_cents: 100 }
-        ];
-        console.log('Using mock earnings data:', mockEarnings);
-        processEarningsData(mockEarnings);
-        return;
-      }
-      
+      if (error) throw error;
       const earnings = Array.isArray(data) ? data : (data ? [data] : []);
-      console.log('Raw referral earnings data:', earnings);
 
-      processEarningsData(earnings);
-
-    } catch(e) { 
-      console.error('[LC] loadReferralEarnings', e); 
-      // Fallback на случай ошибки
-      const mockEarnings = [
-        { generation: 1, total_cents: 0 },
-        { generation: 2, total_cents: 0 },
-        { generation: 3, total_cents: 0 }
-      ];
-      processEarningsData(mockEarnings);
-    }
-
-    function processEarningsData(earnings) {
-      // Создаем объекты для каждого поколения, даже если данных нет
-      const gen1 = earnings.find(e => e.generation === 1) || { total_cents: 0 };
-      const gen2 = earnings.find(e => e.generation === 2) || { total_cents: 0 };
-      const gen3 = earnings.find(e => e.generation === 3) || { total_cents: 0 };
-
-      console.log('Processed earnings:', { gen1, gen2, gen3 });
+      const gen1 = earnings.find(e => e.generation === 1) || {};
+      const gen2 = earnings.find(e => e.generation === 2) || {};
+      const gen3 = earnings.find(e => e.generation === 3) || {};
 
       const set = (sel, val) => { 
         const el = $(sel); 
@@ -497,12 +462,10 @@
       set('#gen3CellModal', fmtMoney(pickNum(gen3.total_cents)/100));
       set('#refTotalCellModal', fmtMoney(total));
 
-      console.log('Referral earnings loaded:', { 
-        gen1: gen1.total_cents, 
-        gen2: gen2.total_cents, 
-        gen3: gen3.total_cents, 
-        total 
-      });
+      console.log('Referral earnings loaded:', { gen1: gen1.total_cents, gen2: gen2.total_cents, gen3: gen3.total_cents, total });
+
+    } catch(e) { 
+      console.error('[LC] loadReferralEarnings', e); 
     }
   };
 
