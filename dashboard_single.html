@@ -303,12 +303,18 @@
     border-radius: var(--radius);
     position: relative;
     overflow: hidden;
+    transition: all 0.3s ease;
     touch-action: pan-y;
     box-shadow: none;
     opacity: 1;
     transform: scale(1);
     display: block !important;
     visibility: visible !important;
+  }
+
+  .level-card-carousel.active {
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 20px rgba(245, 197, 24, 0.3);
   }
 
   .level-bg {
@@ -319,6 +325,11 @@
     height: 100%;
     background-size: cover;
     background-position: center;
+    transition: transform 0.3s ease;
+  }
+
+  .level-card-carousel:hover .level-bg {
+    transform: scale(1.05);
   }
 
   .level-overlay {
@@ -347,15 +358,16 @@
     border-radius: 10px;
     font-size: 9px;
     font-weight: bold;
+    box-shadow: 0 2px 8px rgba(245, 197, 24, 0.4);
   }
 
   .level-status {
+    background: rgba(34, 197, 94, 0.9);
     color: white;
     padding: 3px 8px;
     border-radius: 10px;
     font-size: 9px;
     font-weight: bold;
-    text-shadow: 0 0 5px rgba(0,0,0,0.8);
   }
 
   /* ОБНОВЛЕННЫЕ ИКОНКИ */
@@ -1486,28 +1498,100 @@ function showNotification(message) {
   }
 }
 
-// Карусель карточек уровней - УПРОЩЕННАЯ ВЕРСИЯ
+// Карусель карточек уровней с улучшенным свайпом
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
+  const cards = document.querySelectorAll('.level-card-carousel');
   const dots = document.querySelectorAll('.carousel-dot');
   let currentIndex = 0;
+  const cardWidth = 280;
+  const margin = 16;
+  let startX = 0;
+  let currentX = 0;
+  let isSwiping = false;
 
   function updateCarousel() {
-    // ТОЛЬКО перемещение карусели и обновление точек
-    const offset = -currentIndex * 296; // 280px + 16px margin
+    const offset = -currentIndex * (cardWidth + margin);
     carouselWrapper.style.transform = `translateX(${offset}px)`;
+    
+    cards.forEach((card, index) => {
+      card.classList.toggle('active', index === currentIndex);
+    });
     
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === currentIndex);
     });
   }
 
-  // Навигация точками
   dots.forEach(dot => {
     dot.addEventListener('click', () => {
       currentIndex = parseInt(dot.getAttribute('data-index'));
       updateCarousel();
     });
+  });
+
+  carouselWrapper.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isSwiping = true;
+    carouselWrapper.style.transition = 'none';
+  });
+  
+  carouselWrapper.addEventListener('touchmove', (e) => {
+    if (!isSwiping) return;
+    currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    const offset = -currentIndex * (cardWidth + margin) + diff;
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+  });
+  
+  carouselWrapper.addEventListener('touchend', () => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    carouselWrapper.style.transition = 'transform 0.5s ease';
+    
+    const diff = startX - currentX;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0 && currentIndex < cards.length - 1) {
+        currentIndex++;
+      } else if (diff < 0 && currentIndex > 0) {
+        currentIndex--;
+      }
+    }
+    updateCarousel();
+  });
+
+  carouselWrapper.addEventListener('mousedown', (e) => {
+    startX = e.clientX;
+    isSwiping = true;
+    carouselWrapper.style.transition = 'none';
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isSwiping) return;
+    currentX = e.clientX;
+    const diff = currentX - startX;
+    const offset = -currentIndex * (cardWidth + margin) + diff;
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    carouselWrapper.style.transition = 'transform 0.5s ease';
+    
+    const diff = startX - currentX;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0 && currentIndex < cards.length - 1) {
+        currentIndex++;
+      } else if (diff < 0 && currentIndex > 0) {
+        currentIndex--;
+      }
+    }
+    updateCarousel();
   });
 
   updateCarousel();
