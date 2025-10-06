@@ -403,29 +403,55 @@
     }
   };
 
-  // ИСПРАВЛЕННЫЕ ФУНКЦИИ ДЛЯ РЕФЕРАЛЬНОЙ СИСТЕМЫ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - используем правильные RPC вызовы для подсчета рефералов
   LC.getActiveReferralCounts = async function() {
     try {
       const { data, error } = await sb.rpc('get_all_referral_counts');
       if (error) throw error;
-      const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
-      return { 
-        gen1: Number(row.gen1||0), 
-        gen2: Number(row.gen2||0), 
-        gen3: Number(row.gen3||0) 
-      };
+      
+      // Обрабатываем разные форматы ответа
+      let counts = { gen1: 0, gen2: 0, gen3: 0 };
+      
+      if (Array.isArray(data)) {
+        const row = data[0] || {};
+        counts = {
+          gen1: Number(row.gen1 || 0),
+          gen2: Number(row.gen2 || 0), 
+          gen3: Number(row.gen3 || 0)
+        };
+      } else if (data && typeof data === 'object') {
+        counts = {
+          gen1: Number(data.gen1 || 0),
+          gen2: Number(data.gen2 || 0),
+          gen3: Number(data.gen3 || 0)
+        };
+      }
+      
+      return counts;
     } catch (e) {
       console.warn('[LC] getActiveReferralCounts', e);
-      return { gen1:0, gen2:0, gen3:0 };
+      return { gen1: 0, gen2: 0, gen3: 0 };
     }
   };
 
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - получаем рефералов по поколениям
   LC.getActiveReferrals = async function(level = 1) {
     try {
       const { data, error } = await sb.rpc('get_all_referrals_by_generation', {
         p_level: level
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.warn('get_all_referrals_by_generation failed, trying alternative:', error);
+        // Fallback на альтернативную функцию
+        const { data: altData, error: altError } = await sb.rpc('get_referrals_by_generation', {
+          p_level: level
+        });
+        
+        if (altError) throw altError;
+        return Array.isArray(altData) ? altData : (altData ? [altData] : []);
+      }
+      
       return Array.isArray(data) ? data : (data ? [data] : []);
     } catch (e) {
       console.warn('[LC] getActiveReferrals', e);
@@ -433,42 +459,73 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ПОКАЗЫВАЕТ ДОХОДЫ ВСЕХ ПОКОЛЕНИЙ
+  // ПОЛНОСТЬЮ ПЕРЕПИСАННАЯ ФУНКЦИЯ - правильное получение реферальных доходов
   LC.loadReferralEarnings = async function() {
     try {
       const user = await getUser(); 
       if (!user) return;
 
-      // Сначала пробуем получить доходы через get_referral_earnings
+      console.log('Loading referral earnings for user:', user.id);
+
+      // Пробуем несколько способов получения данных о реферальных доходах
       let earnings = [];
+      
+      // Способ 1: Используем my_ref_income_summary если доступен
       try {
-        const { data, error } = await sb.rpc('get_referral_earnings');
-        if (!error && data) {
-          earnings = Array.isArray(data) ? data : [data];
-        }
-      } catch (e1) {
-        console.warn('get_referral_earnings failed, trying my_ref_income_summary');
-        // Если не сработало, пробуем альтернативную функцию
-        try {
-          const { data, error } = await sb.rpc('my_ref_income_summary');
-          if (!error && data) {
-            const row = Array.isArray(data) ? (data[0] || {}) : (data || {});
-            // Конвертируем формат данных
+        const { data: summaryData, error: summaryError } = await sb.rpc('my_ref_income_summary');
+        if (!summaryError && summaryData) {
+          console.log('Got data from my_ref_income_summary:', summaryData);
+          
+          const row = Array.isArray(summaryData) ? summaryData[0] : summaryData;
+          if (row) {
             earnings = [
-              { generation: 1, total_cents: Math.round(pickNum(row.lvl1_usdt) * 100) },
-              { generation: 2, total_cents: Math.round(pickNum(row.lvl2_usdt) * 100) },
-              { generation: 3, total_cents: Math.round(pickNum(row.lvl3_usdt) * 100) }
+              { generation: 1, total_cents: Math.round((row.lvl1_usdt || 0) * 100) },
+              { generation: 2, total_cents: Math.round((row.lvl2_usdt || 0) * 100) },
+              { generation: 3, total_cents: Math.round((row.lvl3_usdt || 0) * 100) }
             ];
           }
-        } catch (e2) {
-          console.warn('Both referral earnings functions failed');
+        }
+      } catch (summaryErr) {
+        console.warn('my_ref_income_summary failed:', summaryErr);
+      }
+
+      // Способ 2: Если первый способ не сработал, пробуем get_referral_earnings
+      if (earnings.length === 0) {
+        try {
+          const { data: refData, error: refError } = await sb.rpc('get_referral_earnings');
+          if (!refError && refData) {
+            console.log('Got data from get_referral_earnings:', refData);
+            earnings = Array.isArray(refData) ? refData : (refData ? [refData] : []);
+          }
+        } catch (refErr) {
+          console.warn('get_referral_earnings failed:', refErr);
         }
       }
 
-      // Ищем доходы по каждому поколению
-      const gen1 = earnings.find(e => e.generation === 1) || { total_cents: 0 };
-      const gen2 = earnings.find(e => e.generation === 2) || { total_cents: 0 };
-      const gen3 = earnings.find(e => e.generation === 3) || { total_cents: 0 };
+      // Способ 3: Если все еще нет данных, пробуем ref_income_totals
+      if (earnings.length === 0) {
+        try {
+          const { data: totalsData, error: totalsError } = await sb.rpc('ref_income_totals');
+          if (!totalsError && totalsData) {
+            console.log('Got data from ref_income_totals:', totalsData);
+            
+            const totalsArray = Array.isArray(totalsData) ? totalsData : (totalsData ? [totalsData] : []);
+            earnings = totalsArray.map(item => ({
+              generation: item.lvl,
+              total_cents: Math.round((item.amount_usd || 0) * 100)
+            }));
+          }
+        } catch (totalsErr) {
+          console.warn('ref_income_totals failed:', totalsErr);
+        }
+      }
+
+      console.log('Processed earnings data:', earnings);
+
+      // Обрабатываем данные о доходах
+      const gen1 = earnings.find(e => e.generation === 1) || {};
+      const gen2 = earnings.find(e => e.generation === 2) || {};
+      const gen3 = earnings.find(e => e.generation === 3) || {};
 
       const set = (sel, val) => { 
         const el = $(sel); 
@@ -489,10 +546,10 @@
       set('#gen3CellModal', fmtMoney(pickNum(gen3.total_cents)/100));
       set('#refTotalCellModal', fmtMoney(total));
 
-      console.log('Referral earnings loaded:', { 
-        gen1: gen1.total_cents, 
-        gen2: gen2.total_cents, 
-        gen3: gen3.total_cents, 
+      console.log('Referral earnings displayed:', { 
+        gen1: pickNum(gen1.total_cents)/100, 
+        gen2: pickNum(gen2.total_cents)/100, 
+        gen3: pickNum(gen3.total_cents)/100, 
         total 
       });
 
@@ -1043,18 +1100,8 @@
       const user = await getUser(); 
       if (!user) return;
 
-      // Загружаем все 3 поколения рефералов
-      const [refs1, refs2, refs3] = await Promise.all([
-        LC.getActiveReferrals(1),
-        LC.getActiveReferrals(2), 
-        LC.getActiveReferrals(3)
-      ]);
-
-      const counts = {
-        gen1: refs1.length,
-        gen2: refs2.length,
-        gen3: refs3.length
-      };
+      // Получаем количество рефералов по поколениям
+      const counts = await LC.getActiveReferralCounts();
 
       const set = (sel, val) => { const el = $(sel); if (el) el.textContent = String(val); };
       
@@ -1070,8 +1117,19 @@
 
       console.log('Referral counts:', counts);
 
-      // Объединяем все рефералы для таблицы
-      const allRefs = [...refs1, ...refs2, ...refs3];
+      // Загружаем детальную информацию о рефералах для таблицы
+      const allRefs = [];
+      
+      // Получаем рефералов каждого поколения
+      for (let level = 1; level <= 3; level++) {
+        const refs = await LC.getActiveReferrals(level);
+        refs.forEach(ref => {
+          allRefs.push({
+            ...ref,
+            generation: level
+          });
+        });
+      }
       
       const tbody = $('#refTree');
       if (tbody) {
@@ -1082,10 +1140,10 @@
           allRefs.slice(0, 20).forEach(r => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${r.generation || 1}</td>
-                            <td>${r.user_email || '—'}</td>
-                            <td>${fmtMoney(pickNum(r.capital_cents)/100)}</td>
-                            <td>${r.level_name || '—'}</td>
-                            <td>${fmtDate(r.created_at)}</td>`;
+                            <td>${r.user_email || r.email || '—'}</td>
+                            <td>${fmtMoney(pickNum(r.capital_cents || r.balance_cents)/100)}</td>
+                            <td>${r.level_name || 'Starter'}</td>
+                            <td>${fmtDate(r.created_at || r.joined_at)}</td>`;
             tbody.appendChild(tr);
           });
         }
