@@ -42,7 +42,7 @@
     --warning: #f59e0b;
     --error: #ef4444;
     --bg: #ffffff;
-    --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+    --bg-gradient: linear-gradient(135deg, #f0fff0 0%, #e0ffe0 100%);
     --bg-card: #ffffff;
     --text: #1a1a1a;
     --text-secondary: #64748b;
@@ -102,13 +102,13 @@
     gap: 8px;
   }
 
-  /* БАЛАНС УВЕЛИЧЕН НА 40% */
+  /* БАЛАНС */
   .balance-small {
-    font-size: 20px; /* Было 14px, увеличили на 40% */
+    font-size: 20px;
     font-weight: 700;
     color: var(--text);
     background: rgba(245, 197, 24, 0.1);
-    padding: 6px 10px; /* Увеличили отступы для большего баланса */
+    padding: 6px 10px;
     border-radius: 8px;
     border: 1px solid rgba(245, 197, 24, 0.2);
   }
@@ -305,18 +305,14 @@
     overflow: hidden;
     transition: all 0.3s ease;
     touch-action: pan-y;
-    /* Убраны все тени и градиенты */
     box-shadow: none;
     opacity: 1;
     transform: scale(1);
   }
 
   .level-card-carousel.active {
-    /* УБРАНЫ ВСЕ СТИЛИ АКТИВНОЙ КАРТОЧКИ */
-    opacity: 1;
-    transform: scale(1);
-    border: none;
-    box-shadow: none;
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 20px rgba(245, 197, 24, 0.3);
   }
 
   .level-bg {
@@ -334,14 +330,12 @@
     transform: scale(1.05);
   }
 
-  /* УБРАН ЗАТЕМНЯЮЩИЙ ОВЕРЛЕЙ */
   .level-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* Убран градиентный фон */
     background: transparent;
     display: flex;
     flex-direction: column;
@@ -365,28 +359,31 @@
     box-shadow: 0 2px 8px rgba(245, 197, 24, 0.4);
   }
 
-  /* ОБНОВЛЕННЫЕ ИКОНКИ - УВЕЛИЧЕНЫ НА 30% И СДВИНУТЫ ПРАВЕЕ И ПОДНЯТЫ ВЫШЕ */
+  .level-status {
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: bold;
+  }
+
+  /* ОБНОВЛЕННЫЕ ИКОНКИ */
   .level-top-icon {
     position: absolute;
-    /* ПОДНЯТЫ НА 10% ВЫШЕ (было 60%, теперь 50%) */
     top: 50%;
-    /* Сдвинуты правее на 20% от центра (было 30%, теперь 70%) */
     left: 70%;
     transform: translate(-50%, -50%);
-    /* Увеличены на 30% (было 100px, теперь 130px) */
     width: 130px;
     height: 130px;
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     z-index: 2;
-    /* Убраны все фоновые цвета и тени */
     background-color: transparent;
     border: none;
     box-shadow: none;
   }
-
-  /* Убрана анимация пульсации для иконок */
 
   /* ИНФОРМАЦИЯ ПЕРЕНЕСЕНА В ЛЕВЫЙ УГОЛ */
   .level-content {
@@ -417,7 +414,7 @@
     color: rgba(255,255,255,0.9);
   }
 
-  /* Стили для разных уровней - ОБНОВЛЕННЫЕ ПУТИ К ИКОНКАМ */
+  /* Стили для разных уровней */
   .level-card-carousel[data-level="starter"] .level-bg { 
     background-image: url('assets/rotator/card-1.png'); 
   }
@@ -513,6 +510,20 @@
     font-size: 16px;
   }
 
+  .views-left {
+    font-size: 11px;
+    color: var(--primary-light);
+    font-weight: 600;
+  }
+
+  .per-view-badge {
+    text-align: center;
+    margin: 5px 0;
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 600;
+  }
+
   .mining-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -543,7 +554,7 @@
 
   .video-container {
     width: 100%;
-    height: 140px; /* Уменьшена высота для компактности */
+    height: 140px;
     background: linear-gradient(135deg, #0c0a00 0%, #1a1500 100%);
     border-radius: 8px;
     overflow: hidden;
@@ -691,7 +702,7 @@
 
   .referral-stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     margin-bottom: 15px;
   }
@@ -900,6 +911,27 @@
     color: var(--text);
   }
 
+  /* Таблица рефералов */
+  .referral-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 12px;
+  }
+
+  .referral-table th,
+  .referral-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .referral-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(245, 197, 24, 0.05);
+  }
+
   /* Нижний навбар */
   .bottom-nav {
     position: fixed;
@@ -970,8 +1002,12 @@
     .level-top-icon {
       width: 104px;
       height: 104px;
-      left: 70%; /* Сохраняем позицию на маленьких экранах */
-      top: 50%; /* Сохраняем позицию на маленьких экранах */
+      left: 70%;
+      top: 50%;
+    }
+
+    .referral-stats {
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 
@@ -993,6 +1029,22 @@
 
   .notification.show {
     transform: translateX(0);
+  }
+
+  #limitOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 3;
   }
   </style>
 </head>
@@ -1045,6 +1097,10 @@
         <div class="info-label">Следующий уровень</div>
         <div class="info-value" id="nextTargetCell">—</div>
       </div>
+      <div class="info-item">
+        <div class="info-label">Всего рефералов</div>
+        <div class="info-value" data-refs>0</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1096,6 +1152,19 @@
       <input class="input" id="refLink" readonly value="">
       <button class="btn" id="btnCopyRef">📋 Копировать</button>
     </div>
+
+    <table class="referral-table">
+      <thead>
+        <tr>
+          <th>Уровень</th>
+          <th>Email</th>
+          <th>Капитал</th>
+          <th>Уровень</th>
+          <th>Дата</th>
+        </tr>
+      </thead>
+      <tbody id="refTree"></tbody>
+    </table>
   </div>
 </div>
 
@@ -1218,12 +1287,13 @@
     <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ С ОБНОВЛЕННЫМИ ИКОНКАМИ -->
     <div class="carousel-container">
       <div class="carousel-wrapper" id="carouselWrapper">
-        <div class="level-card-carousel active" data-level="starter" data-index="0">
+        <div class="level-card-carousel level-card" data-level="starter" data-index="0">
           <div class="level-bg"></div>
           <div class="level-top-icon"></div>
           <div class="level-overlay">
             <div class="level-header">
               <div class="level-vip-badge">VIP 1</div>
+              <div class="level-status" style="display: none;">Активен</div>
             </div>
             <div class="level-content">
               <div class="level-name-carousel">Starter</div>
@@ -1233,12 +1303,13 @@
           </div>
         </div>
         
-        <div class="level-card-carousel" data-level="advanced" data-index="1">
+        <div class="level-card-carousel level-card" data-level="advanced" data-index="1">
           <div class="level-bg"></div>
           <div class="level-top-icon"></div>
           <div class="level-overlay">
             <div class="level-header">
               <div class="level-vip-badge">VIP 2</div>
+              <div class="level-status" style="display: none;">Активен</div>
             </div>
             <div class="level-content">
               <div class="level-name-carousel">Advanced</div>
@@ -1248,12 +1319,13 @@
           </div>
         </div>
         
-        <div class="level-card-carousel" data-level="proelite" data-index="2">
+        <div class="level-card-carousel level-card" data-level="proelite" data-index="2">
           <div class="level-bg"></div>
           <div class="level-top-icon"></div>
           <div class="level-overlay">
             <div class="level-header">
               <div class="level-vip-badge">VIP 3</div>
+              <div class="level-status" style="display: none;">Активен</div>
             </div>
             <div class="level-content">
               <div class="level-name-carousel">Pro Elite</div>
@@ -1263,12 +1335,13 @@
           </div>
         </div>
         
-        <div class="level-card-carousel" data-level="titanium" data-index="3">
+        <div class="level-card-carousel level-card" data-level="titanium" data-index="3">
           <div class="level-bg"></div>
           <div class="level-top-icon"></div>
           <div class="level-overlay">
             <div class="level-header">
               <div class="level-vip-badge">VIP 4</div>
+              <div class="level-status" style="display: none;">Активен</div>
             </div>
             <div class="level-content">
               <div class="level-name-carousel">Titanium</div>
@@ -1292,7 +1365,10 @@
     <div class="video-player">
       <div class="video-header">
         <div class="video-title">Mining Processor</div>
+        <div class="views-left">Осталось: <span data-views-left>0</span></div>
       </div>
+      
+      <div id="perViewBadge" class="per-view-badge"></div>
       
       <div class="mining-stats">
         <div class="mining-stat">
@@ -1339,22 +1415,22 @@
       <!-- Диаграмма реферальных доходов -->
       <div class="referral-chart">
         <div class="referral-chart-center">
-          <span id="refTotalChart">$0.00</span>
+          <span id="refTotalCell">$0.00</span>
         </div>
       </div>
       
       <div class="chart-legend">
         <div class="legend-item">
           <div class="legend-color" style="background: var(--primary);"></div>
-          <span>1-е поколение: <span id="gen1Chart">$0.00</span></span>
+          <span>1-е поколение: <span id="gen1Cell">$0.00</span></span>
         </div>
         <div class="legend-item">
           <div class="legend-color" style="background: var(--primary-light);"></div>
-          <span>2-е поколение: <span id="gen2Chart">$0.00</span></span>
+          <span>2-е поколение: <span id="gen2Cell">$0.00</span></span>
         </div>
         <div class="legend-item">
           <div class="legend-color" style="background: #e2e8f0;"></div>
-          <span>3-е поколение: <span id="gen3Chart">$0.00</span></span>
+          <span>3-е поколение: <span id="gen3Cell">$0.00</span></span>
         </div>
       </div>
       
@@ -1370,6 +1446,10 @@
         <div class="referral-stat">
           <div class="stat-value" id="gen3Count">0</div>
           <div class="stat-label">3-е поколение</div>
+        </div>
+        <div class="referral-stat">
+          <div class="stat-value" data-refs>0</div>
+          <div class="stat-label">Всего рефералов</div>
         </div>
       </div>
       
@@ -1427,29 +1507,25 @@ function initCarousel() {
   const cards = document.querySelectorAll('.level-card-carousel');
   const dots = document.querySelectorAll('.carousel-dot');
   let currentIndex = 0;
-  const cardWidth = 280; // Ширина карточки
-  const margin = 16; // Суммарный margin (8px с каждой стороны)
+  const cardWidth = 280;
+  const margin = 16;
   let startX = 0;
   let currentX = 0;
   let isSwiping = false;
 
   function updateCarousel() {
-    // Сдвигаем карусель
     const offset = -currentIndex * (cardWidth + margin);
     carouselWrapper.style.transform = `translateX(${offset}px)`;
     
-    // Обновляем активные классы
     cards.forEach((card, index) => {
       card.classList.toggle('active', index === currentIndex);
     });
     
-    // Обновляем точки навигации
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === currentIndex);
     });
   }
 
-  // Обработчики для точек навигации
   dots.forEach(dot => {
     dot.addEventListener('click', () => {
       currentIndex = parseInt(dot.getAttribute('data-index'));
@@ -1457,7 +1533,6 @@ function initCarousel() {
     });
   });
 
-  // Улучшенный свайп для мобильных устройств
   carouselWrapper.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
     isSwiping = true;
@@ -1482,17 +1557,14 @@ function initCarousel() {
     
     if (Math.abs(diff) > threshold) {
       if (diff > 0 && currentIndex < cards.length - 1) {
-        // Свайп влево - следующий слайд
         currentIndex++;
       } else if (diff < 0 && currentIndex > 0) {
-        // Свайп вправо - предыдущий слайд
         currentIndex--;
       }
     }
     updateCarousel();
   });
 
-  // Добавляем обработчики для мыши (для тестирования на ПК)
   carouselWrapper.addEventListener('mousedown', (e) => {
     startX = e.clientX;
     isSwiping = true;
@@ -1517,55 +1589,15 @@ function initCarousel() {
     
     if (Math.abs(diff) > threshold) {
       if (diff > 0 && currentIndex < cards.length - 1) {
-        // Свайп влево - следующий слайд
         currentIndex++;
       } else if (diff < 0 && currentIndex > 0) {
-        // Свайп вправо - предыдущий слайд
         currentIndex--;
       }
     }
     updateCarousel();
   });
 
-  // Автоматическое обновление диаграммы при изменении данных
-  function updateReferralChart() {
-    const gen1 = parseFloat(document.getElementById('gen1Cell')?.textContent.replace('$', '') || 0);
-    const gen2 = parseFloat(document.getElementById('gen2Cell')?.textContent.replace('$', '') || 0);
-    const gen3 = parseFloat(document.getElementById('gen3Cell')?.textContent.replace('$', '') || 0);
-    const total = gen1 + gen2 + gen3;
-    
-    if (total > 0) {
-      const gen1Percent = (gen1 / total) * 100;
-      const gen2Percent = (gen2 / total) * 100;
-      const gen3Percent = (gen3 / total) * 100;
-      
-      const chart = document.querySelector('.referral-chart');
-      if (chart) {
-        chart.style.background = `conic-gradient(
-          var(--primary) 0% ${gen1Percent}%,
-          var(--primary-light) ${gen1Percent}% ${gen1Percent + gen2Percent}%,
-          #e2e8f0 ${gen1Percent + gen2Percent}% 100%
-        )`;
-      }
-      
-      // Обновляем значения в диаграмме
-      document.getElementById('refTotalChart').textContent = `$${total.toFixed(2)}`;
-      document.getElementById('gen1Chart').textContent = `$${gen1.toFixed(2)}`;
-      document.getElementById('gen2Chart').textContent = `$${gen2.toFixed(2)}`;
-      document.getElementById('gen3Chart').textContent = `$${gen3.toFixed(2)}`;
-    }
-  }
-
-  // Наблюдатель за изменениями в реферальных данных
-  const observer = new MutationObserver(updateReferralChart);
-  const refCells = document.querySelectorAll('#gen1Cell, #gen2Cell, #gen3Cell');
-  refCells.forEach(cell => {
-    observer.observe(cell, { characterData: true, subtree: true, childList: true });
-  });
-
-  // Инициализация
   updateCarousel();
-  setTimeout(updateReferralChart, 1000); // Инициализация после загрузки данных
 }
 
 // Модальные окна
@@ -1577,7 +1609,6 @@ function initModals() {
   const closeInfoModalBtn = document.getElementById('closeInfoModal');
   const closeReferralModalBtn = document.getElementById('closeReferralModal');
 
-  // Открытие модальных окон
   openInfoModalBtn.addEventListener('click', () => {
     infoModal.classList.add('active');
   });
@@ -1586,7 +1617,6 @@ function initModals() {
     referralModal.classList.add('active');
   });
 
-  // Закрытие модальных окон
   closeInfoModalBtn.addEventListener('click', () => {
     infoModal.classList.remove('active');
   });
@@ -1595,7 +1625,6 @@ function initModals() {
     referralModal.classList.remove('active');
   });
 
-  // Закрытие по клику вне модального окна
   infoModal.addEventListener('click', (e) => {
     if (e.target === infoModal) {
       infoModal.classList.remove('active');
@@ -1611,7 +1640,6 @@ function initModals() {
 
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', function() {
-  // Копирование реферальной ссылки
   const btnCopyRef = document.getElementById('btnCopyRef');
   const refLink = document.getElementById('refLink');
   
@@ -1623,7 +1651,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Инициализация языкового переключателя
   const langSwitcher = document.getElementById('languageSwitcher');
   const langBtn = document.getElementById('langBtn');
   const langDropdown = document.getElementById('langDropdown');
@@ -1634,12 +1661,10 @@ document.addEventListener('DOMContentLoaded', function() {
       langSwitcher.classList.toggle('active');
     });
     
-    // Закрытие при клике вне переключателя
     document.addEventListener('click', function() {
       langSwitcher.classList.remove('active');
     });
     
-    // Выбор языка
     const langItems = langDropdown.querySelectorAll('.lang-item');
     langItems.forEach(item => {
       item.addEventListener('click', function() {
@@ -1652,11 +1677,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Инициализация карусели
   initCarousel();
-  
-  // Инициализация модальных окон
   initModals();
+  
+  // Инициализация дашборда
+  if (window.LC && typeof window.LC.initDashboard === 'function') {
+    window.LC.initDashboard();
+  }
 });
 </script>
 </body>
