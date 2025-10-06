@@ -304,19 +304,19 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    opacity: 0.6;
-    transform: scale(0.9);
     touch-action: pan-y;
     /* Убраны все тени и градиенты */
     box-shadow: none;
+    opacity: 1;
+    transform: scale(1);
   }
 
   .level-card-carousel.active {
+    /* УБРАНЫ ВСЕ СТИЛИ АКТИВНОЙ КАРТОЧКИ */
     opacity: 1;
     transform: scale(1);
-    /* Только обводка для активной карточки */
-    border: 3px solid var(--primary);
-    box-shadow: 0 0 25px rgba(245, 197, 24, 0.6);
+    border: none;
+    box-shadow: none;
   }
 
   .level-bg {
@@ -365,10 +365,11 @@
     box-shadow: 0 2px 8px rgba(245, 197, 24, 0.4);
   }
 
-  /* ОБНОВЛЕННЫЕ ИКОНКИ - УВЕЛИЧЕНЫ НА 30% И СДВИНУТЫ ПРАВЕЕ */
+  /* ОБНОВЛЕННЫЕ ИКОНКИ - УВЕЛИЧЕНЫ НА 30% И СДВИНУТЫ ПРАВЕЕ И ПОДНЯТЫ ВЫШЕ */
   .level-top-icon {
     position: absolute;
-    top: 60%;
+    /* ПОДНЯТЫ НА 10% ВЫШЕ (было 60%, теперь 50%) */
+    top: 50%;
     /* Сдвинуты правее на 20% от центра (было 30%, теперь 70%) */
     left: 70%;
     transform: translate(-50%, -50%);
@@ -970,6 +971,7 @@
       width: 104px;
       height: 104px;
       left: 70%; /* Сохраняем позицию на маленьких экранах */
+      top: 50%; /* Сохраняем позицию на маленьких экранах */
     }
   }
 
