@@ -103,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПРОПАДАЮТ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НИКОГДА НЕ ПРОПАДАЮТ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -170,7 +170,7 @@
             const cardLevel = card.getAttribute('data-level');
             const statusElement = card.querySelector('.level-status');
             
-            // ВСЕГДА ПОКАЗЫВАЕМ КАРТОЧКУ - НИКОГДА НЕ СКРЫВАЕМ
+            // ВСЕГДА ПОКАЗЫВАЕМ ВСЕ КАРТОЧКИ - НИКОГДА НЕ СКРЫВАЕМ
             card.style.display = 'block';
             card.style.visibility = 'visible';
             card.style.opacity = '1';
@@ -258,6 +258,7 @@
       await LC.refreshBalance();
       await LC.refreshLevelInfo();
       await LC.loadReferralEarnings();
+      await LC.refreshDashboardCards();
       
       // Показываем уведомление о начислении
       if (row.reward_cents) {
@@ -451,6 +452,7 @@
         if (el) el.textContent = val; 
       };
       
+      // Обновляем основную панель
       set('#gen1Cell', fmtMoney(pickNum(gen1.total_cents)/100));
       set('#gen2Cell', fmtMoney(pickNum(gen2.total_cents)/100));
       set('#gen3Cell', fmtMoney(pickNum(gen3.total_cents)/100));
@@ -458,29 +460,14 @@
       const total = (pickNum(gen1.total_cents) + pickNum(gen2.total_cents) + pickNum(gen3.total_cents)) / 100;
       set('#refTotalCell', fmtMoney(total));
 
+      // Обновляем модальное окно
+      set('#gen1CellModal', fmtMoney(pickNum(gen1.total_cents)/100));
+      set('#gen2CellModal', fmtMoney(pickNum(gen2.total_cents)/100));
+      set('#gen3CellModal', fmtMoney(pickNum(gen3.total_cents)/100));
+      set('#refTotalCellModal', fmtMoney(total));
+
       console.log('Referral earnings loaded:', { gen1: gen1.total_cents, gen2: gen2.total_cents, gen3: gen3.total_cents, total });
 
-      // Загружаем последние начисления
-      const { data: recentData, error: recentError } = await sb.rpc('get_recent_referral_earnings');
-      if (!recentError && recentData) {
-        const list = $('#refList');
-        if (list) {
-          list.innerHTML = '';
-          const rows = Array.isArray(recentData) ? recentData : (recentData ? [recentData] : []);
-          if (!rows.length) {
-            list.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:10px 0;">Нет данных</td></tr>`;
-          } else {
-            rows.slice(0, 20).forEach(r => {
-              const tr = document.createElement('tr');
-              tr.innerHTML = `<td>${fmtDate(r.created_at)}</td>
-                              <td>${r.generation || 1}</td>
-                              <td>${fmtMoney(pickNum(r.amount_cents)/100)}</td>
-                              <td>${r.source_email || r.user_email || '—'}</td>`;
-              list.appendChild(tr);
-            });
-          }
-        }
-      }
     } catch(e) { 
       console.error('[LC] loadReferralEarnings', e); 
     }
@@ -1042,9 +1029,16 @@
       };
 
       const set = (sel, val) => { const el = $(sel); if (el) el.textContent = String(val); };
+      
+      // Обновляем основную панель
       set('#gen1Count', counts.gen1);
       set('#gen2Count', counts.gen2);
       set('#gen3Count', counts.gen3);
+
+      // Обновляем модальное окно
+      set('#gen1CountModal', counts.gen1);
+      set('#gen2CountModal', counts.gen2);
+      set('#gen3CountModal', counts.gen3);
 
       console.log('Referral counts:', counts);
 
@@ -1082,6 +1076,8 @@
         return; 
       }
       
+      console.log('🔄 Инициализация дашборда для пользователя:', user.id);
+      
       await LC.ensureProfile();
       await LC.applyReferral();
       await LC.mountReferral();
@@ -1091,10 +1087,13 @@
       await LC.loadReferralEarnings();
       LC.initVideoWatch();
       
+      console.log('✅ Дашборд успешно инициализирован');
+      
       // Обновляем информацию каждые 30 секунд
       setInterval(async () => {
         await LC.refreshBalance();
         await LC.refreshLevelInfo();
+        await LC.loadReferralEarnings();
       }, 30000);
       
     } catch(e) { 
