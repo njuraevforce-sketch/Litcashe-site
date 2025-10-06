@@ -72,7 +72,6 @@
     } catch(e) { console.warn('[LC] refreshBalance', e?.message||e); }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ПРОСТАЯ ПРОВЕРКА АКТИВНОСТИ
   LC.isActiveUser = async function() {
     try {
       const user = await getUser();
@@ -104,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НИКОГДА НЕ ПРОПАДАЮТ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ВСЕ КАРТОЧКИ ВСЕГДА ВИДНЫ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -336,7 +335,6 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - РЕФЕРАЛЬНАЯ ССЫЛКА РАБОТАЕТ
   LC.mountReferral = async function() {
     try {
       const wrap = document.querySelector('#refLinkWrap');
@@ -404,7 +402,7 @@
     }
   };
 
-  // ИСПРАВЛЕННЫЕ ФУНКЦИИ - используем новые функции без фильтра по балансу
+  // ИСПРАВЛЕННЫЕ ФУНКЦИИ ДЛЯ РЕФЕРАЛЬНЫХ ДАННЫХ
   LC.getActiveReferralCounts = async function() {
     try {
       const { data, error } = await sb.rpc('get_referral_counts_active');
@@ -434,16 +432,20 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ПРАВИЛЬНО ОБРАБАТЫВАЕТ ДОХОДЫ ВСЕХ ПОКОЛЕНИЙ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЕ ВЫЗОВЫ К БАЗЕ ДАННЫХ
   LC.loadReferralEarnings = async function() {
     try {
       const user = await getUser(); 
       if (!user) return;
 
+      // Используем правильную функцию из базы данных
       const { data, error } = await sb.rpc('get_referral_earnings');
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting referral earnings:', error);
+        throw error;
+      }
       
-      console.log('Raw referral earnings data:', data);
+      console.log('Raw referral earnings data from DB:', data);
       
       // Обрабатываем данные правильно
       let earnings = [];
@@ -458,14 +460,19 @@
       const gen2 = { total_cents: 0 };
       const gen3 = { total_cents: 0 };
 
-      // Заполняем данные из ответа
+      // Заполняем данные из ответа базы данных
       earnings.forEach(earning => {
-        if (earning.generation === 1) {
-          gen1.total_cents = pickNum(earning.total_cents);
-        } else if (earning.generation === 2) {
-          gen2.total_cents = pickNum(earning.total_cents);
-        } else if (earning.generation === 3) {
-          gen3.total_cents = pickNum(earning.total_cents);
+        const generation = Number(earning.generation);
+        const totalCents = pickNum(earning.total_cents);
+        
+        console.log(`Processing generation ${generation}: ${totalCents} cents`);
+        
+        if (generation === 1) {
+          gen1.total_cents = totalCents;
+        } else if (generation === 2) {
+          gen2.total_cents = totalCents;
+        } else if (generation === 3) {
+          gen3.total_cents = totalCents;
         }
       });
 
@@ -496,7 +503,22 @@
       });
 
     } catch(e) { 
-      console.error('[LC] loadReferralEarnings', e); 
+      console.error('[LC] loadReferralEarnings error:', e); 
+      
+      // Fallback: устанавливаем нули при ошибке
+      const set = (sel, val) => { 
+        const el = $(sel); 
+        if (el) el.textContent = val; 
+      };
+      
+      set('#gen1Cell', fmtMoney(0));
+      set('#gen2Cell', fmtMoney(0));
+      set('#gen3Cell', fmtMoney(0));
+      set('#refTotalCell', fmtMoney(0));
+      set('#gen1CellModal', fmtMoney(0));
+      set('#gen2CellModal', fmtMoney(0));
+      set('#gen3CellModal', fmtMoney(0));
+      set('#refTotalCellModal', fmtMoney(0));
     }
   };
 
