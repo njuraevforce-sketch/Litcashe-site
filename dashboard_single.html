@@ -30,7 +30,7 @@
   </script>
 
   <title data-i18n="page_title_dashboard">Кабинет — Litcash</title>
-  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23F5C518'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%23ffffff' font-family='Arial' font-weight='700'>LC</text></svg>">
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23F5C518'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%23ffffff' font-family='Arial' font-weight='700'>LC</text></svg">
 
   <style>
   /* === ОСНОВНЫЕ СТИЛИ === */
@@ -1047,6 +1047,13 @@
     font-size: 14px;
     font-weight: bold;
     z-index: 3;
+  }
+
+  /* ИСПРАВЛЕНИЕ: ГАРАНТИЯ ВИДИМОСТИ КАРТОЧЕК УРОВНЕЙ */
+  .level-card-carousel {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   </style>
 </head>
