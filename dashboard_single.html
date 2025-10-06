@@ -277,7 +277,7 @@
     width: 100%;
   }
 
-  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ - ИСПРАВЛЕНА === */
+  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ - ОБНОВЛЕННАЯ === */
   .carousel-container {
     position: relative;
     width: 100%;
@@ -313,8 +313,8 @@
   .level-card-carousel.active {
     opacity: 1;
     transform: scale(1);
-    box-shadow: 0 0 15px rgba(245, 197, 24, 0.3);
-    border: 2px solid var(--primary);
+    box-shadow: 0 0 20px rgba(245, 197, 24, 0.5);
+    border: 3px solid var(--primary);
   }
 
   .level-bg {
@@ -362,55 +362,28 @@
     box-shadow: 0 2px 8px rgba(245, 197, 24, 0.4);
   }
 
-  /* ИСПРАВЛЕННЫЕ ИКОНКИ - УБРАНЫ !important и добавлены корректные стили */
-  .level-icon-small {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: absolute;
-    right: 45px;
-    top: 50%;
-    transform: translateY(-50%);
-    /* Убрано: background: none !important; */
-    /* Убрано: border: none !important; */
-  }
-
-  /* ИКОНКА СВЕРХУ КАРТОЧКИ - НОВЫЙ СТИЛЬ */
+  /* ОБНОВЛЕННЫЕ ИКОНКИ - БЕЗ РАМКИ, БОЛЬШЕГО РАЗМЕРА, СМЕЩЕНЫ ВНИЗ И ВЛЕВО */
   .level-top-icon {
     position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    top: 60%; /* Опущены ниже */
+    left: 30%; /* Сдвинуты левее на 20% от центра (было 50%, теперь 30%) */
+    transform: translate(-50%, -50%);
+    width: 100px; /* Увеличен размер */
+    height: 100px; /* Увеличен размер */
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     z-index: 2;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    /* Убраны: border, box-shadow, background-color */
   }
 
-  /* Активная карточка - иконка в круге подсвечивается */
-  .level-card-carousel.active .level-top-icon {
+  /* Активная карточка - только цветная обводка вокруг всей карточки */
+  .level-card-carousel.active {
     border: 3px solid var(--primary);
-    box-shadow: 0 0 15px var(--primary);
-    animation: pulse 2s infinite;
+    box-shadow: 0 0 25px rgba(245, 197, 24, 0.6);
   }
 
-  @keyframes pulse {
-    0% { box-shadow: 0 0 5px var(--primary); }
-    50% { box-shadow: 0 0 20px var(--primary); }
-    100% { box-shadow: 0 0 5px var(--primary); }
-  }
+  /* Убрана анимация пульсации для иконок */
 
   /* ИНФОРМАЦИЯ ПЕРЕНЕСЕНА В ЛЕВЫЙ УГОЛ */
   .level-content {
@@ -992,8 +965,9 @@
     }
 
     .level-top-icon {
-      width: 40px;
-      height: 40px;
+      width: 80px;
+      height: 80px;
+      left: 25%; /* Еще больше сдвигаем на маленьких экранах */
     }
   }
 
@@ -1237,7 +1211,7 @@
 <!-- Основной контент -->
 <main class="main-content">
   <div class="container">
-    <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ С ИСПРАВЛЕННЫМИ ИКОНКАМИ -->
+    <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ С ОБНОВЛЕННЫМИ ИКОНКАМИ -->
     <div class="carousel-container">
       <div class="carousel-wrapper" id="carouselWrapper">
         <div class="level-card-carousel active" data-level="starter" data-index="0">
