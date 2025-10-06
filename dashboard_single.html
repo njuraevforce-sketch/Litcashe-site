@@ -1029,6 +1029,24 @@
     font-weight: bold;
     z-index: 3;
   }
+
+  /* Дополнительные стили для статусов рефералов */
+  .loading-indicator {
+    text-align: center;
+    padding: 10px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  .error-message {
+    text-align: center;
+    padding: 10px;
+    color: var(--error);
+    font-size: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: var(--radius);
+    margin: 10px 0;
+  }
   </style>
 </head>
 
@@ -1046,13 +1064,17 @@
       <button class="close-modal" id="closeInfoModal">×</button>
     </div>
     
-    <div class="donut-chart">
+    <div class="loading-indicator" id="infoModalLoading">
+      Загрузка данных...
+    </div>
+    
+    <div class="donut-chart" id="infoDonutChart" style="display: none;">
       <div class="donut-center">
         <span data-level-name>Starter</span>
       </div>
     </div>
     
-    <div class="chart-legend">
+    <div class="chart-legend" id="infoChartLegend" style="display: none;">
       <div class="legend-item">
         <div class="legend-color" style="background: var(--primary);"></div>
         <span>Уровень: <span data-level-name>Starter</span></span>
@@ -1067,7 +1089,7 @@
       </div>
     </div>
     
-    <div class="info-grid">
+    <div class="info-grid" id="infoGrid" style="display: none;">
       <div class="info-item">
         <div class="info-label">За 1 просмотр</div>
         <div class="info-value" data-reward-per-view>$0.00</div>
@@ -1085,6 +1107,10 @@
         <div class="info-value" data-refs>0</div>
       </div>
     </div>
+
+    <div class="error-message" id="infoModalError" style="display: none;">
+      Ошибка загрузки данных
+    </div>
   </div>
 </div>
 
@@ -1095,13 +1121,17 @@
       <button class="close-modal" id="closeReferralModal">×</button>
     </div>
     
-    <div class="donut-chart">
+    <div class="loading-indicator" id="referralModalLoading">
+      Загрузка реферальных данных...
+    </div>
+    
+    <div class="donut-chart" id="referralDonutChart" style="display: none;">
       <div class="donut-center">
         <span id="refTotalCellModal">$0.00</span>
       </div>
     </div>
     
-    <div class="chart-legend">
+    <div class="chart-legend" id="referralChartLegend" style="display: none;">
       <div class="legend-item">
         <div class="legend-color" style="background: var(--primary);"></div>
         <span>1-е поколение (13%): <span id="gen1CellModal">$0.00</span></span>
@@ -1116,7 +1146,7 @@
       </div>
     </div>
     
-    <div class="referral-stats">
+    <div class="referral-stats" id="referralStatsModal" style="display: none;">
       <div class="referral-stat">
         <div class="stat-value" id="gen1CountModal">0</div>
         <div class="stat-label">1-е поколение</div>
@@ -1131,7 +1161,7 @@
       </div>
     </div>
 
-    <table class="referral-table">
+    <table class="referral-table" id="referralTable" style="display: none;">
       <thead>
         <tr>
           <th>Уровень</th>
@@ -1143,6 +1173,10 @@
       </thead>
       <tbody id="refTree"></tbody>
     </table>
+
+    <div class="error-message" id="referralModalError" style="display: none;">
+      Ошибка загрузки реферальных данных
+    </div>
   </div>
 </div>
 
@@ -1587,12 +1621,91 @@ function initModals() {
   const closeInfoModalBtn = document.getElementById('closeInfoModal');
   const closeReferralModalBtn = document.getElementById('closeReferralModal');
 
-  openInfoModalBtn.addEventListener('click', () => {
+  // Функции для показа/скрытия загрузки
+  function showInfoModalLoading() {
+    document.getElementById('infoModalLoading').style.display = 'block';
+    document.getElementById('infoDonutChart').style.display = 'none';
+    document.getElementById('infoChartLegend').style.display = 'none';
+    document.getElementById('infoGrid').style.display = 'none';
+    document.getElementById('infoModalError').style.display = 'none';
+  }
+
+  function showInfoModalContent() {
+    document.getElementById('infoModalLoading').style.display = 'none';
+    document.getElementById('infoDonutChart').style.display = 'flex';
+    document.getElementById('infoChartLegend').style.display = 'flex';
+    document.getElementById('infoGrid').style.display = 'grid';
+    document.getElementById('infoModalError').style.display = 'none';
+  }
+
+  function showInfoModalError() {
+    document.getElementById('infoModalLoading').style.display = 'none';
+    document.getElementById('infoDonutChart').style.display = 'none';
+    document.getElementById('infoChartLegend').style.display = 'none';
+    document.getElementById('infoGrid').style.display = 'none';
+    document.getElementById('infoModalError').style.display = 'block';
+  }
+
+  function showReferralModalLoading() {
+    document.getElementById('referralModalLoading').style.display = 'block';
+    document.getElementById('referralDonutChart').style.display = 'none';
+    document.getElementById('referralChartLegend').style.display = 'none';
+    document.getElementById('referralStatsModal').style.display = 'none';
+    document.getElementById('referralTable').style.display = 'none';
+    document.getElementById('referralModalError').style.display = 'none';
+  }
+
+  function showReferralModalContent() {
+    document.getElementById('referralModalLoading').style.display = 'none';
+    document.getElementById('referralDonutChart').style.display = 'flex';
+    document.getElementById('referralChartLegend').style.display = 'flex';
+    document.getElementById('referralStatsModal').style.display = 'grid';
+    document.getElementById('referralTable').style.display = 'table';
+    document.getElementById('referralModalError').style.display = 'none';
+  }
+
+  function showReferralModalError() {
+    document.getElementById('referralModalLoading').style.display = 'none';
+    document.getElementById('referralDonutChart').style.display = 'none';
+    document.getElementById('referralChartLegend').style.display = 'none';
+    document.getElementById('referralStatsModal').style.display = 'none';
+    document.getElementById('referralTable').style.display = 'none';
+    document.getElementById('referralModalError').style.display = 'block';
+  }
+
+  openInfoModalBtn.addEventListener('click', async () => {
+    showInfoModalLoading();
     infoModal.classList.add('active');
+    
+    try {
+      // Обновляем данные перед показом модального окна
+      if (window.LC && typeof window.LC.refreshLevelInfo === 'function') {
+        await window.LC.refreshLevelInfo();
+      }
+      showInfoModalContent();
+    } catch (error) {
+      console.error('Error loading info modal data:', error);
+      showInfoModalError();
+    }
   });
 
-  openReferralModalBtn.addEventListener('click', () => {
+  openReferralModalBtn.addEventListener('click', async () => {
+    showReferralModalLoading();
     referralModal.classList.add('active');
+    
+    try {
+      // Обновляем данные перед показом модального окна
+      if (window.LC && typeof window.LC.loadReferralEarnings === 'function') {
+        await window.LC.loadReferralEarnings();
+      }
+      if (window.LC && typeof window.LC.refreshDashboardCards === 'function') {
+        await window.LC.refreshDashboardCards();
+      }
+      showReferralModalContent();
+    } catch (error) {
+      console.error('Error loading referral modal data:', error);
+      showReferralModalError();
+    }
   });
 
   closeInfoModalBtn.addEventListener('click', () => {
@@ -1660,9 +1773,24 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Инициализация дашборда
   if (window.LC && typeof window.LC.initDashboard === 'function') {
-    window.LC.initDashboard();
+    setTimeout(() => {
+      window.LC.initDashboard();
+    }, 500);
   }
 });
+
+// Функция для обновления прогресса видео
+function updateVideoProgress(percent) {
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  
+  if (progressFill) {
+    progressFill.style.width = percent + '%';
+  }
+  if (progressText) {
+    progressText.textContent = Math.round(percent) + '%';
+  }
+}
 </script>
 </body>
 </html>
