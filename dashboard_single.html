@@ -303,18 +303,20 @@
     border-radius: var(--radius);
     position: relative;
     overflow: hidden;
-    box-shadow: var(--shadow);
     transition: all 0.3s ease;
     opacity: 0.6;
     transform: scale(0.9);
     touch-action: pan-y;
+    /* Убраны все тени и градиенты */
+    box-shadow: none;
   }
 
   .level-card-carousel.active {
     opacity: 1;
     transform: scale(1);
-    box-shadow: 0 0 20px rgba(245, 197, 24, 0.5);
+    /* Только обводка для активной карточки */
     border: 3px solid var(--primary);
+    box-shadow: 0 0 25px rgba(245, 197, 24, 0.6);
   }
 
   .level-bg {
@@ -332,14 +334,15 @@
     transform: scale(1.05);
   }
 
-  /* УВЕЛИЧЕННАЯ ПРОЗРАЧНОСТЬ НА 20% */
+  /* УБРАН ЗАТЕМНЯЮЩИЙ ОВЕРЛЕЙ */
   .level-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8));
+    /* Убран градиентный фон */
+    background: transparent;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -362,25 +365,24 @@
     box-shadow: 0 2px 8px rgba(245, 197, 24, 0.4);
   }
 
-  /* ОБНОВЛЕННЫЕ ИКОНКИ - БЕЗ РАМКИ, БОЛЬШЕГО РАЗМЕРА, СМЕЩЕНЫ ВНИЗ И ВЛЕВО */
+  /* ОБНОВЛЕННЫЕ ИКОНКИ - УВЕЛИЧЕНЫ НА 30% И СДВИНУТЫ ПРАВЕЕ */
   .level-top-icon {
     position: absolute;
-    top: 60%; /* Опущены ниже */
-    left: 30%; /* Сдвинуты левее на 20% от центра (было 50%, теперь 30%) */
+    top: 60%;
+    /* Сдвинуты правее на 20% от центра (было 30%, теперь 70%) */
+    left: 70%;
     transform: translate(-50%, -50%);
-    width: 100px; /* Увеличен размер */
-    height: 100px; /* Увеличен размер */
+    /* Увеличены на 30% (было 100px, теперь 130px) */
+    width: 130px;
+    height: 130px;
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     z-index: 2;
-    /* Убраны: border, box-shadow, background-color */
-  }
-
-  /* Активная карточка - только цветная обводка вокруг всей карточки */
-  .level-card-carousel.active {
-    border: 3px solid var(--primary);
-    box-shadow: 0 0 25px rgba(245, 197, 24, 0.6);
+    /* Убраны все фоновые цвета и тени */
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
   }
 
   /* Убрана анимация пульсации для иконок */
@@ -965,9 +967,9 @@
     }
 
     .level-top-icon {
-      width: 80px;
-      height: 80px;
-      left: 25%; /* Еще больше сдвигаем на маленьких экранах */
+      width: 104px;
+      height: 104px;
+      left: 70%; /* Сохраняем позицию на маленьких экранах */
     }
   }
 
