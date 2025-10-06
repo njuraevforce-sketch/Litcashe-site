@@ -103,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ВСЕ КАРТОЧКИ ВСЕГДА ВИДНЫ
+  // УПРОЩЕННАЯ ФУНКЦИЯ - ТОЛЬКО ОТОБРАЖЕНИЕ СТАТУСА "АКТИВЕН"
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -156,7 +156,7 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== ИСПРАВЛЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
+      // ===== УПРОЩЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
       try {
         const levelCards = document.querySelectorAll('.level-card-carousel');
         console.log('Found level cards:', levelCards.length);
@@ -335,6 +335,7 @@
     }
   };
 
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - РЕФЕРАЛЬНАЯ ССЫЛКА РАБОТАЕТ
   LC.mountReferral = async function() {
     try {
       const wrap = document.querySelector('#refLinkWrap');
@@ -402,7 +403,7 @@
     }
   };
 
-  // ИСПРАВЛЕННЫЕ ФУНКЦИИ ДЛЯ РЕФЕРАЛЬНЫХ ДАННЫХ
+  // ИСПРАВЛЕННЫЕ ФУНКЦИИ - используем новые функции без фильтра по балансу
   LC.getActiveReferralCounts = async function() {
     try {
       const { data, error } = await sb.rpc('get_referral_counts_active');
@@ -432,49 +433,19 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЕ ВЫЗОВЫ К БАЗЕ ДАННЫХ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ПОКАЗЫВАЕТ ДОХОДЫ ВСЕХ ПОКОЛЕНИЙ
   LC.loadReferralEarnings = async function() {
     try {
       const user = await getUser(); 
       if (!user) return;
 
-      // Используем правильную функцию из базы данных
       const { data, error } = await sb.rpc('get_referral_earnings');
-      if (error) {
-        console.error('Error getting referral earnings:', error);
-        throw error;
-      }
-      
-      console.log('Raw referral earnings data from DB:', data);
-      
-      // Обрабатываем данные правильно
-      let earnings = [];
-      if (Array.isArray(data)) {
-        earnings = data;
-      } else if (data) {
-        earnings = [data];
-      }
+      if (error) throw error;
+      const earnings = Array.isArray(data) ? data : (data ? [data] : []);
 
-      // Инициализируем объекты для каждого поколения
-      const gen1 = { total_cents: 0 };
-      const gen2 = { total_cents: 0 };
-      const gen3 = { total_cents: 0 };
-
-      // Заполняем данные из ответа базы данных
-      earnings.forEach(earning => {
-        const generation = Number(earning.generation);
-        const totalCents = pickNum(earning.total_cents);
-        
-        console.log(`Processing generation ${generation}: ${totalCents} cents`);
-        
-        if (generation === 1) {
-          gen1.total_cents = totalCents;
-        } else if (generation === 2) {
-          gen2.total_cents = totalCents;
-        } else if (generation === 3) {
-          gen3.total_cents = totalCents;
-        }
-      });
+      const gen1 = earnings.find(e => e.generation === 1) || {};
+      const gen2 = earnings.find(e => e.generation === 2) || {};
+      const gen3 = earnings.find(e => e.generation === 3) || {};
 
       const set = (sel, val) => { 
         const el = $(sel); 
@@ -482,43 +453,23 @@
       };
       
       // Обновляем основную панель
-      set('#gen1Cell', fmtMoney(gen1.total_cents/100));
-      set('#gen2Cell', fmtMoney(gen2.total_cents/100));
-      set('#gen3Cell', fmtMoney(gen3.total_cents/100));
+      set('#gen1Cell', fmtMoney(pickNum(gen1.total_cents)/100));
+      set('#gen2Cell', fmtMoney(pickNum(gen2.total_cents)/100));
+      set('#gen3Cell', fmtMoney(pickNum(gen3.total_cents)/100));
 
-      const total = (gen1.total_cents + gen2.total_cents + gen3.total_cents) / 100;
+      const total = (pickNum(gen1.total_cents) + pickNum(gen2.total_cents) + pickNum(gen3.total_cents)) / 100;
       set('#refTotalCell', fmtMoney(total));
 
       // Обновляем модальное окно
-      set('#gen1CellModal', fmtMoney(gen1.total_cents/100));
-      set('#gen2CellModal', fmtMoney(gen2.total_cents/100));
-      set('#gen3CellModal', fmtMoney(gen3.total_cents/100));
+      set('#gen1CellModal', fmtMoney(pickNum(gen1.total_cents)/100));
+      set('#gen2CellModal', fmtMoney(pickNum(gen2.total_cents)/100));
+      set('#gen3CellModal', fmtMoney(pickNum(gen3.total_cents)/100));
       set('#refTotalCellModal', fmtMoney(total));
 
-      console.log('Referral earnings processed:', { 
-        gen1: gen1.total_cents, 
-        gen2: gen2.total_cents, 
-        gen3: gen3.total_cents, 
-        total 
-      });
+      console.log('Referral earnings loaded:', { gen1: gen1.total_cents, gen2: gen2.total_cents, gen3: gen3.total_cents, total });
 
     } catch(e) { 
-      console.error('[LC] loadReferralEarnings error:', e); 
-      
-      // Fallback: устанавливаем нули при ошибке
-      const set = (sel, val) => { 
-        const el = $(sel); 
-        if (el) el.textContent = val; 
-      };
-      
-      set('#gen1Cell', fmtMoney(0));
-      set('#gen2Cell', fmtMoney(0));
-      set('#gen3Cell', fmtMoney(0));
-      set('#refTotalCell', fmtMoney(0));
-      set('#gen1CellModal', fmtMoney(0));
-      set('#gen2CellModal', fmtMoney(0));
-      set('#gen3CellModal', fmtMoney(0));
-      set('#refTotalCellModal', fmtMoney(0));
+      console.error('[LC] loadReferralEarnings', e); 
     }
   };
 
@@ -1092,9 +1043,7 @@
       console.log('Referral counts:', counts);
 
       // Объединяем все рефералы для таблицы
-      const allRefs = [...refs1.map(r => ({...r, generation: 1})), 
-                       ...refs2.map(r => ({...r, generation: 2})), 
-                       ...refs3.map(r => ({...r, generation: 3}))];
+      const allRefs = [...refs1, ...refs2, ...refs3];
       
       const tbody = $('#refTree');
       if (tbody) {
