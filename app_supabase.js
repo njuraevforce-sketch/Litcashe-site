@@ -441,11 +441,28 @@
 
       const { data, error } = await sb.rpc('get_referral_earnings');
       if (error) throw error;
-      const earnings = Array.isArray(data) ? data : (data ? [data] : []);
+      
+      console.log('Referral earnings raw data:', data);
+      
+      // Обрабатываем данные для всех поколений
+      let gen1 = { total_cents: 0 };
+      let gen2 = { total_cents: 0 };
+      let gen3 = { total_cents: 0 };
 
-      const gen1 = earnings.find(e => e.generation === 1) || {};
-      const gen2 = earnings.find(e => e.generation === 2) || {};
-      const gen3 = earnings.find(e => e.generation === 3) || {};
+      if (Array.isArray(data)) {
+        data.forEach(item => {
+          if (item.generation === 1) gen1 = item;
+          else if (item.generation === 2) gen2 = item;
+          else if (item.generation === 3) gen3 = item;
+        });
+      } else if (data) {
+        // Если данные не массив, а объект
+        if (data.generation === 1) gen1 = data;
+        else if (data.generation === 2) gen2 = data;
+        else if (data.generation === 3) gen3 = data;
+      }
+
+      console.log('Processed referral earnings:', { gen1, gen2, gen3 });
 
       const set = (sel, val) => { 
         const el = $(sel); 
@@ -466,7 +483,12 @@
       set('#gen3CellModal', fmtMoney(pickNum(gen3.total_cents)/100));
       set('#refTotalCellModal', fmtMoney(total));
 
-      console.log('Referral earnings loaded:', { gen1: gen1.total_cents, gen2: gen2.total_cents, gen3: gen3.total_cents, total });
+      console.log('Referral earnings loaded:', { 
+        gen1: gen1.total_cents, 
+        gen2: gen2.total_cents, 
+        gen3: gen3.total_cents, 
+        total 
+      });
 
     } catch(e) { 
       console.error('[LC] loadReferralEarnings', e); 
