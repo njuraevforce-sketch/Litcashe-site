@@ -151,6 +151,7 @@
     }
   };
 
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПРОПАДАЮТ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -203,39 +204,31 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================================
+      // ===== ИСПРАВЛЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
       try {
-        const levelCards = document.querySelectorAll('.level-card');
+        const levelCards = document.querySelectorAll('.level-card-carousel');
+        console.log('Found level cards:', levelCards.length);
+        
         if (levelCards.length) {
-          const levelsConfig = LC.config.LEVELS;
+          const currentLevelName = info.level_name?.toLowerCase().replace(' ', '');
+          
+          console.log('Current active level:', currentLevelName);
           
           levelCards.forEach(card => {
             const cardLevel = card.getAttribute('data-level');
             const statusElement = card.querySelector('.level-status');
             
-            // Сбрасываем активный класс у всех карточек
+            // ВСЕГДА ПОКАЗЫВАЕМ КАРТОЧКУ - НИКОГДА НЕ СКРЫВАЕМ
+            card.style.display = 'block';
+            card.style.visibility = 'visible';
+            card.style.opacity = '1';
+            
+            // Убираем активный класс у всех
             card.classList.remove('active');
             
-            // Находим конфиг для текущего уровня
-            const levelConfig = levelsConfig.find(level => 
-              level.name.toLowerCase().replace(' ', '') === cardLevel
-            );
-            
-            // Обновляем данные карточки
-            if (levelConfig) {
-              const percentageElement = card.querySelector('.level-percentage-carousel');
-              const capElement = card.querySelector('.level-cap-carousel');
-              
-              if (percentageElement) {
-                percentageElement.textContent = `${levelConfig.percent}%`;
-              }
-              if (capElement) {
-                capElement.textContent = `до $${(levelConfig.cap / 100).toLocaleString()}`;
-              }
-            }
-            
-            // Обновляем статус - только обводка и надпись
-            if (cardLevel === info.level_name?.toLowerCase().replace(' ', '')) {
+            // Добавляем активный класс только текущему уровню
+            if (cardLevel === currentLevelName) {
+              console.log('Setting active level:', cardLevel);
               card.classList.add('active');
               if (statusElement) {
                 statusElement.textContent = 'Активен';
@@ -247,11 +240,6 @@
               }
             }
           });
-          
-          // Обновляем перевод
-          if (window.LanguageSwitcher) {
-            window.LanguageSwitcher.updatePageText();
-          }
         }
       } catch (error) {
         console.error('Error updating level cards:', error);
@@ -394,29 +382,50 @@
     }
   };
 
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - РЕФЕРАЛЬНАЯ ССЫЛКА РАБОТАЕТ
   LC.mountReferral = async function() {
     try {
       const wrap = document.querySelector('#refLinkWrap');
       const input = document.querySelector('#refLink');
-      if (!wrap || !input) return;
+      
+      console.log('mountReferral started', { wrap, input });
 
       const user = await getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('No user found');
+        return;
+      }
 
       // Получаем реферальный код пользователя
-      const { data: profile } = await sb
+      const { data: profile, error } = await sb
         .from('profiles')
         .select('ref_code')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (!profile?.ref_code) return;
+      if (error) {
+        console.error('Profile error:', error);
+        return;
+      }
+
+      if (!profile?.ref_code) {
+        console.log('No ref code found');
+        return;
+      }
 
       // Формируем реферальную ссылку
       const url = new URL(location.origin + '/register_single.html');
       url.searchParams.set('ref', profile.ref_code);
-      input.value = url.toString();
-      wrap.style.display = 'block';
+      
+      if (input) {
+        input.value = url.toString();
+        console.log('Ref link set:', input.value);
+      }
+      
+      if (wrap) {
+        wrap.style.display = 'block';
+        console.log('Ref panel displayed');
+      }
 
       // Настраиваем копирование
       const btn = document.querySelector('#btnCopyRef');
@@ -425,18 +434,19 @@
           try {
             await navigator.clipboard.writeText(input.value);
             btn.textContent = 'Скопировано!';
-            setTimeout(() => btn.textContent = 'Копировать', 2000);
+            setTimeout(() => btn.textContent = '📋 Копировать', 2000);
           } catch (err) {
-            // Fallback для старых браузеров
             input.select();
             document.execCommand('copy');
             btn.textContent = 'Скопировано!';
-            setTimeout(() => btn.textContent = 'Копировать', 2000);
+            setTimeout(() => btn.textContent = '📋 Копировать', 2000);
           }
         });
       }
+      
+      console.log('mountReferral completed successfully');
     } catch(e) { 
-      console.error('[LC] mountReferral', e?.message||e); 
+      console.error('[LC] mountReferral error', e); 
     }
   };
 
@@ -470,6 +480,7 @@
     }
   };
 
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - ПОКАЗЫВАЕТ ДОХОДЫ ВСЕХ ПОКОЛЕНИЙ
   LC.loadReferralEarnings = async function() {
     try {
       const user = await getUser(); 
@@ -483,13 +494,19 @@
       const gen2 = earnings.find(e => e.generation === 2) || {};
       const gen3 = earnings.find(e => e.generation === 3) || {};
 
-      const set = (sel, val) => { const el = $(sel); if (el) el.textContent = val; };
+      const set = (sel, val) => { 
+        const el = $(sel); 
+        if (el) el.textContent = val; 
+      };
+      
       set('#gen1Cell', fmtMoney(pickNum(gen1.total_cents)/100));
       set('#gen2Cell', fmtMoney(pickNum(gen2.total_cents)/100));
       set('#gen3Cell', fmtMoney(pickNum(gen3.total_cents)/100));
 
       const total = (pickNum(gen1.total_cents) + pickNum(gen2.total_cents) + pickNum(gen3.total_cents)) / 100;
       set('#refTotalCell', fmtMoney(total));
+
+      console.log('Referral earnings loaded:', { gen1: gen1.total_cents, gen2: gen2.total_cents, gen3: gen3.total_cents, total });
 
       // Загружаем последние начисления
       const { data: recentData, error: recentError } = await sb.rpc('get_recent_referral_earnings');
@@ -1076,6 +1093,8 @@
       set('#gen1Count', counts.gen1);
       set('#gen2Count', counts.gen2);
       set('#gen3Count', counts.gen3);
+
+      console.log('Referral counts:', counts);
 
       // Объединяем все рефералы для таблицы
       const allRefs = [...refs1, ...refs2, ...refs3];
