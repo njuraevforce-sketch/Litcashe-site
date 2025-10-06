@@ -277,7 +277,7 @@
     width: 100%;
   }
 
-  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ - ОБНОВЛЕННАЯ === */
+  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ - УПРОЩЕННАЯ === */
   .carousel-container {
     position: relative;
     width: 100%;
@@ -305,16 +305,17 @@
     overflow: hidden;
     transition: all 0.3s ease;
     touch-action: pan-y;
-    box-shadow: none;
+    box-shadow: var(--shadow);
     opacity: 1;
     transform: scale(1);
     display: block !important;
     visibility: visible !important;
+    border: 2px solid transparent;
   }
 
   .level-card-carousel.active {
     border: 2px solid var(--primary);
-    box-shadow: 0 0 20px rgba(245, 197, 24, 0.3);
+    box-shadow: 0 0 15px rgba(245, 197, 24, 0.4);
   }
 
   .level-bg {
@@ -325,11 +326,6 @@
     height: 100%;
     background-size: cover;
     background-position: center;
-    transition: transform 0.3s ease;
-  }
-
-  .level-card-carousel:hover .level-bg {
-    transform: scale(1.05);
   }
 
   .level-overlay {
@@ -358,7 +354,6 @@
     border-radius: 10px;
     font-size: 9px;
     font-weight: bold;
-    box-shadow: 0 2px 8px rgba(245, 197, 24, 0.4);
   }
 
   .level-status {
