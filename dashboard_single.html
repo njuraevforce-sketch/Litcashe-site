@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0a1a14">
+  <meta name="theme-color" content="#F5C518">
 
   <!-- iOS -->
   <link rel="apple-touch-icon" href="/icons/litcash-180.png">
@@ -30,25 +30,25 @@
   </script>
 
   <title data-i18n="page_title_dashboard">Кабинет — Litcash</title>
-  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23F5C518'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%23ffffff' font-family='Arial' font-weight='700'>LC</text></svg>">
 
   <style>
   /* === ОСНОВНЫЕ СТИЛИ === */
   :root {
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #34d399;
+    --primary: #F5C518;
+    --primary-dark: #e0b415;
+    --primary-light: #f8d34a;
     --success: #22c55e;
     --warning: #f59e0b;
     --error: #ef4444;
-    --bg: #0a1a14;
-    --bg-gradient: linear-gradient(135deg, #0a1a14 0%, #0d2c1f 50%, #0a1a14 100%);
-    --bg-card: rgba(255, 255, 255, 0.08);
-    --text: #ffffff;
-    --text-secondary: #a7f3d0;
-    --border: rgba(16, 185, 129, 0.3);
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --radius: 12px;
+    --bg: #ffffff;
+    --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+    --bg-card: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius: 16px;
   }
 
   * {
@@ -68,16 +68,57 @@
     -webkit-text-size-adjust: 100%;
     display: flex;
     flex-direction: column;
+    max-width: 100%;
   }
 
-  /* === ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ === */
+  .container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 10px 15px;
+    max-width: 100%;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+  }
+
+  .logo {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* БАЛАНС УВЕЛИЧЕН НА 40% */
+  .balance-small {
+    font-size: 20px; /* Было 14px, увеличили на 40% */
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(245, 197, 24, 0.1);
+    padding: 6px 10px; /* Увеличили отступы для большего баланса */
+    border-radius: 8px;
+    border: 1px solid rgba(245, 197, 24, 0.2);
+  }
+
+  /* Переключатель языка */
   .language-switcher-header {
     position: relative;
     display: flex;
     align-items: center;
     z-index: 1001;
-    margin-left: auto;
-    margin-right: 10px;
   }
 
   .lang-btn-header {
@@ -86,7 +127,7 @@
     gap: 6px;
     height: 32px;
     padding: 0 10px;
-    background: var(--bg-card);
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--text);
@@ -94,15 +135,12 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
     white-space: nowrap;
   }
 
   .lang-btn-header:hover {
     border-color: var(--primary);
     color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
   }
 
   .lang-icon {
@@ -124,11 +162,10 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 8px;
-    min-width: 160px;
+    min-width: 140px;
     max-height: 300px;
     overflow-y: auto;
     box-shadow: var(--shadow);
-    backdrop-filter: blur(20px);
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -156,12 +193,12 @@
   }
 
   .lang-item:hover {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--primary-light);
+    background: rgba(245, 197, 24, 0.1);
+    color: var(--primary);
   }
 
   .lang-item.active {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(245, 197, 24, 0.15);
     color: var(--primary);
     font-weight: 600;
   }
@@ -170,7 +207,7 @@
     width: 16px;
     height: 12px;
     border-radius: 2px;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(0,0,0,0.1);
     flex-shrink: 0;
   }
 
@@ -201,705 +238,358 @@
   .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
   .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
 
-  /* Мобильный языковой переключатель */
-  .mobile-lang-switcher {
-    padding: 15px 0;
-    border-top: 1px solid var(--border);
-    margin-top: 10px;
-  }
-
-  .mobile-lang-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-    padding: 0 5px;
-  }
-
-  .mobile-lang-list {
+  /* Верхнее меню */
+  .top-menu {
     display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .mobile-lang-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    color: var(--text);
-  }
-
-  .mobile-lang-item:hover {
-    background: rgba(16, 185, 129, 0.1);
-  }
-
-  .mobile-lang-item.active {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--primary);
-    font-weight: 600;
-  }
-
-  /* Анимация крипторынка на фоне - УВЕЛИЧЕНА ВИДИМОСТЬ ДЛЯ МОБИЛЬНЫХ */
-  .crypto-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-  }
-
-  .crypto-logo {
-    position: absolute;
-    font-size: 18px;
-    font-weight: 800;
-    color: rgba(16, 185, 129, 0.9);
-    opacity: 0;
-    animation: float 20s linear infinite;
-    text-shadow: 0 0 25px rgba(16, 185, 129, 1);
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-    z-index: 1;
-  }
-
-  .trading-bot {
-    position: absolute;
-    width: 35px;
-    height: 35px;
-    background: radial-gradient(circle, var(--primary) 0%, transparent 60%);
-    border-radius: 50%;
-    opacity: 0;
-    animation: trade 25s ease-in-out infinite;
-    filter: blur(1px);
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-    box-shadow: 0 0 35px var(--primary);
-    opacity: 0.8;
-  }
-
-  .price-line {
-    position: absolute;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
-    opacity: 0;
-    animation: priceMove 15s linear infinite;
-    box-shadow: 0 0 25px var(--primary);
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-    opacity: 0.6;
-  }
-
-  .exchange-logo {
-    position: absolute;
-    font-size: 13px;
-    font-weight: 700;
-    color: rgba(52, 211, 153, 0.9);
-    opacity: 0;
-    animation: exchangeFloat 30s linear infinite;
-    padding: 4px 8px;
-    background: rgba(16, 185, 129, 0.35);
-    border-radius: 4px;
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-    border: 1px solid rgba(16, 185, 129, 0.5);
-  }
-
-  .crypto-chart {
-    position: absolute;
-    width: 100px;
-    height: 45px;
-    border: 2px solid rgba(16, 185, 129, 0.7);
-    opacity: 0;
-    animation: chartFloat 40s linear infinite;
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-    background: rgba(16, 185, 129, 0.25);
-  }
-
-  .crypto-chart::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, transparent 100%);
-    clip-path: polygon(0% 100%, 10% 80%, 20% 60%, 30% 70%, 40% 40%, 50% 50%, 60% 30%, 70% 60%, 80% 20%, 90% 40%, 100% 10%, 100% 100%, 0% 100%);
-  }
-
-  @keyframes float {
-    0% {
-      transform: translateY(100vh) rotate(0deg) scale(0.5);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.9;
-    }
-    90% {
-      opacity: 0.9;
-    }
-    100% {
-      transform: translateY(-100px) rotate(360deg) scale(1);
-      opacity: 0;
-    }
-  }
-
-  @keyframes trade {
-    0%, 100% {
-      transform: translate(0, 0) scale(0.8);
-      opacity: 0;
-    }
-    20% {
-      transform: translate(200px, 150px) scale(1);
-      opacity: 0.8;
-    }
-    40% {
-      transform: translate(400px, 80px) scale(0.7);
-      opacity: 0.8;
-    }
-    60% {
-      transform: translate(600px, 200px) scale(0.9);
-      opacity: 0.8;
-    }
-    80% {
-      transform: translate(800px, 120px) scale(0.6);
-      opacity: 0.8;
-    }
-  }
-
-  @keyframes priceMove {
-    0% {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.6;
-    }
-    90% {
-      opacity: 0.6;
-    }
-    100% {
-      transform: translateX(100vw);
-      opacity: 0;
-    }
-  }
-
-  @keyframes exchangeFloat {
-    0% {
-      transform: translateX(100vw) translateY(0) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.8;
-    }
-    90% {
-      opacity: 0.8;
-    }
-    100% {
-      transform: translateX(-100px) translateY(80px) rotate(180deg);
-      opacity: 0;
-    }
-  }
-
-  @keyframes chartFloat {
-    0% {
-      transform: translateY(100vh) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.4;
-    }
-    90% {
-      opacity: 0.4;
-    }
-    100% {
-      transform: translateY(-100px) rotate(10deg);
-      opacity: 0;
-    }
-  }
-
-  .pulse-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--primary-light);
-    border-radius: 50%;
-    animation: pulse 3s ease-in-out infinite;
-    box-shadow: 0 0 30px var(--primary);
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.4;
-    }
-    50% {
-      transform: scale(2.5);
-      opacity: 0.3;
-    }
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-    width: 100%;
-  }
-
-  /* Header - ОПТИМИЗИРОВАННАЯ НАВИГАЦИЯ */
-  .header {
-    background: rgba(10, 26, 20, 0.95);
-    backdrop-filter: blur(20px);
-    box-shadow: var(--shadow);
+    justify-content: space-around;
+    background-color: var(--bg);
+    padding: 10px 0;
     border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    flex-shrink: 0;
-  }
-
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 50px;
-    gap: 10px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    flex-shrink: 0;
-  }
-
-  .logo {
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    animation: logoGlow 3s ease-in-out infinite alternate;
-  }
-
-  @keyframes logoGlow {
-    0% {
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    }
-    100% {
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6);
-    }
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .nav-links a {
-    color: var(--text);
-    text-decoration: none;
-    font-weight: 500;
-    padding: 6px 0;
-    font-size: 12px;
-    position: relative;
-    transition: all 0.3s ease;
+    overflow-x: auto;
     white-space: nowrap;
+    width: 100%;
   }
 
-  .nav-links a:hover {
-    color: var(--primary-light);
+  .menu-item {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    min-width: 60px;
+    padding: 0 5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
   }
 
-  .nav-links a.active {
+  .menu-item.active {
     color: var(--primary);
   }
 
-  .nav-links a.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--primary);
-    box-shadow: 0 0 8px var(--primary);
-  }
-
-  .nav-cta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  /* Кнопки */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    height: 32px;
-    padding: 0 12px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    color: var(--text);
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 11px;
-    backdrop-filter: blur(10px);
-    white-space: nowrap;
-  }
-
-  .btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
-  }
-
-  .btn.primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-color: var(--primary);
-    color: white;
-  }
-
-  .btn.primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    transform: translateY(-1px);
-    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+  .menu-item i {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 4px;
   }
 
   /* Основной контент */
-  .main {
-    padding: 15px 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 120px);
-    overflow-y: auto;
-  }
-
   .main-content {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    padding-bottom: 70px;
+    width: 100%;
   }
 
-  /* Карточки */
-  .card {
-    background: var(--bg-card);
+  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ === */
+  .carousel-container {
+    position: relative;
+    width: 100%;
+    height: 135px;
+    margin: 10px 0 15px 0;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+
+  .carousel-wrapper {
+    display: flex;
+    transition: transform 0.5s ease;
+    height: 100%;
+    align-items: center;
+    touch-action: pan-y;
+  }
+
+  .level-card-carousel {
+    flex: 0 0 auto;
+    width: 280px;
+    height: 135px;
+    margin: 0 8px;
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    padding: 15px;
-    margin-bottom: 12px;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(15px);
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    opacity: 0.6;
+    transform: scale(0.9);
+    touch-action: pan-y;
   }
 
-  .card::before {
-    content: '';
+  .level-card-carousel.active {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(245, 197, 24, 0.3);
+    border: 2px solid var(--primary);
+  }
+
+  .level-bg {
     position: absolute;
     top: 0;
-    left: -100%;
+    left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
-    transition: left 0.5s ease;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.3s ease;
   }
 
-  .card:hover::before {
-    left: 100%;
+  .level-card-carousel:hover .level-bg {
+    transform: scale(1.05);
   }
 
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
-    border-color: rgba(16, 185, 129, 0.5);
+  /* УВЕЛИЧЕННАЯ ПРОЗРАЧНОСТЬ НА 20% */
+  .level-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8));
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
   }
 
-  .card h2 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    color: var(--text);
+  .level-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .level-vip-badge {
+    background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(245, 197, 24, 0.4);
+  }
+
+  /* УВЕЛИЧЕННЫЕ ИКОНКИ НА 60% И ПЕРЕМЕЩЕННЫЕ ЛЕВЕЕ НА 30% */
+  .level-icon-small {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    font-size: 16px;
+    background-size: cover;
+    background-position: center;
+    position: absolute;
+    right: 45px; /* Сдвинуто левее на 30% от предыдущего значения */
+    top: 50%;
+    transform: translateY(-50%);
+    background: none !important;
+    border: none !important;
   }
 
-  .card h2:before {
-    content: '';
-    width: 3px;
-    height: 16px;
+  /* ИНФОРМАЦИЯ ПЕРЕНЕСЕНА В ЛЕВЫЙ УГОЛ */
+  .level-content {
+    text-align: left;
+    position: absolute;
+    left: 12px;
+    top: 40px;
+  }
+
+  .level-name-carousel {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 4px;
+    text-shadow: 0 0 5px rgba(0,0,0,0.8);
+  }
+
+  .level-percentage-carousel {
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 0 5px rgba(0,0,0,0.8);
+    margin-bottom: 4px;
+  }
+
+  .level-cap-carousel {
+    font-size: 11px;
+    color: rgba(255,255,255,0.9);
+  }
+
+  /* Стили для разных уровней */
+  .level-card-carousel[data-level="starter"] .level-bg { 
+    background-image: url('assets/rotator/card-1.png'); 
+  }
+  .level-card-carousel[data-level="starter"] .level-icon-small { 
+    background-image: url('assets/rotator/icon-card1.png'); 
+  }
+
+  .level-card-carousel[data-level="advanced"] .level-bg { 
+    background-image: url('assets/rotator/card-2.png');
+  }
+  .level-card-carousel[data-level="advanced"] .level-icon-small { 
+    background-image: url('assets/rotator/icon-card2.png'); 
+  }
+
+  .level-card-carousel[data-level="proelite"] .level-bg { 
+    background-image: url('assets/rotator/card-3.png');
+  }
+  .level-card-carousel[data-level="proelite"] .level-icon-small { 
+    background-image: url('assets/rotator/icon-card3.png'); 
+  }
+
+  .level-card-carousel[data-level="titanium"] .level-bg { 
+    background-image: url('assets/rotator/card-4.png');
+  }
+  .level-card-carousel[data-level="titanium"] .level-icon-small { 
+    background-image: url('assets/rotator/icon-card4.png'); 
+  }
+
+  /* Кнопки навигации карусели */
+  .carousel-nav {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .carousel-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .carousel-dot.active {
     background: var(--primary);
-    border-radius: 2px;
-    box-shadow: 0 0 8px var(--primary);
+    transform: scale(1.2);
   }
 
-  /* Сетка */
-  .grid {
-    display: grid;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .grid-3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .grid-2 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .grid-4 {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  /* Статистические карточки */
-  .stat-card {
-    text-align: center;
-    padding: 15px 10px;
+  /* === КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР В ЖЕЛТОЙ ТЕМЕ === */
+  .video-player {
+    background: linear-gradient(135deg, #1a1500 0%, #2a2200 100%);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 15px rgba(245, 197, 24, 0.2);
+    border: 1px solid #3a3000;
     position: relative;
     overflow: hidden;
   }
 
-  .stat-card:before {
+  .video-player::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
-    box-shadow: 0 0 8px var(--primary);
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--primary));
+    z-index: 1;
   }
 
-  .stat-card .muted {
-    color: var(--text-secondary);
-    font-size: 11px;
-    margin-bottom: 6px;
-    font-weight: 500;
+  .video-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
   }
 
-  .stat-card .value {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--text), var(--primary-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+  .video-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--primary);
+    text-shadow: 0 0 8px rgba(245, 197, 24, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  .stat-card .badge {
-    display: inline-block;
-    padding: 4px 8px;
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--primary-light);
-    border-radius: 12px;
-    font-size: 9px;
-    font-weight: 600;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    backdrop-filter: blur(10px);
+  .video-title::before {
+    content: '⛏️';
+    font-size: 16px;
   }
 
-  /* === НОВЫЙ СТИЛЬ КАРТОЧЕК УРОВНЕЙ === */
-  .level-card {
-    position: relative;
-    background: linear-gradient(135deg, #2a2200 0%, #3a2f00 50%, #2a2200 100%);
+  .mining-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+    background: rgba(245, 197, 24, 0.05);
     border-radius: 8px;
     padding: 8px;
-    margin-bottom: 8px;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    border: 1px solid rgba(245, 197, 24, 0.1);
+  }
+
+  .mining-stat {
     text-align: center;
-    transition: all 0.3s ease;
-    border: 1px solid #ffd700;
-    min-height: 60px;
+  }
+
+  .mining-stat-label {
+    font-size: 9px;
+    color: var(--primary-light);
+    margin-bottom: 3px;
+    font-weight: 600;
+  }
+
+  .mining-stat-value {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--primary);
+  }
+
+  .video-container {
+    width: 100%;
+    height: 140px; /* Уменьшена высота для компактности */
+    background: linear-gradient(135deg, #0c0a00 0%, #1a1500 100%);
+    border-radius: 8px;
     overflow: hidden;
+    margin-bottom: 10px;
+    border: 1px solid rgba(245, 197, 24, 0.2);
+    position: relative;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
   }
 
-  .level-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(255, 215, 0, 0.3);
-    border-color: #ffed4a;
-  }
-
-  .level-card.active {
-    border-color: #ffed4a;
-    background: linear-gradient(135deg, #3a2f00 0%, #4a3c00 50%, #3a2f00 100%);
-    box-shadow: 0 6px 25px rgba(255, 215, 0, 0.4);
-  }
-
-  .level-card::before {
+  .video-container::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, transparent 30%, rgba(255, 215, 0, 0.1) 50%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .level-card:hover::before {
-    opacity: 1;
-  }
-
-  /* VIP символы в правом верхнем углу */
-  .level-card[data-level="starter"]::after {
-    content: 'VIP1';
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 10px;
-    font-weight: 900;
-    color: rgba(255, 215, 0, 0.8);
+    background: 
+      linear-gradient(90deg, transparent 49%, rgba(245, 197, 24, 0.1) 50%, transparent 51%),
+      linear-gradient(transparent 49%, rgba(245, 197, 24, 0.1) 50%, transparent 51%);
+    background-size: 15px 15px;
     z-index: 1;
     pointer-events: none;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
   }
 
-  .level-card[data-level="advanced"]::after {
-    content: 'VIP2';
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 10px;
-    font-weight: 900;
-    color: rgba(255, 215, 0, 0.8);
-    z-index: 1;
-    pointer-events: none;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-  }
-
-  .level-card[data-level="proelite"]::after {
-    content: 'VIP3';
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 10px;
-    font-weight: 900;
-    color: rgba(255, 215, 0, 0.8);
-    z-index: 1;
-    pointer-events: none;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-  }
-
-  .level-card[data-level="titanium"]::after {
-    content: 'VIP4';
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 10px;
-    font-weight: 900;
-    color: rgba(255, 215, 0, 0.8);
-    z-index: 1;
-    pointer-events: none;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-  }
-
-  .level-icon {
-    font-size: 16px;
-    margin-bottom: 4px;
-    z-index: 1;
+  .video-container video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
     position: relative;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    z-index: 2;
   }
 
-  .level-name {
-    font-size: 11px;
-    font-weight: 700;
-    color: #ffd700;
-    margin-bottom: 3px;
-    z-index: 1;
-    position: relative;
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
-  }
-
-  .level-status {
-    font-size: 8px;
-    padding: 2px 6px;
-    border-radius: 8px;
-    background: rgba(255, 215, 0, 0.2);
-    color: #ffd700;
-    margin-bottom: 4px;
-    font-weight: 600;
-    z-index: 1;
-    position: relative;
-    border: 1px solid rgba(255, 215, 0, 0.3);
-  }
-
-  .level-card.active .level-status {
-    background: rgba(255, 215, 0, 0.4);
-    color: #fff;
-    border-color: rgba(255, 215, 0, 0.6);
-  }
-
-  .level-info {
+  .progress-labels {
     display: flex;
-    flex-direction: column;
-    gap: 1px;
-    z-index: 1;
-    position: relative;
+    justify-content: space-between;
+    margin-bottom: 6px;
   }
 
-  .level-percentage {
-    font-size: 12px;
-    font-weight: 800;
-    color: #ffed4a;
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-  }
-
-  .level-cap {
-    font-size: 8px;
-    color: #ffd700;
+  .progress-label {
+    font-size: 10px;
+    color: var(--primary-light);
     font-weight: 600;
   }
 
-  /* Прогресс бар */
   .progress {
     height: 6px;
-    background: rgba(255, 255, 255, 0.1);
+    background: #0c0a00;
     border-radius: 3px;
     overflow: hidden;
-    margin: 12px 0 8px;
-    border: 1px solid var(--border);
+    margin-bottom: 10px;
+    border: 1px solid rgba(245, 197, 24, 0.2);
+    position: relative;
   }
 
   .progress-fill {
@@ -909,58 +599,124 @@
     transition: width 0.3s ease;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 0 8px var(--primary);
   }
 
-  .progress-fill:after {
+  .progress-fill::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.4) 50%, 
+      transparent 100%);
     animation: shimmer 2s infinite;
   }
 
   @keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 100%; }
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 
-  /* Таблицы */
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
+  .video-controls {
+    display: flex;
+    gap: 8px;
   }
 
-  .table th, .table td {
-    padding: 8px 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .table th {
-    background: rgba(16, 185, 129, 0.1);
+  .btn {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: #1a1500;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 12px;
+    cursor: pointer;
     font-weight: 600;
-    color: var(--text);
-    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    flex: 1;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(245, 197, 24, 0.3);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
   }
 
-  .table td {
+  .btn:hover {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 197, 24, 0.4);
+  }
+
+  .btn-boost {
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-boost:hover {
+    background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+  }
+
+  /* === РЕФЕРАЛЬНАЯ ПАНЕЛЬ === */
+  .referral-panel {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  .referral-header {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .referral-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  .referral-stat {
+    text-align: center;
+    padding: 8px;
+    background: rgba(245, 197, 24, 0.05);
+    border-radius: var(--radius);
+    border: 1px solid rgba(245, 197, 24, 0.1);
+  }
+
+  .stat-value {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--primary);
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 9px;
     color: var(--text-secondary);
-    font-size: 10px;
-    font-weight: 500;
   }
 
-  .table tr:hover td {
-    background: rgba(16, 185, 129, 0.05);
+  .referral-link {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
   }
 
-  /* Формы */
-  .input {
-    width: 100%;
+  .referral-link input {
+    flex: 1;
     height: 32px;
     padding: 0 12px;
     border: 1px solid var(--border);
@@ -968,76 +724,209 @@
     background: rgba(255, 255, 255, 0.05);
     color: var(--text);
     font-size: 11px;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
   }
 
-  .input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .input:read-only {
-    background: rgba(255, 255, 255, 0.03);
-    color: var(--text-secondary);
-  }
-
-  /* Видео - ФИКСИРОВАННЫЙ РАЗМЕР */
-  .video-container {
-    width: 100%;
-    height: 200px; /* Фиксированная высота */
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: #000;
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
+  /* Диаграмма для реферальной панели */
+  .referral-chart {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(
+      var(--primary) 0% 40%,
+      var(--primary-light) 40% 70%,
+      #e2e8f0 70% 100%
+    );
+    margin: 0 auto 15px;
     position: relative;
-  }
-
-  .video-container:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border: 1px solid var(--primary);
-    border-radius: var(--radius);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-
-  .video-container:hover:before {
-    opacity: 0.3;
-  }
-
-  .video-container video {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover; /* Заполняет контейнер без искажений */
-  }
-
-  /* Overlay для блокировки видео */
-  #limitOverlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0,0,0,.65);
-    color: #fff;
-    font-weight: 600;
-    font-size: 16px;
-    backdrop-filter: blur(4px);
-    border-radius: var(--radius);
+  }
+
+  .referral-chart-center {
+    width: 70px;
+    height: 70px;
+    background: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  .chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+
+  /* === МОДАЛЬНЫЕ ОКНА ДЛЯ ТАБЛИЦ === */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-end;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-content {
+    background: var(--bg);
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    width: 100%;
+    max-height: 70vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .modal-overlay.active .modal-content {
+    transform: translateY(0);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .close-modal {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  /* Пончиковые диаграммы */
+  .donut-chart {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(
+      var(--primary) 0% 40%,
+      var(--primary-light) 40% 70%,
+      #e2e8f0 70% 100%
+    );
+    margin: 0 auto 15px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .donut-center {
+    width: 70px;
+    height: 70px;
+    background: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .info-item {
+    background: rgba(245, 197, 24, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid rgba(245, 197, 24, 0.1);
+  }
+
+  .info-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .info-value {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text);
+  }
+
+  /* Нижний навбар */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--bg);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 5px;
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    width: 100%;
+  }
+
+  .nav-item {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-decoration: none;
+    flex: 1;
+    padding: 5px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-item.active {
+    color: var(--primary);
+  }
+
+  .nav-item i {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 4px;
   }
 
   /* Утилиты */
@@ -1056,32 +945,20 @@
     text-align: center;
   }
 
-  /* Footer */
-  .footer {
-    background: rgba(10, 26, 20, 0.8);
-    border-top: 1px solid var(--border);
-    padding: 15px 0;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 10px;
-    font-weight: 500;
-    backdrop-filter: blur(20px);
-    flex-shrink: 0;
-  }
-
-  /* Иконки для заголовков */
-  .icon {
-    width: 18px;
-    height: 18px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 9px;
-    font-weight: bold;
-    box-shadow: 0 0 8px var(--primary);
+  /* Адаптивность */
+  @media (max-width: 360px) {
+    .container {
+      padding: 8px;
+    }
+    
+    .level-card-carousel {
+      width: 260px;
+      height: 125px;
+    }
+    
+    .lang-dropdown-header {
+      min-width: 120px;
+    }
   }
 
   /* Уведомления */
@@ -1103,885 +980,411 @@
   .notification.show {
     transform: translateX(0);
   }
-
-  /* iOS PWA safe-area fix */
-  :root{
-    --pwa-top-extra: -10px;
-    --pwa-top: calc(env(safe-area-inset-top) + var(--pwa-top-extra));
-  }
-
-  html.standalone body { padding-top: 0 !important; }
-  html.standalone .header { padding-top: var(--pwa-top) !important; }
-
-  /* Mobile navigation - ОПТИМИЗИРОВАНА */
-  @media (max-width: 900px){
-    .nav-links {
-      display: none !important;
-    }
-    .burger {
-      display: flex;
-    }
-  }
-
-  /* Mobile fixes */
-  html, body { overflow-x: hidden; }
-  :root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
-  body { padding-bottom: calc(var(--safe-bottom) + 8px); }
-
-  /* Burger menu */
-  .burger {
-    display: none;
-    flex-direction: column;
-    gap: 3px;
-    cursor: pointer;
-    padding: 6px;
-  }
-
-  .burger span {
-    width: 18px;
-    height: 2px;
-    background: var(--text);
-    transition: all 0.3s;
-    border-radius: 1px;
-  }
-
-  /* Мобильное меню */
-  .mobile-menu {
-    position: fixed;
-    top: 50px;
-    left: 0;
-    right: 0;
-    background: rgba(10, 26, 20, 0.98);
-    backdrop-filter: blur(30px);
-    border-bottom: 1px solid var(--border);
-    padding: 15px;
-    transform: translateY(-100%);
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 99;
-  }
-
-  .mobile-menu.active {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  .mobile-menu a {
-    display: block;
-    color: var(--text);
-    text-decoration: none;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .mobile-menu a:hover,
-  .mobile-menu a.active {
-    color: var(--primary);
-  }
-
-  .mobile-menu a:last-child {
-    border-bottom: none;
-  }
-
-  /* === АДАПТИВНАЯ СЕТКА ДЛЯ МОБИЛЬНЫХ === */
-  @media (max-width: 768px) {
-    .grid-4 {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
-    }
-    
-    .level-card {
-        min-height: 55px;
-        padding: 6px 4px;
-    }
-    
-    .level-icon {
-        font-size: 14px;
-        margin-bottom: 2px;
-    }
-    
-    .level-name {
-        font-size: 10px;
-        margin-bottom: 2px;
-    }
-    
-    .level-status {
-        font-size: 7px;
-        padding: 1px 4px;
-        margin-bottom: 2px;
-    }
-    
-    .level-percentage {
-        font-size: 10px;
-    }
-    
-    .level-cap {
-        font-size: 7px;
-    }
-
-    .level-card[data-level="starter"]::after,
-    .level-card[data-level="advanced"]::after,
-    .level-card[data-level="proelite"]::after,
-    .level-card[data-level="titanium"]::after {
-        font-size: 9px;
-        top: 3px;
-        right: 4px;
-    }
-  }
-
-  /* Для очень маленьких экранов */
-  @media (max-width: 360px) {
-    .grid-4 {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 4px;
-    }
-    
-    .level-card {
-        min-height: 50px;
-        padding: 5px 3px;
-    }
-    
-    .level-icon {
-        font-size: 12px;
-    }
-    
-    .level-name {
-        font-size: 9px;
-    }
-    
-    .level-percentage {
-        font-size: 9px;
-    }
-
-    .level-card[data-level="starter"]::after,
-    .level-card[data-level="advanced"]::after,
-    .level-card[data-level="proelite"]::after,
-    .level-card[data-level="titanium"]::after {
-        font-size: 8px;
-        top: 2px;
-        right: 3px;
-    }
-  }
-
-  /* Для горизонтальной ориентации на мобильных */
-  @media (max-width: 768px) and (orientation: landscape) {
-    .level-card {
-        min-height: 50px;
-        padding: 4px 2px;
-    }
-  }
-
-  /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
-  @media (max-width: 768px) {
-    .container {
-      padding: 0 8px;
-      max-width: 100%;
-      width: 100%;
-    }
-
-    .nav {
-      height: 45px;
-      padding: 0 5px;
-      gap: 8px;
-    }
-
-    .brand {
-      font-size: 15px;
-    }
-
-    .logo {
-      width: 26px;
-      height: 26px;
-      font-size: 11px;
-    }
-
-    .nav-cta {
-      gap: 6px;
-    }
-
-    .btn {
-      height: 30px;
-      padding: 0 10px;
-      font-size: 10px;
-    }
-
-    .main {
-      padding: 10px 0;
-      min-height: calc(100vh - 105px);
-    }
-
-    .grid {
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .grid-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .grid-2 {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .card {
-      padding: 12px;
-      margin-bottom: 8px;
-    }
-
-    .card h2 {
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-
-    .stat-card {
-      padding: 10px 6px;
-    }
-
-    .stat-card .value {
-      font-size: 16px;
-      margin-bottom: 6px;
-    }
-
-    .stat-card .muted {
-      font-size: 10px;
-    }
-
-    .stat-card .badge {
-      padding: 3px 6px;
-      font-size: 8px;
-    }
-
-    .video-container {
-      height: 180px; /* Меньшая высота на мобильных */
-      margin-bottom: 8px;
-    }
-
-    .progress {
-      margin: 10px 0 6px;
-    }
-
-    .table {
-      font-size: 9px;
-    }
-
-    .table th, .table td {
-      padding: 6px 8px;
-    }
-
-    .input {
-      height: 30px;
-      font-size: 10px;
-    }
-
-    .flex {
-      gap: 6px;
-    }
-
-    .notification {
-      top: 50px;
-      right: 8px;
-      padding: 8px 10px;
-      font-size: 10px;
-    }
-
-    .footer {
-      padding: 12px 0;
-      font-size: 9px;
-    }
-
-    .burger {
-      display: flex;
-    }
-
-    /* ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ДЛЯ МОБИЛЬНЫХ */
-    .language-switcher-header {
-      margin-right: 5px;
-    }
-
-    .lang-btn-header {
-      height: 28px;
-      padding: 0 8px;
-      font-size: 10px;
-    }
-
-    .lang-code-header {
-      font-size: 10px;
-    }
-
-    .lang-dropdown-header {
-      min-width: 140px;
-      right: -10px;
-    }
-
-    /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
-    .crypto-logo {
-      font-size: 16px !important;
-      animation-duration: 18s !important;
-      color: rgba(16, 185, 129, 0.95) !important;
-      text-shadow: 0 0 30px rgba(16, 185, 129, 1) !important;
-    }
-
-    .trading-bot {
-      width: 30px !important;
-      height: 30px !important;
-      animation-duration: 22s !important;
-      box-shadow: 0 0 40px var(--primary) !important;
-      opacity: 0.9 !important;
-    }
-
-    .crypto-chart {
-      width: 90px !important;
-      height: 40px !important;
-      animation-duration: 35s !important;
-      border: 2px solid rgba(16, 185, 129, 0.8) !important;
-      background: rgba(16, 185, 129, 0.3) !important;
-    }
-
-    .price-line {
-      animation-duration: 16s !important;
-      height: 3px !important;
-      box-shadow: 0 0 30px var(--primary) !important;
-      opacity: 0.7 !important;
-    }
-
-    .exchange-logo {
-      animation-duration: 28s !important;
-      color: rgba(52, 211, 153, 0.95) !important;
-      background: rgba(16, 185, 129, 0.4) !important;
-      font-size: 12px !important;
-      padding: 3px 7px !important;
-    }
-
-    .pulse-dot {
-      width: 9px !important;
-      height: 9px !important;
-      box-shadow: 0 0 35px var(--primary) !important;
-    }
-  }
-
-  /* Для очень маленьких экранов - ИСПРАВЛЕНО: обе кнопки видны */
-  @media (max-width: 480px) {
-    .container {
-      padding: 0 5px;
-    }
-
-    .nav {
-      padding: 0 3px;
-    }
-
-    .grid-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .grid-2 {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .stat-card .value {
-      font-size: 14px;
-    }
-
-    .card h2 {
-      font-size: 13px;
-    }
-
-    .card {
-      padding: 10px;
-    }
-
-    .btn {
-      padding: 0 8px;
-      font-size: 9px;
-      height: 28px; /* Уменьшаем высоту кнопок */
-    }
-
-    .video-container {
-      height: 160px; /* Еще меньше на очень маленьких экранах */
-    }
-
-    /* ИСПРАВЛЕНО: не скрываем первую кнопку, обе видны */
-    .nav-cta {
-      gap: 4px; /* Уменьшаем расстояние между кнопками */
-    }
-
-    .nav-cta .btn {
-      padding: 0 6px; /* Еще меньше отступы */
-      font-size: 8px; /* Еще меньше шрифт */
-      min-width: auto; /* Убираем минимальную ширину */
-    }
-
-    /* ДОПОЛНИТЕЛЬНАЯ ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ */
-    .language-switcher-header {
-      margin-right: 3px;
-    }
-
-    .lang-btn-header {
-      height: 26px;
-      padding: 0 6px;
-    }
-
-    .lang-code-header {
-      font-size: 9px;
-    }
-  }
-
-  /* Для горизонтальной ориентации на мобильных */
-  @media (max-width: 768px) and (orientation: landscape) {
-    .main {
-      min-height: calc(100vh - 100px);
-    }
-    
-    .container {
-      padding: 0 8px;
-    }
-
-    .video-container {
-      height: 150px; /* Меньшая высота в ландшафте */
-    }
-  }
-
-  /* Высота viewport для мобильных */
-  @media (max-height: 700px) {
-    .main {
-      padding: 8px 0;
-      min-height: calc(100vh - 100px);
-    }
-
-    .grid {
-      gap: 6px;
-    }
-
-    .card {
-      margin-bottom: 6px;
-    }
-
-    .video-container {
-      height: 140px; /* Еще меньше на устройствах с маленькой высотой */
-    }
-  }
-
-  /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
-  @media (prefers-reduced-motion: reduce) {
-    .crypto-logo,
-    .trading-bot,
-    .price-line,
-    .exchange-logo,
-    .crypto-chart,
-    .pulse-dot,
-    .logo,
-    .progress-fill:after,
-    .card::before {
-      animation: none !important;
-      transition: none !important;
-    }
-  }
   </style>
 </head>
 
 <body>
-<!-- ставит класс .standalone только в режиме PWA -->
-<script>
-  (function () {
-    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    if (isStandalone) document.documentElement.classList.add('standalone');
-  })();
-</script>
-
-<!-- === LC RECOVERY GUARD === -->
-<script>
-(function () {
-  try {
-    if (location.pathname.endsWith('/login_single.html')) return;
-    var parts = (location.search || '') + (location.hash || '');
-    if (/(type=recovery|access_token|recovery_token)/i.test(parts)) {
-      var qs = '?' + parts.replace(/^[?#]/, '').replace('#','&');
-      var url = new URL('login_single.html', location.origin).href + qs;
-      location.replace(url);
-    }
-  } catch (e) {
-    console.error('recovery-guard', e);
-  }
-})();
-</script>
-
-<!-- Анимированный фон с крипто-элементами -->
-<div class="crypto-background" id="cryptoBackground">
-  <!-- Элементы добавляются через JavaScript -->
-</div>
-
-<!-- Модальное окно -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="dashboard_single.html" class="active" data-i18n="nav_dashboard">Личный кабинет</a>
-  <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
-  <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
-  <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
-  <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
-  
-  <!-- Языковой переключатель для мобильных добавится автоматически -->
-</div>
-
 <!-- Уведомление -->
 <div class="notification" id="notification">
   Текст уведомления
 </div>
 
-<header class="header">
-  <div class="container">
-    <nav class="nav">
-      <!-- ИСПРАВЛЕНО: Логотип ведет на dashboard_single.html -->
-      <a class="brand" href="dashboard_single.html">
-        <div class="logo">LC</div>
-        <span data-i18n="brand_name">Litcash</span>
-      </a>
+<!-- Модальные окна -->
+<div class="modal-overlay" id="infoModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">ℹ Информационная таблица</div>
+      <button class="close-modal" id="closeInfoModal">×</button>
+    </div>
+    
+    <div class="donut-chart">
+      <div class="donut-center">
+        <span data-level-name>Starter</span>
+      </div>
+    </div>
+    
+    <div class="chart-legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: var(--primary);"></div>
+        <span>Уровень: <span data-level-name>Starter</span></span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: var(--primary-light);"></div>
+        <span>Процент: <span data-rate>2.5%</span></span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e2e8f0;"></div>
+        <span>База: <span id="baseCapCell">$0</span></span>
+      </div>
+    </div>
+    
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">За 1 просмотр</div>
+        <div class="info-value" data-reward-per-view>$0.00</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">За 5 просмотров</div>
+        <div class="info-value" data-daily-reward>$0.00</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Следующий уровень</div>
+        <div class="info-value" id="nextTargetCell">—</div>
+      </div>
+    </div>
+  </div>
+</div>
 
-      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ -->
-      <div class="language-switcher-header" id="languageSwitcher">
-        <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
-          <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
-                  fill="none" stroke="currentColor" stroke-width="1.2"/>
-          </svg>
-          <span class="lang-code-header">RU</span>
-        </button>
+<div class="modal-overlay" id="referralModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">💰 Реферальный доход</div>
+      <button class="close-modal" id="closeReferralModal">×</button>
+    </div>
+    
+    <div class="donut-chart">
+      <div class="donut-center">
+        <span id="refTotalCell">$0.00</span>
+      </div>
+    </div>
+    
+    <div class="chart-legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: var(--primary);"></div>
+        <span>1-е поколение (13%): <span id="gen1Cell">$0.00</span></span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: var(--primary-light);"></div>
+        <span>2-е поколение (5%): <span id="gen2Cell">$0.00</span></span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e2e8f0;"></div>
+        <span>3-е поколение (1%): <span id="gen3Cell">$0.00</span></span>
+      </div>
+    </div>
+    
+    <div class="referral-stats">
+      <div class="referral-stat">
+        <div class="stat-value" id="gen1Count">0</div>
+        <div class="stat-label">1-е поколение</div>
+      </div>
+      <div class="referral-stat">
+        <div class="stat-value" id="gen2Count">0</div>
+        <div class="stat-label">2-е поколение</div>
+      </div>
+      <div class="referral-stat">
+        <div class="stat-value" id="gen3Count">0</div>
+        <div class="stat-label">3-е поколение</div>
+      </div>
+    </div>
+    
+    <div class="referral-link">
+      <input class="input" id="refLink" readonly value="">
+      <button class="btn" id="btnCopyRef">📋 Копировать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Верхняя часть -->
+<header>
+  <div class="logo">
+    <span>Litcash</span>
+    <div class="balance-small" data-balance>$0.00</div>
+  </div>
+  
+  <!-- Переключатель языка -->
+  <div class="language-switcher-header" id="languageSwitcher">
+    <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
+      <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+              fill="none" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+      <span class="lang-code-header">RU</span>
+    </button>
+    
+    <div class="lang-dropdown-header" id="langDropdown">
+      <div class="lang-list">
+        <div class="lang-item active" data-lang="ru">
+          <span class="lang-flag ru"></span>
+          <span class="lang-name">Русский</span>
+          <span class="lang-code">RU</span>
+        </div>
+        <div class="lang-item" data-lang="en">
+          <span class="lang-flag en"></span>
+          <span class="lang-name">English</span>
+          <span class="lang-code">EN</span>
+        </div>
+        <div class="lang-item" data-lang="cn">
+          <span class="lang-flag cn"></span>
+          <span class="lang-name">中文</span>
+          <span class="lang-code">CN</span>
+        </div>
+        <div class="lang-item" data-lang="es">
+          <span class="lang-flag es"></span>
+          <span class="lang-name">Español</span>
+          <span class="lang-code">ES</span>
+        </div>
+        <div class="lang-item" data-lang="fr">
+          <span class="lang-flag fr"></span>
+          <span class="lang-name">Français</span>
+          <span class="lang-code">FR</span>
+        </div>
+        <div class="lang-item" data-lang="de">
+          <span class="lang-flag de"></span>
+          <span class="lang-name">Deutsch</span>
+          <span class="lang-code">DE</span>
+        </div>
+        <div class="lang-item" data-lang="pt">
+          <span class="lang-flag pt"></span>
+          <span class="lang-name">Português</span>
+          <span class="lang-code">PT</span>
+        </div>
+        <div class="lang-item" data-lang="ar">
+          <span class="lang-flag ar"></span>
+          <span class="lang-name">العربية</span>
+          <span class="lang-code">AR</span>
+        </div>
+        <div class="lang-item" data-lang="ja">
+          <span class="lang-flag jp"></span>
+          <span class="lang-name">日本語</span>
+          <span class="lang-code">JA</span>
+        </div>
+        <div class="lang-item" data-lang="ko">
+          <span class="lang-flag kr"></span>
+          <span class="lang-name">한국어</span>
+          <span class="lang-code">KO</span>
+        </div>
+        <div class="lang-item" data-lang="tr">
+          <span class="lang-flag tr"></span>
+          <span class="lang-name">Türkçe</span>
+          <span class="lang-code">TR</span>
+        </div>
+        <div class="lang-item" data-lang="it">
+          <span class="lang-flag it"></span>
+          <span class="lang-name">Italiano</span>
+          <span class="lang-code">IT</span>
+        </div>
+        <div class="lang-item" data-lang="hi">
+          <span class="lang-flag in"></span>
+          <span class="lang-name">हिन्दी</span>
+          <span class="lang-code">HI</span>
+        </div>
+        <div class="lang-item" data-lang="pl">
+          <span class="lang-flag pl"></span>
+          <span class="lang-name">Polski</span>
+          <span class="lang-code">PL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Верхнее меню -->
+<nav class="top-menu">
+  <a href="dashboard_single.html" class="menu-item active">
+    <i>🏠</i> Платформа
+  </a>
+  <a href="deposit_single.html" class="menu-item">
+    <i>💰</i> Пополнение
+  </a>
+  <a href="withdraw_single.html" class="menu-item">
+    <i>💸</i> Вывод
+  </a>
+  <a href="faq_single.html" class="menu-item">
+    <i>❓</i> Помощь
+  </a>
+  <a href="settings_single.html" class="menu-item">
+    <i>👤</i> Профиль
+  </a>
+</nav>
+
+<!-- Основной контент -->
+<main class="main-content">
+  <div class="container">
+    <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ -->
+    <div class="carousel-container">
+      <div class="carousel-wrapper" id="carouselWrapper">
+        <div class="level-card-carousel active" data-level="starter" data-index="0">
+          <div class="level-bg"></div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 1</div>
+            </div>
+            <div class="level-content">
+              <div class="level-name-carousel">Starter</div>
+              <div class="level-percentage-carousel">2.5%</div>
+              <div class="level-cap-carousel">до $300</div>
+            </div>
+            <div class="level-icon-small"></div>
+          </div>
+        </div>
         
-        <div class="lang-dropdown-header" id="langDropdown">
-          <div class="lang-list">
-            <div class="lang-item active" data-lang="ru">
-              <span class="lang-flag ru"></span>
-              <span class="lang-name">Русский</span>
-              <span class="lang-code">RU</span>
+        <div class="level-card-carousel" data-level="advanced" data-index="1">
+          <div class="level-bg"></div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 2</div>
             </div>
-            <div class="lang-item" data-lang="en">
-              <span class="lang-flag en"></span>
-              <span class="lang-name">English</span>
-              <span class="lang-code">EN</span>
+            <div class="level-content">
+              <div class="level-name-carousel">Advanced</div>
+              <div class="level-percentage-carousel">3.0%</div>
+              <div class="level-cap-carousel">до $1,000</div>
             </div>
-            <div class="lang-item" data-lang="cn">
-              <span class="lang-flag cn"></span>
-              <span class="lang-name">中文</span>
-              <span class="lang-code">CN</span>
+            <div class="level-icon-small"></div>
+          </div>
+        </div>
+        
+        <div class="level-card-carousel" data-level="proelite" data-index="2">
+          <div class="level-bg"></div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 3</div>
             </div>
-            <div class="lang-item" data-lang="es">
-              <span class="lang-flag es"></span>
-              <span class="lang-name">Español</span>
-              <span class="lang-code">ES</span>
+            <div class="level-content">
+              <div class="level-name-carousel">Pro Elite</div>
+              <div class="level-percentage-carousel">4.0%</div>
+              <div class="level-cap-carousel">до $3,000</div>
             </div>
-            <div class="lang-item" data-lang="fr">
-              <span class="lang-flag fr"></span>
-              <span class="lang-name">Français</span>
-              <span class="lang-code">FR</span>
+            <div class="level-icon-small"></div>
+          </div>
+        </div>
+        
+        <div class="level-card-carousel" data-level="titanium" data-index="3">
+          <div class="level-bg"></div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 4</div>
             </div>
-            <div class="lang-item" data-lang="de">
-              <span class="lang-flag de"></span>
-              <span class="lang-name">Deutsch</span>
-              <span class="lang-code">DE</span>
+            <div class="level-content">
+              <div class="level-name-carousel">Titanium</div>
+              <div class="level-percentage-carousel">5.0%</div>
+              <div class="level-cap-carousel">$3,000+</div>
             </div>
-            <div class="lang-item" data-lang="pt">
-              <span class="lang-flag pt"></span>
-              <span class="lang-name">Português</span>
-              <span class="lang-code">PT</span>
-            </div>
-            <div class="lang-item" data-lang="ar">
-              <span class="lang-flag ar"></span>
-              <span class="lang-name">العربية</span>
-              <span class="lang-code">AR</span>
-            </div>
-            <div class="lang-item" data-lang="ja">
-              <span class="lang-flag jp"></span>
-              <span class="lang-name">日本語</span>
-              <span class="lang-code">JA</span>
-            </div>
-            <div class="lang-item" data-lang="ko">
-              <span class="lang-flag kr"></span>
-              <span class="lang-name">한국어</span>
-              <span class="lang-code">KO</span>
-            </div>
-            <div class="lang-item" data-lang="tr">
-              <span class="lang-flag tr"></span>
-              <span class="lang-name">Türkçe</span>
-              <span class="lang-code">TR</span>
-            </div>
-            <div class="lang-item" data-lang="it">
-              <span class="lang-flag it"></span>
-              <span class="lang-name">Italiano</span>
-              <span class="lang-code">IT</span>
-            </div>
-            <div class="lang-item" data-lang="hi">
-              <span class="lang-flag in"></span>
-              <span class="lang-name">हिन्दी</span>
-              <span class="lang-code">HI</span>
-            </div>
-            <div class="lang-item" data-lang="pl">
-              <span class="lang-flag pl"></span>
-              <span class="lang-name">Polski</span>
-              <span class="lang-code">PL</span>
-            </div>
+            <div class="level-icon-small"></div>
           </div>
         </div>
       </div>
       
-      <div class="nav-links">
-        <a href="dashboard_single.html" class="active" data-i18n="nav_dashboard">Личный кабинет</a>
-        <a href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
-        <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
-        <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
-        <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
-      </div>
-
-      <!-- ИСПРАВЛЕНО: Добавлены кнопки Пополнение и Вывод в шапку -->
-      <div class="nav-cta">
-        <a class="btn" href="deposit_single.html" data-i18n="nav_deposit">Пополнение</a>
-        <a class="btn primary" href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
-      </div>
-
-      <div class="burger" id="burgerBtn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </nav>
-  </div>
-</header>
-
-<main class="main">
-  <div class="container main-content">
-    <!-- Статистика -->
-    <div class="grid grid-3">
-      <div class="card stat-card">
-        <div class="muted" data-i18n="dashboard_balance">Баланс</div>
-        <div class="value" data-balance>$0.00</div>
+      <!-- Навигация карусели -->
+      <div class="carousel-nav">
+        <div class="carousel-dot active" data-index="0"></div>
+        <div class="carousel-dot" data-index="1"></div>
+        <div class="carousel-dot" data-index="2"></div>
+        <div class="carousel-dot" data-index="3"></div>
       </div>
     </div>
 
-    <!-- Карточки уровней -->
-    <div class="grid grid-4" id="levelCardsContainer">
-      <div class="card level-card" data-level="starter">
-        <div class="level-icon">⭐</div>
-        <div class="level-name">Starter</div>
-        <div class="level-status" data-i18n="level_inactive">Неактивен</div>
-        <div class="level-info">
-          <div class="level-percentage" id="starter-percentage">2.5%</div>
-          <div class="level-cap" id="starter-cap">до $300</div>
+    <!-- 2. КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР В ЖЕЛТОЙ ТЕМЕ -->
+    <div class="video-player">
+      <div class="video-header">
+        <div class="video-title">Mining Processor</div>
+      </div>
+      
+      <div class="mining-stats">
+        <div class="mining-stat">
+          <div class="mining-stat-label">Hashrate</div>
+          <div class="mining-stat-value">125 MH/s</div>
+        </div>
+        <div class="mining-stat">
+          <div class="mining-stat-label">Temperature</div>
+          <div class="mining-stat-value">67°C</div>
+        </div>
+        <div class="mining-stat">
+          <div class="mining-stat-label">Efficiency</div>
+          <div class="mining-stat-value">0.35 J/MH</div>
         </div>
       </div>
       
-      <div class="card level-card" data-level="advanced">
-        <div class="level-icon">🚀</div>
-        <div class="level-name">Advanced</div>
-        <div class="level-status" data-i18n="level_inactive">Неактивен</div>
-        <div class="level-info">
-          <div class="level-percentage" id="advanced-percentage">3.0%</div>
-          <div class="level-cap" id="advanced-cap">до $1,000</div>
+      <div class="video-container">
+        <video id="promoVid" controls playsinline style="width:100%;height:100%">
+          <source src="/assets/videos/ad1.MP4" type="video/mp4">
+          <span data-i18n="video_not_supported">Ваш браузер не поддерживает видео тег.</span>
+        </video>
+        <div id="limitOverlay" data-i18n="video_limit_reached">Лимит просмотров исчерпан</div>
+      </div>
+
+      <div class="progress-labels">
+        <div class="progress-label">Mining Progress</div>
+        <div class="progress-label" id="progressText">0%</div>
+      </div>
+      
+      <div class="progress">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+
+      <div class="video-controls">
+        <button class="btn" id="startBtn">⛏️ Start Mining</button>
+        <a href="deposit_single.html" class="btn btn-boost">⚡ Boost</a>
+      </div>
+    </div>
+
+    <!-- 3. РЕФЕРАЛЬНАЯ ПАНЕЛЬ С ДИАГРАММОЙ -->
+    <div class="referral-panel">
+      <div class="referral-header">👥 Реферальная панель</div>
+      
+      <!-- Диаграмма реферальных доходов -->
+      <div class="referral-chart">
+        <div class="referral-chart-center">
+          <span id="refTotalChart">$0.00</span>
         </div>
       </div>
       
-      <div class="card level-card" data-level="proelite">
-        <div class="level-icon">👑</div>
-        <div class="level-name">Pro Elite</div>
-        <div class="level-status" data-i18n="level_inactive">Неактивен</div>
-        <div class="level-info">
-          <div class="level-percentage" id="proelite-percentage">4.0%</div>
-          <div class="level-cap" id="proelite-cap">до $3,000</div>
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--primary);"></div>
+          <span>1-е поколение: <span id="gen1Chart">$0.00</span></span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--primary-light);"></div>
+          <span>2-е поколение: <span id="gen2Chart">$0.00</span></span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #e2e8f0;"></div>
+          <span>3-е поколение: <span id="gen3Chart">$0.00</span></span>
         </div>
       </div>
       
-      <div class="card level-card" data-level="titanium">
-        <div class="level-icon">💎</div>
-        <div class="level-name">Titanium</div>
-        <div class="level-status" data-i18n="level_inactive">Неактивен</div>
-        <div class="level-info">
-          <div class="level-percentage" id="titanium-percentage">5.0%</div>
-          <div class="level-cap" id="titanium-cap">$3,000+</div>
+      <div class="referral-stats">
+        <div class="referral-stat">
+          <div class="stat-value" id="gen1Count">0</div>
+          <div class="stat-label">1-е поколение</div>
+        </div>
+        <div class="referral-stat">
+          <div class="stat-value" id="gen2Count">0</div>
+          <div class="stat-label">2-е поколение</div>
+        </div>
+        <div class="referral-stat">
+          <div class="stat-value" id="gen3Count">0</div>
+          <div class="stat-label">3-е поколение</div>
         </div>
       </div>
-    </div>
-
-    <!-- Основной контент -->
-    <div class="grid grid-2">
-      <!-- Видео блок -->
-      <div class="card">
-        <h2><span class="icon">▶</span><span data-i18n="dashboard_video_view">Просмотр видео</span></h2>
-        
-        <div class="video-container">
-          <video id="promoVid" controls playsinline style="width:100%;height:100%">
-            <source src="/assets/videos/ad1.MP4" type="video/mp4">
-            <span data-i18n="video_not_supported">Ваш браузер не поддерживает видео тег.</span>
-          </video>
-          <div id="limitOverlay" data-i18n="video_limit_reached">Лимит просмотров исчерпан</div>
-        </div>
-
-        <div class="progress">
-          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-        </div>
-        <div class="muted" id="progressText" data-i18n="dashboard_progress">Прогресс: 0%</div>
-
-        <div class="flex" style="margin-top: 12px">
-          <button class="btn primary" id="startBtn" style="flex: 1" data-i18n="dashboard_earn_by_view">🎬 Заработать за просмотр</button>
-          <a href="deposit_single.html" class="btn" style="flex: 1; text-align: center" data-i18n="dashboard_deposit">💳 Пополнить</a>
-        </div>
-      </div>
-
-    <!-- Реферальная панель -->
-<div class="card">
-  <h2><span class="icon">👥</span><span data-i18n="dashboard_referral_panel">Реферальная панель</span></h2>
-  
-  <!-- ДОБАВЛЕНО: обертка refLinkWrap -->
-  <div id="refLinkWrap">
-    <div class="flex" style="margin-bottom: 12px">
-      <input class="input" id="refLink" readonly value="" style="flex: 1">
-      <button class="btn" id="btnCopyRef" data-i18n="dashboard_copy">📋 Копировать</button>
-    </div>
-  </div>
-
-  <div class="grid grid-3" style="margin-bottom: 12px">
-    <div class="card stat-card">
-      <div class="muted" data-i18n="dashboard_gen1">1 поколение</div>
-      <div class="value" id="gen1Count">0</div>
-    </div>
-    <div class="card stat-card">
-      <div class="muted" data-i18n="dashboard_gen2">2 поколение</div>
-      <div class="value" id="gen2Count">0</div>
-    </div>
-    <div class="card stat-card">
-      <div class="muted" data-i18n="dashboard_gen3">3 поколение</div>
-      <div class="value" id="gen3Count">0</div>
-    </div>
-  </div>
-
-  <div style="overflow-x: auto;">
-    <table class="table">
-      <thead>
-        <tr>
-          <th data-i18n="dashboard_generation">Поколение</th>
-          <th data-i18n="dashboard_email">Email</th>
-          <th data-i18n="dashboard_capital">Капитал</th>
-          <th data-i18n="dashboard_level">Уровень</th>
-          <th data-i18n="dashboard_date">Дата</th>
-        </tr>
-      </thead>
-      <tbody id="refTree">
-        <tr>
-          <td colspan="5" class="text-center muted" data-i18n="no_data">Нет данных</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
       
-    <!-- Информационная таблица -->
-    <div class="card">
-      <h2><span class="icon">ℹ</span><span data-i18n="dashboard_info_table">Информационная таблица</span></h2>
-      <div style="overflow-x: auto;">
-        <table class="table">
-          <thead>
-            <tr>
-              <th data-i18n="dashboard_indicator">Показатель</th>
-              <th data-i18n="dashboard_value">Значение</th>
-              <th data-i18n="dashboard_comment">Комментарий</th>
-            </tr>
-          </thead>
-          <tbody id="infoRows">
-            <tr>
-              <td data-i18n="dashboard_level">Уровень</td>
-              <td><span data-level-name>—</span></td>
-              <td data-i18n="dashboard_levels_list">Starter / Advanced / Pro Elite / Titanium</td>
-            </tr>
-            <tr>
-              <td data-i18n="dashboard_percentage">Процент</td>
-              <td><span data-rate>—</span></td>
-              <td data-i18n="dashboard_percentage_desc">Начисляется от базового капитала уровня</td>
-            </tr>
-            <tr>
-              <td data-i18n="dashboard_base">База уровня</td>
-              <td><span id="baseCapCell">—</span></td>
-              <td data-i18n="dashboard_base_desc">min(капитал, потолок уровня)</td>
-            </tr>
-            <tr>
-              <td data-i18n="dashboard_per_view">За 1 просмотр</td>
-              <td><span data-reward-per-view>$0.00</span></td>
-              <td data-i18n="dashboard_per_view_desc">5 просмотров = полный дневной %</td>
-            </tr>
-            <tr>
-              <td data-i18n="dashboard_daily_reward">За 5 просмотров (сегодня)</td>
-              <td><span data-daily-reward>$0.00</span></td>
-              <td data-i18n="dashboard_daily_reward_desc">Сумма за сутки по уровню</td>
-            </tr>
-            <tr>
-              <td data-i18n="dashboard_next_level_goal">Цель следующего уровня</td>
-              <td colspan="2"><span id="nextTargetCell">—</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ИСПРАВЛЕНО: Объединенные колонки - Реферальный доход -->
-    <div class="card">
-      <h2><span class="icon">💰</span><span data-i18n="dashboard_referral_income">Реферальный доход</span></h2>
-      
-      <!-- Первая таблица - Реферальный доход -->
-      <div style="overflow-x: auto; margin-bottom: 15px;">
-        <table class="table">
-          <thead>
-            <tr>
-              <th data-i18n="dashboard_generation">Поколение</th>
-              <th data-i18n="dashboard_amount">Сумма</th>
-            </tr>
-          </thead>
-          <tbody id="refRows">
-            <tr>
-              <td data-i18n="dashboard_gen1_with_percent">1-е поколение (13%)</td>
-              <td id="gen1Cell">$0.00</td>
-            </tr>
-            <tr>
-              <td data-i18n="dashboard_gen2_with_percent">2-е поколение (5%)</td>
-              <td id="gen2Cell">$0.00</td>
-            </tr>
-            <tr>
-              <td data-i18n="dashboard_gen3_with_percent">3-е поколение (1%)</td>
-              <td id="gen3Cell">$0.00</td>
-            </tr>
-            <tr>
-              <td><strong data-i18n="dashboard_total">Итого</strong></td>
-              <td id="refTotalCell"><strong>$0.00</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Вторая таблица - Последние начисления -->
-      <h3 style="margin: 15px 0 10px 0; font-size: 14px; color: var(--text);">
-        <span class="icon">📊</span><span data-i18n="dashboard_recent_referral_earnings">Последние реферальные начисления</span>
-      </h3>
-      <div style="overflow-x: auto;">
-        <table class="table">
-          <thead>
-            <tr>
-              <th data-i18n="dashboard_date">Дата</th>
-              <th data-i18n="dashboard_generation">Поколение</th>
-              <th data-i18n="dashboard_amount">Сумма</th>
-              <th data-i18n="dashboard_source">Источник</th>
-            </tr>
-          </thead>
-          <tbody id="refList">
-            <tr>
-              <td colspan="4" class="text-center muted" data-i18n="no_data">Нет данных</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="referral-link">
+        <input class="input" id="refLink" readonly value="">
+        <button class="btn" id="btnCopyRef">📋 Копировать</button>
       </div>
     </div>
   </div>
 </main>
 
-<footer class="footer">
-  <div class="container">
-    <span data-i18n="footer_copyright">© 2025 Litcash. Все права защищены.</span>
-  </div>
-</footer>
+<!-- Нижний навбар -->
+<nav class="bottom-nav">
+  <a href="dashboard_single.html" class="nav-item active">
+    <i>🏠</i> Кабинет
+  </a>
+  <a href="deposit_single.html" class="nav-item">
+    <i>💰</i> Пополнение
+  </a>
+  <a href="withdraw_single.html" class="nav-item">
+    <i>💸</i> Вывод
+  </a>
+  <a href="#" class="nav-item" id="openInfoModal">
+    <i>ℹ</i> Инфо
+  </a>
+  <a href="#" class="nav-item" id="openReferralModal">
+    <i>👥</i> Рефералы
+  </a>
+</nav>
 
 <!-- Подключаем систему перевода -->
 <script src="assets/js/i18n.js"></script>
@@ -1992,36 +1395,220 @@
 <script defer src="app_supabase.js"></script>
 
 <script>
-// Бургер-меню
-document.addEventListener('DOMContentLoaded', function() {
-  const burgerBtn = document.getElementById('burgerBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
-  
-  if (burgerBtn && mobileMenu) {
-    burgerBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      mobileMenu.classList.toggle('active');
-      burgerBtn.classList.toggle('active');
+// Базовые функции для уведомлений
+function showNotification(message) {
+  const notification = document.getElementById('notification');
+  if (notification) {
+    notification.textContent = message;
+    notification.classList.add('show');
+    setTimeout(() => {
+      notification.classList.remove('show');
+    }, 3000);
+  }
+}
+
+// Карусель карточек уровней с улучшенным свайпом
+function initCarousel() {
+  const carouselWrapper = document.getElementById('carouselWrapper');
+  const cards = document.querySelectorAll('.level-card-carousel');
+  const dots = document.querySelectorAll('.carousel-dot');
+  let currentIndex = 0;
+  const cardWidth = 280; // Ширина карточки
+  const margin = 16; // Суммарный margin (8px с каждой стороны)
+  let startX = 0;
+  let currentX = 0;
+  let isSwiping = false;
+
+  function updateCarousel() {
+    // Сдвигаем карусель
+    const offset = -currentIndex * (cardWidth + margin);
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+    
+    // Обновляем активные классы
+    cards.forEach((card, index) => {
+      card.classList.toggle('active', index === currentIndex);
     });
     
-    // Закрытие меню при клике на ссылку
-    const mobileLinks = mobileMenu.querySelectorAll('a');
-    mobileLinks.forEach(link => {
-      link.addEventListener('click', function() {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      });
-    });
-    
-    // Закрытие меню при клике вне его
-    document.addEventListener('click', function(e) {
-      if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      }
+    // Обновляем точки навигации
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentIndex);
     });
   }
 
+  // Обработчики для точек навигации
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      currentIndex = parseInt(dot.getAttribute('data-index'));
+      updateCarousel();
+    });
+  });
+
+  // Улучшенный свайп для мобильных устройств
+  carouselWrapper.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isSwiping = true;
+    carouselWrapper.style.transition = 'none';
+  });
+  
+  carouselWrapper.addEventListener('touchmove', (e) => {
+    if (!isSwiping) return;
+    currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    const offset = -currentIndex * (cardWidth + margin) + diff;
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+  });
+  
+  carouselWrapper.addEventListener('touchend', () => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    carouselWrapper.style.transition = 'transform 0.5s ease';
+    
+    const diff = startX - currentX;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0 && currentIndex < cards.length - 1) {
+        // Свайп влево - следующий слайд
+        currentIndex++;
+      } else if (diff < 0 && currentIndex > 0) {
+        // Свайп вправо - предыдущий слайд
+        currentIndex--;
+      }
+    }
+    updateCarousel();
+  });
+
+  // Добавляем обработчики для мыши (для тестирования на ПК)
+  carouselWrapper.addEventListener('mousedown', (e) => {
+    startX = e.clientX;
+    isSwiping = true;
+    carouselWrapper.style.transition = 'none';
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isSwiping) return;
+    currentX = e.clientX;
+    const diff = currentX - startX;
+    const offset = -currentIndex * (cardWidth + margin) + diff;
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    carouselWrapper.style.transition = 'transform 0.5s ease';
+    
+    const diff = startX - currentX;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0 && currentIndex < cards.length - 1) {
+        // Свайп влево - следующий слайд
+        currentIndex++;
+      } else if (diff < 0 && currentIndex > 0) {
+        // Свайп вправо - предыдущий слайд
+        currentIndex--;
+      }
+    }
+    updateCarousel();
+  });
+
+  // Автоматическое обновление диаграммы при изменении данных
+  function updateReferralChart() {
+    const gen1 = parseFloat(document.getElementById('gen1Cell')?.textContent.replace('$', '') || 0);
+    const gen2 = parseFloat(document.getElementById('gen2Cell')?.textContent.replace('$', '') || 0);
+    const gen3 = parseFloat(document.getElementById('gen3Cell')?.textContent.replace('$', '') || 0);
+    const total = gen1 + gen2 + gen3;
+    
+    if (total > 0) {
+      const gen1Percent = (gen1 / total) * 100;
+      const gen2Percent = (gen2 / total) * 100;
+      const gen3Percent = (gen3 / total) * 100;
+      
+      const chart = document.querySelector('.referral-chart');
+      if (chart) {
+        chart.style.background = `conic-gradient(
+          var(--primary) 0% ${gen1Percent}%,
+          var(--primary-light) ${gen1Percent}% ${gen1Percent + gen2Percent}%,
+          #e2e8f0 ${gen1Percent + gen2Percent}% 100%
+        )`;
+      }
+      
+      // Обновляем значения в диаграмме
+      document.getElementById('refTotalChart').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('gen1Chart').textContent = `$${gen1.toFixed(2)}`;
+      document.getElementById('gen2Chart').textContent = `$${gen2.toFixed(2)}`;
+      document.getElementById('gen3Chart').textContent = `$${gen3.toFixed(2)}`;
+    }
+  }
+
+  // Наблюдатель за изменениями в реферальных данных
+  const observer = new MutationObserver(updateReferralChart);
+  const refCells = document.querySelectorAll('#gen1Cell, #gen2Cell, #gen3Cell');
+  refCells.forEach(cell => {
+    observer.observe(cell, { characterData: true, subtree: true, childList: true });
+  });
+
+  // Инициализация
+  updateCarousel();
+  setTimeout(updateReferralChart, 1000); // Инициализация после загрузки данных
+}
+
+// Модальные окна
+function initModals() {
+  const infoModal = document.getElementById('infoModal');
+  const referralModal = document.getElementById('referralModal');
+  const openInfoModalBtn = document.getElementById('openInfoModal');
+  const openReferralModalBtn = document.getElementById('openReferralModal');
+  const closeInfoModalBtn = document.getElementById('closeInfoModal');
+  const closeReferralModalBtn = document.getElementById('closeReferralModal');
+
+  // Открытие модальных окон
+  openInfoModalBtn.addEventListener('click', () => {
+    infoModal.classList.add('active');
+  });
+
+  openReferralModalBtn.addEventListener('click', () => {
+    referralModal.classList.add('active');
+  });
+
+  // Закрытие модальных окон
+  closeInfoModalBtn.addEventListener('click', () => {
+    infoModal.classList.remove('active');
+  });
+
+  closeReferralModalBtn.addEventListener('click', () => {
+    referralModal.classList.remove('active');
+  });
+
+  // Закрытие по клику вне модального окна
+  infoModal.addEventListener('click', (e) => {
+    if (e.target === infoModal) {
+      infoModal.classList.remove('active');
+    }
+  });
+
+  referralModal.addEventListener('click', (e) => {
+    if (e.target === referralModal) {
+      referralModal.classList.remove('active');
+    }
+  });
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+  // Копирование реферальной ссылки
+  const btnCopyRef = document.getElementById('btnCopyRef');
+  const refLink = document.getElementById('refLink');
+  
+  if (btnCopyRef && refLink) {
+    btnCopyRef.addEventListener('click', function() {
+      refLink.select();
+      document.execCommand('copy');
+      showNotification('Ссылка скопирована в буфер обмена');
+    });
+  }
+  
   // Инициализация языкового переключателя
   const langSwitcher = document.getElementById('languageSwitcher');
   const langBtn = document.getElementById('langBtn');
@@ -2050,77 +1637,12 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
-});
-
-// Анимированный фон
-document.addEventListener('DOMContentLoaded', function() {
-  const cryptoBackground = document.getElementById('cryptoBackground');
-  if (!cryptoBackground) return;
-
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
   
-  const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
-  const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
+  // Инициализация карусели
+  initCarousel();
   
-  const cryptoLogoCount = isMobile ? 15 : 12;
-  const exchangeLogoCount = isMobile ? 10 : 8;
-  const botCount = isMobile ? 8 : 6;
-  const lineCount = isMobile ? 10 : 8;
-  const chartCount = isMobile ? 6 : 4;
-  const dotCount = isMobile ? 15 : 10;
-  
-  for (let i = 0; i < cryptoLogoCount; i++) {
-    const element = document.createElement('div');
-    element.className = 'crypto-logo';
-    element.textContent = cryptoLogos[i % cryptoLogos.length];
-    element.style.left = Math.random() * 90 + 5 + '%';
-    element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
-    element.style.fontSize = (Math.random() * 8 + 14) + 'px';
-    cryptoBackground.appendChild(element);
-  }
-  
-  for (let i = 0; i < exchangeLogoCount; i++) {
-    const element = document.createElement('div');
-    element.className = 'exchange-logo';
-    element.textContent = exchangeLogos[i % exchangeLogos.length];
-    element.style.top = Math.random() * 80 + 10 + '%';
-    element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
-    cryptoBackground.appendChild(element);
-  }
-  
-  for (let i = 0; i < botCount; i++) {
-    const bot = document.createElement('div');
-    bot.className = 'trading-bot';
-    bot.style.left = Math.random() * 80 + 10 + '%';
-    bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
-    cryptoBackground.appendChild(bot);
-  }
-  
-  for (let i = 0; i < lineCount; i++) {
-    const line = document.createElement('div');
-    line.className = 'price-line';
-    line.style.top = Math.random() * 80 + 10 + '%';
-    line.style.width = (Math.random() * 200 + 100) + 'px';
-    line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
-    cryptoBackground.appendChild(line);
-  }
-
-  for (let i = 0; i < chartCount; i++) {
-    const chart = document.createElement('div');
-    chart.className = 'crypto-chart';
-    chart.style.left = Math.random() * 80 + 10 + '%';
-    chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
-    cryptoBackground.appendChild(chart);
-  }
-
-  for (let i = 0; i < dotCount; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'pulse-dot';
-    dot.style.left = Math.random() * 95 + '%';
-    dot.style.top = Math.random() * 95 + '%';
-    dot.style.animationDelay = (i * 0.3) + 's';
-    cryptoBackground.appendChild(dot);
-  }
+  // Инициализация модальных окон
+  initModals();
 });
 </script>
 </body>
