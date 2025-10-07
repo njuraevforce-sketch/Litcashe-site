@@ -1,3 +1,5 @@
+[file name]: app_supabase.js
+[file content begin]
 ;(function () {
   if (window.__LC_SINGLETON__) {
     try { console.warn('[LC] main app already initialized:', window.__LC_SINGLETON__); } catch(_){}
@@ -103,7 +105,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПЕРЕМЕЩАЮТСЯ И НЕ ИЗМЕНЯЮТСЯ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - УПРОЩЕННАЯ ВЕРСИЯ БЕЗ КАРУСЕЛИ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -156,9 +158,35 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== ВАЖНОЕ ИСПРАВЛЕНИЕ: УДАЛЕНА ВСЯ ЛОГИКА ОБНОВЛЕНИЯ КАРТОЧЕК =====
-      // Карточки уровней больше не изменяются - они всегда остаются как есть
-      console.log('Карточки уровней не изменяются - отключена логика определения текущего уровня');
+      // ===== УПРОЩЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
+      // УДАЛЕНА ВСЯ ЛОГИКА КАРУСЕЛИ, ОСТАВЛЕНА ТОЛЬКО БАЗОВАЯ ФУНКЦИОНАЛЬНОСТЬ
+      try {
+        const currentLevelName = info.level_name?.toLowerCase().replace(' ', '');
+        console.log('Current active level:', currentLevelName);
+        
+        // Просто обновляем статус карточек без какой-либо анимации или карусели
+        const levelCards = document.querySelectorAll('.level-card');
+        if (levelCards.length) {
+          levelCards.forEach(card => {
+            const cardLevel = card.getAttribute('data-level');
+            const statusElement = card.querySelector('.level-status');
+            
+            if (cardLevel === currentLevelName) {
+              card.classList.add('active');
+              if (statusElement) {
+                statusElement.textContent = 'Активен';
+              }
+            } else {
+              card.classList.remove('active');
+              if (statusElement) {
+                statusElement.textContent = '';
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error updating level cards:', error);
+      }
 
     } catch(e) { 
       console.error('[LC] refreshLevelInfo', e); 
@@ -1564,3 +1592,4 @@
   // Экспортируем объект
   window.LC = LC;
 })();
+[file content end]
