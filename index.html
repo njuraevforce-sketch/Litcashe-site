@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewpoint-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#C8D8C8">
@@ -103,14 +103,14 @@
   }
 
   /* Переключатель языка */
-  .language-switcher-header {
+  .language-switcher {
     position: relative;
     display: flex;
     align-items: center;
     z-index: 1001;
   }
 
-  .lang-btn-header {
+  .lang-btn {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -127,7 +127,7 @@
     white-space: nowrap;
   }
 
-  .lang-btn-header:hover {
+  .lang-btn:hover {
     border-color: var(--primary);
     color: var(--primary);
   }
@@ -137,12 +137,12 @@
     height: 14px;
   }
 
-  .lang-code-header {
+  .lang-code {
     font-size: 11px;
     font-weight: 600;
   }
 
-  .lang-dropdown-header {
+  .lang-dropdown {
     position: absolute;
     top: 100%;
     right: 0;
@@ -162,7 +162,7 @@
     z-index: 1002;
   }
 
-  .language-switcher-header.active .lang-dropdown-header {
+  .language-switcher.active .lang-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -524,16 +524,16 @@
   
   <div class="nav-actions">
     <!-- Переключатель языка -->
-    <div class="language-switcher-header" id="languageSwitcher">
-      <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
+    <div class="language-switcher" id="languageSwitcher">
+      <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
         <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
                 fill="none" stroke="currentColor" stroke-width="1.2"/>
         </svg>
-        <span class="lang-code-header">RU</span>
+        <span class="lang-code">RU</span>
       </button>
       
-      <div class="lang-dropdown-header" id="langDropdown">
+      <div class="lang-dropdown" id="langDropdown">
         <div class="lang-list">
           <div class="lang-item active" data-lang="ru">
             <span class="lang-flag ru"></span>
@@ -684,7 +684,7 @@
 <!-- Floating contact button -->
 <a class="contact-fab" href="https://t.me/litcash_investment" target="_blank" rel="noopener" aria-label="Связь с оператором в Telegram" title="Связь с оператором" data-i18n="contact_fab_aria_label" data-i18n-title="contact_fab_title">
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M21.6 3.2L2.8 10.4c-.9.34-.86 1.66.06 1.94l5.68 1.79a1 a1 0 01.66.66l1.79 5.68c.28.92 1.6.96 1.94.06L21.6 3.2z" fill="currentColor"/>
+    <path d="M21.6 3.2L2.8 10.4c-.9.34-.86 1.66.06 1.94l5.68 1.79a1 1 0 01.66.66l1.79 5.68c.28.92 1.6.96 1.94.06L21.6 3.2z" fill="currentColor"/>
     <path d="M9.5 14.5l5.6-5.6" stroke="#ffffff" stroke-opacity=".9" stroke-width="1.7" stroke-linecap="round"/>
   </svg>
 </a>
@@ -780,9 +780,11 @@
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
-<script defer src="assets/js/i18n.js"></script>
-<script defer src="assets/js/language-switcher.js"></script>
 <script defer src="app_supabase.js"></script>
+
+<!-- Подключение системы перевода -->
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/language-switcher.js"></script>
 
 </body>
 </html>
