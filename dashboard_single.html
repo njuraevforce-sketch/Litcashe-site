@@ -1525,25 +1525,27 @@ function initCarousel() {
   let currentX = 0;
   let isSwiping = false;
 
-  function updateCarousel() {
-    const offset = -currentIndex * (cardWidth + margin);
-    carouselWrapper.style.transform = `translateX(${offset}px)`;
-    
-    cards.forEach((card, index) => {
-      card.classList.toggle('active', index === currentIndex);
-    });
-    
-    dots.forEach((dot, index) => {
-      dot.classList.toggle('active', index === currentIndex);
-    });
-  }
-
-  dots.forEach(dot => {
-    dot.addEventListener('click', () => {
-      currentIndex = parseInt(dot.getAttribute('data-index'));
-      updateCarousel();
-    });
+function updateCarousel() {
+  const offset = -currentIndex * (cardWidth + margin);
+  carouselWrapper.style.transform = `translateX(${offset}px)`;
+  
+  // УДАЛЕНО: управление классом active для карточек
+  // cards.forEach((card, index) => {
+  //   card.classList.toggle('active', index === currentIndex);
+  // });
+  
+  // ОСТАВЛЕНО: управление активностью точек навигации
+  dots.forEach((dot, index) => {
+    dot.classList.toggle('active', index === currentIndex);
   });
+}
+
+dots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    currentIndex = parseInt(dot.getAttribute('data-index'));
+    updateCarousel();
+  });
+});
 
   carouselWrapper.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
