@@ -231,17 +231,7 @@
         p_video_id: String(videoId || 'video'),
         p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
       });
-    
-
-  } catch (e) {
-    console.warn('[LC] safe update level card status failed', e);
-  }
-
-  const { data, error } = await sb.rpc('credit_view', {
-    p_video_id: String(videoId || 'video'),
-    p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
-  });
-
+      
       if (error) { 
         console.error('Credit view error:', error); 
         alert(error.message || 'Ошибка начисления'); 
