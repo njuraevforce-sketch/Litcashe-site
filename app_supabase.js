@@ -1,5 +1,3 @@
-[file name]: app_supabase.js
-[file content begin]
 ;(function () {
   if (window.__LC_SINGLETON__) {
     try { console.warn('[LC] main app already initialized:', window.__LC_SINGLETON__); } catch(_){}
