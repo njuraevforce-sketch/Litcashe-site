@@ -103,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПЕРЕМЕЩАЮТСЯ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - УДАЛЕН ПРОБЛЕМНЫЙ КОД КАРТОЧЕК
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -156,44 +156,8 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== ИСПРАВЛЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
-      try {
-        const levelCards = document.querySelectorAll('.level-card-carousel');
-        console.log('Found level cards:', levelCards.length);
-        
-        if (levelCards.length) {
-          const currentLevelName = info.level_name?.toLowerCase().replace(' ', '');
-          
-          console.log('Current active level:', currentLevelName);
-          
-          levelCards.forEach(card => {
-            const cardLevel = card.getAttribute('data-level');
-            const statusElement = card.querySelector('.level-status');
-            
-            // ВАЖНО: НИКОГДА не меняем display, visibility, opacity или порядок карточек
-            // Карточки всегда должны оставаться в своем исходном состоянии и порядке
-            
-            // Убираем активный класс у всех
-            card.classList.remove('active');
-            
-            // Добавляем активный класс только текущему уровню
-            if (cardLevel === currentLevelName) {
-              console.log('Setting active level:', cardLevel);
-              card.classList.add('active');
-              if (statusElement) {
-                statusElement.textContent = 'Активен';
-                statusElement.style.display = 'block';
-              }
-            } else {
-              if (statusElement) {
-                statusElement.style.display = 'none';
-              }
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error updating level cards:', error);
-      }
+      // ===== УДАЛЕН ПРОБЛЕМНЫЙ КОД ОБНОВЛЕНИЯ КАРТОЧЕК УРОВНЕЙ ========================
+      // Карточки уровней теперь остаются в своем исходном состоянии и не изменяются
 
     } catch(e) { 
       console.error('[LC] refreshLevelInfo', e); 
