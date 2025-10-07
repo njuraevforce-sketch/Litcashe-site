@@ -114,14 +114,14 @@
   }
 
   /* Переключатель языка */
-  .language-switcher-header {
+  .language-switcher {
     position: relative;
     display: flex;
     align-items: center;
     z-index: 1001;
   }
 
-  .lang-btn-header {
+  .lang-btn {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -138,7 +138,7 @@
     white-space: nowrap;
   }
 
-  .lang-btn-header:hover {
+  .lang-btn:hover {
     border-color: var(--primary);
     color: var(--primary);
   }
@@ -148,12 +148,12 @@
     height: 14px;
   }
 
-  .lang-code-header {
+  .lang-code {
     font-size: 11px;
     font-weight: 600;
   }
 
-  .lang-dropdown-header {
+  .lang-dropdown {
     position: absolute;
     top: 100%;
     right: 0;
@@ -173,7 +173,7 @@
     z-index: 1002;
   }
 
-  .language-switcher-header.active .lang-dropdown-header {
+  .language-switcher.active .lang-dropdown {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -978,7 +978,7 @@
       height: 125px;
     }
     
-    .lang-dropdown-header {
+    .lang-dropdown {
       min-width: 120px;
     }
 
@@ -1060,55 +1060,55 @@
 <div class="modal-overlay" id="infoModal">
   <div class="modal-content">
     <div class="modal-header">
-      <div class="modal-title">ℹ Информационная таблица</div>
+      <div class="modal-title" data-i18n="info_table">ℹ Информационная таблица</div>
       <button class="close-modal" id="closeInfoModal">×</button>
     </div>
     
-    <div class="loading-indicator" id="infoModalLoading">
+    <div class="loading-indicator" id="infoModalLoading" data-i18n="loading_data">
       Загрузка данных...
     </div>
     
     <div class="donut-chart" id="infoDonutChart" style="display: none;">
       <div class="donut-center">
-        <span data-level-name>Starter</span>
+        <span data-level-name data-i18n="vip_starter">Starter</span>
       </div>
     </div>
     
     <div class="chart-legend" id="infoChartLegend" style="display: none;">
       <div class="legend-item">
         <div class="legend-color" style="background: var(--primary);"></div>
-        <span>Уровень: <span data-level-name>Starter</span></span>
+        <span data-i18n="info_level">Уровень:</span> <span data-level-name data-i18n="vip_starter">Starter</span>
       </div>
       <div class="legend-item">
         <div class="legend-color" style="background: var(--primary-light);"></div>
-        <span>Процент: <span data-rate>2.5%</span></span>
+        <span data-i18n="info_percentage">Процент:</span> <span data-rate>2.5%</span>
       </div>
       <div class="legend-item">
         <div class="legend-color" style="background: #e2e8f0;"></div>
-        <span>База: <span id="baseCapCell">$0</span></span>
+        <span data-i18n="info_base">База:</span> <span id="baseCapCell">$0</span>
       </div>
     </div>
     
     <div class="info-grid" id="infoGrid" style="display: none;">
       <div class="info-item">
-        <div class="info-label">За 1 просмотр</div>
+        <div class="info-label" data-i18n="info_per_view">За 1 просмотр</div>
         <div class="info-value" data-reward-per-view>$0.00</div>
       </div>
       <div class="info-item">
-        <div class="info-label">За 5 просмотров</div>
+        <div class="info-label" data-i18n="info_daily_reward">За 5 просмотров</div>
         <div class="info-value" data-daily-reward>$0.00</div>
       </div>
       <div class="info-item">
-        <div class="info-label">Следующий уровень</div>
+        <div class="info-label" data-i18n="info_next_level">Следующий уровень</div>
         <div class="info-value" id="nextTargetCell">—</div>
       </div>
       <div class="info-item">
-        <div class="info-label">Всего рефералов</div>
+        <div class="info-label" data-i18n="info_total_refs">Всего рефералов</div>
         <div class="info-value" data-refs>0</div>
       </div>
     </div>
 
-    <div class="error-message" id="infoModalError" style="display: none;">
+    <div class="error-message" id="infoModalError" data-i18n="error_loading_data">
       Ошибка загрузки данных
     </div>
   </div>
@@ -1117,11 +1117,11 @@
 <div class="modal-overlay" id="referralModal">
   <div class="modal-content">
     <div class="modal-header">
-      <div class="modal-title">💰 Реферальный доход</div>
+      <div class="modal-title" data-i18n="referral_income">💰 Реферальный доход</div>
       <button class="close-modal" id="closeReferralModal">×</button>
     </div>
     
-    <div class="loading-indicator" id="referralModalLoading">
+    <div class="loading-indicator" id="referralModalLoading" data-i18n="loading_referral_data">
       Загрузка реферальных данных...
     </div>
     
@@ -1134,47 +1134,47 @@
     <div class="chart-legend" id="referralChartLegend" style="display: none;">
       <div class="legend-item">
         <div class="legend-color" style="background: var(--primary);"></div>
-        <span>1-е поколение (13%): <span id="gen1CellModal">$0.00</span></span>
+        <span data-i18n="referral_gen1_modal">1-е поколение (13%):</span> <span id="gen1CellModal">$0.00</span>
       </div>
       <div class="legend-item">
         <div class="legend-color" style="background: var(--primary-light);"></div>
-        <span>2-е поколение (5%): <span id="gen2CellModal">$0.00</span></span>
+        <span data-i18n="referral_gen2_modal">2-е поколение (5%):</span> <span id="gen2CellModal">$0.00</span>
       </div>
       <div class="legend-item">
         <div class="legend-color" style="background: #e2e8f0;"></div>
-        <span>3-е поколение (1%): <span id="gen3CellModal">$0.00</span></span>
+        <span data-i18n="referral_gen3_modal">3-е поколение (1%):</span> <span id="gen3CellModal">$0.00</span>
       </div>
     </div>
     
     <div class="referral-stats" id="referralStatsModal" style="display: none;">
       <div class="referral-stat">
         <div class="stat-value" id="gen1CountModal">0</div>
-        <div class="stat-label">1-е поколение</div>
+        <div class="stat-label" data-i18n="referral_gen1_label">1-е поколение</div>
       </div>
       <div class="referral-stat">
         <div class="stat-value" id="gen2CountModal">0</div>
-        <div class="stat-label">2-е поколение</div>
+        <div class="stat-label" data-i18n="referral_gen2_label">2-е поколение</div>
       </div>
       <div class="referral-stat">
         <div class="stat-value" id="gen3CountModal">0</div>
-        <div class="stat-label">3-е поколение</div>
+        <div class="stat-label" data-i18n="referral_gen3_label">3-е поколение</div>
       </div>
     </div>
 
     <table class="referral-table" id="referralTable" style="display: none;">
       <thead>
         <tr>
-          <th>Уровень</th>
-          <th>Email</th>
-          <th>Капитал</th>
-          <th>Уровень</th>
-          <th>Дата</th>
+          <th data-i18n="referral_generation">Уровень</th>
+          <th data-i18n="referral_email">Email</th>
+          <th data-i18n="referral_capital">Капитал</th>
+          <th data-i18n="referral_level">Уровень</th>
+          <th data-i18n="referral_date">Дата</th>
         </tr>
       </thead>
       <tbody id="refTree"></tbody>
     </table>
 
-    <div class="error-message" id="referralModalError" style="display: none;">
+    <div class="error-message" id="referralModalError" data-i18n="error_loading_referral_data">
       Ошибка загрузки реферальных данных
     </div>
   </div>
@@ -1183,21 +1183,21 @@
 <!-- Верхняя часть -->
 <header>
   <div class="logo">
-    <span>Litcash</span>
+    <span data-i18n="brand_name">Litcash</span>
     <div class="balance-small" data-balance>$0.00</div>
   </div>
   
-  <!-- Переключатель языка -->
-  <div class="language-switcher-header" id="languageSwitcher">
-    <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
+  <!-- Переключатель языка - ОБНОВЛЕННЫЙ согласно language-switcher.js -->
+  <div class="language-switcher" id="languageSwitcher">
+    <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
       <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
               fill="none" stroke="currentColor" stroke-width="1.2"/>
       </svg>
-      <span class="lang-code-header">RU</span>
+      <span class="lang-code">RU</span>
     </button>
     
-    <div class="lang-dropdown-header" id="langDropdown">
+    <div class="lang-dropdown" id="langDropdown">
       <div class="lang-list">
         <div class="lang-item active" data-lang="ru">
           <span class="lang-flag ru"></span>
@@ -1277,19 +1277,19 @@
 <!-- Верхнее меню -->
 <nav class="top-menu">
   <a href="dashboard_single.html" class="menu-item active">
-    <i>🏠</i> Платформа
+    <i>🏠</i> <span data-i18n="nav_platform">Платформа</span>
   </a>
   <a href="deposit_single.html" class="menu-item">
-    <i>💰</i> Пополнение
+    <i>💰</i> <span data-i18n="nav_deposit">Пополнение</span>
   </a>
   <a href="withdraw_single.html" class="menu-item">
-    <i>💸</i> Вывод
+    <i>💸</i> <span data-i18n="nav_withdraw">Вывод</span>
   </a>
   <a href="faq_single.html" class="menu-item">
-    <i>❓</i> Помощь
+    <i>❓</i> <span data-i18n="nav_faq">Помощь</span>
   </a>
   <a href="settings_single.html" class="menu-item">
-    <i>👤</i> Профиль
+    <i>👤</i> <span data-i18n="nav_profile">Профиль</span>
   </a>
 </nav>
 
@@ -1305,12 +1305,12 @@
           <div class="level-overlay">
             <div class="level-header">
               <div class="level-vip-badge">VIP 1</div>
-              <div class="level-status" style="display: none;">Активен</div>
+              <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
             </div>
             <div class="level-content">
-              <div class="level-name-carousel">Starter</div>
+              <div class="level-name-carousel" data-i18n="vip_starter">Starter</div>
               <div class="level-percentage-carousel">2.5%</div>
-              <div class="level-cap-carousel">до $300</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_starter">до $300</div>
             </div>
           </div>
         </div>
@@ -1321,12 +1321,12 @@
           <div class="level-overlay">
             <div class="level-header">
               <div class="level-vip-badge">VIP 2</div>
-              <div class="level-status" style="display: none;">Активен</div>
+              <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
             </div>
             <div class="level-content">
-              <div class="level-name-carousel">Advanced</div>
+              <div class="level-name-carousel" data-i18n="vip_advanced">Advanced</div>
               <div class="level-percentage-carousel">3.0%</div>
-              <div class="level-cap-carousel">до $1,000</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_advanced">до $1,000</div>
             </div>
           </div>
         </div>
@@ -1337,12 +1337,12 @@
           <div class="level-overlay">
             <div class="level-header">
               <div class="level-vip-badge">VIP 3</div>
-              <div class="level-status" style="display: none;">Активен</div>
+              <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
             </div>
             <div class="level-content">
-              <div class="level-name-carousel">Pro Elite</div>
+              <div class="level-name-carousel" data-i18n="vip_proelite">Pro Elite</div>
               <div class="level-percentage-carousel">4.0%</div>
-              <div class="level-cap-carousel">до $3,000</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_proelite">до $3,000</div>
             </div>
           </div>
         </div>
@@ -1353,12 +1353,12 @@
           <div class="level-overlay">
             <div class="level-header">
               <div class="level-vip-badge">VIP 4</div>
-              <div class="level-status" style="display: none;">Активен</div>
+              <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
             </div>
             <div class="level-content">
-              <div class="level-name-carousel">Titanium</div>
+              <div class="level-name-carousel" data-i18n="vip_titanium">Titanium</div>
               <div class="level-percentage-carousel">5.0%</div>
-              <div class="level-cap-carousel">$3,000+</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_titanium">$3,000+</div>
             </div>
           </div>
         </div>
@@ -1376,23 +1376,23 @@
     <!-- 2. КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР В ЖЕЛТОЙ ТЕМЕ -->
     <div class="video-player">
       <div class="video-header">
-        <div class="video-title">Mining Processor</div>
-        <div class="views-left">Осталось: <span data-views-left>0</span></div>
+        <div class="video-title" data-i18n="mining_processor">Mining Processor</div>
+        <div class="views-left"><span data-i18n="mining_views_left">Осталось:</span> <span data-views-left>0</span></div>
       </div>
       
       <div id="perViewBadge" class="per-view-badge"></div>
       
       <div class="mining-stats">
         <div class="mining-stat">
-          <div class="mining-stat-label">Hashrate</div>
+          <div class="mining-stat-label" data-i18n="mining_hashrate">Hashrate</div>
           <div class="mining-stat-value">125 MH/s</div>
         </div>
         <div class="mining-stat">
-          <div class="mining-stat-label">Temperature</div>
+          <div class="mining-stat-label" data-i18n="mining_temperature">Temperature</div>
           <div class="mining-stat-value">67°C</div>
         </div>
         <div class="mining-stat">
-          <div class="mining-stat-label">Efficiency</div>
+          <div class="mining-stat-label" data-i18n="mining_efficiency">Efficiency</div>
           <div class="mining-stat-value">0.35 J/MH</div>
         </div>
       </div>
@@ -1406,7 +1406,7 @@
       </div>
 
       <div class="progress-labels">
-        <div class="progress-label">Mining Progress</div>
+        <div class="progress-label" data-i18n="mining_progress">Mining Progress</div>
         <div class="progress-label" id="progressText">0%</div>
       </div>
       
@@ -1415,14 +1415,14 @@
       </div>
 
       <div class="video-controls">
-        <button class="btn" id="startBtn">⛏️ Start Mining</button>
-        <a href="deposit_single.html" class="btn btn-boost">⚡ Boost</a>
+        <button class="btn" id="startBtn" data-i18n="mining_start">⛏️ Start Mining</button>
+        <a href="deposit_single.html" class="btn btn-boost" data-i18n="mining_boost">⚡ Boost</a>
       </div>
     </div>
 
     <!-- 3. РЕФЕРАЛЬНАЯ ПАНЕЛЬ С ДИАГРАММОЙ -->
     <div class="referral-panel" id="refLinkWrap">
-      <div class="referral-header">👥 Реферальная панель</div>
+      <div class="referral-header" data-i18n="referral_panel">👥 Реферальная панель</div>
       
       <!-- Диаграмма реферальных доходов -->
       <div class="referral-chart">
@@ -1434,40 +1434,40 @@
       <div class="chart-legend">
         <div class="legend-item">
           <div class="legend-color" style="background: var(--primary);"></div>
-          <span>1-е поколение (13%): <span id="gen1Cell">$0.00</span></span>
+          <span data-i18n="referral_gen1">1-е поколение (13%):</span> <span id="gen1Cell">$0.00</span>
         </div>
         <div class="legend-item">
           <div class="legend-color" style="background: var(--primary-light);"></div>
-          <span>2-е поколение (5%): <span id="gen2Cell">$0.00</span></span>
+          <span data-i18n="referral_gen2">2-е поколение (5%):</span> <span id="gen2Cell">$0.00</span>
         </div>
         <div class="legend-item">
           <div class="legend-color" style="background: #e2e8f0;"></div>
-          <span>3-е поколение (1%): <span id="gen3Cell">$0.00</span></span>
+          <span data-i18n="referral_gen3">3-е поколение (1%):</span> <span id="gen3Cell">$0.00</span>
         </div>
       </div>
       
       <div class="referral-stats">
         <div class="referral-stat">
           <div class="stat-value" id="gen1Count">0</div>
-          <div class="stat-label">1-е поколение</div>
+          <div class="stat-label" data-i18n="referral_gen1_label">1-е поколение</div>
         </div>
         <div class="referral-stat">
           <div class="stat-value" id="gen2Count">0</div>
-          <div class="stat-label">2-е поколение</div>
+          <div class="stat-label" data-i18n="referral_gen2_label">2-е поколение</div>
         </div>
         <div class="referral-stat">
           <div class="stat-value" id="gen3Count">0</div>
-          <div class="stat-label">3-е поколение</div>
+          <div class="stat-label" data-i18n="referral_gen3_label">3-е поколение</div>
         </div>
         <div class="referral-stat">
           <div class="stat-value" data-refs>0</div>
-          <div class="stat-label">Всего рефералов</div>
+          <div class="stat-label" data-i18n="referral_total">Всего рефералов</div>
         </div>
       </div>
       
       <div class="referral-link">
         <input class="input" id="refLink" readonly value="">
-        <button class="btn" id="btnCopyRef">📋 Копировать</button>
+        <button class="btn" id="btnCopyRef" data-i18n="referral_copy">📋 Копировать</button>
       </div>
     </div>
   </div>
@@ -1476,19 +1476,19 @@
 <!-- Нижний навбар -->
 <nav class="bottom-nav">
   <a href="dashboard_single.html" class="nav-item active">
-    <i>🏠</i> Кабинет
+    <i>🏠</i> <span data-i18n="nav_dashboard">Кабинет</span>
   </a>
   <a href="deposit_single.html" class="nav-item">
-    <i>💰</i> Пополнение
+    <i>💰</i> <span data-i18n="nav_deposit">Пополнение</span>
   </a>
   <a href="withdraw_single.html" class="nav-item">
-    <i>💸</i> Вывод
+    <i>💸</i> <span data-i18n="nav_withdraw">Вывод</span>
   </a>
   <a href="#" class="nav-item" id="openInfoModal">
-    <i>ℹ</i> Инфо
+    <i>ℹ</i> <span data-i18n="nav_info">Инфо</span>
   </a>
   <a href="#" class="nav-item" id="openReferralModal">
-    <i>👥</i> Рефералы
+    <i>👥</i> <span data-i18n="nav_referrals">Рефералы</span>
   </a>
 </nav>
 
@@ -1742,31 +1742,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  const langSwitcher = document.getElementById('languageSwitcher');
-  const langBtn = document.getElementById('langBtn');
-  const langDropdown = document.getElementById('langDropdown');
-  
-  if (langBtn && langDropdown) {
-    langBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      langSwitcher.classList.toggle('active');
-    });
-    
-    document.addEventListener('click', function() {
-      langSwitcher.classList.remove('active');
-    });
-    
-    const langItems = langDropdown.querySelectorAll('.lang-item');
-    langItems.forEach(item => {
-      item.addEventListener('click', function() {
-        const lang = this.getAttribute('data-lang');
-        if (window.LanguageSwitcher) {
-          window.LanguageSwitcher.setLang(lang);
-        }
-        langSwitcher.classList.remove('active');
-      });
-    });
-  }
+  // УДАЛЕНО: конфликтующий код переключателя языка
+  // Теперь переключатель управляется language-switcher.js
   
   initCarousel();
   initModals();
