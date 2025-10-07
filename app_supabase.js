@@ -232,7 +232,7 @@
         p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
       });
     
-    }
+
   } catch (e) {
     console.warn('[LC] safe update level card status failed', e);
   }
