@@ -184,11 +184,8 @@
                 statusElement.textContent = 'Активен';
                 statusElement.style.display = 'block';
               }
-            } else {
-              if (statusElement) {
-                statusElement.style.display = 'none';
-              }
             }
+            // УДАЛЕНО: скрытие статуса для неактивных карточек
           });
         }
       } catch (error) {
@@ -1275,7 +1272,7 @@
         tbody.appendChild(tr);
       });
       
-      // Добавляем обработчики для кнопок отмены
+      // Добавляем обработчики для кнопок отмена
       tbody.querySelectorAll('[data-cancel]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const withdrawalId = e.target.getAttribute('data-cancel');
