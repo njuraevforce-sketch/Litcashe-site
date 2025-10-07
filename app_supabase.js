@@ -184,8 +184,13 @@
                 statusElement.textContent = 'Активен';
                 statusElement.style.display = 'block';
               }
+            } else {
+              // ВАЖНОЕ ИСПРАВЛЕНИЕ: НЕ СКРЫВАЕМ СТАТУС У НЕАКТИВНЫХ КАРТОЧЕК
+              // Это предотвращает исчезновение VIP бейджа и других элементов
+              if (statusElement && statusElement.textContent === 'Активен') {
+                statusElement.style.display = 'none';
+              }
             }
-            // УДАЛЕНО: скрытие статуса для неактивных карточек
           });
         }
       } catch (error) {
@@ -1272,7 +1277,7 @@
         tbody.appendChild(tr);
       });
       
-      // Добавляем обработчики для кнопок отмена
+      // Добавляем обработчики для кнопок отмены
       tbody.querySelectorAll('[data-cancel]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const withdrawalId = e.target.getAttribute('data-cancel');
