@@ -227,71 +227,35 @@
   .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
   .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
 
-  /* Верхнее меню */
-  .top-menu {
-    display: flex;
-    justify-content: space-around;
-    background-color: var(--bg);
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    white-space: nowrap;
-    width: 100%;
-  }
-
-  .menu-item {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 12px;
-    min-width: 60px;
-    padding: 0 5px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-  }
-
-  .menu-item.active {
-    color: var(--primary);
-  }
-
-  .menu-item i {
-    display: block;
-    font-size: 20px;
-    margin-bottom: 4px;
-  }
-
   /* Основной контент */
   .main-content {
     flex: 1;
-    padding-bottom: 70px;
+    padding: 20px 0;
     width: 100%;
   }
 
-  /* Карточка регистрации */
-  .register-card {
+  /* Карточки */
+  .card {
     background: var(--bg-card);
     border-radius: var(--radius);
-    padding: 20px;
-    margin: 20px 0;
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 15px;
+    width: 100%;
   }
 
-  .register-header {
+  .card h2 {
     font-size: 18px;
     font-weight: bold;
+    margin-bottom: 15px;
     color: var(--primary);
-    margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .register-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
+  /* Формы */
   .input {
     width: 100%;
     height: 44px;
@@ -302,6 +266,7 @@
     color: var(--text);
     font-size: 14px;
     transition: all 0.3s ease;
+    margin-bottom: 12px;
   }
 
   .input:focus {
@@ -310,23 +275,24 @@
     box-shadow: 0 0 0 2px rgba(245, 197, 24, 0.2);
   }
 
+  /* Кнопки */
   .btn {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-    color: #1a1500;
-    border: none;
-    border-radius: 20px;
-    padding: 12px 20px;
-    cursor: pointer;
-    font-weight: 600;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    width: 100%;
-    font-size: 14px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: var(--radius);
+    border: none;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: #1a1500;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 14px;
+    width: 100%;
     box-shadow: 0 2px 8px rgba(245, 197, 24, 0.3);
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
   }
 
   .btn:hover {
@@ -335,53 +301,16 @@
     box-shadow: 0 4px 12px rgba(245, 197, 24, 0.4);
   }
 
-  .login-link {
-    text-align: center;
-    margin-top: 20px;
-    color: var(--text-secondary);
-    font-size: 14px;
+  .btn.secondary {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    box-shadow: none;
   }
 
-  .login-link a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-  }
-
-  /* Нижний навбар */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: var(--bg);
-    display: flex;
-    justify-content: space-around;
-    padding: 10px 5px;
-    border-top: 1px solid var(--border);
-    z-index: 100;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-    width: 100%;
-  }
-
-  .nav-item {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 11px;
-    text-decoration: none;
-    flex: 1;
-    padding: 5px;
-    transition: all 0.3s ease;
-  }
-
-  .nav-item.active {
-    color: var(--primary);
-  }
-
-  .nav-item i {
-    font-size: 18px;
-    display: block;
-    margin-bottom: 4px;
+  .btn.secondary:hover {
+    background: rgba(245, 197, 24, 0.05);
+    border-color: var(--primary);
   }
 
   /* Утилиты */
@@ -394,19 +323,47 @@
     text-align: center;
   }
 
+  .nav-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* Footer */
+  .footer {
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 15px 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
   /* Адаптивность */
-  @media (max-width: 360px) {
+  @media (max-width: 480px) {
     .container {
-      padding: 8px;
+      padding: 0 10px;
     }
     
-    .register-card {
-      padding: 15px;
-      margin: 15px 0;
+    header {
+      padding: 10px 12px;
     }
     
-    .register-header {
+    .logo {
       font-size: 16px;
+    }
+    
+    .nav-actions {
+      gap: 6px;
+    }
+    
+    .btn {
+      height: 36px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+    
+    .card {
+      padding: 15px;
     }
     
     .input {
@@ -415,112 +372,141 @@
     }
   }
   </style>
+
+  <script>
+    (function(){
+      try {
+        const p = new URLSearchParams(location.search).get('ref');
+        if (p) localStorage.setItem('lc_ref_code', p);
+      } catch(e){}
+    })();
+  </script>
 </head>
 
 <body>
-<!-- Верхняя часть -->
 <header>
   <div class="logo">
     <span data-i18n="brand_name">Litcash</span>
   </div>
   
-  <!-- Переключатель языка -->
-  <div class="language-switcher-header" id="languageSwitcher">
-    <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
-      <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
-              fill="none" stroke="currentColor" stroke-width="1.2"/>
-      </svg>
-      <span class="lang-code-header">RU</span>
-    </button>
-    
-    <div class="lang-dropdown-header" id="langDropdown">
-      <div class="lang-list">
-        <div class="lang-item active" data-lang="ru">
-          <span class="lang-flag ru"></span>
-          <span class="lang-name" data-i18n="lang_russian">Русский</span>
-          <span class="lang-code">RU</span>
-        </div>
-        <div class="lang-item" data-lang="en">
-          <span class="lang-flag en"></span>
-          <span class="lang-name" data-i18n="lang_english">English</span>
-          <span class="lang-code">EN</span>
-        </div>
-        <div class="lang-item" data-lang="cn">
-          <span class="lang-flag cn"></span>
-          <span class="lang-name" data-i18n="lang_chinese">中文</span>
-          <span class="lang-code">CN</span>
-        </div>
-        <div class="lang-item" data-lang="es">
-          <span class="lang-flag es"></span>
-          <span class="lang-name" data-i18n="lang_spanish">Español</span>
-          <span class="lang-code">ES</span>
-        </div>
-        <div class="lang-item" data-lang="fr">
-          <span class="lang-flag fr"></span>
-          <span class="lang-name" data-i18n="lang_french">Français</span>
-          <span class="lang-code">FR</span>
-        </div>
-        <div class="lang-item" data-lang="de">
-          <span class="lang-flag de"></span>
-          <span class="lang-name" data-i18n="lang_german">Deutsch</span>
-          <span class="lang-code">DE</span>
+  <div class="nav-actions">
+    <!-- Переключатель языка -->
+    <div class="language-switcher-header" id="languageSwitcher">
+      <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
+        <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+                fill="none" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        <span class="lang-code-header">RU</span>
+      </button>
+      
+      <div class="lang-dropdown-header" id="langDropdown">
+        <div class="lang-list">
+          <div class="lang-item active" data-lang="ru">
+            <span class="lang-flag ru"></span>
+            <span class="lang-name">Русский</span>
+            <span class="lang-code">RU</span>
+          </div>
+          <div class="lang-item" data-lang="en">
+            <span class="lang-flag en"></span>
+            <span class="lang-name">English</span>
+            <span class="lang-code">EN</span>
+          </div>
+          <div class="lang-item" data-lang="cn">
+            <span class="lang-flag cn"></span>
+            <span class="lang-name">中文</span>
+            <span class="lang-code">CN</span>
+          </div>
+          <div class="lang-item" data-lang="es">
+            <span class="lang-flag es"></span>
+            <span class="lang-name">Español</span>
+            <span class="lang-code">ES</span>
+          </div>
+          <div class="lang-item" data-lang="fr">
+            <span class="lang-flag fr"></span>
+            <span class="lang-name">Français</span>
+            <span class="lang-code">FR</span>
+          </div>
+          <div class="lang-item" data-lang="de">
+            <span class="lang-flag de"></span>
+            <span class="lang-name">Deutsch</span>
+            <span class="lang-code">DE</span>
+          </div>
+          <div class="lang-item" data-lang="pt">
+            <span class="lang-flag pt"></span>
+            <span class="lang-name">Português</span>
+            <span class="lang-code">PT</span>
+          </div>
+          <div class="lang-item" data-lang="ar">
+            <span class="lang-flag ar"></span>
+            <span class="lang-name">العربية</span>
+            <span class="lang-code">AR</span>
+          </div>
+          <div class="lang-item" data-lang="ja">
+            <span class="lang-flag jp"></span>
+            <span class="lang-name">日本語</span>
+            <span class="lang-code">JA</span>
+          </div>
+          <div class="lang-item" data-lang="ko">
+            <span class="lang-flag kr"></span>
+            <span class="lang-name">한국어</span>
+            <span class="lang-code">KO</span>
+          </div>
+          <div class="lang-item" data-lang="tr">
+            <span class="lang-flag tr"></span>
+            <span class="lang-name">Türkçe</span>
+            <span class="lang-code">TR</span>
+          </div>
+          <div class="lang-item" data-lang="it">
+            <span class="lang-flag it"></span>
+            <span class="lang-name">Italiano</span>
+            <span class="lang-code">IT</span>
+          </div>
+          <div class="lang-item" data-lang="hi">
+            <span class="lang-flag in"></span>
+            <span class="lang-name">हिन्दी</span>
+            <span class="lang-code">HI</span>
+          </div>
+          <div class="lang-item" data-lang="pl">
+            <span class="lang-flag pl"></span>
+            <span class="lang-name">Polski</span>
+            <span class="lang-code">PL</span>
+          </div>
         </div>
       </div>
     </div>
+    
+    <a class="btn secondary" href="login_single.html" data-i18n="nav_login">Вход</a>
+    <a class="btn" href="register_single.html" data-i18n="nav_register">Регистрация</a>
   </div>
 </header>
 
-<!-- Верхнее меню -->
-<nav class="top-menu">
-  <a href="index.html" class="menu-item">
-    <i>🏠</i> <span data-i18n="nav_home">Главная</span>
-  </a>
-  <a href="login_single.html" class="menu-item">
-    <i>🔑</i> <span data-i18n="nav_login">Вход</span>
-  </a>
-  <a href="register_single.html" class="menu-item active">
-    <i>📝</i> <span data-i18n="nav_register">Регистрация</span>
-  </a>
-</nav>
-
-<!-- Основной контент -->
 <main class="main-content">
   <div class="container">
-    <div class="register-card">
-      <div class="register-header">
-        <span>📝</span>
-        <span data-i18n="nav_register">Регистрация</span>
-      </div>
+    <div class="card">
+      <h2><span data-i18n="nav_register">Регистрация</span></h2>
       
-      <form class="register-form" id="regForm">
-        <input class="input" id="regEmail" placeholder="Email" required type="email" data-i18n-placeholder="email_placeholder"/>
-        <input class="input" id="regPhone" placeholder="Телефон" required type="tel" data-i18n-placeholder="phone_placeholder"/>
-        <input class="input" id="regPass" placeholder="Пароль" required type="password" data-i18n-placeholder="password_placeholder"/>
-        <input class="input" id="refId" placeholder="Реферальный код" type="text" data-i18n-placeholder="referral_code_placeholder"/>
-        <button class="btn" type="submit" data-i18n="create_account_button">Создать аккаунт</button>
+      <form id="regForm">
+        <input class="input" id="regEmail" placeholder="Email" required="" type="email" data-i18n-placeholder="email"/>
+        <input class="input" id="regPhone" placeholder="Телефон" required="" type="tel" data-i18n-placeholder="phone"/>
+        <input class="input" id="regPass" placeholder="Пароль" required="" type="password" data-i18n-placeholder="password"/>
+        <input class="input" id="refId" placeholder="Реферальный код" type="text" required data-i18n-placeholder="referral_code"/>
+        <button class="btn" type="submit" data-i18n="create_account">Создать аккаунт</button>
       </form>
 
-      <div class="login-link">
+      <p class="muted text-center" style="margin-top: 15px;">
         <span data-i18n="already_have_account">Уже есть аккаунт?</span> 
         <a href="login_single.html" data-i18n="nav_login">Войдите</a>
-      </div>
+      </p>
     </div>
   </div>
 </main>
 
-<!-- Нижний навбар -->
-<nav class="bottom-nav">
-  <a href="index.html" class="nav-item">
-    <i>🏠</i> <span data-i18n="nav_home">Главная</span>
-  </a>
-  <a href="login_single.html" class="nav-item">
-    <i>🔑</i> <span data-i18n="nav_login">Вход</span>
-  </a>
-  <a href="register_single.html" class="nav-item active">
-    <i>📝</i> <span data-i18n="nav_register">Регистрация</span>
-  </a>
-</nav>
+<footer class="footer">
+  <div class="container">
+    <span data-i18n="footer_copyright">© 2025 Litcash. Все права защищены.</span>
+  </div>
+</footer>
 
 <script>
 // Инициализация языкового переключателя
@@ -535,10 +521,12 @@ document.addEventListener('DOMContentLoaded', function() {
       langSwitcher.classList.toggle('active');
     });
     
+    // Закрытие при клике вне переключателя
     document.addEventListener('click', function() {
       langSwitcher.classList.remove('active');
     });
     
+    // Выбор языка
     const langItems = langDropdown.querySelectorAll('.lang-item');
     langItems.forEach(item => {
       item.addEventListener('click', function() {
@@ -559,7 +547,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if(ref && input) input.value = ref;
 })();
 
-// Регистрация (сохранена существующая логика)
+// ИСПРАВЛЕННАЯ РЕГИСТРАЦИЯ - СИНХРОННАЯ С APP_SUPABASE.JS
 document.addEventListener('DOMContentLoaded', function() {
   const regForm = document.getElementById('regForm');
   
@@ -698,5 +686,12 @@ document.addEventListener('DOMContentLoaded', function() {
 <script defer src="assets/js/i18n.js"></script>
 <script defer src="assets/js/language-switcher.js"></script>
 <script defer src="app_supabase.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+  }
+</script>
+
 </body>
 </html>
