@@ -684,7 +684,7 @@
 <!-- Floating contact button -->
 <a class="contact-fab" href="https://t.me/litcash_investment" target="_blank" rel="noopener" aria-label="Связь с оператором в Telegram" title="Связь с оператором" data-i18n="contact_fab_aria_label" data-i18n-title="contact_fab_title">
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M21.6 3.2L2.8 10.4c-.9.34-.86 1.66.06 1.94l5.68 1.79a1 1 0 01.66.66l1.79 5.68c.28.92 1.6.96 1.94.06L21.6 3.2z" fill="currentColor"/>
+    <path d="M21.6 3.2L2.8 10.4c-.9.34-.86 1.66.06 1.94l5.68 1.79a1 a1 0 01.66.66l1.79 5.68c.28.92 1.6.96 1.94.06L21.6 3.2z" fill="currentColor"/>
     <path d="M9.5 14.5l5.6-5.6" stroke="#ffffff" stroke-opacity=".9" stroke-width="1.7" stroke-linecap="round"/>
   </svg>
 </a>
@@ -695,6 +695,25 @@ document.addEventListener('DOMContentLoaded', function() {
   const langSwitcher = document.getElementById('languageSwitcher');
   const langBtn = document.getElementById('langBtn');
   const langDropdown = document.getElementById('langDropdown');
+  const langCodeHeader = langBtn.querySelector('.lang-code-header');
+  
+  // Функция для обновления переключателя
+  function updateLanguageSwitcher() {
+    const currentLang = window.LC_I18N ? window.LC_I18N.getLang() : 'ru';
+    const langItem = langDropdown.querySelector(`.lang-item[data-lang="${currentLang}"]`);
+    
+    if (langItem) {
+      // Обновляем активный элемент в dropdown
+      langDropdown.querySelectorAll('.lang-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      langItem.classList.add('active');
+      
+      // Обновляем код языка в кнопке
+      const langCode = langItem.querySelector('.lang-code').textContent;
+      langCodeHeader.textContent = langCode;
+    }
+  }
   
   if (langBtn && langDropdown) {
     langBtn.addEventListener('click', function(e) {
@@ -712,13 +731,22 @@ document.addEventListener('DOMContentLoaded', function() {
     langItems.forEach(item => {
       item.addEventListener('click', function() {
         const lang = this.getAttribute('data-lang');
-        if (window.LanguageSwitcher) {
-          window.LanguageSwitcher.setLang(lang);
+        if (window.LC_I18N) {
+          window.LC_I18N.set(lang);
+          updateLanguageSwitcher();
         }
         langSwitcher.classList.remove('active');
       });
     });
+    
+    // Инициализация при загрузке
+    setTimeout(updateLanguageSwitcher, 100);
   }
+  
+  // Обновляем переключатель при смене языка
+  window.addEventListener('languageChanged', function() {
+    updateLanguageSwitcher();
+  });
 });
 
 // Hourly image rotator
@@ -811,6 +839,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
+<script defer src="i18n.js"></script>
 <script defer src="app_supabase.js"></script>
 
 </body>
