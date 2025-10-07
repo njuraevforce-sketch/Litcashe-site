@@ -208,45 +208,30 @@
       return null; 
     }
 
-  // Проверяем активность пользователя
-const isActive = await LC.isActiveUser();
-if (!isActive) {
-  alert('Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
-  return null;
-}
+    // Проверяем активность пользователя
+    const isActive = await LC.isActiveUser();
+    if (!isActive) {
+      alert('Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
+      return null;
+    }
 
-console.log('Calling credit_view with:', { videoId, watchedSeconds, userId: user.id });
+    console.log('Calling credit_view with:', { videoId, watchedSeconds, userId: user.id });
 
-try {
-  // Сначала проверим текущий уровень и лимиты
-  const levelInfo = await LC.getLevelInfo();
-  console.log('Current level info before credit:', levelInfo);
-  
-  if (levelInfo && levelInfo.views_left_today <= 0) {
-    alert('Лимит просмотров на сегодня исчерпан');
-    return null;
-  }
+    try {
+      // Сначала проверим текущий уровень и лимиты
+      const levelInfo = await LC.getLevelInfo();
+      console.log('Current level info before credit:', levelInfo);
+      
+      if (levelInfo && levelInfo.views_left_today <= 0) {
+        alert('Лимит просмотров на сегодня исчерпан');
+        return null;
+      }
 
-  // Без скрытий и анимаций — просто помечаем карточку текущего уровня как "Активен"
-  try {
-    const currentLevelName = (levelInfo?.level_name || '').toLowerCase().replace(/\s+/g, '');
-    const levelCards = document.querySelectorAll('.level-card-carousel');
-    if (levelCards && levelCards.length) {
-      levelCards.forEach(card => {
-        const cardLevel = (card.getAttribute('data-level') || '').toLowerCase().replace(/\s+/g, '');
-        const statusElement = card.querySelector('.level-status');
-        if (!statusElement) return;
-        if (currentLevelName && cardLevel === currentLevelName) {
-          // Показываем метку "Активен" — не прячем элемент
-          statusElement.textContent = 'Активен';
-          statusElement.removeAttribute('style'); // убираем возможные inline-стили, но не задаём display
-          card.classList.add('active');
-        } else {
-          // Не прячем другие карточки; при желании можно убрать класс active:
-          card.classList.remove('active');
-          // statusElement.textContent = ''; // опционально
-        }
+      const { data, error } = await sb.rpc('credit_view', {
+        p_video_id: String(videoId || 'video'),
+        p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
       });
+    
     }
   } catch (e) {
     console.warn('[LC] safe update level card status failed', e);
