@@ -277,11 +277,29 @@
     width: 100%;
   }
 
-  /* === КАРТОЧКА УРОВНЯ - УПРОЩЕННАЯ === */
+  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ - УПРОЩЕННАЯ === */
+  .carousel-container {
+    position: relative;
+    width: 100%;
+    height: 135px;
+    margin: 10px 0 15px 0;
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+
+  .carousel-wrapper {
+    display: flex;
+    transition: transform 0.5s ease;
+    height: 100%;
+    align-items: center;
+    touch-action: pan-y;
+  }
+
   .level-card-carousel {
+    flex: 0 0 auto;
     width: 280px;
     height: 135px;
-    margin: 10px auto 15px auto;
+    margin: 0 8px;
     border-radius: var(--radius);
     position: relative;
     overflow: hidden;
@@ -406,6 +424,28 @@
   }
   .level-card-carousel[data-level="titanium"] .level-top-icon { 
     background-image: url('assets/rotator/card-icon4.png'); 
+  }
+
+  /* Кнопки навигации карусели */
+  .carousel-nav {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .carousel-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .carousel-dot.active {
+    background: var(--primary);
+    transform: scale(1.2);
   }
 
   /* === КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР В ЖЕЛТОЙ ТЕМЕ === */
@@ -1256,20 +1296,80 @@
 <!-- Основной контент -->
 <main class="main-content">
   <div class="container">
-    <!-- 1. ОДНА КАРТОЧКА УРОВНЯ С ОБНОВЛЕННЫМИ ИКОНКАМИ -->
-    <div class="level-card-carousel level-card" data-level="starter" data-index="0">
-      <div class="level-bg"></div>
-      <div class="level-top-icon"></div>
-      <div class="level-overlay">
-        <div class="level-header">
-          <div class="level-vip-badge">VIP 1</div>
-          <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
+    <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ С ОБНОВЛЕННЫМИ ИКОНКАМИ -->
+    <div class="carousel-container">
+      <div class="carousel-wrapper" id="carouselWrapper">
+        <div class="level-card-carousel level-card" data-level="starter" data-index="0">
+          <div class="level-bg"></div>
+          <div class="level-top-icon"></div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 1</div>
+              <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
+            </div>
+            <div class="level-content">
+              <div class="level-name-carousel" data-i18n="vip_starter">Starter</div>
+              <div class="level-percentage-carousel">2.5%</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_starter">до $300</div>
+            </div>
+          </div>
         </div>
-        <div class="level-content">
-          <div class="level-name-carousel" data-i18n="vip_starter">Starter</div>
-          <div class="level-percentage-carousel">2.5%</div>
-          <div class="level-cap-carousel" data-i18n="vip_cap_starter">до $300</div>
+        
+        <div class="level-card-carousel level-card" data-level="advanced" data-index="1">
+          <div class="level-bg"></div>
+          <div class="level-top-icon"></div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 2</div>
+              <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
+            </div>
+            <div class="level-content">
+              <div class="level-name-carousel" data-i18n="vip_advanced">Advanced</div>
+              <div class="level-percentage-carousel">3.0%</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_advanced">до $1,000</div>
+            </div>
+          </div>
         </div>
+        
+        <div class="level-card-carousel level-card" data-level="proelite" data-index="2">
+          <div class="level-bg"></div>
+          <div class="level-top-icon"></div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 3</div>
+              <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
+            </div>
+            <div class="level-content">
+              <div class="level-name-carousel" data-i18n="vip_proelite">Pro Elite</div>
+              <div class="level-percentage-carousel">4.0%</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_proelite">до $3,000</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="level-card-carousel level-card" data-level="titanium" data-index="3">
+          <div class="level-bg"></div>
+          <div class="level-top-icon"></div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 4</div>
+              <div class="level-status" style="display: none;" data-i18n="status_active">Активен</div>
+            </div>
+            <div class="level-content">
+              <div class="level-name-carousel" data-i18n="vip_titanium">Titanium</div>
+              <div class="level-percentage-carousel">5.0%</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_titanium">$3,000+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Навигация карусели -->
+      <div class="carousel-nav">
+        <div class="carousel-dot active" data-index="0"></div>
+        <div class="carousel-dot" data-index="1"></div>
+        <div class="carousel-dot" data-index="2"></div>
+        <div class="carousel-dot" data-index="3"></div>
       </div>
     </div>
 
@@ -1413,6 +1513,105 @@ function showNotification(message) {
   }
 }
 
+// Карусель карточек уровней с улучшенным свайпом
+function initCarousel() {
+  const carouselWrapper = document.getElementById('carouselWrapper');
+  const cards = document.querySelectorAll('.level-card-carousel');
+  const dots = document.querySelectorAll('.carousel-dot');
+  let currentIndex = 0;
+  const cardWidth = 280;
+  const margin = 16;
+  let startX = 0;
+  let currentX = 0;
+  let isSwiping = false;
+
+  function updateCarousel() {
+    const offset = -currentIndex * (cardWidth + margin);
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+    
+    cards.forEach((card, index) => {
+      card.classList.toggle('active', index === currentIndex);
+    });
+    
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentIndex);
+    });
+  }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      currentIndex = parseInt(dot.getAttribute('data-index'));
+      updateCarousel();
+    });
+  });
+
+  carouselWrapper.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isSwiping = true;
+    carouselWrapper.style.transition = 'none';
+  });
+  
+  carouselWrapper.addEventListener('touchmove', (e) => {
+    if (!isSwiping) return;
+    currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    const offset = -currentIndex * (cardWidth + margin) + diff;
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+  });
+  
+  carouselWrapper.addEventListener('touchend', () => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    carouselWrapper.style.transition = 'transform 0.5s ease';
+    
+    const diff = startX - currentX;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0 && currentIndex < cards.length - 1) {
+        currentIndex++;
+      } else if (diff < 0 && currentIndex > 0) {
+        currentIndex--;
+      }
+    }
+    updateCarousel();
+  });
+
+  carouselWrapper.addEventListener('mousedown', (e) => {
+    startX = e.clientX;
+    isSwiping = true;
+    carouselWrapper.style.transition = 'none';
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isSwiping) return;
+    currentX = e.clientX;
+    const diff = currentX - startX;
+    const offset = -currentIndex * (cardWidth + margin) + diff;
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    carouselWrapper.style.transition = 'transform 0.5s ease';
+    
+    const diff = startX - currentX;
+    const threshold = 50;
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0 && currentIndex < cards.length - 1) {
+        currentIndex++;
+      } else if (diff < 0 && currentIndex > 0) {
+        currentIndex--;
+      }
+    }
+    updateCarousel();
+  });
+
+  updateCarousel();
+}
+
 // Модальные окна
 function initModals() {
   const infoModal = document.getElementById('infoModal');
@@ -1543,6 +1742,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
+  // УДАЛЕНО: конфликтующий код переключателя языка
+  // Теперь переключатель управляется language-switcher.js
+  
+  initCarousel();
   initModals();
   
   // Инициализация дашборда
