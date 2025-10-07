@@ -1525,67 +1525,6 @@ function showNotification(message) {
   }
 }
 
-// Функция для определения и отображения активного уровня
-function updateActiveLevel() {
-  const balanceElement = document.querySelector('[data-balance]');
-  if (!balanceElement) return;
-
-  const balanceText = balanceElement.textContent;
-  const balance = parseFloat(balanceText.replace('$', '').replace(',', ''));
-  
-  if (isNaN(balance)) return;
-
-  // Определение текущего уровня на основе баланса
-  let currentLevel = 'starter';
-  
-  if (balance >= 2000) {
-    currentLevel = 'titanium';
-  } else if (balance >= 500) {
-    currentLevel = 'proelite';
-  } else if (balance >= 100) {
-    currentLevel = 'advanced';
-  }
-
-  // Снимаем активный статус со всех карточек
-  document.querySelectorAll('.level-card-carousel').forEach(card => {
-    card.classList.remove('active');
-    const status = card.querySelector('.level-status');
-    if (status) {
-      status.style.display = 'none';
-    }
-  });
-
-  // Добавляем активный статус только на правильную карточку
-  const activeCard = document.querySelector(`[data-level="${currentLevel}"]`);
-  if (activeCard) {
-    activeCard.classList.add('active');
-    const status = activeCard.querySelector('.level-status');
-    if (status) {
-      status.style.display = 'block';
-    }
-  }
-}
-
-// Наблюдатель за изменениями баланса
-function observeBalanceChanges() {
-  const balanceElement = document.querySelector('[data-balance]');
-  if (!balanceElement) return;
-
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (mutation.type === 'characterData' || mutation.type === 'childList') {
-        updateActiveLevel();
-      }
-    });
-  });
-
-  observer.observe(balanceElement, {
-    characterData: true,
-    childList: true,
-    subtree: true
-  });
-}
-
 // Карусель карточек уровней с улучшенным свайпом
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
@@ -1814,16 +1753,10 @@ document.addEventListener('DOMContentLoaded', function() {
   initCarousel();
   initModals();
   
-  // Добавляем вызовы новых функций
-  updateActiveLevel();
-  observeBalanceChanges();
-  
   // Инициализация дашборда
   if (window.LC && typeof window.LC.initDashboard === 'function') {
     setTimeout(() => {
       window.LC.initDashboard();
-      // Дополнительно обновляем активный уровень после инициализации дашборда
-      setTimeout(updateActiveLevel, 1000);
     }, 500);
   }
 });
