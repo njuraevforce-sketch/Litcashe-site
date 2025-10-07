@@ -204,14 +204,14 @@
   LC.creditView = async function(videoId, watchedSeconds) {
     const user = await getUser(); 
     if (!user) { 
-      alert('Войдите в аккаунт'); 
+      alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт'); 
       return null; 
     }
 
     // Проверяем активность пользователя
     const isActive = await LC.isActiveUser();
     if (!isActive) {
-      alert('Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
+      alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
       return null;
     }
 
@@ -223,7 +223,7 @@
       console.log('Current level info before credit:', levelInfo);
       
       if (levelInfo && levelInfo.views_left_today <= 0) {
-        alert('Лимит просмотров на сегодня исчерпан');
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : '❌ Лимит просмотров исчерпан');
         return null;
       }
 
@@ -234,7 +234,7 @@
       
       if (error) { 
         console.error('Credit view error:', error); 
-        alert(error.message || 'Ошибка начисления'); 
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_award_error') : '❌ Ошибка начисления'); 
         return null; 
       }
       
@@ -242,7 +242,7 @@
       
       const row = Array.isArray(data) ? data[0] : data;
       if (!row?.ok) { 
-        alert(row?.message || 'Начисление отклонено'); 
+        alert(row?.message || (window.LC_I18N ? window.LC_I18N.t('notification_award_error') : '❌ Начисление отклонено')); 
         return null; 
       }
       
@@ -261,13 +261,13 @@
       // Показываем уведомление о начислении
       if (row.reward_cents) {
         const reward = (row.reward_cents / 100).toFixed(2);
-        alert(`✅ Начислено $${reward} за просмотр!`);
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_award_success', { amount: reward }) : `✅ Начислено $${reward} за просмотр!`);
       }
       
       return row;
     } catch (error) {
       console.error('Exception in creditView:', error);
-      alert('Ошибка при начислении: ' + error.message);
+      alert((window.LC_I18N ? window.LC_I18N.t('notification_award_error') : '❌ Ошибка при начислении') + ': ' + error.message);
       return null;
     }
   };
@@ -384,12 +384,12 @@
         btn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText(input.value);
-            btn.textContent = 'Скопировано!';
+            btn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_copied') : '✅ Скопировано!';
             setTimeout(() => btn.textContent = '📋 Копировать', 2000);
           } catch (err) {
             input.select();
             document.execCommand('copy');
-            btn.textContent = 'Скопировано!';
+            btn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_copied') : '✅ Скопировано!';
             setTimeout(() => btn.textContent = '📋 Копировать', 2000);
           }
         });
@@ -890,7 +890,7 @@
       video.currentTime = 0; video.pause();
       setBar(0); 
       startBtn.disabled = false; 
-      startBtn.textContent = '🎬 Заработать за просмотр';
+      startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('dashboard_earn_by_view') : '🎬 Заработать за просмотр';
       checkVideoAvailability();
     };
 
@@ -903,25 +903,25 @@
         console.log('Video availability check:', { isActive, viewsLeft, levelInfo });
         
         if (!isActive) {
-          ui('Пополните баланс от $29 для заработка');
+          ui(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : 'Пополните баланс от $29 для заработка');
           startBtn.disabled = true;
-          startBtn.textContent = '❌ Неактивный аккаунт';
+          startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_failed') + ' Неактивный аккаунт' : '❌ Неактивный аккаунт';
           if (overlay) {
             overlay.style.display = 'flex';
-            overlay.textContent = 'Для заработка пополните баланс от $29';
+            overlay.textContent = window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : 'Для заработка пополните баланс от $29';
           }
         } else if (viewsLeft <= 0) {
-          ui('Лимит просмотров исчерпан');
+          ui(window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : 'Лимит просмотров исчерпан');
           startBtn.disabled = true;
-          startBtn.textContent = '⏳ Лимит исчерпан';
+          startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : '⏳ Лимит исчерпан';
           if (overlay) {
             overlay.style.display = 'flex';
-            overlay.textContent = 'Лимит просмотров исчерпан';
+            overlay.textContent = window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : 'Лимит просмотров исчерпан';
           }
         } else {
-          ui(`Нажмите «Заработать за просмотр» (осталось: ${viewsLeft})`);
+          ui(window.LC_I18N ? window.LC_I18N.t('progress_views_left', { count: viewsLeft }) : `Нажмите «Заработать за просмотр» (осталось: ${viewsLeft})`);
           startBtn.disabled = false;
-          startBtn.textContent = '🎬 Заработать за просмотр';
+          startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('dashboard_earn_by_view') : '🎬 Заработать за просмотр';
           if (overlay) overlay.style.display = 'none';
         }
       } catch (error) {
@@ -946,7 +946,7 @@
       
       if (t >= dur - 0.5) {
         video.pause();
-        ui('Начисление завершено');
+        ui(window.LC_I18N ? window.LC_I18N.t('notification_success') + ' Начисление завершено' : 'Начисление завершено');
         setTimeout(reset, 1500);
       }
     });
@@ -954,7 +954,7 @@
     video.addEventListener('ended', ()=> {
       if (!allowed) return;
       video.pause();
-      ui('Начисление завершено');
+      ui(window.LC_I18N ? window.LC_I18N.t('notification_success') + ' Начисление завершено' : 'Начисление завершено');
       setTimeout(reset, 1500);
     });
 
@@ -969,12 +969,12 @@
       console.log('Start button clicked:', { isActive, viewsLeft });
       
       if (!isActive) {
-        alert('Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
         return;
       }
       
       if (viewsLeft <= 0) {
-        alert('Лимит просмотров на сегодня исчерпан');
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : '❌ Лимит просмотров на сегодня исчерпан');
         return;
       }
       
@@ -984,13 +984,14 @@
       
       try {
         await video.play();
-        ui('Смотрите видео до конца'); 
+        ui(window.LC_I18N ? window.LC_I18N.t('notification_processing') + ' Смотрите видео до конца' : 'Смотрите видео до конца'); 
         setBar(0);
         startBtn.disabled = true; 
-        startBtn.textContent = '⏳ Ожидание...';
+        startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_processing') : '⏳ Ожидание...';
         if (overlay) overlay.style.display = 'none';
       } catch (err) {
         console.warn('Autoplay failed:', err);
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_autoplay_blocked') : '❌ Автовоспроизведение заблокировано');
         reset();
       }
     });
@@ -1007,14 +1008,14 @@
     try {
       const sb = window.sb || window.supabase;
       if (!sb) {
-        alert('❌ Ошибка подключения к базе данных');
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_network_error') : '❌ Ошибка подключения к базе данных');
         return null;
       }
       
       // Получаем текущего пользователя
       const { data: { user }, error: userError } = await sb.auth.getUser();
       if (userError || !user) {
-        alert('❌ Войдите в аккаунт');
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
         return null;
       }
       
@@ -1046,7 +1047,7 @@
           .single();
           
         if (!wallet || wallet.balance_cents < amountCents) {
-          alert('❌ Недостаточно средств на балансе');
+          alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Недостаточно средств на балансе');
           return null;
         }
         
@@ -1067,7 +1068,7 @@
           
         if (directError) {
           console.error('❌ Ошибка прямой вставки:', directError);
-          alert('❌ Не удалось создать заявку: ' + directError.message);
+          alert((window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : '❌ Не удалось создать заявку') + ': ' + directError.message);
           return null;
         }
         
@@ -1084,7 +1085,7 @@
         
         return { 
           ok: true, 
-          message: 'Заявка на вывод создана и отправлена на обработку администратору',
+          message: window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_success') : '✅ Заявка на вывод создана и отправлена на обработку администратору',
           id: directData.id 
         };
       }
@@ -1095,7 +1096,7 @@
       const result = typeof data === 'object' ? data : JSON.parse(data);
       
       if (!result?.ok) {
-        alert('❌ ' + (result?.message || 'Заявка отклонена системой'));
+        alert('❌ ' + (result?.message || (window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : 'Заявка отклонена системой')));
         return null;
       }
       
@@ -1103,7 +1104,7 @@
       
     } catch (error) {
       console.error('❌ Withdrawal request error:', error);
-      alert('❌ Ошибка при создании заявки: ' + error.message);
+      alert((window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : '❌ Ошибка при создании заявки') + ': ' + error.message);
       return null;
     }
   };
@@ -1300,7 +1301,7 @@
     try {
       const sb = window.sb || window.supabase;
       if (!sb) {
-        alert('❌ Ошибка подключения к базе данных');
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_network_error') : '❌ Ошибка подключения к базе данных');
         return;
       }
       
@@ -1318,14 +1319,14 @@
         throw new Error(data.error || 'Ошибка отмены заявки');
       }
       
-      alert('✅ ' + (data.message || 'Заявка отменена'));
+      alert('✅ ' + (data.message || (window.LC_I18N ? window.LC_I18N.t('notification_success') + ' Заявка отменена' : 'Заявка отменена')));
       
       // Обновляем интерфейс
       await LC.refreshBalance();
       
     } catch (error) {
       console.error('❌ Cancel withdrawal error:', error);
-      alert('❌ Ошибка отмены заявки: ' + error.message);
+      alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Ошибка отмены заявки') + ': ' + error.message);
     }
   };
 
@@ -1460,7 +1461,7 @@
   LC.createDeposit = async function(amountCents, network='TRC20', currency='USDT') {
     const user = await getUser(); 
     if (!user) { 
-      alert('Войдите в аккаунт'); 
+      alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт'); 
       return; 
     }
     
@@ -1472,17 +1473,17 @@
     
     if (error) { 
       console.error(error); 
-      alert('Ошибка создания депозита'); 
+      alert(window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Ошибка создания депозита'); 
       return; 
     }
     
     const row = Array.isArray(data) ? data[0] : data;
     if (!row?.ok) { 
-      alert(row?.message || 'Депозит отклонен'); 
+      alert(row?.message || (window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Депозит отклонен')); 
       return; 
     }
     
-    alert('Депозит создан');
+    alert(window.LC_I18N ? window.LC_I18N.t('notification_deposit_success') : '✅ Депозит создан');
     return row;
   };
 
@@ -1493,7 +1494,7 @@
     try {
       const user = await getUser();
       if (!user) {
-        alert('Войдите в аккаунт');
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
         return null;
       }
 
@@ -1522,16 +1523,16 @@
 
       if (error) {
         console.error('❌ Ошибка создания депозита:', error);
-        alert('❌ Не удалось создать депозит: ' + error.message);
+        alert((window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Не удалось создать депозит') + ': ' + error.message);
         return null;
       }
 
       console.log('✅ Депозит создан:', data);
-      return { ok: true, id: data.id, message: 'Депозит создан' };
+      return { ok: true, id: data.id, message: window.LC_I18N ? window.LC_I18N.t('notification_deposit_success') : '✅ Депозит создан' };
         
     } catch (error) {
       console.error('❌ Ошибка создания депозита:', error);
-      alert('❌ Ошибка при создании депозита: ' + error.message);
+      alert((window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Ошибка при создании депозита') + ': ' + error.message);
       return null;
     }
   };
@@ -1541,7 +1542,7 @@
     try {
       const user = await getUser();
       if (!user) {
-        alert('Войдите в аккаунт');
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
         return null;
       }
 
@@ -1558,7 +1559,7 @@
 
       if (error) {
         console.error('❌ Ошибка прикрепления TXID:', error);
-        alert('❌ Не удалось прикрепить TXID: ' + error.message);
+        alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Не удалось прикрепить TXID') + ': ' + error.message);
         return null;
       }
 
@@ -1567,7 +1568,7 @@
         
     } catch (error) {
       console.error('❌ Ошибка прикрепления TXID:', error);
-      alert('❌ Ошибка при прикреплении TXID: ' + error.message);
+      alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Ошибка при прикреплении TXID') + ': ' + error.message);
       return null;
     }
   };
