@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewpoint-fit=cover">
   
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#C8D8C8">
@@ -690,65 +690,6 @@
 </a>
 
 <script>
-// Инициализация языкового переключателя
-document.addEventListener('DOMContentLoaded', function() {
-  const langSwitcher = document.getElementById('languageSwitcher');
-  const langBtn = document.getElementById('langBtn');
-  const langDropdown = document.getElementById('langDropdown');
-  const langCodeHeader = langBtn.querySelector('.lang-code-header');
-  
-  // Функция для обновления переключателя
-  function updateLanguageSwitcher() {
-    const currentLang = window.LC_I18N ? window.LC_I18N.getLang() : 'ru';
-    const langItem = langDropdown.querySelector(`.lang-item[data-lang="${currentLang}"]`);
-    
-    if (langItem) {
-      // Обновляем активный элемент в dropdown
-      langDropdown.querySelectorAll('.lang-item').forEach(item => {
-        item.classList.remove('active');
-      });
-      langItem.classList.add('active');
-      
-      // Обновляем код языка в кнопке
-      const langCode = langItem.querySelector('.lang-code').textContent;
-      langCodeHeader.textContent = langCode;
-    }
-  }
-  
-  if (langBtn && langDropdown) {
-    langBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      langSwitcher.classList.toggle('active');
-    });
-    
-    // Закрытие при клике вне переключателя
-    document.addEventListener('click', function() {
-      langSwitcher.classList.remove('active');
-    });
-    
-    // Выбор языка
-    const langItems = langDropdown.querySelectorAll('.lang-item');
-    langItems.forEach(item => {
-      item.addEventListener('click', function() {
-        const lang = this.getAttribute('data-lang');
-        if (window.LC_I18N) {
-          window.LC_I18N.set(lang);
-          updateLanguageSwitcher();
-        }
-        langSwitcher.classList.remove('active');
-      });
-    });
-    
-    // Инициализация при загрузке
-    setTimeout(updateLanguageSwitcher, 100);
-  }
-  
-  // Обновляем переключатель при смене языка
-  window.addEventListener('languageChanged', function() {
-    updateLanguageSwitcher();
-  });
-});
-
 // Hourly image rotator
 (function(){
   const el = document.getElementById('brandRotator');
@@ -839,7 +780,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
-<script defer src="i18n.js"></script>
+<script defer src="assets/js/i18n.js"></script>
+<script defer src="assets/js/language-switcher.js"></script>
 <script defer src="app_supabase.js"></script>
 
 </body>
