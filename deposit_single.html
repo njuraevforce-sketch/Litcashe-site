@@ -2,10 +2,10 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0a1a14">
+  <meta name="theme-color" content="#F5C518">
 
   <!-- iOS -->
   <link rel="apple-touch-icon" href="/icons/litcash-180.png">
@@ -15,41 +15,32 @@
   <!-- PWA init -->
   <script defer src="/app-install.js"></script>
   
-  <title data-i18n="page_title_deposit">Пополнение — Litcash</title>
-  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
+  <title data-i18n="deposit_title">Пополнение — Litcash</title>
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23F5C518'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%23ffffff' font-family='Arial' font-weight='700'>LC</text></svg>">
 
   <style>
   /* === ОСНОВНЫЕ СТИЛИ === */
   :root {
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #34d399;
+    --primary: #F5C518;
+    --primary-dark: #e0b415;
+    --primary-light: #f8d34a;
     --success: #22c55e;
     --warning: #f59e0b;
     --error: #ef4444;
-    --bg: #0a1a14;
-    --bg-gradient: linear-gradient(135deg, #0a1a14 0%, #0d2c1f 50%, #0a1a14 100%);
-    --bg-card: rgba(255, 255, 255, 0.08);
-    --text: #ffffff;
-    --text-secondary: #a7f3d0;
-    --border: rgba(16, 185, 129, 0.3);
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --radius: 12px;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #ffffff;
+    --bg-gradient: linear-gradient(135deg, #f0fff0 0%, #e0ffe0 100%);
+    --bg-card: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius: 16px;
   }
 
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html {
-    height: 100%;
-    overflow-x: hidden;
-    background: var(--bg);
   }
 
   body {
@@ -57,24 +48,52 @@
     background: var(--bg-gradient);
     color: var(--text);
     line-height: 1.4;
+    position: relative;
+    overflow-x: hidden;
     min-height: 100vh;
-    min-height: -webkit-fill-available;
     -webkit-text-size-adjust: 100%;
-    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-    width: 100%;
-    overflow-x: hidden;
+    max-width: 100%;
   }
 
-  /* === ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ === */
+  .container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 10px 15px;
+    max-width: 100%;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+  }
+
+  .logo {
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Переключатель языка */
   .language-switcher-header {
     position: relative;
     display: flex;
     align-items: center;
     z-index: 1001;
-    margin-left: auto;
-    margin-right: 10px;
   }
 
   .lang-btn-header {
@@ -83,7 +102,7 @@
     gap: 6px;
     height: 32px;
     padding: 0 10px;
-    background: var(--bg-card);
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--text);
@@ -91,15 +110,12 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
     white-space: nowrap;
   }
 
   .lang-btn-header:hover {
     border-color: var(--primary);
     color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
   }
 
   .lang-icon {
@@ -121,11 +137,10 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 8px;
-    min-width: 160px;
+    min-width: 140px;
     max-height: 300px;
     overflow-y: auto;
     box-shadow: var(--shadow);
-    backdrop-filter: blur(20px);
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -153,12 +168,12 @@
   }
 
   .lang-item:hover {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--primary-light);
+    background: rgba(245, 197, 24, 0.1);
+    color: var(--primary);
   }
 
   .lang-item.active {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(245, 197, 24, 0.15);
     color: var(--primary);
     font-weight: 600;
   }
@@ -167,7 +182,7 @@
     width: 16px;
     height: 12px;
     border-radius: 2px;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(0,0,0,0.1);
     flex-shrink: 0;
   }
 
@@ -198,408 +213,10 @@
   .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
   .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
 
-  /* Мобильный языковой переключатель */
-  .mobile-lang-switcher {
-    padding: 15px 0;
-    border-top: 1px solid var(--border);
-    margin-top: 10px;
-  }
-
-  .mobile-lang-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-    padding: 0 5px;
-  }
-
-  .mobile-lang-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .mobile-lang-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 14px;
-    color: var(--text);
-  }
-
-  .mobile-lang-item:hover {
-    background: rgba(16, 185, 129, 0.1);
-  }
-
-  .mobile-lang-item.active {
-    background: rgba(16, 185, 129, 0.2);
-    color: var(--primary);
-    font-weight: 600;
-  }
-
-  /* Анимация крипторынка на фоне */
-  .crypto-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-    background: var(--bg);
-  }
-
-  .crypto-logo {
-    position: absolute;
-    font-size: 18px;
-    font-weight: 800;
-    color: rgba(16, 185, 129, 0.9);
-    opacity: 0;
-    animation: float 20s linear infinite;
-    text-shadow: 0 0 25px rgba(16, 185, 129, 1);
-    z-index: 1;
-  }
-
-  .trading-bot {
-    position: absolute;
-    width: 35px;
-    height: 35px;
-    background: radial-gradient(circle, var(--primary) 0%, transparent 60%);
-    border-radius: 50%;
-    opacity: 0;
-    animation: trade 25s ease-in-out infinite;
-    filter: blur(1px);
-    box-shadow: 0 0 35px var(--primary);
-    opacity: 0.8;
-  }
-
-  .price-line {
-    position: absolute;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
-    opacity: 0;
-    animation: priceMove 15s linear infinite;
-    box-shadow: 0 0 25px var(--primary);
-    opacity: 0.6;
-  }
-
-  .exchange-logo {
-    position: absolute;
-    font-size: 13px;
-    font-weight: 700;
-    color: rgba(52, 211, 153, 0.9);
-    opacity: 0;
-    animation: exchangeFloat 30s linear infinite;
-    padding: 4px 8px;
-    background: rgba(16, 185, 129, 0.35);
-    border-radius: 4px;
-    border: 1px solid rgba(16, 185, 129, 0.5);
-  }
-
-  .crypto-chart {
-    position: absolute;
-    width: 100px;
-    height: 45px;
-    border: 2px solid rgba(16, 185, 129, 0.7);
-    opacity: 0;
-    animation: chartFloat 40s linear infinite;
-    background: rgba(16, 185, 129, 0.25);
-  }
-
-  .crypto-chart::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, transparent 100%);
-    clip-path: polygon(0% 100%, 10% 80%, 20% 60%, 30% 70%, 40% 40%, 50% 50%, 60% 30%, 70% 60%, 80% 20%, 90% 40%, 100% 10%, 100% 100%, 0% 100%);
-  }
-
-  @keyframes float {
-    0% {
-      transform: translateY(100vh) rotate(0deg) scale(0.5);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.9;
-    }
-    90% {
-      opacity: 0.9;
-    }
-    100% {
-      transform: translateY(-100px) rotate(360deg) scale(1);
-      opacity: 0;
-    }
-  }
-
-  @keyframes trade {
-    0%, 100% {
-      transform: translate(0, 0) scale(0.8);
-      opacity: 0;
-    }
-    20% {
-      transform: translate(200px, 150px) scale(1);
-      opacity: 0.8;
-    }
-    40% {
-      transform: translate(400px, 80px) scale(0.7);
-      opacity: 0.8;
-    }
-    60% {
-      transform: translate(600px, 200px) scale(0.9);
-      opacity: 0.8;
-    }
-    80% {
-      transform: translate(800px, 120px) scale(0.6);
-      opacity: 0.8;
-    }
-  }
-
-  @keyframes priceMove {
-    0% {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.6;
-    }
-    90% {
-      opacity: 0.6;
-    }
-    100% {
-      transform: translateX(100vw);
-      opacity: 0;
-    }
-  }
-
-  @keyframes exchangeFloat {
-    0% {
-      transform: translateX(100vw) translateY(0) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.8;
-    }
-    90% {
-      opacity: 0.8;
-    }
-    100% {
-      transform: translateX(-100px) translateY(80px) rotate(180deg);
-      opacity: 0;
-    }
-  }
-
-  @keyframes chartFloat {
-    0% {
-      transform: translateY(100vh) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.4;
-    }
-    90% {
-      opacity: 0.4;
-    }
-    100% {
-      transform: translateY(-100px) rotate(10deg);
-      opacity: 0;
-    }
-  }
-
-  .pulse-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--primary-light);
-    border-radius: 50%;
-    animation: pulse 3s ease-in-out infinite;
-    box-shadow: 0 0 30px var(--primary);
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.4;
-    }
-    50% {
-      transform: scale(2.5);
-      opacity: 0.3;
-    }
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-    width: 100%;
-  }
-
-  /* Header */
-  .header {
-    background: rgba(10, 26, 20, 0.98);
-    backdrop-filter: blur(20px);
-    box-shadow: var(--shadow);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    flex-shrink: 0;
-    padding-top: var(--safe-top);
-  }
-
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 50px;
-    gap: 10px;
-    padding: 0 10px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    flex-shrink: 0;
-    z-index: 1001;
-  }
-
-  .logo {
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    animation: logoGlow 3s ease-in-out infinite alternate;
-  }
-
-  @keyframes logoGlow {
-    0% {
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    }
-    100% {
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6);
-    }
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .nav-links a {
-    color: var(--text);
-    text-decoration: none;
-    font-weight: 500;
-    padding: 6px 0;
-    font-size: 12px;
-    position: relative;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-  }
-
-  .nav-links a:hover {
-    color: var(--primary-light);
-  }
-
-  .nav-links a.active {
-    color: var(--primary);
-  }
-
-  .nav-links a.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--primary);
-    box-shadow: 0 0 8px var(--primary);
-  }
-
-  .nav-cta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  /* Кнопки */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    height: 32px;
-    padding: 0 12px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    color: var(--text);
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 11px;
-    backdrop-filter: blur(10px);
-    white-space: nowrap;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
-  }
-
-  .btn.primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-color: var(--primary);
-    color: white;
-  }
-
-  .btn.primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    transform: translateY(-1px);
-    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
-  }
-
   /* Основной контент */
-  .main {
-    padding: 15px 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 120px);
-    overflow-y: auto;
-    width: 100%;
-    position: relative;
-  }
-
   .main-content {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    padding-bottom: 70px;
     width: 100%;
   }
 
@@ -611,37 +228,11 @@
     border: 1px solid var(--border);
     padding: 15px;
     margin-bottom: 12px;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(15px);
-    position: relative;
-    overflow: hidden;
-    width: 100%;
   }
 
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
-    transition: left 0.5s ease;
-  }
-
-  .card:hover::before {
-    left: 100%;
-  }
-
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
-    border-color: rgba(16, 185, 129, 0.5);
-  }
-
-  .card h1, .card h2 {
+  .card h1 {
     font-size: 16px;
-    font-weight: 700;
+    font-weight: bold;
     margin-bottom: 12px;
     color: var(--text);
     display: flex;
@@ -649,13 +240,12 @@
     gap: 8px;
   }
 
-  .card h1:before, .card h2:before {
+  .card h1:before {
     content: '';
     width: 3px;
     height: 16px;
     background: var(--primary);
     border-radius: 2px;
-    box-shadow: 0 0 8px var(--primary);
   }
 
   /* Сетка */
@@ -666,30 +256,85 @@
     width: 100%;
   }
 
-  .grid-2 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   /* Формы */
   .input {
     width: 100%;
-    height: 32px;
+    height: 44px;
     padding: 0 12px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.05);
     color: var(--text);
-    font-size: 11px;
+    font-size: 14px;
     transition: all 0.3s ease;
     font-weight: 500;
-    backdrop-filter: blur(10px);
   }
 
   .input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 2px rgba(245, 197, 24, 0.2);
     background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Кнопки */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    border: none;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: #1a1500;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    text-decoration: none;
+  }
+
+  .btn:hover {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 197, 24, 0.4);
+  }
+
+  /* Нижний навбар */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--bg);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 5px;
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    width: 100%;
+  }
+
+  .nav-item {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-decoration: none;
+    flex: 1;
+    padding: 5px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-item.active {
+    color: var(--primary);
+  }
+
+  .nav-item i {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 4px;
   }
 
   /* Утилиты */
@@ -698,475 +343,115 @@
     font-size: 11px;
   }
 
-  .flex {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .text-center {
-    text-align: center;
-  }
-
-  /* Footer */
-  .footer {
-    background: rgba(10, 26, 20, 0.8);
-    border-top: 1px solid var(--border);
-    padding: 15px 0;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 10px;
-    font-weight: 500;
-    backdrop-filter: blur(20px);
-    flex-shrink: 0;
-    padding-bottom: calc(15px + var(--safe-bottom));
-  }
-
-  /* Иконки для заголовков */
-  .icon {
-    width: 18px;
-    height: 18px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 9px;
-    font-weight: bold;
-    box-shadow: 0 0 8px var(--primary);
-  }
-
-  /* Бургер меню для мобильных */
-  .burger {
-    display: none;
-    flex-direction: column;
-    gap: 3px;
-    cursor: pointer;
-    padding: 8px;
-    z-index: 1001;
-  }
-
-  .burger span {
-    width: 18px;
-    height: 2px;
-    background: var(--text);
-    transition: all 0.3s;
-    border-radius: 1px;
-  }
-
-  /* Мобильное меню */
-  .mobile-menu {
-    position: fixed;
-    top: 50px;
-    left: 0;
-    right: 0;
-    background: rgba(10, 26, 20, 0.98);
-    backdrop-filter: blur(30px);
-    border-bottom: 1px solid var(--border);
-    padding: 15px;
-    transform: translateY(-100%);
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 999;
-  }
-
-  .mobile-menu.active {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  .mobile-menu a {
-    display: block;
-    color: var(--text);
-    text-decoration: none;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .mobile-menu a:hover,
-  .mobile-menu a.active {
-    color: var(--primary);
-  }
-
-  .mobile-menu a:last-child {
-    border-bottom: none;
-  }
-
-  /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
-  @media (max-width: 768px) {
-    html, body {
-      background: var(--bg);
-      position: relative;
-      height: auto;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
+  @media (max-width: 360px) {
     .container {
-      padding: 0 10px;
-      max-width: 100%;
-      width: 100%;
-    }
-
-    .nav {
-      height: 50px;
-      padding: 0 8px;
-      gap: 8px;
-    }
-
-    .brand {
-      font-size: 15px;
-    }
-
-    .logo {
-      width: 26px;
-      height: 26px;
-      font-size: 11px;
-    }
-
-    .nav-cta {
-      gap: 6px;
-    }
-
-    .btn {
-      height: 32px;
-      padding: 0 10px;
-      font-size: 10px;
-    }
-
-    .main {
-      padding: 10px 0;
-      min-height: calc(100vh - 140px);
-      overflow-y: auto;
-    }
-
-    .grid {
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .grid-2 {
-      grid-template-columns: 1fr;
-    }
-
-    .card {
-      padding: 12px;
-      margin-bottom: 8px;
-    }
-
-    .card h1, .card h2 {
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-
-    .input {
-      height: 30px;
-      font-size: 10px;
-    }
-
-    /* Скрываем обычное меню, показываем бургер */
-    .nav-links {
-      display: none !important;
+      padding: 8px;
     }
     
-    .burger {
-      display: flex;
-    }
-
-    /* ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКОВ ДЛЯ МОБИЛЬНЫХ */
-    .language-switcher-header {
-      margin-right: 5px;
-    }
-
-    .lang-btn-header {
-      height: 28px;
-      padding: 0 8px;
-      font-size: 10px;
-    }
-
-    .lang-code-header {
-      font-size: 10px;
-    }
-
     .lang-dropdown-header {
-      min-width: 140px;
-      right: -10px;
-    }
-
-    .nav-cta {
-      display: none;
-    }
-
-    /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
-    .crypto-logo {
-      font-size: 16px !important;
-      animation-duration: 18s !important;
-      color: rgba(16, 185, 129, 0.95) !important;
-      text-shadow: 0 0 30px rgba(16, 185, 129, 1) !important;
-    }
-
-    .trading-bot {
-      width: 30px !important;
-      height: 30px !important;
-      animation-duration: 22s !important;
-      box-shadow: 0 0 40px var(--primary) !important;
-      opacity: 0.9 !important;
-    }
-
-    .crypto-chart {
-      width: 90px !important;
-      height: 40px !important;
-      animation-duration: 35s !important;
-      border: 2px solid rgba(16, 185, 129, 0.8) !important;
-      background: rgba(16, 185, 129, 0.3) !important;
-    }
-
-    .price-line {
-      animation-duration: 16s !important;
-      height: 3px !important;
-      box-shadow: 0 0 30px var(--primary) !important;
-      opacity: 0.7 !important;
-    }
-
-    .exchange-logo {
-      animation-duration: 28s !important;
-      color: rgba(52, 211, 153, 0.95) !important;
-      background: rgba(16, 185, 129, 0.4) !important;
-      font-size: 12px !important;
-      padding: 3px 7px !important;
-    }
-
-    .pulse-dot {
-      width: 9px !important;
-      height: 9px !important;
-      box-shadow: 0 0 35px var(--primary) !important;
-    }
-  }
-
-  /* Для очень маленьких экранов */
-  @media (max-width: 480px) {
-    .container {
-      padding: 0 8px;
-    }
-
-    .nav {
-      padding: 0 5px;
-    }
-
-    .card h1, .card h2 {
-      font-size: 13px;
-    }
-
-    .card {
-      padding: 10px;
-    }
-
-    .btn {
-      padding: 0 8px;
-      font-size: 9px;
-    }
-
-    /* ДОПОЛНИТЕЛЬНАЯ ОПТИМИЗАЦИЯ ПЕРЕКЛЮЧАТЕЛЯ */
-    .language-switcher-header {
-      margin-right: 3px;
-    }
-
-    .lang-btn-header {
-      height: 26px;
-      padding: 0 6px;
-    }
-
-    .lang-code-header {
-      font-size: 9px;
-    }
-  }
-
-  /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
-  @media (prefers-reduced-motion: reduce) {
-    .crypto-logo,
-    .trading-bot,
-    .price-line,
-    .exchange-logo,
-    .crypto-chart,
-    .pulse-dot,
-    .logo,
-    .card::before {
-      animation: none !important;
-      transition: none !important;
+      min-width: 120px;
     }
   }
   </style>
 </head>
 
 <body>
-<!-- Анимированный фон с крипто-элементами -->
-<div class="crypto-background" id="cryptoBackground">
-  <!-- Элементы добавляются через JavaScript -->
-</div>
-
-<!-- Мобильное меню -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="index.html" data-i18n="nav_home">Главная</a>
-  <a href="dashboard_single.html" data-i18n="nav_dashboard">Личный кабинет</a>
-  <a href="deposit_single.html" class="active" data-i18n="nav_deposit">Пополнение</a>
-  <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
-  <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
-  <a href="settings_single.html" data-i18n="nav_settings">Настройки</a>
+<!-- Верхняя часть -->
+<header>
+  <a class="logo" href="dashboard_single.html" data-i18n="brand_name">
+    <span>Litcash</span>
+  </a>
   
-  <!-- Мобильный переключатель языков -->
-  <div class="mobile-lang-switcher">
-    <div class="mobile-lang-title" data-i18n="language_switch">Выбор языка</div>
-    <div class="mobile-lang-list">
-      <div class="mobile-lang-item active" data-lang="ru">
-        <span class="lang-flag ru"></span>
-        <span class="lang-name">Русский</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="en">
-        <span class="lang-flag en"></span>
-        <span class="lang-name">English</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="cn">
-        <span class="lang-flag cn"></span>
-        <span class="lang-name">中文</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="es">
-        <span class="lang-flag es"></span>
-        <span class="lang-name">Español</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="fr">
-        <span class="lang-flag fr"></span>
-        <span class="lang-name">Français</span>
-      </div>
-      <div class="mobile-lang-item" data-lang="de">
-        <span class="lang-flag de"></span>
-        <span class="lang-name">Deutsch</span>
+  <!-- Переключатель языка -->
+  <div class="language-switcher-header" id="languageSwitcher">
+    <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка" data-i18n-attr="aria-label:language_switch_label">
+      <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+              fill="none" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+      <span class="lang-code-header">RU</span>
+    </button>
+    
+    <div class="lang-dropdown-header" id="langDropdown">
+      <div class="lang-list">
+        <div class="lang-item active" data-lang="ru">
+          <span class="lang-flag ru"></span>
+          <span class="lang-name" data-i18n="lang_russian">Русский</span>
+          <span class="lang-code">RU</span>
+        </div>
+        <div class="lang-item" data-lang="en">
+          <span class="lang-flag en"></span>
+          <span class="lang-name" data-i18n="lang_english">English</span>
+          <span class="lang-code">EN</span>
+        </div>
+        <div class="lang-item" data-lang="cn">
+          <span class="lang-flag cn"></span>
+          <span class="lang-name" data-i18n="lang_chinese">中文</span>
+          <span class="lang-code">CN</span>
+        </div>
+        <div class="lang-item" data-lang="es">
+          <span class="lang-flag es"></span>
+          <span class="lang-name" data-i18n="lang_spanish">Español</span>
+          <span class="lang-code">ES</span>
+        </div>
+        <div class="lang-item" data-lang="fr">
+          <span class="lang-flag fr"></span>
+          <span class="lang-name" data-i18n="lang_french">Français</span>
+          <span class="lang-code">FR</span>
+        </div>
+        <div class="lang-item" data-lang="de">
+          <span class="lang-flag de"></span>
+          <span class="lang-name" data-i18n="lang_german">Deutsch</span>
+          <span class="lang-code">DE</span>
+        </div>
+        <div class="lang-item" data-lang="pt">
+          <span class="lang-flag pt"></span>
+          <span class="lang-name" data-i18n="lang_portuguese">Português</span>
+          <span class="lang-code">PT</span>
+        </div>
+        <div class="lang-item" data-lang="ar">
+          <span class="lang-flag ar"></span>
+          <span class="lang-name" data-i18n="lang_arabic">العربية</span>
+          <span class="lang-code">AR</span>
+        </div>
+        <div class="lang-item" data-lang="ja">
+          <span class="lang-flag jp"></span>
+          <span class="lang-name" data-i18n="lang_japanese">日本語</span>
+          <span class="lang-code">JA</span>
+        </div>
+        <div class="lang-item" data-lang="ko">
+          <span class="lang-flag kr"></span>
+          <span class="lang-name" data-i18n="lang_korean">한국어</span>
+          <span class="lang-code">KO</span>
+        </div>
+        <div class="lang-item" data-lang="tr">
+          <span class="lang-flag tr"></span>
+          <span class="lang-name" data-i18n="lang_turkish">Türkçe</span>
+          <span class="lang-code">TR</span>
+        </div>
+        <div class="lang-item" data-lang="it">
+          <span class="lang-flag it"></span>
+          <span class="lang-name" data-i18n="lang_italian">Italiano</span>
+          <span class="lang-code">IT</span>
+        </div>
+        <div class="lang-item" data-lang="hi">
+          <span class="lang-flag in"></span>
+          <span class="lang-name" data-i18n="lang_hindi">हिन्दी</span>
+          <span class="lang-code">HI</span>
+        </div>
+        <div class="lang-item" data-lang="pl">
+          <span class="lang-flag pl"></span>
+          <span class="lang-name" data-i18n="lang_polish">Polski</span>
+          <span class="lang-code">PL</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-<header class="header">
-  <div class="container">
-    <nav class="nav">
-      <a class="brand" href="index.html">
-        <div class="logo">LC</div>
-        <span data-i18n="brand_name">Litcash</span>
-      </a>
-
-      <!-- ОПТИМИЗИРОВАННЫЙ ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ В ШАПКЕ -->
-      <div class="language-switcher-header" id="languageSwitcher">
-        <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
-          <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
-                  fill="none" stroke="currentColor" stroke-width="1.2"/>
-          </svg>
-          <span class="lang-code-header">RU</span>
-        </button>
-        
-        <div class="lang-dropdown-header" id="langDropdown">
-          <div class="lang-list">
-            <div class="lang-item active" data-lang="ru">
-              <span class="lang-flag ru"></span>
-              <span class="lang-name">Русский</span>
-              <span class="lang-code">RU</span>
-            </div>
-            <div class="lang-item" data-lang="en">
-              <span class="lang-flag en"></span>
-              <span class="lang-name">English</span>
-              <span class="lang-code">EN</span>
-            </div>
-            <div class="lang-item" data-lang="cn">
-              <span class="lang-flag cn"></span>
-              <span class="lang-name">中文</span>
-              <span class="lang-code">CN</span>
-            </div>
-            <div class="lang-item" data-lang="es">
-              <span class="lang-flag es"></span>
-              <span class="lang-name">Español</span>
-              <span class="lang-code">ES</span>
-            </div>
-            <div class="lang-item" data-lang="fr">
-              <span class="lang-flag fr"></span>
-              <span class="lang-name">Français</span>
-              <span class="lang-code">FR</span>
-            </div>
-            <div class="lang-item" data-lang="de">
-              <span class="lang-flag de"></span>
-              <span class="lang-name">Deutsch</span>
-              <span class="lang-code">DE</span>
-            </div>
-            <div class="lang-item" data-lang="pt">
-              <span class="lang-flag pt"></span>
-              <span class="lang-name">Português</span>
-              <span class="lang-code">PT</span>
-            </div>
-            <div class="lang-item" data-lang="ar">
-              <span class="lang-flag ar"></span>
-              <span class="lang-name">العربية</span>
-              <span class="lang-code">AR</span>
-            </div>
-            <div class="lang-item" data-lang="ja">
-              <span class="lang-flag jp"></span>
-              <span class="lang-name">日本語</span>
-              <span class="lang-code">JA</span>
-            </div>
-            <div class="lang-item" data-lang="ko">
-              <span class="lang-flag kr"></span>
-              <span class="lang-name">한국어</span>
-              <span class="lang-code">KO</span>
-            </div>
-            <div class="lang-item" data-lang="tr">
-              <span class="lang-flag tr"></span>
-              <span class="lang-name">Türkçe</span>
-              <span class="lang-code">TR</span>
-            </div>
-            <div class="lang-item" data-lang="it">
-              <span class="lang-flag it"></span>
-              <span class="lang-name">Italiano</span>
-              <span class="lang-code">IT</span>
-            </div>
-            <div class="lang-item" data-lang="hi">
-              <span class="lang-flag in"></span>
-              <span class="lang-name">हिन्दी</span>
-              <span class="lang-code">HI</span>
-            </div>
-            <div class="lang-item" data-lang="pl">
-              <span class="lang-flag pl"></span>
-              <span class="lang-name">Polski</span>
-              <span class="lang-code">PL</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="nav-links">
-        <a href="index.html" data-i18n="nav_home">Главная</a>
-        <a href="dashboard_single.html" data-i18n="nav_dashboard">Личный кабинет</a>
-        <a href="deposit_single.html" class="active" data-i18n="nav_deposit">Пополнение</a>
-        <a href="withdraw_single.html" data-i18n="nav_withdraw">Вывод</a>
-        <a href="faq_single.html" data-i18n="nav_faq">FAQ</a>
-      </div>
-
-      <div class="nav-cta">
-        <a class="btn" href="login_single.html" data-i18n="nav_login">Вход</a>
-        <a class="btn primary" href="register_single.html" data-i18n="nav_register">Регистрация</a>
-      </div>
-
-      <div class="burger" id="burgerBtn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </nav>
-  </div>
 </header>
 
-<main class="main">
-  <div class="container main-content">
+<!-- Основной контент -->
+<main class="main-content">
+  <div class="container">
     <div class="card">
       <h1><span class="icon">💳</span><span data-i18n="deposit_title">Пополнение</span></h1>
       <div class="grid">
@@ -1184,70 +469,28 @@
   </div>
 </main>
 
-<footer class="footer">
-  <div class="container">
-    <span data-i18n="footer_copyright">© 2025 Litcash. Все права защищены.</span>
-  </div>
-</footer>
+<!-- Нижний навбар -->
+<nav class="bottom-nav">
+  <a href="dashboard_single.html" class="nav-item">
+    <i>🏠</i> <span data-i18n="nav_dashboard">Кабинет</span>
+  </a>
+  <a href="deposit_single.html" class="nav-item active">
+    <i>💰</i> <span data-i18n="nav_deposit">Пополнение</span>
+  </a>
+  <a href="withdraw_single.html" class="nav-item">
+    <i>💸</i> <span data-i18n="nav_withdraw">Вывод</span>
+  </a>
+  <a href="faq_single.html" class="nav-item">
+    <i>❓</i> <span data-i18n="nav_faq">Помощь</span>
+  </a>
+  <a href="settings_single.html" class="nav-item">
+    <i>👤</i> <span data-i18n="nav_settings">Профиль</span>
+  </a>
+</nav>
 
 <script>
-// Service Worker Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistration('/')
-      .then((reg) => {
-        if (!reg) {
-          return navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        }
-      })
-      .catch(console.error);
-  });
-}
-
-// Бургер-меню и языковой переключатель
+// Инициализация языкового переключателя
 document.addEventListener('DOMContentLoaded', function() {
-  const burgerBtn = document.getElementById('burgerBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
-  
-  if (burgerBtn && mobileMenu) {
-    burgerBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      mobileMenu.classList.toggle('active');
-      burgerBtn.classList.toggle('active');
-    });
-    
-    // Закрытие меню при клике на ссылку
-    const mobileLinks = mobileMenu.querySelectorAll('a');
-    mobileLinks.forEach(link => {
-      link.addEventListener('click', function() {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      });
-    });
-    
-    // Закрытие меню при клике вне его
-    document.addEventListener('click', function(e) {
-      if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      }
-    });
-
-    // Мобильный переключатель языка
-    const mobileLangItems = mobileMenu.querySelectorAll('.mobile-lang-item');
-    mobileLangItems.forEach(item => {
-      item.addEventListener('click', function() {
-        const lang = this.getAttribute('data-lang');
-        if (window.LanguageSwitcher) {
-          window.LanguageSwitcher.setLang(lang);
-        }
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      });
-    });
-  }
-
-  // Инициализация языкового переключателя
   const langSwitcher = document.getElementById('languageSwitcher');
   const langBtn = document.getElementById('langBtn');
   const langDropdown = document.getElementById('langDropdown');
@@ -1258,12 +501,10 @@ document.addEventListener('DOMContentLoaded', function() {
       langSwitcher.classList.toggle('active');
     });
     
-    // Закрытие при клике вне переключателя
     document.addEventListener('click', function() {
       langSwitcher.classList.remove('active');
     });
     
-    // Выбор языка
     const langItems = langDropdown.querySelectorAll('.lang-item');
     langItems.forEach(item => {
       item.addEventListener('click', function() {
@@ -1275,87 +516,8 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
-});
 
-// Crypto Background Animation
-document.addEventListener('DOMContentLoaded', () => {
-  const cryptoBackground = document.getElementById('cryptoBackground');
-  if (!cryptoBackground) return;
-
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-  
-  const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
-  const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
-  
-  const cryptoLogoCount = isMobile ? 8 : 12;
-  const exchangeLogoCount = isMobile ? 6 : 8;
-  const botCount = isMobile ? 4 : 6;
-  const lineCount = isMobile ? 6 : 8;
-  const chartCount = isMobile ? 3 : 4;
-  const dotCount = isMobile ? 8 : 10;
-  
-  // Create crypto logos
-  for (let i = 0; i < cryptoLogoCount; i++) {
-    const element = document.createElement('div');
-    element.className = 'crypto-logo';
-    element.textContent = cryptoLogos[i % cryptoLogos.length];
-    element.style.left = Math.random() * 90 + 5 + '%';
-    element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
-    element.style.fontSize = (Math.random() * 8 + 14) + 'px';
-    cryptoBackground.appendChild(element);
-  }
-  
-  // Create exchange logos
-  for (let i = 0; i < exchangeLogoCount; i++) {
-    const element = document.createElement('div');
-    element.className = 'exchange-logo';
-    element.textContent = exchangeLogos[i % exchangeLogos.length];
-    element.style.top = Math.random() * 80 + 10 + '%';
-    element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
-    cryptoBackground.appendChild(element);
-  }
-  
-  // Create trading bots
-  for (let i = 0; i < botCount; i++) {
-    const bot = document.createElement('div');
-    bot.className = 'trading-bot';
-    bot.style.left = Math.random() * 80 + 10 + '%';
-    bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
-    cryptoBackground.appendChild(bot);
-  }
-  
-  // Create price lines
-  for (let i = 0; i < lineCount; i++) {
-    const line = document.createElement('div');
-    line.className = 'price-line';
-    line.style.top = Math.random() * 80 + 10 + '%';
-    line.style.width = (Math.random() * 200 + 100) + 'px';
-    line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
-    cryptoBackground.appendChild(line);
-  }
-
-  // Create crypto charts
-  for (let i = 0; i < chartCount; i++) {
-    const chart = document.createElement('div');
-    chart.className = 'crypto-chart';
-    chart.style.left = Math.random() * 80 + 10 + '%';
-    chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
-    cryptoBackground.appendChild(chart);
-  }
-
-  // Create pulse dots
-  for (let i = 0; i < dotCount; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'pulse-dot';
-    dot.style.left = Math.random() * 95 + '%';
-    dot.style.top = Math.random() * 95 + '%';
-    dot.style.animationDelay = (i * 0.3) + 's';
-    cryptoBackground.appendChild(dot);
-  }
-});
-
-// Copy wallet functionality
-document.addEventListener('DOMContentLoaded', function(){
+  // Copy wallet functionality
   var btn = document.getElementById('copyWalletBtn');
   var el = document.getElementById('globalWallet');
   if(btn && el){
@@ -1382,19 +544,17 @@ document.addEventListener('DOMContentLoaded', function(){
 <script defer src="assets/js/i18n.js"></script>
 <script defer src="assets/js/language-switcher.js"></script>
 <script defer src="app_supabase.js"></script>
+<script defer src="assets/js/guard.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', async function(){
   try{
     const sb = window._supabase;
     if(!sb) return;
-    const cta = document.querySelector('.nav-cta');
     const { data } = await sb.auth.getUser();
     const isAuth = !!(data && data.user);
-    if(isAuth && cta){
-      cta.innerHTML = '<button id="nav-logout" class="btn" style="background:var(--error);border-color:var(--error)" data-i18n="nav_logout">Выйти</button>';
-      const btn = document.getElementById('nav-logout');
-      if(btn){ btn.addEventListener('click', function(e){ e.preventDefault(); if(window.logout){ logout(); } }); }
+    if(isAuth){
+      // Update navigation for authenticated users
     }
   }catch(_){}
 });
@@ -1464,8 +624,5 @@ async function getUser() {
   }
 }
 </script>
-
-<script defer src="assets/js/guard.js"></script>
-
 </body>
 </html>
