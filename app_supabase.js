@@ -103,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - УПРОЩЕННАЯ ВЕРСИЯ БЕЗ КАРУСЕЛИ
+  // УДАЛЕНА ФУНКЦИЯ ИЗМЕНЕНИЯ ОТОБРАЖЕНИЯ КАРТОЧЕК УРОВНЕЙ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -156,35 +156,8 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== УПРОЩЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
-      // УДАЛЕНА ВСЯ ЛОГИКА КАРУСЕЛИ, ОСТАВЛЕНА ТОЛЬКО БАЗОВАЯ ФУНКЦИОНАЛЬНОСТЬ
-      try {
-        const currentLevelName = info.level_name?.toLowerCase().replace(' ', '');
-        console.log('Current active level:', currentLevelName);
-        
-        // Просто обновляем статус карточек без какой-либо анимации или карусели
-        const levelCards = document.querySelectorAll('.level-card');
-        if (levelCards.length) {
-          levelCards.forEach(card => {
-            const cardLevel = card.getAttribute('data-level');
-            const statusElement = card.querySelector('.level-status');
-            
-            if (cardLevel === currentLevelName) {
-              card.classList.add('active');
-              if (statusElement) {
-                statusElement.textContent = 'Активен';
-              }
-            } else {
-              card.classList.remove('active');
-              if (statusElement) {
-                statusElement.textContent = '';
-              }
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error updating level cards:', error);
-      }
+      // УДАЛЕН БЛОК ИЗМЕНЕНИЯ КАРТОЧЕК УРОВНЕЙ
+      // Карточки теперь всегда остаются в исходном состоянии
 
     } catch(e) { 
       console.error('[LC] refreshLevelInfo', e); 
