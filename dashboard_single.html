@@ -352,6 +352,7 @@
     border-radius: 10px;
     font-size: 9px;
     font-weight: bold;
+    display: none;
   }
 
   /* ОБНОВЛЕННЫЕ ИКОНКИ */
@@ -395,6 +396,127 @@
   .level-cap-carousel {
     font-size: 11px;
     color: rgba(255,255,255,0.9);
+  }
+
+  /* === ОБНОВЛЕННЫЕ СТИЛИ ДЛЯ КАРТОЧЕК УРОВНЕЙ === */
+
+  /* Убираем все визуальные изменения для активного состояния */
+  .level-card-carousel.active,
+  .level-card-carousel {
+      /* Одинаковые стили для всех карточек */
+      flex: 0 0 auto;
+      width: 280px;
+      height: 135px;
+      margin: 0 8px;
+      border-radius: var(--radius);
+      position: relative;
+      overflow: hidden;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      transform: none !important;
+      filter: none !important;
+      border: none !important;
+      box-shadow: none !important;
+  }
+
+  /* Отключаем все изменения фона и иконок */
+  .level-card-carousel.active .level-bg,
+  .level-card-carousel .level-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 1 !important;
+      filter: none !important;
+  }
+
+  .level-card-carousel.active .level-top-icon,
+  .level-card-carousel .level-top-icon {
+      position: absolute;
+      top: 50%;
+      left: 70%;
+      transform: translate(-50%, -50%);
+      width: 130px;
+      height: 130px;
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 2;
+      opacity: 1 !important;
+  }
+
+  /* ОСТАВЛЯЕМ ТОЛЬКО СТАТУС АКТИВНОСТИ */
+  .level-card-carousel .level-status {
+      display: none !important;
+  }
+
+  .level-card-carousel.active .level-status {
+      display: block !important;
+      background: rgba(34, 197, 94, 0.9);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: bold;
+  }
+
+  /* Фиксируем остальные элементы */
+  .level-card-carousel.active .level-vip-badge,
+  .level-card-carousel .level-vip-badge {
+      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: bold;
+      opacity: 1 !important;
+  }
+
+  .level-card-carousel.active .level-content,
+  .level-card-carousel .level-content {
+      text-align: left;
+      position: absolute;
+      left: 12px;
+      top: 40px;
+      opacity: 1 !important;
+  }
+
+  .level-card-carousel.active .level-name-carousel,
+  .level-card-carousel .level-name-carousel {
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 4px;
+      text-shadow: 0 0 5px rgba(0,0,0,0.8);
+  }
+
+  .level-card-carousel.active .level-percentage-carousel,
+  .level-card-carousel .level-percentage-carousel {
+      font-size: 20px;
+      font-weight: 900;
+      color: white;
+      text-shadow: 0 0 5px rgba(0,0,0,0.8);
+      margin-bottom: 4px;
+  }
+
+  .level-card-carousel.active .level-cap-carousel,
+  .level-card-carousel .level-cap-carousel {
+      font-size: 11px;
+      color: rgba(255,255,255,0.9);
+  }
+
+  /* Убираем любые переходы и анимации */
+  .level-card-carousel {
+      transition: none !important;
+      animation: none !important;
+  }
+
+  .level-card-carousel:hover {
+      transform: none !important;
   }
 
   /* Стили для разных уровней */
@@ -1513,6 +1635,67 @@ function showNotification(message) {
   }
 }
 
+// Функция для определения и отображения активного уровня
+function updateActiveLevel() {
+  const balanceElement = document.querySelector('[data-balance]');
+  if (!balanceElement) return;
+
+  const balanceText = balanceElement.textContent;
+  const balance = parseFloat(balanceText.replace('$', '').replace(',', ''));
+  
+  if (isNaN(balance)) return;
+
+  // Определение текущего уровня на основе баланса
+  let currentLevel = 'starter';
+  
+  if (balance >= 2000) {
+    currentLevel = 'titanium';
+  } else if (balance >= 500) {
+    currentLevel = 'proelite';
+  } else if (balance >= 100) {
+    currentLevel = 'advanced';
+  }
+
+  // Снимаем активный статус со всех карточек
+  document.querySelectorAll('.level-card-carousel').forEach(card => {
+    card.classList.remove('active');
+    const status = card.querySelector('.level-status');
+    if (status) {
+      status.style.display = 'none';
+    }
+  });
+
+  // Добавляем активный статус только на правильную карточку
+  const activeCard = document.querySelector(`[data-level="${currentLevel}"]`);
+  if (activeCard) {
+    activeCard.classList.add('active');
+    const status = activeCard.querySelector('.level-status');
+    if (status) {
+      status.style.display = 'block';
+    }
+  }
+}
+
+// Наблюдатель за изменениями баланса
+function observeBalanceChanges() {
+  const balanceElement = document.querySelector('[data-balance]');
+  if (!balanceElement) return;
+
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.type === 'characterData' || mutation.type === 'childList') {
+        updateActiveLevel();
+      }
+    });
+  });
+
+  observer.observe(balanceElement, {
+    characterData: true,
+    childList: true,
+    subtree: true
+  });
+}
+
 // Карусель карточек уровней с улучшенным свайпом
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
@@ -1525,27 +1708,21 @@ function initCarousel() {
   let currentX = 0;
   let isSwiping = false;
 
-function updateCarousel() {
-  const offset = -currentIndex * (cardWidth + margin);
-  carouselWrapper.style.transform = `translateX(${offset}px)`;
-  
-  // УДАЛЕНО: управление классом active для карточек
-  // cards.forEach((card, index) => {
-  //   card.classList.toggle('active', index === currentIndex);
-  // });
-  
-  // ОСТАВЛЕНО: управление активностью точек навигации
-  dots.forEach((dot, index) => {
-    dot.classList.toggle('active', index === currentIndex);
-  });
-}
+  function updateCarousel() {
+    const offset = -currentIndex * (cardWidth + margin);
+    carouselWrapper.style.transform = `translateX(${offset}px)`;
+    
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentIndex);
+    });
+  }
 
-dots.forEach(dot => {
-  dot.addEventListener('click', () => {
-    currentIndex = parseInt(dot.getAttribute('data-index'));
-    updateCarousel();
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      currentIndex = parseInt(dot.getAttribute('data-index'));
+      updateCarousel();
+    });
   });
-});
 
   carouselWrapper.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
@@ -1750,10 +1927,16 @@ document.addEventListener('DOMContentLoaded', function() {
   initCarousel();
   initModals();
   
+  // Добавляем вызовы новых функций
+  updateActiveLevel();
+  observeBalanceChanges();
+  
   // Инициализация дашборда
   if (window.LC && typeof window.LC.initDashboard === 'function') {
     setTimeout(() => {
       window.LC.initDashboard();
+      // Дополнительно обновляем активный уровень после инициализации дашборда
+      setTimeout(updateActiveLevel, 1000);
     }, 500);
   }
 });
