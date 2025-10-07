@@ -103,7 +103,7 @@
     }
   };
 
-  // УПРОЩЕННАЯ ФУНКЦИЯ - ТОЛЬКО ОТОБРАЖЕНИЕ СТАТУСА "АКТИВЕН"
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПЕРЕМЕЩАЮТСЯ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -156,7 +156,7 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== УПРОЩЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
+      // ===== ИСПРАВЛЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
       try {
         const levelCards = document.querySelectorAll('.level-card-carousel');
         console.log('Found level cards:', levelCards.length);
@@ -170,10 +170,8 @@
             const cardLevel = card.getAttribute('data-level');
             const statusElement = card.querySelector('.level-status');
             
-            // ВСЕГДА ПОКАЗЫВАЕМ ВСЕ КАРТОЧКИ - НИКОГДА НЕ СКРЫВАЕМ
-            card.style.display = 'block';
-            card.style.visibility = 'visible';
-            card.style.opacity = '1';
+            // ВАЖНО: НИКОГДА не меняем display, visibility, opacity или порядок карточек
+            // Карточки всегда должны оставаться в своем исходном состоянии и порядке
             
             // Убираем активный класс у всех
             card.classList.remove('active');
@@ -519,6 +517,7 @@
       let gen1Total = 0;
       let gen2Total = 0;
       let gen3Total = 0;
+      let dataFound = false;
 
       // Способ 1: Пробуем получить данные через my_ref_income_summary
       try {
@@ -530,10 +529,12 @@
           const row = Array.isArray(summaryData) ? summaryData[0] : summaryData;
           
           if (row) {
-            gen1Total = Math.round((row.lvl1_usdt || row.gen1 || 0) * 100);
-            gen2Total = Math.round((row.lvl2_usdt || row.gen2 || 0) * 100);
-            gen3Total = Math.round((row.lvl3_usdt || row.gen3 || 0) * 100);
+            // ИСПРАВЛЕНО: Используем правильные имена полей
+            gen1Total = Math.round((row.lvl1_usdt || 0) * 100);
+            gen2Total = Math.round((row.lvl2_usdt || 0) * 100);
+            gen3Total = Math.round((row.lvl3_usdt || 0) * 100);
             
+            dataFound = true;
             console.log('✅ Данные из my_ref_income_summary обработаны:', {
               gen1: gen1Total/100,
               gen2: gen2Total/100, 
@@ -545,8 +546,8 @@
         console.warn('❌ my_ref_income_summary не сработал:', summaryErr);
       }
 
-      // Способ 2: Если первый способ не дал данных, пробуем get_referral_earnings
-      if (gen1Total === 0 && gen2Total === 0 && gen3Total === 0) {
+      // Способ 2: Если первый способ не дал ВООБЩЕ данных, пробуем get_referral_earnings
+      if (!dataFound) {
         try {
           const { data: refData, error: refError } = await sb.rpc('get_referral_earnings');
           
@@ -556,8 +557,9 @@
             const earnings = Array.isArray(refData) ? refData : (refData ? [refData] : []);
             
             earnings.forEach(earning => {
-              const generation = earning.generation || earning.gen || earning.level;
-              const totalCents = earning.total_cents || earning.amount_cents || 0;
+              // ИСПРАВЛЕНО: Используем правильные имена полей
+              const generation = earning.generation;
+              const totalCents = earning.total_cents || 0;
               
               switch(generation) {
                 case 1:
@@ -572,6 +574,7 @@
               }
             });
             
+            dataFound = true;
             console.log('✅ Данные из get_referral_earnings обработаны:', {
               gen1: gen1Total/100,
               gen2: gen2Total/100,
@@ -584,7 +587,7 @@
       }
 
       // Способ 3: Если все еще нет данных, пробуем ref_income_totals
-      if (gen1Total === 0 && gen2Total === 0 && gen3Total === 0) {
+      if (!dataFound) {
         try {
           const { data: totalsData, error: totalsError } = await sb.rpc('ref_income_totals');
           
@@ -594,8 +597,9 @@
             const totalsArray = Array.isArray(totalsData) ? totalsData : (totalsData ? [totalsData] : []);
             
             totalsArray.forEach(item => {
-              const level = item.lvl || item.level || item.generation;
-              const amountUsd = item.amount_usd || item.reward_usdt || 0;
+              // ИСПРАВЛЕНО: Правильная обработка данных
+              const level = item.lvl;
+              const amountUsd = item.amount_usd || 0;
               
               switch(level) {
                 case 1:
@@ -610,6 +614,7 @@
               }
             });
             
+            dataFound = true;
             console.log('✅ Данные из ref_income_totals обработаны:', {
               gen1: gen1Total/100,
               gen2: gen2Total/100,
@@ -622,7 +627,7 @@
       }
 
       // Способ 4: Прямой запрос к таблице referral_rewards (если другие способы не сработали)
-      if (gen1Total === 0 && gen2Total === 0 && gen3Total === 0) {
+      if (!dataFound) {
         try {
           const { data: rewardsData, error: rewardsError } = await sb
             .from('referral_rewards')
@@ -649,6 +654,7 @@
               }
             });
             
+            dataFound = true;
             console.log('✅ Данные из referral_rewards обработаны:', {
               gen1: gen1Total/100,
               gen2: gen2Total/100,
@@ -660,7 +666,7 @@
         }
       }
 
-      // Обновляем интерфейс
+      // Обновляем интерфейс ДАЖЕ ЕСЛИ ДАННЫЕ = 0
       const set = (sel, val) => { 
         const el = $(sel); 
         if (el) el.textContent = val; 
@@ -1078,7 +1084,7 @@
         
         return { 
           ok: true, 
-          message: 'Заявка на вывод создана и отправлена на обработку администратору',
+          message = 'Заявка на вывод создана и отправлена на обработку администратору',
           id: directData.id 
         };
       }
