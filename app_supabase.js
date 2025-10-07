@@ -108,61 +108,13 @@
     try {
       const info = await LC.getLevelInfo(); 
       if (!info) return;
-
+      
       console.log('Refreshing level info:', info);
-
+      
       const set = (sel, val) => { 
         const el = $(sel); 
         if (el) el.textContent = String(val); 
       };
-
-      const perView = pickNum(info.reward_per_view_cents)/100;
-      const daily   = pickNum(info.daily_reward_cents)/100;
-      const base    = pickNum(info.base_amount_cents)/100;
-      const rate    = pickNum(info.level_percent);
-
-      set('[data-level-name]', info.level_name ?? '');
-      set('[data-views-left]', info.views_left_today ?? 0);
-      set('[data-reward-per-view]', `${perView.toFixed(2)} USDT`);
-      set('[data-daily-reward]', `${daily.toFixed(2)} USDT`);
-      set('[data-level-base]', `$${base.toFixed(2)}`);
-      set('[data-level-percent]', `${rate.toFixed(2)}%`);
-
-      const badge = $('#perViewBadge'); 
-      if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
-
-      const levelEl = $('[data-level]');
-      if (levelEl) levelEl.textContent = info.level_name || '—';
-
-      const rateEl = $('[data-rate]');
-      if (rateEl) rateEl.textContent = `${rate.toFixed(2)}%`;
-
-      const capEl = $('[data-cap]');
-      if (capEl) capEl.textContent = `$${base.toFixed(2)}`;
-
-      const refsEl = $('[data-refs]');
-      if (refsEl && info.total_referrals !== undefined) {
-        refsEl.textContent = info.total_referrals;
-      }
-
-      const baseCapEl = $('#baseCapCell');
-      if (baseCapEl) baseCapEl.textContent = `$${base.toFixed(2)}`;
-
-      if (info.next_level_goal) {
-        const nextTargetEl = $('#nextTargetCell');
-        if (nextTargetEl) nextTargetEl.textContent = info.next_level_goal;
-      } else {
-        const nextTargetEl = $('#nextTargetCell');
-        if (nextTargetEl) nextTargetEl.textContent = '—';
-      }
-
-      // ===== УДАЛЕН ПРОБЛЕМНЫЙ КОД ОБНОВЛЕНИЯ КАРТОЧЕК УРОВНЕЙ ========================
-      // Карточки уровней теперь остаются в своем исходном состоянии и не изменяются
-
-    } catch(e) { 
-      console.error('[LC] refreshLevelInfo', e); 
-    }
-  };
 
       const perView = pickNum(info.reward_per_view_cents)/100;
       const daily   = pickNum(info.daily_reward_cents)/100;
