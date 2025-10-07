@@ -305,11 +305,6 @@
     overflow: hidden;
     display: block !important;
     visibility: visible !important;
-    opacity: 1 !important;
-    /* УБИРАЕМ ВСЕ АНИМАЦИИ И ПЕРЕХОДЫ */
-    transition: none !important;
-    animation: none !important;
-    filter: none !important;
   }
 
   .level-bg {
@@ -320,11 +315,6 @@
     height: 100%;
     background-size: cover;
     background-position: center;
-    /* УБИРАЕМ ВСЕ ЭФФЕКТЫ */
-    transition: none !important;
-    animation: none !important;
-    filter: none !important;
-    opacity: 1 !important;
   }
 
   .level-overlay {
@@ -338,9 +328,6 @@
     flex-direction: column;
     justify-content: space-between;
     padding: 12px;
-    /* УБИРАЕМ ВСЕ ЭФФЕКТЫ */
-    transition: none !important;
-    animation: none !important;
   }
 
   .level-header {
@@ -359,7 +346,12 @@
   }
 
   .level-status {
-    display: none !important; /* ВСЕГДА СКРЫВАЕМ СТАТУС */
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: bold;
   }
 
   /* ОБНОВЛЕННЫЕ ИКОНКИ */
@@ -374,10 +366,6 @@
     background-position: center;
     background-repeat: no-repeat;
     z-index: 2;
-    /* УБИРАЕМ ВСЕ ЭФФЕКТЫ */
-    transition: none !important;
-    animation: none !important;
-    opacity: 1 !important;
   }
 
   /* ИНФОРМАЦИЯ ПЕРЕНЕСЕНА В ЛЕВЫЙ УГОЛ */
@@ -386,9 +374,6 @@
     position: absolute;
     left: 12px;
     top: 40px;
-    /* УБИРАЕМ ВСЕ ЭФФЕКТЫ */
-    transition: none !important;
-    animation: none !important;
   }
 
   .level-name-carousel {
@@ -412,7 +397,7 @@
     color: rgba(255,255,255,0.9);
   }
 
-  /* Стили для разных уровней - УБИРАЕМ ВСЕ ЭФФЕКТЫ АКТИВАЦИИ */
+  /* Стили для разных уровней */
   .level-card-carousel[data-level="starter"] .level-bg { 
     background-image: url('assets/rotator/card-1.png'); 
   }
@@ -439,17 +424,6 @@
   }
   .level-card-carousel[data-level="titanium"] .level-top-icon { 
     background-image: url('assets/rotator/card-icon4.png'); 
-  }
-
-  /* УБИРАЕМ ВСЕ КЛАССЫ АКТИВАЦИИ И ЭФФЕКТЫ */
-  .level-card-carousel.active,
-  .level-card-carousel.activated,
-  .level-card-carousel.current,
-  .level-card-carousel.current-level {
-    /* НИКАКИХ ИЗМЕНЕНИЙ ПРИ АКТИВАЦИИ */
-    opacity: 1 !important;
-    filter: none !important;
-    transform: none !important;
   }
 
   /* Кнопки навигации карусели */
@@ -1539,9 +1513,10 @@ function showNotification(message) {
   }
 }
 
-// УПРОЩЕННАЯ карусель карточек уровней БЕЗ ИЗМЕНЕНИЙ ВНЕШНЕГО ВИДА
+// Карусель карточек уровней с улучшенным свайпом
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
+  const cards = document.querySelectorAll('.level-card-carousel');
   const dots = document.querySelectorAll('.carousel-dot');
   let currentIndex = 0;
   const cardWidth = 280;
@@ -1554,39 +1529,14 @@ function initCarousel() {
     const offset = -currentIndex * (cardWidth + margin);
     carouselWrapper.style.transform = `translateX(${offset}px)`;
     
+    cards.forEach((card, index) => {
+      card.classList.toggle('active', index === currentIndex);
+    });
+    
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === currentIndex);
     });
   }
-
-  // ЖЕСТКАЯ БЛОКИРОВКА ЛЮБЫХ ИЗМЕНЕНИЙ КАРТОЧЕК
-  const cards = document.querySelectorAll('.level-card-carousel');
-  cards.forEach(card => {
-    // Сохраняем исходное состояние
-    const originalHTML = card.innerHTML;
-    const originalStyle = card.getAttribute('style') || '';
-    const originalClasses = card.className;
-    
-    // Блокируем любые изменения
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.type === 'attributes') {
-          card.setAttribute('style', originalStyle);
-          card.setAttribute('class', originalClasses);
-        }
-        if (mutation.type === 'childList') {
-          card.innerHTML = originalHTML;
-        }
-      });
-    });
-    
-    observer.observe(card, {
-      attributes: true,
-      attributeFilter: ['style', 'class'],
-      childList: true,
-      subtree: true
-    });
-  });
 
   dots.forEach(dot => {
     dot.addEventListener('click', () => {
@@ -1595,7 +1545,6 @@ function initCarousel() {
     });
   });
 
-  // Остальной код свайпа
   carouselWrapper.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
     isSwiping = true;
