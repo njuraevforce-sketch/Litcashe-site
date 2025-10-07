@@ -398,125 +398,14 @@
     color: rgba(255,255,255,0.9);
   }
 
-  /* === ОБНОВЛЕННЫЕ СТИЛИ ДЛЯ КАРТОЧЕК УРОВНЕЙ === */
-
-  /* Убираем все визуальные изменения для активного состояния */
-  .level-card-carousel.active,
-  .level-card-carousel {
-      /* Одинаковые стили для всех карточек */
-      flex: 0 0 auto;
-      width: 280px;
-      height: 135px;
-      margin: 0 8px;
-      border-radius: var(--radius);
-      position: relative;
-      overflow: hidden;
-      display: block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-      transform: none !important;
-      filter: none !important;
-      border: none !important;
-      box-shadow: none !important;
-  }
-
-  /* Отключаем все изменения фона и иконок */
-  .level-card-carousel.active .level-bg,
-  .level-card-carousel .level-bg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-size: cover;
-      background-position: center;
-      opacity: 1 !important;
-      filter: none !important;
-  }
-
-  .level-card-carousel.active .level-top-icon,
-  .level-card-carousel .level-top-icon {
-      position: absolute;
-      top: 50%;
-      left: 70%;
-      transform: translate(-50%, -50%);
-      width: 130px;
-      height: 130px;
-      background-size: contain;
-      background-position: center;
-      background-repeat: no-repeat;
-      z-index: 2;
-      opacity: 1 !important;
-  }
-
-  /* ОСТАВЛЯЕМ ТОЛЬКО СТАТУС АКТИВНОСТИ */
+  /* УБРАНЫ ВСЕ ВИЗУАЛЬНЫЕ ИЗМЕНЕНИЯ ПРИ АКТИВНОСТИ */
+  /* Единственное изменение - отображение статуса */
   .level-card-carousel .level-status {
-      display: none !important;
+    display: none !important;
   }
 
   .level-card-carousel.active .level-status {
-      display: block !important;
-      background: rgba(34, 197, 94, 0.9);
-      color: white;
-      padding: 3px 8px;
-      border-radius: 10px;
-      font-size: 9px;
-      font-weight: bold;
-  }
-
-  /* Фиксируем остальные элементы */
-  .level-card-carousel.active .level-vip-badge,
-  .level-card-carousel .level-vip-badge {
-      background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-      color: white;
-      padding: 3px 8px;
-      border-radius: 10px;
-      font-size: 9px;
-      font-weight: bold;
-      opacity: 1 !important;
-  }
-
-  .level-card-carousel.active .level-content,
-  .level-card-carousel .level-content {
-      text-align: left;
-      position: absolute;
-      left: 12px;
-      top: 40px;
-      opacity: 1 !important;
-  }
-
-  .level-card-carousel.active .level-name-carousel,
-  .level-card-carousel .level-name-carousel {
-      font-size: 14px;
-      font-weight: bold;
-      color: white;
-      margin-bottom: 4px;
-      text-shadow: 0 0 5px rgba(0,0,0,0.8);
-  }
-
-  .level-card-carousel.active .level-percentage-carousel,
-  .level-card-carousel .level-percentage-carousel {
-      font-size: 20px;
-      font-weight: 900;
-      color: white;
-      text-shadow: 0 0 5px rgba(0,0,0,0.8);
-      margin-bottom: 4px;
-  }
-
-  .level-card-carousel.active .level-cap-carousel,
-  .level-card-carousel .level-cap-carousel {
-      font-size: 11px;
-      color: rgba(255,255,255,0.9);
-  }
-
-  /* Убираем любые переходы и анимации */
-  .level-card-carousel {
-      transition: none !important;
-      animation: none !important;
-  }
-
-  .level-card-carousel:hover {
-      transform: none !important;
+    display: block !important;
   }
 
   /* Стили для разных уровней */
@@ -1920,9 +1809,6 @@ document.addEventListener('DOMContentLoaded', function() {
       showNotification('Ссылка скопирована в буфер обмена');
     });
   }
-  
-  // УДАЛЕНО: конфликтующий код переключателя языка
-  // Теперь переключатель управляется language-switcher.js
   
   initCarousel();
   initModals();
