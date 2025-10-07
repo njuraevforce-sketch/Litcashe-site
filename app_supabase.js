@@ -1590,4 +1590,3 @@
   // Экспортируем объект
   window.LC = LC;
 })();
-[file content end]
