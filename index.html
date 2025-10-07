@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-
+  
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#F5C518">
+  <meta name="theme-color" content="#C8D8C8">
 
   <!-- iOS -->
   <link rel="apple-touch-icon" href="/icons/litcash-180.png">
@@ -42,7 +42,7 @@
     --warning: #f59e0b;
     --error: #ef4444;
     --bg: #ffffff;
-    --bg-gradient: linear-gradient(135deg, #f0fff0 0%, #e0ffe0 100%);
+    --bg-gradient: linear-gradient(135deg, #d8e8d8 0%, #c8d8c8 100%);
     --bg-card: #ffffff;
     --text: #1a1a1a;
     --text-secondary: #64748b;
@@ -227,101 +227,106 @@
   .lang-flag.in { background: linear-gradient(to bottom, #ff9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%); }
   .lang-flag.pl { background: linear-gradient(to bottom, #ffffff 50%, #dc143c 50%); }
 
-  /* Верхнее меню */
-  .top-menu {
-    display: flex;
-    justify-content: space-around;
-    background-color: var(--bg);
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    white-space: nowrap;
-    width: 100%;
-  }
-
-  .menu-item {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 12px;
-    min-width: 60px;
-    padding: 0 5px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-  }
-
-  .menu-item.active {
-    color: var(--primary);
-  }
-
-  .menu-item i {
-    display: block;
-    font-size: 20px;
-    margin-bottom: 4px;
-  }
-
   /* Основной контент */
   .main-content {
     flex: 1;
-    padding-bottom: 70px;
+    padding-bottom: 20px;
     width: 100%;
   }
 
+  /* Карточки */
+  .card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+
+  .card h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   /* Hero секция */
-  .hero-section {
+  .hero {
     padding: 20px 0;
+    text-align: center;
   }
 
   .hero-badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px;
     background: rgba(245, 197, 24, 0.1);
     color: var(--primary);
-    padding: 6px 12px;
-    border-radius: 20px;
+    border-radius: 14px;
     font-size: 12px;
     font-weight: 600;
-    margin-bottom: 15px;
     border: 1px solid rgba(245, 197, 24, 0.2);
+    margin-bottom: 15px;
   }
 
   .hero-title {
     font-size: 24px;
     font-weight: bold;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     color: var(--text);
     line-height: 1.3;
   }
 
-  .hero-description {
-    color: var(--text-secondary);
-    font-size: 14px;
-    margin-bottom: 25px;
-    line-height: 1.5;
-  }
-
   .hero-buttons {
     display: flex;
-    gap: 12px;
-    margin-bottom: 25px;
+    gap: 10px;
+    margin: 20px 0;
+    justify-content: center;
   }
 
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 25px;
+  }
+
+  .hero-stat {
+    text-align: center;
+    padding: 15px 10px;
+  }
+
+  .hero-stat .number {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: var(--primary);
+  }
+
+  /* Кнопки */
   .btn {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-    color: #1a1500;
-    border: none;
-    border-radius: 20px;
-    padding: 12px 20px;
-    cursor: pointer;
-    font-weight: 600;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    flex: 1;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(245, 197, 24, 0.3);
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+    height: 44px;
+    padding: 0 20px;
+    border-radius: var(--radius);
+    border: none;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: #1a1500;
+    font-weight: 600;
     text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(245, 197, 24, 0.3);
   }
 
   .btn:hover {
@@ -330,106 +335,39 @@
     box-shadow: 0 4px 12px rgba(245, 197, 24, 0.4);
   }
 
-  .btn-outline {
-    background: transparent;
-    border: 1px solid var(--primary);
-    color: var(--primary);
-    box-shadow: none;
-    text-shadow: none;
-  }
-
-  .btn-outline:hover {
-    background: rgba(245, 197, 24, 0.1);
-  }
-
-  /* Статистика */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 25px;
-  }
-
-  .stat-card {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    padding: 15px 10px;
-    text-align: center;
-    box-shadow: var(--shadow);
+  .btn.secondary {
+    background: var(--bg);
     border: 1px solid var(--border);
+    color: var(--text);
+    box-shadow: none;
   }
 
-  .stat-value {
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--primary);
-    margin-bottom: 5px;
+  .btn.secondary:hover {
+    background: rgba(245, 197, 24, 0.05);
+    border-color: var(--primary);
   }
 
-  .stat-label {
-    font-size: 11px;
-    color: var(--text-secondary);
-  }
-
-  /* Карточки функций */
-  .features-grid {
+  /* Сетка */
+  .grid {
     display: grid;
     gap: 15px;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
+    width: 100%;
   }
 
-  .feature-card {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
+  .grid-3 {
+    grid-template-columns: 1fr;
   }
 
-  .feature-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .feature-icon {
-    width: 24px;
-    height: 24px;
-    background: var(--primary);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-  }
-
-  .feature-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--text);
-  }
-
-  .feature-description {
-    color: var(--text-secondary);
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
-  /* Видео секция */
-  .video-section {
-    margin-bottom: 25px;
-  }
-
+  /* Видео контейнер */
   .video-container {
     width: 100%;
     height: 200px;
-    background: #000;
     border-radius: var(--radius);
     overflow: hidden;
+    background: #000;
     margin-bottom: 15px;
+    border: 1px solid var(--border);
   }
 
   .video-container video {
@@ -439,51 +377,104 @@
     object-fit: cover;
   }
 
-  /* Нижний навбар */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: var(--bg);
+  /* Rotator */
+  .hero-rotator {
     display: flex;
-    justify-content: space-around;
-    padding: 10px 5px;
-    border-top: 1px solid var(--border);
-    z-index: 100;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
     width: 100%;
+    margin-top: 20px;
   }
 
-  .nav-item {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 11px;
-    text-decoration: none;
-    flex: 1;
-    padding: 5px;
-    transition: all 0.3s ease;
-  }
-
-  .nav-item.active {
-    color: var(--primary);
-  }
-
-  .nav-item i {
-    font-size: 18px;
-    display: block;
-    margin-bottom: 4px;
+  .rotator-img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: var(--radius);
+    transition: opacity 0.3s ease;
   }
 
   /* Утилиты */
+  .muted {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
   .text-center {
     text-align: center;
   }
 
+  .nav-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* Footer */
+  .footer {
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 15px 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
+  /* Contact FAB */
+  .contact-fab {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 8px 25px rgba(245, 197, 24, 0.4);
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+
+  .contact-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(245, 197, 24, 0.6);
+  }
+
+  .contact-fab svg {
+    width: 22px;
+    height: 22px;
+  }
+
   /* Адаптивность */
-  @media (max-width: 360px) {
+  @media (max-width: 480px) {
     .container {
-      padding: 8px;
+      padding: 0 10px;
+    }
+    
+    header {
+      padding: 10px 12px;
+    }
+    
+    .logo {
+      font-size: 16px;
+    }
+    
+    .nav-actions {
+      gap: 6px;
+    }
+    
+    .btn {
+      height: 36px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+    
+    .card {
+      padding: 15px;
     }
     
     .hero-title {
@@ -494,176 +485,209 @@
       flex-direction: column;
     }
     
-    .stats-grid {
+    .hero-buttons .btn {
+      width: 100%;
+    }
+    
+    .hero-stats {
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
     }
     
-    .stat-card {
-      padding: 12px 8px;
+    .hero-stat {
+      padding: 12px 6px;
     }
     
-    .stat-value {
+    .hero-stat .number {
       font-size: 16px;
+    }
+    
+    .video-container {
+      height: 180px;
+    }
+    
+    .contact-fab {
+      width: 45px;
+      height: 45px;
+      right: 15px;
+      bottom: 15px;
     }
   }
   </style>
 </head>
 
 <body>
-<!-- Верхняя часть -->
 <header>
   <div class="logo">
     <span data-i18n="brand_name">Litcash</span>
   </div>
   
-  <!-- Переключатель языка -->
-  <div class="language-switcher-header" id="languageSwitcher">
-    <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
-      <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
-              fill="none" stroke="currentColor" stroke-width="1.2"/>
-      </svg>
-      <span class="lang-code-header">RU</span>
-    </button>
-    
-    <div class="lang-dropdown-header" id="langDropdown">
-      <div class="lang-list">
-        <div class="lang-item active" data-lang="ru">
-          <span class="lang-flag ru"></span>
-          <span class="lang-name" data-i18n="lang_russian">Русский</span>
-          <span class="lang-code">RU</span>
-        </div>
-        <div class="lang-item" data-lang="en">
-          <span class="lang-flag en"></span>
-          <span class="lang-name" data-i18n="lang_english">English</span>
-          <span class="lang-code">EN</span>
-        </div>
-        <div class="lang-item" data-lang="cn">
-          <span class="lang-flag cn"></span>
-          <span class="lang-name" data-i18n="lang_chinese">中文</span>
-          <span class="lang-code">CN</span>
-        </div>
-        <div class="lang-item" data-lang="es">
-          <span class="lang-flag es"></span>
-          <span class="lang-name" data-i18n="lang_spanish">Español</span>
-          <span class="lang-code">ES</span>
-        </div>
-        <div class="lang-item" data-lang="fr">
-          <span class="lang-flag fr"></span>
-          <span class="lang-name" data-i18n="lang_french">Français</span>
-          <span class="lang-code">FR</span>
-        </div>
-        <div class="lang-item" data-lang="de">
-          <span class="lang-flag de"></span>
-          <span class="lang-name" data-i18n="lang_german">Deutsch</span>
-          <span class="lang-code">DE</span>
+  <div class="nav-actions">
+    <!-- Переключатель языка -->
+    <div class="language-switcher-header" id="languageSwitcher">
+      <button class="lang-btn-header" id="langBtn" aria-label="Выбор языка">
+        <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" 
+                fill="none" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+        <span class="lang-code-header">RU</span>
+      </button>
+      
+      <div class="lang-dropdown-header" id="langDropdown">
+        <div class="lang-list">
+          <div class="lang-item active" data-lang="ru">
+            <span class="lang-flag ru"></span>
+            <span class="lang-name">Русский</span>
+            <span class="lang-code">RU</span>
+          </div>
+          <div class="lang-item" data-lang="en">
+            <span class="lang-flag en"></span>
+            <span class="lang-name">English</span>
+            <span class="lang-code">EN</span>
+          </div>
+          <div class="lang-item" data-lang="cn">
+            <span class="lang-flag cn"></span>
+            <span class="lang-name">中文</span>
+            <span class="lang-code">CN</span>
+          </div>
+          <div class="lang-item" data-lang="es">
+            <span class="lang-flag es"></span>
+            <span class="lang-name">Español</span>
+            <span class="lang-code">ES</span>
+          </div>
+          <div class="lang-item" data-lang="fr">
+            <span class="lang-flag fr"></span>
+            <span class="lang-name">Français</span>
+            <span class="lang-code">FR</span>
+          </div>
+          <div class="lang-item" data-lang="de">
+            <span class="lang-flag de"></span>
+            <span class="lang-name">Deutsch</span>
+            <span class="lang-code">DE</span>
+          </div>
+          <div class="lang-item" data-lang="pt">
+            <span class="lang-flag pt"></span>
+            <span class="lang-name">Português</span>
+            <span class="lang-code">PT</span>
+          </div>
+          <div class="lang-item" data-lang="ar">
+            <span class="lang-flag ar"></span>
+            <span class="lang-name">العربية</span>
+            <span class="lang-code">AR</span>
+          </div>
+          <div class="lang-item" data-lang="ja">
+            <span class="lang-flag jp"></span>
+            <span class="lang-name">日本語</span>
+            <span class="lang-code">JA</span>
+          </div>
+          <div class="lang-item" data-lang="ko">
+            <span class="lang-flag kr"></span>
+            <span class="lang-name">한국어</span>
+            <span class="lang-code">KO</span>
+          </div>
+          <div class="lang-item" data-lang="tr">
+            <span class="lang-flag tr"></span>
+            <span class="lang-name">Türkçe</span>
+            <span class="lang-code">TR</span>
+          </div>
+          <div class="lang-item" data-lang="it">
+            <span class="lang-flag it"></span>
+            <span class="lang-name">Italiano</span>
+            <span class="lang-code">IT</span>
+          </div>
+          <div class="lang-item" data-lang="hi">
+            <span class="lang-flag in"></span>
+            <span class="lang-name">हिन्दी</span>
+            <span class="lang-code">HI</span>
+          </div>
+          <div class="lang-item" data-lang="pl">
+            <span class="lang-flag pl"></span>
+            <span class="lang-name">Polski</span>
+            <span class="lang-code">PL</span>
+          </div>
         </div>
       </div>
     </div>
+    
+    <a class="btn secondary" href="login_single.html" data-i18n="nav_login">Вход</a>
+    <a class="btn" href="register_single.html" data-i18n="nav_register">Регистрация</a>
   </div>
 </header>
 
-<!-- Верхнее меню -->
-<nav class="top-menu">
-  <a href="index.html" class="menu-item active">
-    <i>🏠</i> <span data-i18n="nav_home">Главная</span>
-  </a>
-  <a href="login_single.html" class="menu-item">
-    <i>🔑</i> <span data-i18n="nav_login">Вход</span>
-  </a>
-  <a href="register_single.html" class="menu-item">
-    <i>📝</i> <span data-i18n="nav_register">Регистрация</span>
-  </a>
-</nav>
-
-<!-- Основной контент -->
 <main class="main-content">
   <div class="container">
     <!-- Hero секция -->
-    <section class="hero-section">
+    <section class="hero">
       <div class="hero-badge" data-i18n="hero_badge">USDT • TRC20 • 13%/5%/1%</div>
       <h1 class="hero-title" data-i18n="hero_title">Заряжайся и побеждай! LITCASH-заработок, которому доверяют!</h1>
-      <p class="hero-description" data-i18n="hero_description">Инновационная платформа для пассивного заработка через просмотр рекламы и реферальную программу</p>
       
       <div class="hero-buttons">
-        <a class="btn" href="register_single.html" data-i18n="hero_start_button">Начать зарабатывать</a>
-        <a class="btn btn-outline" href="#features" data-i18n="hero_learn_button">Узнать больше</a>
+        <a class="btn" href="register_single.html" data-i18n="hero_start">Начать</a>
+        <a class="btn secondary" href="#how" data-i18n="hero_more">Подробнее</a>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="kpiUsers">128</div>
-          <div class="stat-label" data-i18n="stat_users">Активные пользователи</div>
+      <div class="hero-stats">
+        <div class="card hero-stat">
+          <div class="number" id="kpiUsers">128</div>
+          <div class="muted" data-i18n="hero_activeUsers">Активные пользователи</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="kpiPayouts">$504k</div>
-          <div class="stat-label" data-i18n="stat_payouts">Выплаты</div>
+        <div class="card hero-stat">
+          <div class="number" id="kpiPayouts">$504k</div>
+          <div class="muted" data-i18n="hero_payouts">Выплаты</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" id="kpiApr">~5%</div>
-          <div class="stat-label" data-i18n="stat_apr">Потенциальный APR</div>
+        <div class="card hero-stat">
+          <div class="number" id="kpiApr">~5%</div>
+          <div class="muted" data-i18n="hero_apr">Потенциальный APR</div>
         </div>
       </div>
     </section>
 
-    <!-- Функции -->
-    <section class="features-grid" id="features">
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-icon">1</div>
-          <div class="feature-title" data-i18n="feature1_title">Активация</div>
-        </div>
-        <p class="feature-description" data-i18n="feature1_description">Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.</p>
+    <!-- How it works -->
+    <section class="grid grid-3" id="how">
+      <div class="card">
+        <h2><span data-i18n="steps_activation">Активация</span></h2>
+        <p class="muted" data-i18n="steps_activationDesc">Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.</p>
       </div>
-      
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-icon">2</div>
-          <div class="feature-title" data-i18n="feature2_title">Просмотры</div>
-        </div>
-        <p class="feature-description" data-i18n="feature2_description">Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.</p>
+      <div class="card">
+        <h2><span data-i18n="steps_views">Просмотры</span></h2>
+        <p class="muted" data-i18n="steps_viewsDesc">Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.</p>
       </div>
-      
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-icon">3</div>
-          <div class="feature-title" data-i18n="feature3_title">Рефералы</div>
-        </div>
-        <p class="feature-description" data-i18n="feature3_description">Создай команду инвесторов — ты получаешь 13% / 5% / 1%.</p>
+      <div class="card">
+        <h2><span data-i18n="steps_referrals">Рефералы</span></h2>
+        <p class="muted" data-i18n="steps_referralsDesc">Создай команду инвесторов — ты получаешь 13% / 5% / 1%.</p>
       </div>
     </section>
 
-    <!-- Видео секция -->
-    <section class="video-section">
-      <div class="feature-card">
-        <div class="feature-header">
-          <div class="feature-icon">▶</div>
-          <div class="feature-title" data-i18n="video_title">Как это работает</div>
-        </div>
-        <div class="video-container">
-          <video id="heroVideo" controls playsinline>
-            <source src="/assets/hero.MP4" type="video/mp4"/>
-            <span data-i18n="video_not_supported">Ваш браузер не поддерживает видео тег.</span>
-          </video>
-        </div>
+    <!-- Video section -->
+    <section class="card">
+      <h2><span data-i18n="video_preview">Превью</span></h2>
+      <div class="video-container">
+        <video id="heroVideo" controls playsinline>
+          <source src="/assets/hero.MP4" type="video/mp4"/>
+        </video>
       </div>
+    </section>
+
+    <!-- Rotator section -->
+    <section class="card hero-rotator">
+      <img id="brandRotator" class="rotator-img" src="assets/rotator/lit-1.webp" alt="Lit Energy — бренд" loading="eager" decoding="async"/>
     </section>
   </div>
 </main>
 
-<!-- Нижний навбар -->
-<nav class="bottom-nav">
-  <a href="index.html" class="nav-item active">
-    <i>🏠</i> <span data-i18n="nav_home">Главная</span>
-  </a>
-  <a href="login_single.html" class="nav-item">
-    <i>🔑</i> <span data-i18n="nav_login">Вход</span>
-  </a>
-  <a href="register_single.html" class="nav-item">
-    <i>📝</i> <span data-i18n="nav_register">Регистрация</span>
-  </a>
-</nav>
+<footer class="footer">
+  <div class="container">
+    <span data-i18n="footer_copyright">© 2025 Litcash. Все права защищены.</span>
+  </div>
+</footer>
+
+<!-- Floating contact button -->
+<a class="contact-fab" href="https://t.me/litcash_investment" target="_blank" rel="noopener" aria-label="Связь с оператором в Telegram" title="Связь с оператором">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M21.6 3.2L2.8 10.4c-.9.34-.86 1.66.06 1.94l5.68 1.79a1 1 0 01.66.66l1.79 5.68c.28.92 1.6.96 1.94.06L21.6 3.2z" fill="currentColor"/>
+    <path d="M9.5 14.5l5.6-5.6" stroke="#ffffff" stroke-opacity=".9" stroke-width="1.7" stroke-linecap="round"/>
+  </svg>
+</a>
 
 <script>
 // Инициализация языкового переключателя
@@ -678,10 +702,12 @@ document.addEventListener('DOMContentLoaded', function() {
       langSwitcher.classList.toggle('active');
     });
     
+    // Закрытие при клике вне переключателя
     document.addEventListener('click', function() {
       langSwitcher.classList.remove('active');
     });
     
+    // Выбор языка
     const langItems = langDropdown.querySelectorAll('.lang-item');
     langItems.forEach(item => {
       item.addEventListener('click', function() {
@@ -695,7 +721,47 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// KPI auto-growth (сохранена существующая логика)
+// Hourly image rotator
+(function(){
+  const el = document.getElementById('brandRotator');
+  if(!el) return;
+
+  const IMAGES = [
+    'assets/rotator/lit-1.jpg',
+    'assets/rotator/lit-2.jpg',
+    'assets/rotator/lit-3.jpg',
+    'assets/rotator/lit-4.png',
+    'assets/rotator/lit-5.jpg'
+  ];
+
+  const HOUR = 60 * 70 * 1000;
+  function hourIndex(t = Date.now()){ return Math.floor(t / HOUR) % IMAGES.length; }
+
+  function swapTo(idx){
+    const next = IMAGES[idx % IMAGES.length];
+    if(el.dataset.src === next) return;
+    el.style.opacity = 0;
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      el.src = next; el.dataset.src = next; el.alt = 'Lit Energy — ' + (idx+1);
+      requestAnimationFrame(()=>{ el.style.opacity = 1; });
+    };
+    img.src = next;
+  }
+
+  IMAGES.forEach(src => { const i = new Image(); i.src = src; });
+
+  swapTo(hourIndex());
+
+  const msToNextHour = HOUR - (Date.now() % HOUR) + 50;
+  setTimeout(function tick(){
+    swapTo(hourIndex());
+    setInterval(() => swapTo(hourIndex()), HOUR);
+  }, msToNextHour);
+})();
+
+// KPI auto-growth
 (function(){
   const elUsers = document.getElementById('kpiUsers');
   const elPayouts = document.getElementById('kpiPayouts');
@@ -745,8 +811,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="supabaseConfig.js"></script>
-<script defer src="assets/js/i18n.js"></script>
-<script defer src="assets/js/language-switcher.js"></script>
 <script defer src="app_supabase.js"></script>
+
 </body>
 </html>
