@@ -103,18 +103,66 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - УДАЛЕН ПРОБЛЕМНЫЙ КОД КАРТОЧЕК
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПЕРЕМЕЩАЮТСЯ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
       if (!info) return;
-      
+
       console.log('Refreshing level info:', info);
-      
+
       const set = (sel, val) => { 
         const el = $(sel); 
         if (el) el.textContent = String(val); 
       };
+
+      const perView = pickNum(info.reward_per_view_cents)/100;
+      const daily   = pickNum(info.daily_reward_cents)/100;
+      const base    = pickNum(info.base_amount_cents)/100;
+      const rate    = pickNum(info.level_percent);
+
+      set('[data-level-name]', info.level_name ?? '');
+      set('[data-views-left]', info.views_left_today ?? 0);
+      set('[data-reward-per-view]', `${perView.toFixed(2)} USDT`);
+      set('[data-daily-reward]', `${daily.toFixed(2)} USDT`);
+      set('[data-level-base]', `$${base.toFixed(2)}`);
+      set('[data-level-percent]', `${rate.toFixed(2)}%`);
+
+      const badge = $('#perViewBadge'); 
+      if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
+
+      const levelEl = $('[data-level]');
+      if (levelEl) levelEl.textContent = info.level_name || '—';
+
+      const rateEl = $('[data-rate]');
+      if (rateEl) rateEl.textContent = `${rate.toFixed(2)}%`;
+
+      const capEl = $('[data-cap]');
+      if (capEl) capEl.textContent = `$${base.toFixed(2)}`;
+
+      const refsEl = $('[data-refs]');
+      if (refsEl && info.total_referrals !== undefined) {
+        refsEl.textContent = info.total_referrals;
+      }
+
+      const baseCapEl = $('#baseCapCell');
+      if (baseCapEl) baseCapEl.textContent = `$${base.toFixed(2)}`;
+
+      if (info.next_level_goal) {
+        const nextTargetEl = $('#nextTargetCell');
+        if (nextTargetEl) nextTargetEl.textContent = info.next_level_goal;
+      } else {
+        const nextTargetEl = $('#nextTargetCell');
+        if (nextTargetEl) nextTargetEl.textContent = '—';
+      }
+
+      // ===== УДАЛЕН ПРОБЛЕМНЫЙ КОД ОБНОВЛЕНИЯ КАРТОЧЕК УРОВНЕЙ ========================
+      // Карточки уровней теперь остаются в своем исходном состоянии и не изменяются
+
+    } catch(e) { 
+      console.error('[LC] refreshLevelInfo', e); 
+    }
+  };
 
       const perView = pickNum(info.reward_per_view_cents)/100;
       const daily   = pickNum(info.daily_reward_cents)/100;
@@ -156,8 +204,44 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== УДАЛЕН ПРОБЛЕМНЫЙ КОД ОБНОВЛЕНИЯ КАРТОЧЕК УРОВНЕЙ ========================
-      // Карточки уровней теперь остаются в своем исходном состоянии и не изменяются
+      // ===== ИСПРАВЛЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
+      try {
+        const levelCards = document.querySelectorAll('.level-card-carousel');
+        console.log('Found level cards:', levelCards.length);
+        
+        if (levelCards.length) {
+          const currentLevelName = info.level_name?.toLowerCase().replace(' ', '');
+          
+          console.log('Current active level:', currentLevelName);
+          
+          levelCards.forEach(card => {
+            const cardLevel = card.getAttribute('data-level');
+            const statusElement = card.querySelector('.level-status');
+            
+            // ВАЖНО: НИКОГДА не меняем display, visibility, opacity или порядок карточек
+            // Карточки всегда должны оставаться в своем исходном состоянии и порядке
+            
+            // Убираем активный класс у всех
+            card.classList.remove('active');
+            
+            // Добавляем активный класс только текущему уровню
+            if (cardLevel === currentLevelName) {
+              console.log('Setting active level:', cardLevel);
+              card.classList.add('active');
+              if (statusElement) {
+                statusElement.textContent = 'Активен';
+                statusElement.style.display = 'block';
+              }
+            } else {
+              if (statusElement) {
+                statusElement.style.display = 'none';
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error updating level cards:', error);
+      }
 
     } catch(e) { 
       console.error('[LC] refreshLevelInfo', e); 
