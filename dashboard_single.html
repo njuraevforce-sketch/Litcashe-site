@@ -1513,7 +1513,7 @@ function showNotification(message) {
   }
 }
 
-// Карусель карточек уровней с улучшенным свайпом
+// УПРОЩЕННАЯ карусель карточек уровней БЕЗ изменения внешнего вида карточек
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
   const cards = document.querySelectorAll('.level-card-carousel');
@@ -1529,9 +1529,8 @@ function initCarousel() {
     const offset = -currentIndex * (cardWidth + margin);
     carouselWrapper.style.transform = `translateX(${offset}px)`;
     
-    cards.forEach((card, index) => {
-      card.classList.toggle('active', index === currentIndex);
-    });
+    // ВАЖНО: УБИРАЕМ ВСЯКОЕ ДОБАВЛЕНИЕ КЛАССОВ К КАРТОЧКАМ
+    // Карточки должны оставаться в исходном состоянии
     
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === currentIndex);
