@@ -103,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПЕРЕМЕЩАЮТСЯ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПЕРЕМЕЩАЮТСЯ И НЕ ИЗМЕНЯЮТСЯ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -156,46 +156,9 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== ИСПРАВЛЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
-      try {
-        const levelCards = document.querySelectorAll('.level-card-carousel');
-        console.log('Found level cards:', levelCards.length);
-        
-        if (levelCards.length) {
-          const currentLevelName = info.level_name?.toLowerCase().replace(' ', '');
-          
-          console.log('Current active level:', currentLevelName);
-          
-          levelCards.forEach(card => {
-            const cardLevel = card.getAttribute('data-level');
-            const statusElement = card.querySelector('.level-status');
-            
-            // ВАЖНО: НИКОГДА не меняем display, visibility, opacity или порядок карточек
-            // Карточки всегда должны оставаться в своем исходном состоянии и порядке
-            
-            // Убираем активный класс у всех
-            card.classList.remove('active');
-            
-            // Добавляем активный класс только текущему уровню
-            if (cardLevel === currentLevelName) {
-              console.log('Setting active level:', cardLevel);
-              card.classList.add('active');
-              if (statusElement) {
-                statusElement.textContent = 'Активен';
-                statusElement.style.display = 'block';
-              }
-            } else {
-              // ВАЖНОЕ ИСПРАВЛЕНИЕ: НЕ СКРЫВАЕМ СТАТУС У НЕАКТИВНЫХ КАРТОЧЕК
-              // Это предотвращает исчезновение VIP бейджа и других элементов
-              if (statusElement && statusElement.textContent === 'Активен') {
-                statusElement.style.display = 'none';
-              }
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error updating level cards:', error);
-      }
+      // ===== ВАЖНОЕ ИСПРАВЛЕНИЕ: УДАЛЕНА ВСЯ ЛОГИКА ОБНОВЛЕНИЯ КАРТОЧЕК =====
+      // Карточки уровней больше не изменяются - они всегда остаются как есть
+      console.log('Карточки уровней не изменяются - отключена логика определения текущего уровня');
 
     } catch(e) { 
       console.error('[LC] refreshLevelInfo', e); 
