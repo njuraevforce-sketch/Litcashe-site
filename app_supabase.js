@@ -403,33 +403,82 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - используем правильные RPC вызовы для подсчета рефералов
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - правильный подсчет рефералов
   LC.getActiveReferralCounts = async function() {
     try {
-      const { data, error } = await sb.rpc('get_all_referral_counts');
-      if (error) throw error;
-      
-      // Обрабатываем разные форматы ответа
       let counts = { gen1: 0, gen2: 0, gen3: 0 };
       
-      if (Array.isArray(data)) {
-        const row = data[0] || {};
-        counts = {
-          gen1: Number(row.gen1 || 0),
-          gen2: Number(row.gen2 || 0), 
-          gen3: Number(row.gen3 || 0)
-        };
-      } else if (data && typeof data === 'object') {
-        counts = {
-          gen1: Number(data.gen1 || 0),
-          gen2: Number(data.gen2 || 0),
-          gen3: Number(data.gen3 || 0)
-        };
+      // Способ 1: Пробуем get_all_referral_counts
+      try {
+        const { data, error } = await sb.rpc('get_all_referral_counts');
+        if (!error && data) {
+          const row = Array.isArray(data) ? data[0] : data;
+          counts = {
+            gen1: Number(row.gen1 || row.lvl1 || 0),
+            gen2: Number(row.gen2 || row.lvl2 || 0),
+            gen3: Number(row.gen3 || row.lvl3 || 0)
+          };
+          console.log('✅ Количество рефералов из get_all_referral_counts:', counts);
+        }
+      } catch (e1) {
+        console.warn('❌ get_all_referral_counts не сработал:', e1);
       }
-      
+
+      // Способ 2: Если первый не сработал, пробуем get_referral_counts_active
+      if (counts.gen1 === 0 && counts.gen2 === 0 && counts.gen3 === 0) {
+        try {
+          const { data, error } = await sb.rpc('get_referral_counts_active');
+          if (!error && data) {
+            const row = Array.isArray(data) ? data[0] : data;
+            counts = {
+              gen1: Number(row.gen1 || row.lvl1 || 0),
+              gen2: Number(row.gen2 || row.lvl2 || 0),
+              gen3: Number(row.gen3 || row.lvl3 || 0)
+            };
+            console.log('✅ Количество рефералов из get_referral_counts_active:', counts);
+          }
+        } catch (e2) {
+          console.warn('❌ get_referral_counts_active не сработал:', e2);
+        }
+      }
+
+      // Способ 3: Прямой запрос к таблице referrals
+      if (counts.gen1 === 0 && counts.gen2 === 0 && counts.gen3 === 0) {
+        try {
+          const user = await getUser();
+          if (!user) return counts;
+
+          const { data: refs1, error: error1 } = await sb
+            .from('referrals')
+            .select('id')
+            .eq('referrer_id', user.id)
+            .eq('generation', 1);
+
+          const { data: refs2, error: error2 } = await sb
+            .from('referrals')
+            .select('id')
+            .eq('referrer_id', user.id)
+            .eq('generation', 2);
+
+          const { data: refs3, error: error3 } = await sb
+            .from('referrals')
+            .select('id')
+            .eq('referrer_id', user.id)
+            .eq('generation', 3);
+
+          if (!error1) counts.gen1 = refs1?.length || 0;
+          if (!error2) counts.gen2 = refs2?.length || 0;
+          if (!error3) counts.gen3 = refs3?.length || 0;
+
+          console.log('✅ Количество рефералов из прямого запроса:', counts);
+        } catch (e3) {
+          console.warn('❌ Прямой запрос к referrals не сработал:', e3);
+        }
+      }
+
       return counts;
     } catch (e) {
-      console.warn('[LC] getActiveReferralCounts', e);
+      console.warn('[LC] getActiveReferralCounts ошибка:', e);
       return { gen1: 0, gen2: 0, gen3: 0 };
     }
   };
@@ -459,102 +508,351 @@
     }
   };
 
-  // ПОЛНОСТЬЮ ПЕРЕПИСАННАЯ ФУНКЦИЯ - правильное получение реферальных доходов
+  // ===== РЕФЕРАЛЬНАЯ СИСТЕМА - ИСПРАВЛЕННАЯ ВЕРСИЯ ===============================================
   LC.loadReferralEarnings = async function() {
     try {
       const user = await getUser(); 
       if (!user) return;
 
-      console.log('Loading referral earnings for user:', user.id);
+      console.log('🔄 Загрузка реферальных доходов для пользователя:', user.id);
 
-      // Пробуем несколько способов получения данных о реферальных доходах
-      let earnings = [];
-      
-      // Способ 1: Используем my_ref_income_summary если доступен
+      let gen1Total = 0;
+      let gen2Total = 0;
+      let gen3Total = 0;
+
+      // Способ 1: Пробуем получить данные через my_ref_income_summary
       try {
         const { data: summaryData, error: summaryError } = await sb.rpc('my_ref_income_summary');
+        
         if (!summaryError && summaryData) {
-          console.log('Got data from my_ref_income_summary:', summaryData);
+          console.log('📊 Данные из my_ref_income_summary:', summaryData);
           
           const row = Array.isArray(summaryData) ? summaryData[0] : summaryData;
+          
           if (row) {
-            earnings = [
-              { generation: 1, total_cents: Math.round((row.lvl1_usdt || 0) * 100) },
-              { generation: 2, total_cents: Math.round((row.lvl2_usdt || 0) * 100) },
-              { generation: 3, total_cents: Math.round((row.lvl3_usdt || 0) * 100) }
-            ];
+            gen1Total = Math.round((row.lvl1_usdt || row.gen1 || 0) * 100);
+            gen2Total = Math.round((row.lvl2_usdt || row.gen2 || 0) * 100);
+            gen3Total = Math.round((row.lvl3_usdt || row.gen3 || 0) * 100);
+            
+            console.log('✅ Данные из my_ref_income_summary обработаны:', {
+              gen1: gen1Total/100,
+              gen2: gen2Total/100, 
+              gen3: gen3Total/100
+            });
           }
         }
       } catch (summaryErr) {
-        console.warn('my_ref_income_summary failed:', summaryErr);
+        console.warn('❌ my_ref_income_summary не сработал:', summaryErr);
       }
 
-      // Способ 2: Если первый способ не сработал, пробуем get_referral_earnings
-      if (earnings.length === 0) {
+      // Способ 2: Если первый способ не дал данных, пробуем get_referral_earnings
+      if (gen1Total === 0 && gen2Total === 0 && gen3Total === 0) {
         try {
           const { data: refData, error: refError } = await sb.rpc('get_referral_earnings');
+          
           if (!refError && refData) {
-            console.log('Got data from get_referral_earnings:', refData);
-            earnings = Array.isArray(refData) ? refData : (refData ? [refData] : []);
+            console.log('📊 Данные из get_referral_earnings:', refData);
+            
+            const earnings = Array.isArray(refData) ? refData : (refData ? [refData] : []);
+            
+            earnings.forEach(earning => {
+              const generation = earning.generation || earning.gen || earning.level;
+              const totalCents = earning.total_cents || earning.amount_cents || 0;
+              
+              switch(generation) {
+                case 1:
+                  gen1Total = totalCents;
+                  break;
+                case 2:
+                  gen2Total = totalCents;
+                  break;
+                case 3:
+                  gen3Total = totalCents;
+                  break;
+              }
+            });
+            
+            console.log('✅ Данные из get_referral_earnings обработаны:', {
+              gen1: gen1Total/100,
+              gen2: gen2Total/100,
+              gen3: gen3Total/100
+            });
           }
         } catch (refErr) {
-          console.warn('get_referral_earnings failed:', refErr);
+          console.warn('❌ get_referral_earnings не сработал:', refErr);
         }
       }
 
       // Способ 3: Если все еще нет данных, пробуем ref_income_totals
-      if (earnings.length === 0) {
+      if (gen1Total === 0 && gen2Total === 0 && gen3Total === 0) {
         try {
           const { data: totalsData, error: totalsError } = await sb.rpc('ref_income_totals');
+          
           if (!totalsError && totalsData) {
-            console.log('Got data from ref_income_totals:', totalsData);
+            console.log('📊 Данные из ref_income_totals:', totalsData);
             
             const totalsArray = Array.isArray(totalsData) ? totalsData : (totalsData ? [totalsData] : []);
-            earnings = totalsArray.map(item => ({
-              generation: item.lvl,
-              total_cents: Math.round((item.amount_usd || 0) * 100)
-            }));
+            
+            totalsArray.forEach(item => {
+              const level = item.lvl || item.level || item.generation;
+              const amountUsd = item.amount_usd || item.reward_usdt || 0;
+              
+              switch(level) {
+                case 1:
+                  gen1Total = Math.round(amountUsd * 100);
+                  break;
+                case 2:
+                  gen2Total = Math.round(amountUsd * 100);
+                  break;
+                case 3:
+                  gen3Total = Math.round(amountUsd * 100);
+                  break;
+              }
+            });
+            
+            console.log('✅ Данные из ref_income_totals обработаны:', {
+              gen1: gen1Total/100,
+              gen2: gen2Total/100,
+              gen3: gen3Total/100
+            });
           }
         } catch (totalsErr) {
-          console.warn('ref_income_totals failed:', totalsErr);
+          console.warn('❌ ref_income_totals не сработал:', totalsErr);
         }
       }
 
-      console.log('Processed earnings data:', earnings);
+      // Способ 4: Прямой запрос к таблице referral_rewards (если другие способы не сработали)
+      if (gen1Total === 0 && gen2Total === 0 && gen3Total === 0) {
+        try {
+          const { data: rewardsData, error: rewardsError } = await sb
+            .from('referral_rewards')
+            .select('level, reward_usdt')
+            .eq('referrer_user_id', user.id);
+            
+          if (!rewardsError && rewardsData) {
+            console.log('📊 Данные из таблицы referral_rewards:', rewardsData);
+            
+            rewardsData.forEach(reward => {
+              const level = reward.level;
+              const amountUsd = reward.reward_usdt || 0;
+              
+              switch(level) {
+                case 1:
+                  gen1Total += Math.round(amountUsd * 100);
+                  break;
+                case 2:
+                  gen2Total += Math.round(amountUsd * 100);
+                  break;
+                case 3:
+                  gen3Total += Math.round(amountUsd * 100);
+                  break;
+              }
+            });
+            
+            console.log('✅ Данные из referral_rewards обработаны:', {
+              gen1: gen1Total/100,
+              gen2: gen2Total/100,
+              gen3: gen3Total/100
+            });
+          }
+        } catch (rewardsErr) {
+          console.warn('❌ Прямой запрос к referral_rewards не сработал:', rewardsErr);
+        }
+      }
 
-      // Обрабатываем данные о доходах
-      const gen1 = earnings.find(e => e.generation === 1) || {};
-      const gen2 = earnings.find(e => e.generation === 2) || {};
-      const gen3 = earnings.find(e => e.generation === 3) || {};
-
+      // Обновляем интерфейс
       const set = (sel, val) => { 
         const el = $(sel); 
         if (el) el.textContent = val; 
       };
       
       // Обновляем основную панель
-      set('#gen1Cell', fmtMoney(pickNum(gen1.total_cents)/100));
-      set('#gen2Cell', fmtMoney(pickNum(gen2.total_cents)/100));
-      set('#gen3Cell', fmtMoney(pickNum(gen3.total_cents)/100));
+      set('#gen1Cell', fmtMoney(gen1Total/100));
+      set('#gen2Cell', fmtMoney(gen2Total/100));
+      set('#gen3Cell', fmtMoney(gen3Total/100));
 
-      const total = (pickNum(gen1.total_cents) + pickNum(gen2.total_cents) + pickNum(gen3.total_cents)) / 100;
+      const total = (gen1Total + gen2Total + gen3Total) / 100;
       set('#refTotalCell', fmtMoney(total));
 
       // Обновляем модальное окно
-      set('#gen1CellModal', fmtMoney(pickNum(gen1.total_cents)/100));
-      set('#gen2CellModal', fmtMoney(pickNum(gen2.total_cents)/100));
-      set('#gen3CellModal', fmtMoney(pickNum(gen3.total_cents)/100));
+      set('#gen1CellModal', fmtMoney(gen1Total/100));
+      set('#gen2CellModal', fmtMoney(gen2Total/100));
+      set('#gen3CellModal', fmtMoney(gen3Total/100));
       set('#refTotalCellModal', fmtMoney(total));
 
-      console.log('Referral earnings displayed:', { 
-        gen1: pickNum(gen1.total_cents)/100, 
-        gen2: pickNum(gen2.total_cents)/100, 
-        gen3: pickNum(gen3.total_cents)/100, 
-        total 
+      console.log('🎯 Итоговые реферальные доходы:', { 
+        gen1: fmtMoney(gen1Total/100), 
+        gen2: fmtMoney(gen2Total/100), 
+        gen3: fmtMoney(gen3Total/100), 
+        total: fmtMoney(total)
       });
 
+      // Обновляем круговую диаграмму на основе данных
+      this.updateReferralChart(gen1Total, gen2Total, gen3Total);
+
     } catch(e) { 
-      console.error('[LC] loadReferralEarnings', e); 
+      console.error('❌ [LC] loadReferralEarnings ошибка:', e); 
+    }
+  };
+
+  // Функция для обновления круговой диаграммы реферальных доходов
+  LC.updateReferralChart = function(gen1Cents, gen2Cents, gen3Cents) {
+    try {
+      const total = gen1Cents + gen2Cents + gen3Cents;
+      
+      if (total === 0) {
+        // Если нет доходов, показываем равномерное распределение
+        this.updateChartAppearance(40, 30, 30);
+        return;
+      }
+
+      const gen1Percent = Math.round((gen1Cents / total) * 100);
+      const gen2Percent = Math.round((gen2Cents / total) * 100);
+      const gen3Percent = 100 - gen1Percent - gen2Percent;
+
+      this.updateChartAppearance(gen1Percent, gen2Percent, gen3Percent);
+    } catch (error) {
+      console.error('Ошибка обновления диаграммы:', error);
+    }
+  };
+
+  // Функция для обновления внешнего вида диаграммы
+  LC.updateChartAppearance = function(gen1Percent, gen2Percent, gen3Percent) {
+    const chart = document.querySelector('.referral-chart');
+    if (chart) {
+      chart.style.background = `conic-gradient(
+        var(--primary) 0% ${gen1Percent}%,
+        var(--primary-light) ${gen1Percent}% ${gen1Percent + gen2Percent}%,
+        #e2e8f0 ${gen1Percent + gen2Percent}% 100%
+      )`;
+    }
+    
+    const donutChart = document.querySelector('.donut-chart');
+    if (donutChart) {
+      donutChart.style.background = `conic-gradient(
+        var(--primary) 0% ${gen1Percent}%,
+        var(--primary-light) ${gen1Percent}% ${gen1Percent + gen2Percent}%,
+        #e2e8f0 ${gen1Percent + gen2Percent}% 100%
+      )`;
+    }
+  };
+
+  // Новая функция для загрузки деталей рефералов в таблицу
+  LC.loadReferralDetailsTable = async function() {
+    try {
+      const user = await getUser();
+      if (!user) return;
+
+      const tbody = $('#refTree');
+      if (!tbody) return;
+
+      let allRefs = [];
+
+      // Пробуем несколько способов получить данные о рефералах
+      try {
+        // Способ 1: get_all_referrals_by_generation
+        for (let level = 1; level <= 3; level++) {
+          try {
+            const { data, error } = await sb.rpc('get_all_referrals_by_generation', {
+              p_level: level
+            });
+            
+            if (!error && data) {
+              const refs = Array.isArray(data) ? data : [data];
+              refs.forEach(ref => {
+                allRefs.push({
+                  ...ref,
+                  generation: level
+                });
+              });
+            }
+          } catch (levelErr) {
+            console.warn(`Не удалось получить рефералов ${level} поколения:`, levelErr);
+          }
+        }
+      } catch (method1Err) {
+        console.warn('Первый способ получения рефералов не сработал:', method1Err);
+      }
+
+      // Способ 2: Прямой запрос к referrals
+      if (allRefs.length === 0) {
+        try {
+          const { data: referrals, error } = await sb
+            .from('referrals')
+            .select(`
+              generation,
+              referred_id,
+              created_at,
+              profiles:referred_id (email)
+            `)
+            .eq('referrer_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (!error && referrals) {
+            allRefs = referrals.map(ref => ({
+              generation: ref.generation,
+              user_email: ref.profiles?.email || '—',
+              capital_cents: 0,
+              level_name: 'Starter',
+              created_at: ref.created_at
+            }));
+          }
+        } catch (method2Err) {
+          console.warn('Второй способ получения рефералов не сработал:', method2Err);
+        }
+      }
+
+      // Обновляем таблицу
+      tbody.innerHTML = '';
+      
+      if (allRefs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Нет активных рефералов</td></tr>`;
+      } else {
+        allRefs.slice(0, 20).forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${r.generation || 1}</td>
+                          <td>${r.user_email || r.email || '—'}</td>
+                          <td>${fmtMoney(pickNum(r.capital_cents || r.balance_cents)/100)}</td>
+                          <td>${r.level_name || 'Starter'}</td>
+                          <td>${fmtDate(r.created_at || r.joined_at)}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+
+      console.log('✅ Таблица рефералов обновлена, записей:', allRefs.length);
+    } catch (error) {
+      console.error('❌ Ошибка загрузки таблицы рефералов:', error);
+    }
+  };
+
+  // ===== ОБНОВЛЕНИЕ ДАННЫХ ДАШБОРДА ========================================
+  LC.refreshDashboardCards = async function() {
+    try {
+      const user = await getUser(); 
+      if (!user) return;
+
+      // Получаем количество рефералов по поколениям
+      const counts = await LC.getActiveReferralCounts();
+
+      const set = (sel, val) => { const el = $(sel); if (el) el.textContent = String(val); };
+      
+      // Обновляем основную панель
+      set('#gen1Count', counts.gen1);
+      set('#gen2Count', counts.gen2);
+      set('#gen3Count', counts.gen3);
+
+      // Обновляем модальное окно
+      set('#gen1CountModal', counts.gen1);
+      set('#gen2CountModal', counts.gen2);
+      set('#gen3CountModal', counts.gen3);
+
+      console.log('📊 Количество рефералов обновлено:', counts);
+
+      // Загружаем детальную информацию о рефералах для таблицы
+      await this.loadReferralDetailsTable();
+
+    } catch(e) { 
+      console.error('[LC] refreshDashboardCards ошибка:', e); 
     }
   };
 
@@ -1091,65 +1389,6 @@
       
     } catch (error) {
       console.error('❌ Withdraw page init error:', error);
-    }
-  };
-
-  // ===== ОБНОВЛЕНИЕ ДАННЫХ ДАШБОРДА ========================================
-  LC.refreshDashboardCards = async function() {
-    try {
-      const user = await getUser(); 
-      if (!user) return;
-
-      // Получаем количество рефералов по поколениям
-      const counts = await LC.getActiveReferralCounts();
-
-      const set = (sel, val) => { const el = $(sel); if (el) el.textContent = String(val); };
-      
-      // Обновляем основную панель
-      set('#gen1Count', counts.gen1);
-      set('#gen2Count', counts.gen2);
-      set('#gen3Count', counts.gen3);
-
-      // Обновляем модальное окно
-      set('#gen1CountModal', counts.gen1);
-      set('#gen2CountModal', counts.gen2);
-      set('#gen3CountModal', counts.gen3);
-
-      console.log('Referral counts:', counts);
-
-      // Загружаем детальную информацию о рефералах для таблицы
-      const allRefs = [];
-      
-      // Получаем рефералов каждого поколения
-      for (let level = 1; level <= 3; level++) {
-        const refs = await LC.getActiveReferrals(level);
-        refs.forEach(ref => {
-          allRefs.push({
-            ...ref,
-            generation: level
-          });
-        });
-      }
-      
-      const tbody = $('#refTree');
-      if (tbody) {
-        tbody.innerHTML = '';
-        if (!allRefs.length) {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Нет активных рефералов</td></tr>`;
-        } else {
-          allRefs.slice(0, 20).forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${r.generation || 1}</td>
-                            <td>${r.user_email || r.email || '—'}</td>
-                            <td>${fmtMoney(pickNum(r.capital_cents || r.balance_cents)/100)}</td>
-                            <td>${r.level_name || 'Starter'}</td>
-                            <td>${fmtDate(r.created_at || r.joined_at)}</td>`;
-            tbody.appendChild(tr);
-          });
-        }
-      }
-    } catch(e) { 
-      console.error('[LC] refreshDashboardCards', e); 
     }
   };
 
