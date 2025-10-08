@@ -1528,11 +1528,7 @@ function initCarousel() {
   function updateCarousel() {
     const offset = -currentIndex * (cardWidth + margin);
     carouselWrapper.style.transform = `translateX(${offset}px)`;
-    
-    cards.forEach((card, index) => {
-      card.classList.toggle('active', index === currentIndex);
-    });
-    
+  
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === currentIndex);
     });
