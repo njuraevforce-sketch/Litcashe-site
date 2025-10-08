@@ -103,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ПЕРЕМЕЩАЮТСЯ
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ИЗМЕНЯЮТСЯ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -170,8 +170,8 @@
             const cardLevel = card.getAttribute('data-level');
             const statusElement = card.querySelector('.level-status');
             
-            // ВАЖНО: НИКОГДА не меняем display, visibility, opacity или порядок карточек
-            // Карточки всегда должны оставаться в своем исходном состоянии и порядке
+            // ВАЖНО: КАРТОЧКИ НИКОГДА НЕ МЕНЯЮТ СВОЙ ВНЕШНИЙ ВИД ИЛИ ПОРЯДОК
+            // ТОЛЬКО обновляем текст статуса для активной карточки
             
             // Убираем активный класс у всех
             card.classList.remove('active');
@@ -181,14 +181,11 @@
               console.log('Setting active level:', cardLevel);
               card.classList.add('active');
               if (statusElement) {
-                statusElement.textContent = 'Активен';
-                statusElement.style.display = 'block';
-              }
-            } else {
-              if (statusElement) {
-                statusElement.style.display = 'none';
+                statusElement.textContent = window.LC_I18N ? window.LC_I18N.t('status_active') : 'Активен';
+                // НЕ меняем display - оставляем как есть в HTML!
               }
             }
+            // НЕ делаем ничего с неактивными карточками - оставляем их как есть
           });
         }
       } catch (error) {
