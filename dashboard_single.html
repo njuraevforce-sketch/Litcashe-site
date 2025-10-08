@@ -397,6 +397,18 @@
     color: rgba(255,255,255,0.9);
   }
 
+  /* Стили для замков на VIP5 и VIP6 */
+  .level-locked {
+    position: absolute;
+    top: 50%;
+    left: 70%;
+    transform: translate(-50%, -50%);
+    font-size: 50px;
+    opacity: 0.7;
+    z-index: 3;
+    filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
+  }
+
   /* Стили для разных уровней */
   .level-card-carousel[data-level="starter"] .level-bg { 
     background-image: url('assets/rotator/card-1.png'); 
@@ -424,6 +436,21 @@
   }
   .level-card-carousel[data-level="titanium"] .level-top-icon { 
     background-image: url('assets/rotator/card-icon4.png'); 
+  }
+
+  /* Новые карточки VIP5 и VIP6 */
+  .level-card-carousel[data-level="vip5"] .level-bg { 
+    background-image: url('assets/rotator/card-5.png');
+  }
+  .level-card-carousel[data-level="vip5"] .level-top-icon { 
+    background-image: url('assets/rotator/card-icon5.png'); 
+  }
+
+  .level-card-carousel[data-level="vip6"] .level-bg { 
+    background-image: url('assets/rotator/card-6.png');
+  }
+  .level-card-carousel[data-level="vip6"] .level-top-icon { 
+    background-image: url('assets/rotator/card-icon6.png'); 
   }
 
   /* Кнопки навигации карусели */
@@ -1362,6 +1389,42 @@
             </div>
           </div>
         </div>
+        
+        <!-- НОВАЯ КАРТОЧКА VIP5 -->
+        <div class="level-card-carousel level-card" data-level="vip5" data-index="4">
+          <div class="level-bg"></div>
+          <div class="level-top-icon"></div>
+          <div class="level-locked">🔒</div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 5</div>
+              <div class="level-status" style="display: none;" data-i18n="status_locked">Заблокирован</div>
+            </div>
+            <div class="level-content">
+              <div class="level-name-carousel" data-i18n="vip_vip5">VIP 5</div>
+              <div class="level-percentage-carousel">6.0%</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_vip5">$10,000+</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- НОВАЯ КАРТОЧКА VIP6 -->
+        <div class="level-card-carousel level-card" data-level="vip6" data-index="5">
+          <div class="level-bg"></div>
+          <div class="level-top-icon"></div>
+          <div class="level-locked">🔒</div>
+          <div class="level-overlay">
+            <div class="level-header">
+              <div class="level-vip-badge">VIP 6</div>
+              <div class="level-status" style="display: none;" data-i18n="status_locked">Заблокирован</div>
+            </div>
+            <div class="level-content">
+              <div class="level-name-carousel" data-i18n="vip_vip6">VIP 6</div>
+              <div class="level-percentage-carousel">7.5%</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_vip6">$25,000+</div>
+            </div>
+          </div>
+        </div>
       </div>
       
       <!-- Навигация карусели -->
@@ -1370,6 +1433,8 @@
         <div class="carousel-dot" data-index="1"></div>
         <div class="carousel-dot" data-index="2"></div>
         <div class="carousel-dot" data-index="3"></div>
+        <div class="carousel-dot" data-index="4"></div>
+        <div class="carousel-dot" data-index="5"></div>
       </div>
     </div>
 
