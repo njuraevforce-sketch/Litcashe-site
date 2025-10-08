@@ -777,144 +777,6 @@
     border-radius: 2px;
   }
 
-  /* === МОДАЛЬНЫЕ ОКНА ДЛЯ ТАБЛИЦ === */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: flex-end;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-  }
-
-  .modal-overlay.active {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .modal-content {
-    background: var(--bg);
-    border-radius: 20px 20px 0 0;
-    padding: 20px;
-    width: 100%;
-    max-height: 70vh;
-    overflow-y: auto;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-  }
-
-  .modal-overlay.active .modal-content {
-    transform: translateY(0);
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .close-modal {
-    background: none;
-    border: none;
-    font-size: 20px;
-    color: var(--text-secondary);
-    cursor: pointer;
-  }
-
-  /* Пончиковые диаграммы */
-  .donut-chart {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: conic-gradient(
-      var(--primary) 0% 40%,
-      var(--primary-light) 40% 70%,
-      #e2e8f0 70% 100%
-    );
-    margin: 0 auto 15px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .donut-center {
-    width: 70px;
-    height: 70px;
-    background: var(--bg);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    color: var(--text);
-  }
-
-  .info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 15px;
-  }
-
-  .info-item {
-    background: rgba(245, 197, 24, 0.05);
-    border-radius: 8px;
-    padding: 10px;
-    border: 1px solid rgba(245, 197, 24, 0.1);
-  }
-
-  .info-label {
-    font-size: 11px;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-  }
-
-  .info-value {
-    font-size: 14px;
-    font-weight: bold;
-    color: var(--text);
-  }
-
-  /* Таблица рефералов */
-  .referral-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 12px;
-  }
-
-  .referral-table th,
-  .referral-table td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .referral-table th {
-    font-weight: 600;
-    color: var(--text-secondary);
-    background: rgba(245, 197, 24, 0.05);
-  }
-
   /* Нижний навбар */
   .bottom-nav {
     position: fixed;
@@ -1056,130 +918,6 @@
   Текст уведомления
 </div>
 
-<!-- Модальные окна -->
-<div class="modal-overlay" id="infoModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title" data-i18n="info_table">ℹ Информационная таблица</div>
-      <button class="close-modal" id="closeInfoModal">×</button>
-    </div>
-    
-    <div class="loading-indicator" id="infoModalLoading" data-i18n="loading_data">
-      Загрузка данных...
-    </div>
-    
-    <div class="donut-chart" id="infoDonutChart" style="display: none;">
-      <div class="donut-center">
-        <span data-level-name data-i18n="vip_starter">Starter</span>
-      </div>
-    </div>
-    
-    <div class="chart-legend" id="infoChartLegend" style="display: none;">
-      <div class="legend-item">
-        <div class="legend-color" style="background: var(--primary);"></div>
-        <span data-i18n="info_level">Уровень:</span> <span data-level-name data-i18n="vip_starter">Starter</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: var(--primary-light);"></div>
-        <span data-i18n="info_percentage">Процент:</span> <span data-rate>2.5%</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #e2e8f0;"></div>
-        <span data-i18n="info_base">База:</span> <span id="baseCapCell">$0</span>
-      </div>
-    </div>
-    
-    <div class="info-grid" id="infoGrid" style="display: none;">
-      <div class="info-item">
-        <div class="info-label" data-i18n="info_per_view">За 1 просмотр</div>
-        <div class="info-value" data-reward-per-view>$0.00</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label" data-i18n="info_daily_reward">За 5 просмотров</div>
-        <div class="info-value" data-daily-reward>$0.00</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label" data-i18n="info_next_level">Следующий уровень</div>
-        <div class="info-value" id="nextTargetCell">—</div>
-      </div>
-      <div class="info-item">
-        <div class="info-label" data-i18n="info_total_refs">Всего рефералов</div>
-        <div class="info-value" data-refs>0</div>
-      </div>
-    </div>
-
-    <div class="error-message" id="infoModalError" data-i18n="error_loading_data">
-      Ошибка загрузки данных
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="referralModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title" data-i18n="referral_income">💰 Реферальный доход</div>
-      <button class="close-modal" id="closeReferralModal">×</button>
-    </div>
-    
-    <div class="loading-indicator" id="referralModalLoading" data-i18n="loading_referral_data">
-      Загрузка реферальных данных...
-    </div>
-    
-    <div class="donut-chart" id="referralDonutChart" style="display: none;">
-      <div class="donut-center">
-        <span id="refTotalCellModal">$0.00</span>
-      </div>
-    </div>
-    
-    <div class="chart-legend" id="referralChartLegend" style="display: none;">
-      <div class="legend-item">
-        <div class="legend-color" style="background: var(--primary);"></div>
-        <span data-i18n="referral_gen1_modal">1-е поколение (13%):</span> <span id="gen1CellModal">$0.00</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: var(--primary-light);"></div>
-        <span data-i18n="referral_gen2_modal">2-е поколение (5%):</span> <span id="gen2CellModal">$0.00</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color" style="background: #e2e8f0;"></div>
-        <span data-i18n="referral_gen3_modal">3-е поколение (1%):</span> <span id="gen3CellModal">$0.00</span>
-      </div>
-    </div>
-    
-    <div class="referral-stats" id="referralStatsModal" style="display: none;">
-      <div class="referral-stat">
-        <div class="stat-value" id="gen1CountModal">0</div>
-        <div class="stat-label" data-i18n="referral_gen1_label">1-е поколение</div>
-      </div>
-      <div class="referral-stat">
-        <div class="stat-value" id="gen2CountModal">0</div>
-        <div class="stat-label" data-i18n="referral_gen2_label">2-е поколение</div>
-      </div>
-      <div class="referral-stat">
-        <div class="stat-value" id="gen3CountModal">0</div>
-        <div class="stat-label" data-i18n="referral_gen3_label">3-е поколение</div>
-      </div>
-    </div>
-
-    <table class="referral-table" id="referralTable" style="display: none;">
-      <thead>
-        <tr>
-          <th data-i18n="referral_generation">Уровень</th>
-          <th data-i18n="referral_email">Email</th>
-          <th data-i18n="referral_capital">Капитал</th>
-          <th data-i18n="referral_level">Уровень</th>
-          <th data-i18n="referral_date">Дата</th>
-        </tr>
-      </thead>
-      <tbody id="refTree"></tbody>
-    </table>
-
-    <div class="error-message" id="referralModalError" data-i18n="error_loading_referral_data">
-      Ошибка загрузки реферальных данных
-    </div>
-  </div>
-</div>
-
 <!-- Верхняя часть -->
 <header>
   <div class="logo">
@@ -1187,7 +925,7 @@
     <div class="balance-small" data-balance>$0.00</div>
   </div>
   
-  <!-- Переключатель языка - ОБНОВЛЕННЫЙ согласно language-switcher.js -->
+  <!-- Переключатель языка -->
   <div class="language-switcher" id="languageSwitcher">
     <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
       <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1484,12 +1222,6 @@
   <a href="withdraw_single.html" class="nav-item">
     <i>💸</i> <span data-i18n="nav_withdraw">Вывод</span>
   </a>
-  <a href="#" class="nav-item" id="openInfoModal">
-    <i>ℹ</i> <span data-i18n="nav_info">Инфо</span>
-  </a>
-  <a href="#" class="nav-item" id="openReferralModal">
-    <i>👥</i> <span data-i18n="nav_referrals">Рефералы</span>
-  </a>
 </nav>
 
 <!-- Подключаем систему перевода -->
@@ -1513,22 +1245,18 @@ function showNotification(message) {
   }
 }
 
-// Карусель карточек уровней с улучшенным свайпом
+// ⭐ УПРОЩЕННАЯ КАРУСЕЛЬ БЕЗ КОНФЛИКТОВ
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
-  const cards = document.querySelectorAll('.level-card-carousel');
   const dots = document.querySelectorAll('.carousel-dot');
   let currentIndex = 0;
   const cardWidth = 280;
   const margin = 16;
-  let startX = 0;
-  let currentX = 0;
-  let isSwiping = false;
 
   function updateCarousel() {
     const offset = -currentIndex * (cardWidth + margin);
     carouselWrapper.style.transform = `translateX(${offset}px)`;
-  
+    
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index === currentIndex);
     });
@@ -1541,188 +1269,29 @@ function initCarousel() {
     });
   });
 
+  // Простой свайп
+  let startX = 0;
+  
   carouselWrapper.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
-    isSwiping = true;
-    carouselWrapper.style.transition = 'none';
   });
   
-  carouselWrapper.addEventListener('touchmove', (e) => {
-    if (!isSwiping) return;
-    currentX = e.touches[0].clientX;
-    const diff = currentX - startX;
-    const offset = -currentIndex * (cardWidth + margin) + diff;
-    carouselWrapper.style.transform = `translateX(${offset}px)`;
-  });
-  
-  carouselWrapper.addEventListener('touchend', () => {
-    if (!isSwiping) return;
-    isSwiping = false;
-    carouselWrapper.style.transition = 'transform 0.5s ease';
-    
-    const diff = startX - currentX;
+  carouselWrapper.addEventListener('touchend', (e) => {
+    const endX = e.changedTouches[0].clientX;
+    const diff = startX - endX;
     const threshold = 50;
     
     if (Math.abs(diff) > threshold) {
-      if (diff > 0 && currentIndex < cards.length - 1) {
+      if (diff > 0 && currentIndex < 3) {
         currentIndex++;
       } else if (diff < 0 && currentIndex > 0) {
         currentIndex--;
       }
+      updateCarousel();
     }
-    updateCarousel();
-  });
-
-  carouselWrapper.addEventListener('mousedown', (e) => {
-    startX = e.clientX;
-    isSwiping = true;
-    carouselWrapper.style.transition = 'none';
-  });
-  
-  document.addEventListener('mousemove', (e) => {
-    if (!isSwiping) return;
-    currentX = e.clientX;
-    const diff = currentX - startX;
-    const offset = -currentIndex * (cardWidth + margin) + diff;
-    carouselWrapper.style.transform = `translateX(${offset}px)`;
-  });
-  
-  document.addEventListener('mouseup', () => {
-    if (!isSwiping) return;
-    isSwiping = false;
-    carouselWrapper.style.transition = 'transform 0.5s ease';
-    
-    const diff = startX - currentX;
-    const threshold = 50;
-    
-    if (Math.abs(diff) > threshold) {
-      if (diff > 0 && currentIndex < cards.length - 1) {
-        currentIndex++;
-      } else if (diff < 0 && currentIndex > 0) {
-        currentIndex--;
-      }
-    }
-    updateCarousel();
   });
 
   updateCarousel();
-}
-
-// Модальные окна
-function initModals() {
-  const infoModal = document.getElementById('infoModal');
-  const referralModal = document.getElementById('referralModal');
-  const openInfoModalBtn = document.getElementById('openInfoModal');
-  const openReferralModalBtn = document.getElementById('openReferralModal');
-  const closeInfoModalBtn = document.getElementById('closeInfoModal');
-  const closeReferralModalBtn = document.getElementById('closeReferralModal');
-
-  // Функции для показа/скрытия загрузки
-  function showInfoModalLoading() {
-    document.getElementById('infoModalLoading').style.display = 'block';
-    document.getElementById('infoDonutChart').style.display = 'none';
-    document.getElementById('infoChartLegend').style.display = 'none';
-    document.getElementById('infoGrid').style.display = 'none';
-    document.getElementById('infoModalError').style.display = 'none';
-  }
-
-  function showInfoModalContent() {
-    document.getElementById('infoModalLoading').style.display = 'none';
-    document.getElementById('infoDonutChart').style.display = 'flex';
-    document.getElementById('infoChartLegend').style.display = 'flex';
-    document.getElementById('infoGrid').style.display = 'grid';
-    document.getElementById('infoModalError').style.display = 'none';
-  }
-
-  function showInfoModalError() {
-    document.getElementById('infoModalLoading').style.display = 'none';
-    document.getElementById('infoDonutChart').style.display = 'none';
-    document.getElementById('infoChartLegend').style.display = 'none';
-    document.getElementById('infoGrid').style.display = 'none';
-    document.getElementById('infoModalError').style.display = 'block';
-  }
-
-  function showReferralModalLoading() {
-    document.getElementById('referralModalLoading').style.display = 'block';
-    document.getElementById('referralDonutChart').style.display = 'none';
-    document.getElementById('referralChartLegend').style.display = 'none';
-    document.getElementById('referralStatsModal').style.display = 'none';
-    document.getElementById('referralTable').style.display = 'none';
-    document.getElementById('referralModalError').style.display = 'none';
-  }
-
-  function showReferralModalContent() {
-    document.getElementById('referralModalLoading').style.display = 'none';
-    document.getElementById('referralDonutChart').style.display = 'flex';
-    document.getElementById('referralChartLegend').style.display = 'flex';
-    document.getElementById('referralStatsModal').style.display = 'grid';
-    document.getElementById('referralTable').style.display = 'table';
-    document.getElementById('referralModalError').style.display = 'none';
-  }
-
-  function showReferralModalError() {
-    document.getElementById('referralModalLoading').style.display = 'none';
-    document.getElementById('referralDonutChart').style.display = 'none';
-    document.getElementById('referralChartLegend').style.display = 'none';
-    document.getElementById('referralStatsModal').style.display = 'none';
-    document.getElementById('referralTable').style.display = 'none';
-    document.getElementById('referralModalError').style.display = 'block';
-  }
-
-  openInfoModalBtn.addEventListener('click', async () => {
-    showInfoModalLoading();
-    infoModal.classList.add('active');
-    
-    try {
-      // Обновляем данные перед показом модального окна
-      if (window.LC && typeof window.LC.refreshLevelInfo === 'function') {
-        await window.LC.refreshLevelInfo();
-      }
-      showInfoModalContent();
-    } catch (error) {
-      console.error('Error loading info modal data:', error);
-      showInfoModalError();
-    }
-  });
-
-  openReferralModalBtn.addEventListener('click', async () => {
-    showReferralModalLoading();
-    referralModal.classList.add('active');
-    
-    try {
-      // Обновляем данные перед показом модального окна
-      if (window.LC && typeof window.LC.loadReferralEarnings === 'function') {
-        await window.LC.loadReferralEarnings();
-      }
-      if (window.LC && typeof window.LC.refreshDashboardCards === 'function') {
-        await window.LC.refreshDashboardCards();
-      }
-      showReferralModalContent();
-    } catch (error) {
-      console.error('Error loading referral modal data:', error);
-      showReferralModalError();
-    }
-  });
-
-  closeInfoModalBtn.addEventListener('click', () => {
-    infoModal.classList.remove('active');
-  });
-
-  closeReferralModalBtn.addEventListener('click', () => {
-    referralModal.classList.remove('active');
-  });
-
-  infoModal.addEventListener('click', (e) => {
-    if (e.target === infoModal) {
-      infoModal.classList.remove('active');
-    }
-  });
-
-  referralModal.addEventListener('click', (e) => {
-    if (e.target === referralModal) {
-      referralModal.classList.remove('active');
-    }
-  });
 }
 
 // Инициализация при загрузке
@@ -1738,11 +1307,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // УДАЛЕНО: конфликтующий код переключателя языка
-  // Теперь переключатель управляется language-switcher.js
-  
   initCarousel();
-  initModals();
   
   // Инициализация дашборда
   if (window.LC && typeof window.LC.initDashboard === 'function') {
