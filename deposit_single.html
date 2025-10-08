@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
       try{
         const txt = (el.value||el.textContent||'').trim();
         await navigator.clipboard.writeText(txt);
-        btn.textContent = 'Скопировано!';
+        btn.textContent = window.LanguageSwitcher ? window.LanguageSwitcher.t('notification_copied') : 'Скопировано!';
         setTimeout(()=>{ 
           if (window.LanguageSwitcher) {
             btn.textContent = window.LanguageSwitcher.t('deposit_copy_btn');
@@ -570,14 +570,14 @@ document.addEventListener('DOMContentLoaded', () => {
       // Проверяем авторизацию
       const user = await getUser();
       if (!user) {
-        alert('Войдите в аккаунт для пополнения');
+        alert(window.LanguageSwitcher ? window.LanguageSwitcher.t('notification_login_required') : 'Войдите в аккаунт для пополнения');
         window.location.href = 'login_single.html';
         return;
       }
 
       const amount = parseFloat(amountEl.value || '0');
       if (!Number.isFinite(amount) || amount <= 0) {
-        alert('Введите корректную сумму в USDT');
+        alert(window.LanguageSwitcher ? window.LanguageSwitcher.t('deposit_invalid_amount') : 'Введите корректную сумму в USDT');
         return;
       }
 
@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Минимальная сумма депозита
       if (cents < 2900) {
-        alert('Минимальная сумма пополнения: $29');
+        alert(window.LanguageSwitcher ? window.LanguageSwitcher.t('deposit_minimum_amount') : 'Минимальная сумма пополнения: $29');
         return;
       }
 
@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = await LC.createDepositWithTx(cents, 'TRC20', 'USDT', txid);
       
       if (result && result.ok) {
-        alert('✅ Заявка на пополнение создана! После подтверждения сети баланс пополнится автоматически.');
+        alert(window.LanguageSwitcher ? window.LanguageSwitcher.t('deposit_success_message') : '✅ Заявка на пополнение создана! После подтверждения сети баланс пополнится автоматически.');
         amountEl.value = '';
         txidEl.value   = '';
         
@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) {
       console.error(e);
-      alert(e?.message || 'Ошибка при создании пополнения');
+      alert(e?.message || (window.LanguageSwitcher ? window.LanguageSwitcher.t('deposit_error_message') : 'Ошибка при создании пополнения'));
     }
   }
 
