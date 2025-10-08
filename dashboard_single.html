@@ -397,16 +397,17 @@
     color: rgba(255,255,255,0.9);
   }
 
-  /* Стили для замков на VIP5 и VIP6 */
+  /* Стили для замков на VIP5 и VIP6 - ПО ЦЕНТРУ КАРТОЧКИ */
   .level-locked {
     position: absolute;
     top: 50%;
-    left: 70%;
+    left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 50px;
-    opacity: 0.7;
+    font-size: 60px;
+    opacity: 0.8;
     z-index: 3;
-    filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
+    filter: drop-shadow(0 0 8px rgba(0,0,0,0.7));
+    text-shadow: 0 0 10px rgba(0,0,0,0.5);
   }
 
   /* Стили для разных уровней */
@@ -1019,6 +1020,10 @@
     .referral-stats {
       grid-template-columns: repeat(2, 1fr);
     }
+    
+    .level-locked {
+      font-size: 50px;
+    }
   }
 
   /* Уведомления */
@@ -1401,9 +1406,9 @@
               <div class="level-status" style="display: none;" data-i18n="status_locked">Заблокирован</div>
             </div>
             <div class="level-content">
-              <div class="level-name-carousel" data-i18n="vip_vip5">VIP 5</div>
+              <div class="level-name-carousel" data-i18n="vip_diamond_elite">Diamond Elite</div>
               <div class="level-percentage-carousel">6.0%</div>
-              <div class="level-cap-carousel" data-i18n="vip_cap_vip5">$10,000+</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_diamond_elite">$10,000+</div>
             </div>
           </div>
         </div>
@@ -1419,9 +1424,9 @@
               <div class="level-status" style="display: none;" data-i18n="status_locked">Заблокирован</div>
             </div>
             <div class="level-content">
-              <div class="level-name-carousel" data-i18n="vip_vip6">VIP 6</div>
+              <div class="level-name-carousel" data-i18n="vip_quantum_titan">Quantum Titan</div>
               <div class="level-percentage-carousel">7.5%</div>
-              <div class="level-cap-carousel" data-i18n="vip_cap_vip6">$25,000+</div>
+              <div class="level-cap-carousel" data-i18n="vip_cap_quantum_titan">$25,000+</div>
             </div>
           </div>
         </div>
