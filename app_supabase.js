@@ -39,7 +39,7 @@
 
   // ===== КОНФИГУРАЦИЯ СИСТЕМЫ =====
   LC.config = {
-    MIN_ACTIVE_BALANCE: 2900, // 29 USDT в центах
+    MIN_ACTIVE_BALANCE: 2900,
     DAILY_VIEWS_LIMIT: 5,
     MIN_VIEW_SECONDS: 10,
     LEVELS: [
@@ -48,7 +48,7 @@
       { name: 'Pro Elite', min_balance: 100000, min_refs: 10, percent: 4.0, cap: 300000 },
       { name: 'Titanium', min_balance: 300000, min_refs: 30, percent: 5.0, cap: 1000000 }
     ],
-    REFERRAL_PERCENTS: [13, 5, 1] // 1st, 2nd, 3rd generation
+    REFERRAL_PERCENTS: [13, 5, 1]
   };
 
   // ===== БАЛАНС И АКТИВНОСТЬ ================================================
@@ -103,7 +103,7 @@
     }
   };
 
-  // УДАЛЕНА ФУНКЦИЯ ИЗМЕНЕНИЯ ОТОБРАЖЕНИЯ КАРТОЧЕК УРОВНЕЙ
+  // ⭐ ИСПРАВЛЕННАЯ ФУНКЦИЯ - ТОЛЬКО СТАТУС "АКТИВЕН"
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -131,6 +131,36 @@
       const badge = $('#perViewBadge'); 
       if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
 
+      // ⭐ ОБНОВЛЕНИЕ КАРТОЧЕК - ТОЛЬКО СТАТУС
+      try {
+        const levelCards = document.querySelectorAll('.level-card-carousel');
+        console.log('Found level cards:', levelCards.length);
+        
+        if (levelCards.length) {
+          const currentLevelName = info.level_name?.toLowerCase().replace(/\s+/g, '');
+          
+          console.log('Current active level:', currentLevelName);
+          
+          levelCards.forEach(card => {
+            const cardLevel = card.getAttribute('data-level');
+            const statusElement = card.querySelector('.level-status');
+            
+            // ⭐ ВАЖНО: НЕ МЕНЯЕМ КЛАССЫ, НЕ ТРОГАЕМ СТИЛИ - ТОЛЬКО СТАТУС
+            if (statusElement) {
+              if (cardLevel === currentLevelName) {
+                statusElement.textContent = 'Активен';
+                statusElement.style.display = 'block';
+              } else {
+                statusElement.style.display = 'none';
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error updating level cards status:', error);
+      }
+
+      // Обновление остальных элементов
       const levelEl = $('[data-level]');
       if (levelEl) levelEl.textContent = info.level_name || '—';
       
@@ -156,9 +186,6 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // УДАЛЕН БЛОК ИЗМЕНЕНИЯ КАРТОЧЕК УРОВНЕЙ
-      // Карточки теперь всегда остаются в исходном состоянии
-
     } catch(e) { 
       console.error('[LC] refreshLevelInfo', e); 
     }
@@ -172,7 +199,6 @@
       return null; 
     }
 
-    // Проверяем активность пользователя
     const isActive = await LC.isActiveUser();
     if (!isActive) {
       alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
@@ -182,7 +208,6 @@
     console.log('Calling credit_view with:', { videoId, watchedSeconds, userId: user.id });
 
     try {
-      // Сначала проверим текущий уровень и лимиты
       const levelInfo = await LC.getLevelInfo();
       console.log('Current level info before credit:', levelInfo);
       
@@ -210,19 +235,16 @@
         return null; 
       }
       
-      // Обновляем интерфейс
       if (typeof row.views_left === 'number') {
         const el = document.querySelector('[data-views-left]');
         if (el) el.textContent = String(row.views_left);
       }
       
-      // Обновляем данные
       await LC.refreshBalance();
       await LC.refreshLevelInfo();
       await LC.loadReferralEarnings();
       await LC.refreshDashboardCards();
       
-      // Показываем уведомление о начислении
       if (row.reward_cents) {
         const reward = (row.reward_cents / 100).toFixed(2);
         alert(window.LC_I18N ? window.LC_I18N.t('notification_award_success', { amount: reward }) : `✅ Начислено $${reward} за просмотр!`);
@@ -242,7 +264,6 @@
       const user = await getUser(); 
       if (!user) return;
 
-      // Проверяем существующий профиль
       const { data: existingProfile } = await sb
         .from('profiles')
         .select('user_id, ref_code')
@@ -251,10 +272,8 @@
 
       if (existingProfile) return;
 
-      // Генерируем уникальный реферальный код
       const refCode = 'LC' + Math.random().toString(36).substr(2, 8).toUpperCase();
       
-      // Создаем профиль с реферальным кодом
       const { error } = await sb
         .from('profiles')
         .insert({ 
@@ -279,12 +298,10 @@
 
       const user = await getUser();
       if (!user) {
-        // Сохраняем код для применения после регистрации
         localStorage.setItem('lc_ref_code', refParam);
         return;
       }
 
-      // Применяем реферальный код
       const { error } = await sb.rpc('apply_referral', { 
         p_ref_code: refParam 
       });
@@ -297,7 +314,6 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - РЕФЕРАЛЬНАЯ ССЫЛКА РАБОТАЕТ
   LC.mountReferral = async function() {
     try {
       const wrap = document.querySelector('#refLinkWrap');
@@ -311,7 +327,6 @@
         return;
       }
 
-      // Получаем реферальный код пользователя
       const { data: profile, error } = await sb
         .from('profiles')
         .select('ref_code')
@@ -328,7 +343,6 @@
         return;
       }
 
-      // Формируем реферальную ссылку
       const url = new URL(location.origin + '/register_single.html');
       url.searchParams.set('ref', profile.ref_code);
       
@@ -342,7 +356,6 @@
         console.log('Ref panel displayed');
       }
 
-      // Настраиваем копирование
       const btn = document.querySelector('#btnCopyRef');
       if (btn) {
         btn.addEventListener('click', async () => {
@@ -365,12 +378,10 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - правильный подсчет рефералов
   LC.getActiveReferralCounts = async function() {
     try {
       let counts = { gen1: 0, gen2: 0, gen3: 0 };
       
-      // Способ 1: Пробуем get_all_referral_counts
       try {
         const { data, error } = await sb.rpc('get_all_referral_counts');
         if (!error && data) {
@@ -386,7 +397,6 @@
         console.warn('❌ get_all_referral_counts не сработал:', e1);
       }
 
-      // Способ 2: Если первый не сработал, пробуем get_referral_counts_active
       if (counts.gen1 === 0 && counts.gen2 === 0 && counts.gen3 === 0) {
         try {
           const { data, error } = await sb.rpc('get_referral_counts_active');
@@ -404,7 +414,6 @@
         }
       }
 
-      // Способ 3: Прямой запрос к таблице referrals
       if (counts.gen1 === 0 && counts.gen2 === 0 && counts.gen3 === 0) {
         try {
           const user = await getUser();
@@ -445,32 +454,6 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - получаем рефералов по поколениям
-  LC.getActiveReferrals = async function(level = 1) {
-    try {
-      const { data, error } = await sb.rpc('get_all_referrals_by_generation', {
-        p_level: level
-      });
-      
-      if (error) {
-        console.warn('get_all_referrals_by_generation failed, trying alternative:', error);
-        // Fallback на альтернативную функцию
-        const { data: altData, error: altError } = await sb.rpc('get_referrals_by_generation', {
-          p_level: level
-        });
-        
-        if (altError) throw altError;
-        return Array.isArray(altData) ? altData : (altData ? [altData] : []);
-      }
-      
-      return Array.isArray(data) ? data : (data ? [data] : []);
-    } catch (e) {
-      console.warn('[LC] getActiveReferrals', e);
-      return [];
-    }
-  };
-
-  // ===== РЕФЕРАЛЬНАЯ СИСТЕМА - ИСПРАВЛЕННАЯ ВЕРСИЯ ===============================================
   LC.loadReferralEarnings = async function() {
     try {
       const user = await getUser(); 
@@ -483,7 +466,6 @@
       let gen3Total = 0;
       let dataFound = false;
 
-      // Способ 1: Пробуем получить данные через my_ref_income_summary
       try {
         const { data: summaryData, error: summaryError } = await sb.rpc('my_ref_income_summary');
         
@@ -493,7 +475,6 @@
           const row = Array.isArray(summaryData) ? summaryData[0] : summaryData;
           
           if (row) {
-            // ИСПРАВЛЕНО: Используем правильные имена полей
             gen1Total = Math.round((row.lvl1_usdt || 0) * 100);
             gen2Total = Math.round((row.lvl2_usdt || 0) * 100);
             gen3Total = Math.round((row.lvl3_usdt || 0) * 100);
@@ -510,7 +491,6 @@
         console.warn('❌ my_ref_income_summary не сработал:', summaryErr);
       }
 
-      // Способ 2: Если первый способ не дал ВООБЩЕ данных, пробуем get_referral_earnings
       if (!dataFound) {
         try {
           const { data: refData, error: refError } = await sb.rpc('get_referral_earnings');
@@ -521,7 +501,6 @@
             const earnings = Array.isArray(refData) ? refData : (refData ? [refData] : []);
             
             earnings.forEach(earning => {
-              // ИСПРАВЛЕНО: Используем правильные имена полей
               const generation = earning.generation;
               const totalCents = earning.total_cents || 0;
               
@@ -550,7 +529,6 @@
         }
       }
 
-      // Способ 3: Если все еще нет данных, пробуем ref_income_totals
       if (!dataFound) {
         try {
           const { data: totalsData, error: totalsError } = await sb.rpc('ref_income_totals');
@@ -561,7 +539,6 @@
             const totalsArray = Array.isArray(totalsData) ? totalsData : (totalsData ? [totalsData] : []);
             
             totalsArray.forEach(item => {
-              // ИСПРАВЛЕНО: Правильная обработка данных
               const level = item.lvl;
               const amountUsd = item.amount_usd || 0;
               
@@ -590,7 +567,6 @@
         }
       }
 
-      // Способ 4: Прямой запрос к таблице referral_rewards (если другие способы не сработали)
       if (!dataFound) {
         try {
           const { data: rewardsData, error: rewardsError } = await sb
@@ -630,13 +606,11 @@
         }
       }
 
-      // Обновляем интерфейс ДАЖЕ ЕСЛИ ДАННЫЕ = 0
       const set = (sel, val) => { 
         const el = $(sel); 
         if (el) el.textContent = val; 
       };
       
-      // Обновляем основную панель
       set('#gen1Cell', fmtMoney(gen1Total/100));
       set('#gen2Cell', fmtMoney(gen2Total/100));
       set('#gen3Cell', fmtMoney(gen3Total/100));
@@ -644,7 +618,6 @@
       const total = (gen1Total + gen2Total + gen3Total) / 100;
       set('#refTotalCell', fmtMoney(total));
 
-      // Обновляем модальное окно
       set('#gen1CellModal', fmtMoney(gen1Total/100));
       set('#gen2CellModal', fmtMoney(gen2Total/100));
       set('#gen3CellModal', fmtMoney(gen3Total/100));
@@ -657,169 +630,29 @@
         total: fmtMoney(total)
       });
 
-      // Обновляем круговую диаграмму на основе данных
-      this.updateReferralChart(gen1Total, gen2Total, gen3Total);
-
     } catch(e) { 
       console.error('❌ [LC] loadReferralEarnings ошибка:', e); 
     }
   };
 
-  // Функция для обновления круговой диаграммы реферальных доходов
-  LC.updateReferralChart = function(gen1Cents, gen2Cents, gen3Cents) {
-    try {
-      const total = gen1Cents + gen2Cents + gen3Cents;
-      
-      if (total === 0) {
-        // Если нет доходов, показываем равномерное распределение
-        this.updateChartAppearance(40, 30, 30);
-        return;
-      }
-
-      const gen1Percent = Math.round((gen1Cents / total) * 100);
-      const gen2Percent = Math.round((gen2Cents / total) * 100);
-      const gen3Percent = 100 - gen1Percent - gen2Percent;
-
-      this.updateChartAppearance(gen1Percent, gen2Percent, gen3Percent);
-    } catch (error) {
-      console.error('Ошибка обновления диаграммы:', error);
-    }
-  };
-
-  // Функция для обновления внешнего вида диаграммы
-  LC.updateChartAppearance = function(gen1Percent, gen2Percent, gen3Percent) {
-    const chart = document.querySelector('.referral-chart');
-    if (chart) {
-      chart.style.background = `conic-gradient(
-        var(--primary) 0% ${gen1Percent}%,
-        var(--primary-light) ${gen1Percent}% ${gen1Percent + gen2Percent}%,
-        #e2e8f0 ${gen1Percent + gen2Percent}% 100%
-      )`;
-    }
-    
-    const donutChart = document.querySelector('.donut-chart');
-    if (donutChart) {
-      donutChart.style.background = `conic-gradient(
-        var(--primary) 0% ${gen1Percent}%,
-        var(--primary-light) ${gen1Percent}% ${gen1Percent + gen2Percent}%,
-        #e2e8f0 ${gen1Percent + gen2Percent}% 100%
-      )`;
-    }
-  };
-
-  // Новая функция для загрузки деталей рефералов в таблицу
-  LC.loadReferralDetailsTable = async function() {
-    try {
-      const user = await getUser();
-      if (!user) return;
-
-      const tbody = $('#refTree');
-      if (!tbody) return;
-
-      let allRefs = [];
-
-      // Пробуем несколько способов получить данные о рефералах
-      try {
-        // Способ 1: get_all_referrals_by_generation
-        for (let level = 1; level <= 3; level++) {
-          try {
-            const { data, error } = await sb.rpc('get_all_referrals_by_generation', {
-              p_level: level
-            });
-            
-            if (!error && data) {
-              const refs = Array.isArray(data) ? data : [data];
-              refs.forEach(ref => {
-                allRefs.push({
-                  ...ref,
-                  generation: level
-                });
-              });
-            }
-          } catch (levelErr) {
-            console.warn(`Не удалось получить рефералов ${level} поколения:`, levelErr);
-          }
-        }
-      } catch (method1Err) {
-        console.warn('Первый способ получения рефералов не сработал:', method1Err);
-      }
-
-      // Способ 2: Прямой запрос к referrals
-      if (allRefs.length === 0) {
-        try {
-          const { data: referrals, error } = await sb
-            .from('referrals')
-            .select(`
-              generation,
-              referred_id,
-              created_at,
-              profiles:referred_id (email)
-            `)
-            .eq('referrer_id', user.id)
-            .order('created_at', { ascending: false });
-
-          if (!error && referrals) {
-            allRefs = referrals.map(ref => ({
-              generation: ref.generation,
-              user_email: ref.profiles?.email || '—',
-              capital_cents: 0,
-              level_name: 'Starter',
-              created_at: ref.created_at
-            }));
-          }
-        } catch (method2Err) {
-          console.warn('Второй способ получения рефералов не сработал:', method2Err);
-        }
-      }
-
-      // Обновляем таблицу
-      tbody.innerHTML = '';
-      
-      if (allRefs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Нет активных рефералов</td></tr>`;
-      } else {
-        allRefs.slice(0, 20).forEach(r => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${r.generation || 1}</td>
-                          <td>${r.user_email || r.email || '—'}</td>
-                          <td>${fmtMoney(pickNum(r.capital_cents || r.balance_cents)/100)}</td>
-                          <td>${r.level_name || 'Starter'}</td>
-                          <td>${fmtDate(r.created_at || r.joined_at)}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
-
-      console.log('✅ Таблица рефералов обновлена, записей:', allRefs.length);
-    } catch (error) {
-      console.error('❌ Ошибка загрузки таблицы рефералов:', error);
-    }
-  };
-
-  // ===== ОБНОВЛЕНИЕ ДАННЫХ ДАШБОРДА ========================================
   LC.refreshDashboardCards = async function() {
     try {
       const user = await getUser(); 
       if (!user) return;
 
-      // Получаем количество рефералов по поколениям
       const counts = await LC.getActiveReferralCounts();
 
       const set = (sel, val) => { const el = $(sel); if (el) el.textContent = String(val); };
       
-      // Обновляем основную панель
       set('#gen1Count', counts.gen1);
       set('#gen2Count', counts.gen2);
       set('#gen3Count', counts.gen3);
 
-      // Обновляем модальное окно
       set('#gen1CountModal', counts.gen1);
       set('#gen2CountModal', counts.gen2);
       set('#gen3CountModal', counts.gen3);
 
       console.log('📊 Количество рефералов обновлено:', counts);
-
-      // Загружаем детальную информацию о рефералах для таблицы
-      await this.loadReferralDetailsTable();
 
     } catch(e) { 
       console.error('[LC] refreshDashboardCards ошибка:', e); 
@@ -901,7 +734,6 @@
       setBar(p);
       if (t > lastT) { acc += (t - lastT); lastT = t; }
       
-      // Начисляем после 10 секунд просмотра
       if (acc >= LC.config.MIN_VIEW_SECONDS && !credited) {
         credited = true; 
         console.log('Calling creditView with seconds:', Math.floor(acc));
@@ -960,407 +792,8 @@
       }
     });
 
-    // Инициализация проверки доступности
     setTimeout(checkVideoAvailability, 500);
     reset();
-  };
-
-  // ===== СИСТЕМА ВЫВОДА СРЕДСТВ =====
-
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - исправлена синтаксическая ошибка
-  LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '') {
-    try {
-      const sb = window.sb || window.supabase;
-      if (!sb) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_network_error') : '❌ Ошибка подключения к базе данных');
-        return null;
-      }
-      
-      // Получаем текущего пользователя
-      const { data: { user }, error: userError } = await sb.auth.getUser();
-      if (userError || !user) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
-        return null;
-      }
-      
-      console.log('🔄 Запрос вывода:', {
-        userId: user.id,
-        amountCents,
-        method,
-        address
-      });
-
-      // Используем RPC функцию
-      const { data, error } = await sb.rpc('request_withdrawal', {
-        p_amount_cents: parseInt(amountCents),
-        p_network: String(method),
-        p_address: String(address),
-        p_currency: 'USDT'
-      });
-
-      if (error) {
-        console.error('❌ Withdrawal RPC error:', error);
-        
-        // Fallback: создаем заявку напрямую
-        console.log('🔄 Пробуем создать заявку напрямую...');
-        
-        const { data: wallet } = await sb
-          .from('wallets')
-          .select('balance_cents')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (!wallet || wallet.balance_cents < amountCents) {
-          alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Недостаточно средств на балансе');
-          return null;
-        }
-        
-        const { data: directData, error: directError } = await sb
-          .from('withdrawals')
-          .insert({
-            user_id: user.id,
-            amount_cents: amountCents,
-            network: method,
-            address: address,
-            currency: 'USDT',
-            status: 'pending',
-            fee_cents: 0,
-            created_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-          
-        if (directError) {
-          console.error('❌ Ошибка прямой вставки:', directError);
-          alert((window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : '❌ Не удалось создать заявку') + ': ' + directError.message);
-          return null;
-        }
-        
-        // Списываем средства
-        await sb
-          .from('wallets')
-          .update({ 
-            balance_cents: wallet.balance_cents - amountCents,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-        
-        console.log('✅ Заявка создана напрямую:', directData);
-        
-        return { 
-          ok: true, 
-          message: window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_success') : '✅ Заявка на вывод создана и отправлена на обработку администратору',
-          id: directData.id 
-        };
-      }
-
-      console.log('✅ Ответ от RPC функции:', data);
-      
-      // Обрабатываем ответ от RPC функции
-      const result = typeof data === 'object' ? data : JSON.parse(data);
-      
-      if (!result?.ok) {
-        alert('❌ ' + (result?.message || (window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : 'Заявка отклонена системой')));
-        return null;
-      }
-      
-      return result;
-      
-    } catch (error) {
-      console.error('❌ Withdrawal request error:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : '❌ Ошибка при создании заявки') + ': ' + error.message);
-      return null;
-    }
-  };
-
-  // Функция проверки возможности вывода
-  LC.checkWithdrawalEligibility = async function(userId) {
-    try {
-      const sb = window.sb || window.supabase;
-      if (!sb) return { eligible: false, reason: 'База данных недоступна' };
-      
-      // Получаем профиль пользователя
-      const { data: profile, error: profileError } = await sb
-        .from('profiles')
-        .select('created_at')
-        .eq('user_id', userId)
-        .single();
-      
-      if (profileError) {
-        console.error('❌ Ошибка профиля:', profileError);
-        return { eligible: false, reason: 'Ошибка получения данных профиля' };
-      }
-      
-      const registrationDate = new Date(profile.created_at);
-      const now = new Date();
-      const daysSinceRegistration = Math.floor((now - registrationDate) / (1000 * 60 * 60 * 24));
-      
-      console.log('📅 Дней с регистрации:', daysSinceRegistration);
-      
-      // Проверяем историю выводов
-      const { data: previousWithdrawals, error: withdrawalsError } = await sb
-        .from('withdrawals')
-        .select('id, created_at, status')
-        .eq('user_id', userId)
-        .in('status', ['paid', 'pending'])
-        .order('created_at', { ascending: false });
-      
-      if (withdrawalsError) {
-        console.error('❌ Ошибка проверки истории выводов:', withdrawalsError);
-        return { eligible: false, reason: 'Ошибка проверки истории выводов' };
-      }
-      
-      const hasPreviousWithdrawals = previousWithdrawals && previousWithdrawals.length > 0;
-      
-      // Первый вывод - минимум 5 дней после регистрации
-      if (!hasPreviousWithdrawals && daysSinceRegistration < 5) {
-        const daysLeft = 5 - daysSinceRegistration;
-        return { 
-          eligible: false, 
-          reason: `Первый вывод доступен через ${daysLeft} ${daysLeft === 1 ? 'день' : 'дня'} после регистрации` 
-        };
-      }
-      
-      // Проверяем последний вывод (не чаще 1 раза в 24 часа)
-      if (hasPreviousWithdrawals) {
-        const lastWithdrawal = previousWithdrawals[0];
-        const lastWithdrawalDate = new Date(lastWithdrawal.created_at);
-        const hoursSinceLastWithdrawal = Math.floor((now - lastWithdrawalDate) / (1000 * 60 * 60));
-        
-        console.log('⏰ Часов с последнего вывода:', hoursSinceLastWithdrawal);
-        
-        if (hoursSinceLastWithdrawal < 24) {
-          const hoursLeft = 24 - hoursSinceLastWithdrawal;
-          return { 
-            eligible: false, 
-            reason: `Следующий вывод доступен через ${hoursLeft} ${hoursLeft === 1 ? 'час' : 'часов'}` 
-          };
-        }
-      }
-      
-      // Проверяем баланс
-      const { data: wallet, error: walletError } = await sb
-        .from('wallets')
-        .select('balance_cents')
-        .eq('user_id', userId)
-        .single();
-        
-      if (walletError || !wallet) {
-        return { eligible: false, reason: 'Ошибка проверки баланса' };
-      }
-      
-      if (wallet.balance_cents < 2900) {
-        return { eligible: false, reason: 'Минимальная сумма для вывода: $29' };
-      }
-      
-      console.log('✅ Все проверки пройдены');
-      return { eligible: true };
-      
-    } catch (error) {
-      console.error('❌ Ошибка проверки возможности вывода:', error);
-      return { eligible: false, reason: 'Ошибка проверки возможности вывода' };
-    }
-  };
-
-  // Функция загрузки истории выводов
-  LC.loadWithdrawalsList = async function() {
-    try {
-      const sb = window.sb || window.supabase;
-      if (!sb) {
-        console.error('❌ Supabase not available');
-        return;
-      }
-      
-      // Получаем текущего пользователя
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) return;
-      
-      const tbody = document.getElementById('wd-table-body');
-      if (!tbody) return;
-      
-      // Загружаем заявки пользователя
-      const { data, error } = await sb
-        .from('withdrawals')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      
-      if (error) throw error;
-      
-      tbody.innerHTML = '';
-      
-      if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Пока нет заявок</td></tr>';
-        return;
-      }
-      
-      // Рендерим таблицу
-      data.forEach(withdrawal => {
-        const tr = document.createElement('tr');
-        const amount = (withdrawal.amount_cents / 100).toFixed(2);
-        const date = new Date(withdrawal.created_at).toLocaleString();
-        const fee = withdrawal.fee_cents ? (withdrawal.fee_cents / 100).toFixed(2) : '0.00';
-        const total = ((withdrawal.amount_cents + (withdrawal.fee_cents || 0)) / 100).toFixed(2);
-        
-        // Статусы
-        let statusBadge = '';
-        switch (withdrawal.status) {
-          case 'paid':
-            statusBadge = '<span class="pill paid">Выплачено</span>';
-            break;
-          case 'rejected':
-            statusBadge = '<span class="pill rejected">Отклонено</span>';
-            break;
-          case 'cancelled':
-            statusBadge = '<span class="pill rejected">Отменено</span>';
-            break;
-          default:
-            statusBadge = '<span class="pill pending">Ожидание</span>';
-        }
-        
-        // Можно отменить только pending заявки в течение 5 часов
-        const canCancel = withdrawal.status === 'pending' && 
-          (Date.now() - new Date(withdrawal.created_at).getTime()) < 5 * 3600 * 1000;
-        
-        tr.innerHTML = `
-          <td>${date}</td>
-          <td class="right">${total} $</td>
-          <td>${withdrawal.network || 'TRC20'}</td>
-          <td>${statusBadge}</td>
-          <td>${withdrawal.txid ? `<code title="${withdrawal.txid}">${withdrawal.txid.substring(0, 8)}...</code>` : '—'}</td>
-          <td>
-            ${canCancel ? 
-              `<button class="btn bad" data-cancel="${withdrawal.id}">Отменить</button>` : 
-              '<span class="small muted">—</span>'
-            }
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-      
-      // Добавляем обработчики для кнопок отмены
-      tbody.querySelectorAll('[data-cancel]').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const withdrawalId = e.target.getAttribute('data-cancel');
-          await LC.cancelWithdrawal(withdrawalId);
-        });
-      });
-      
-    } catch (error) {
-      console.error('❌ Load withdrawals error:', error);
-      const tbody = document.getElementById('wd-table-body');
-      if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка загрузки</td></tr>';
-      }
-    }
-  };
-
-  // ИСПРАВЛЕННАЯ Функция отмены вывода
-  LC.cancelWithdrawal = async function(withdrawalId) {
-    if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
-      return;
-    }
-    
-    try {
-      const sb = window.sb || window.supabase;
-      if (!sb) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_network_error') : '❌ Ошибка подключения к базе данных');
-        return;
-      }
-      
-      // Используем RPC функцию для отмены
-      const { data, error } = await sb.rpc('user_cancel_withdrawal', {
-        p_id: parseInt(withdrawalId)
-      });
-      
-      if (error) {
-        console.error('❌ Cancel withdrawal RPC error:', error);
-        throw new Error('Не удалось отменить заявку: ' + error.message);
-      }
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Ошибка отмены заявки');
-      }
-      
-      alert('✅ ' + (data.message || (window.LC_I18N ? window.LC_I18N.t('notification_success') + ' Заявка отменена' : 'Заявка отменена')));
-      
-      // Обновляем интерфейс
-      await LC.refreshBalance();
-      
-    } catch (error) {
-      console.error('❌ Cancel withdrawal error:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Ошибка отмены заявки') + ': ' + error.message);
-    }
-  };
-
-  // Real-time подписка на выводы
-  LC.subscribeToWithdrawals = async function() {
-    try {
-      const sb = window.sb || window.supabase;
-      if (!sb) return;
-      
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) return;
-      
-      console.log('🔔 Подписываемся на обновления выводов для пользователя:', user.id);
-      
-      const channel = sb.channel('withdrawals-' + user.id)
-        .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'withdrawals',
-            filter: `user_id=eq.${user.id}`
-          }, 
-          (payload) => {
-            console.log('🔄 Получено обновление вывода:', payload);
-            LC.loadWithdrawalsList();
-            LC.refreshBalance();
-          }
-        )
-        .subscribe((status) => {
-          console.log('📡 Статус подписки на выводы:', status);
-        });
-      
-      return channel;
-    } catch (error) {
-      console.error('❌ Subscribe to withdrawals error:', error);
-    }
-  };
-
-  // Инициализация страницы вывода
-  LC.initWithdrawPage = async function() {
-    try {
-      const sb = window.sb || window.supabase;
-      if (!sb) {
-        console.error('❌ Supabase not available');
-        return;
-      }
-      
-      // Проверяем авторизацию
-      const { data: { user } } = await sb.auth.getUser();
-      if (!user) {
-        window.location.href = 'login_single.html';
-        return;
-      }
-      
-      console.log('🚀 Инициализация страницы вывода для пользователя:', user.id);
-      
-      // Обновляем баланс
-      await LC.refreshBalance();
-      
-      // Загружаем историю выводов
-      await LC.loadWithdrawalsList();
-      
-      // Инициализируем real-time подписку
-      await LC.subscribeToWithdrawals();
-      
-      console.log('✅ Страница вывода успешно инициализирована');
-      
-    } catch (error) {
-      console.error('❌ Withdraw page init error:', error);
-    }
   };
 
   // ===== ИНИЦИАЛИЗАЦИЯ ДАШБОРДА ============================================
@@ -1385,7 +818,6 @@
       
       console.log('✅ Дашборд успешно инициализирован');
       
-      // Обновляем информацию каждые 30 секунд
       setInterval(async () => {
         await LC.refreshBalance();
         await LC.refreshLevelInfo();
@@ -1397,157 +829,16 @@
     }
   };
 
-  // ===== ИНИЦИАЛИЗАЦИЯ СТРАНИЦ =============================================
-  LC.initDepositPage = async function() {
-    try {
-      const user = await getUser(); 
-      if (!user) { 
-        location.href = '/login_single.html'; 
-        return; 
-      }
-      await LC.refreshBalance();
-      
-      const form = document.getElementById('depositForm');
-      if (form && !form.dataset.lcInit) {
-        form.dataset.lcInit = '1';
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const amount = parseFloat(document.getElementById('amount')?.value || '0');
-          const network = document.getElementById('network')?.value || 'TRC20';
-          await LC.createDeposit(Math.round(amount * 100), network, 'USDT');
-        });
-      }
-    } catch(e) { 
-      console.error('[LC] initDepositPage', e); 
-    }
-  };
-
-  LC.createDeposit = async function(amountCents, network='TRC20', currency='USDT') {
-    const user = await getUser(); 
-    if (!user) { 
-      alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт'); 
-      return; 
-    }
-    
-    const { data, error } = await sb.rpc('create_deposit', {
-      p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
-      p_network: String(network || 'TRC20'),
-      p_currency: String(currency || 'USDT')
-    });
-    
-    if (error) { 
-      console.error(error); 
-      alert(window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Ошибка создания депозита'); 
-      return; 
-    }
-    
-    const row = Array.isArray(data) ? data[0] : data;
-    if (!row?.ok) { 
-      alert(row?.message || (window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Депозит отклонен')); 
-      return; 
-    }
-    
-    alert(window.LC_I18N ? window.LC_I18N.t('notification_deposit_success') : '✅ Депозит создан');
-    return row;
-  };
-
-  // ===== ФУНКЦИИ ДЕПОЗИТОВ =================================================
-
-  // Создание депозита с прикреплением TXID
-  LC.createDepositWithTx = async function(amountCents, network = 'TRC20', currency = 'USDT', txid = '') {
-    try {
-      const user = await getUser();
-      if (!user) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
-        return null;
-      }
-
-      console.log('🔄 Создание депозита:', {
-        userId: user.id,
-        amountCents,
-        network,
-        currency,
-        txid
-      });
-
-      // Создаем депозит напрямую
-      const { data, error } = await sb
-        .from('deposits')
-        .insert({
-          user_id: user.id,
-          amount_cents: amountCents,
-          network: network,
-          currency: currency,
-          txid: txid || null,
-          status: 'pending',
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ Ошибка создания депозита:', error);
-        alert((window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Не удалось создать депозит') + ': ' + error.message);
-        return null;
-      }
-
-      console.log('✅ Депозит создан:', data);
-      return { ok: true, id: data.id, message: window.LC_I18N ? window.LC_I18N.t('notification_deposit_success') : '✅ Депозит создан' };
-        
-    } catch (error) {
-      console.error('❌ Ошибка создания депозита:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Ошибка при создании депозита') + ': ' + error.message);
-      return null;
-    }
-  };
-
-  // Прикрепление TXID к существующему депозиту
-  LC.attachTxToDeposit = async function(depositId, txid) {
-    try {
-      const user = await getUser();
-      if (!user) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
-        return null;
-      }
-
-      const { data, error } = await sb
-        .from('deposits')
-        .update({ 
-          txid: txid,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', depositId)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ Ошибка прикрепления TXID:', error);
-        alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Не удалось прикрепить TXID') + ': ' + error.message);
-        return null;
-      }
-
-      console.log('✅ TXID прикреплен:', data);
-      return data;
-        
-    } catch (error) {
-      console.error('❌ Ошибка прикрепления TXID:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Ошибка при прикреплении TXID') + ': ' + error.message);
-      return null;
-    }
-  };
-
   // ===== АВТОМАТИЧЕСКАЯ ИНИЦИАЛИЗАЦИЯ ======================================
   const init = function() {
     const path = location.pathname;
     if (path.includes('dashboard')) {
       LC.initDashboard();
     } else if (path.includes('withdraw')) {
-      LC.initWithdrawPage();
+      // LC.initWithdrawPage();
     } else if (path.includes('deposit')) {
-      LC.initDepositPage();
+      // LC.initDepositPage();
     } else if (path.includes('login') || path.includes('register')) {
-      // Автоматически применяем реферальный код после регистрации
       setTimeout(() => {
         LC.applyReferral();
       }, 1000);
@@ -1560,6 +851,5 @@
     setTimeout(init, 100);
   }
 
-  // Экспортируем объект
   window.LC = LC;
 })();
