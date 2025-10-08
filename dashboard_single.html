@@ -1763,6 +1763,19 @@ function updateVideoProgress(percent) {
     progressText.textContent = Math.round(percent) + '%';
   }
 }
+
+// Автоматическое обновление данных каждые 30 секунд
+setInterval(() => {
+  if (window.LC && typeof window.LC.refreshBalance === 'function') {
+    window.LC.refreshBalance();
+  }
+  if (window.LC && typeof window.LC.refreshLevelInfo === 'function') {
+    window.LC.refreshLevelInfo();
+  }
+  if (window.LC && typeof window.LC.loadReferralEarnings === 'function') {
+    window.LC.loadReferralEarnings();
+  }
+}, 30000);
 </script>
 </body>
 </html>
