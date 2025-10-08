@@ -194,18 +194,25 @@
       const baseCapEl = $('#baseCapCell');
       if (baseCapEl) baseCapEl.textContent = `$${base.toFixed(2)}`;
 
-      if (info.next_level_goal) {
-        const nextTargetEl = $('#nextTargetCell');
-        if (nextTargetEl) nextTargetEl.textContent = info.next_level_goal;
-      } else {
-        const nextTargetEl = $('#nextTargetCell');
-        if (nextTargetEl) nextTargetEl.textContent = '—';
+      // Следующий уровень
+      const nextTargetEl = $('#nextTargetCell');
+      if (nextTargetEl) {
+        if (info.next_level_goal) {
+          nextTargetEl.textContent = info.next_level_goal;
+        } else {
+          nextTargetEl.textContent = '—';
+        }
       }
 
-      console.log('🔄 Level info updated - CARDS LEFT UNTOUCHED');
+      // Обновляем баннер текущего уровня если функция существует
+      if (window.updateCurrentLevelBanner) {
+        window.updateCurrentLevelBanner(info);
+      }
+
+      console.log('🔄 Level info updated successfully');
 
     } catch(e) { 
-      console.error('[LC] refreshLevelInfo', e); 
+      console.error('[LC] refreshLevelInfo error:', e); 
     }
   };
 
@@ -864,7 +871,6 @@
 
   // ===== СИСТЕМА ВЫВОДА СРЕДСТВ =====
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - исправлена синтаксическая ошибка
   LC.requestWithdrawal = async function(amountCents, method = 'TRC20', address = '') {
     try {
       const sb = window.sb || window.supabase;
@@ -966,6 +972,437 @@
     } catch (error) {
       console.error('❌ Withdrawal request error:', error);
       alert((window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : '❌ Ошибка при создании заявки') + ': ' + error.message);
+      return null;
+    }
+  };
+
+  // Функция проверки возможности вывода
+  LC.checkWithdrawalEligibility = async function(userId) {
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) return { eligible: false, reason: 'База данных недоступна' };
+      
+      // Получаем профиль пользователя
+      const { data: profile, error: profileError } = await sb
+        .from('profiles')
+        .select('created_at')
+        .eq('user_id', userId)
+        .single();
+      
+      if (profileError) {
+        console.error('❌ Ошибка профиля:', profileError);
+        return { eligible: false, reason: 'Ошибка получения данных профиля' };
+      }
+      
+      const registrationDate = new Date(profile.created_at);
+      const now = new Date();
+      const daysSinceRegistration = Math.floor((now - registrationDate) / (1000 * 60 * 60 * 24));
+      
+      console.log('📅 Дней с регистрации:', daysSinceRegistration);
+      
+      // Проверяем историю выводов
+      const { data: previousWithdrawals, error: withdrawalsError } = await sb
+        .from('withdrawals')
+        .select('id, created_at, status')
+        .eq('user_id', userId)
+        .in('status', ['paid', 'pending'])
+        .order('created_at', { ascending: false });
+      
+      if (withdrawalsError) {
+        console.error('❌ Ошибка проверки истории выводов:', withdrawalsError);
+        return { eligible: false, reason: 'Ошибка проверки истории выводов' };
+      }
+      
+      const hasPreviousWithdrawals = previousWithdrawals && previousWithdrawals.length > 0;
+      
+      // Первый вывод - минимум 5 дней после регистрации
+      if (!hasPreviousWithdrawals && daysSinceRegistration < 5) {
+        const daysLeft = 5 - daysSinceRegistration;
+        return { 
+          eligible: false, 
+          reason: `Первый вывод доступен через ${daysLeft} ${daysLeft === 1 ? 'день' : 'дня'} после регистрации` 
+        };
+      }
+      
+      // Проверяем последний вывод (не чаще 1 раза в 24 часа)
+      if (hasPreviousWithdrawals) {
+        const lastWithdrawal = previousWithdrawals[0];
+        const lastWithdrawalDate = new Date(lastWithdrawal.created_at);
+        const hoursSinceLastWithdrawal = Math.floor((now - lastWithdrawalDate) / (1000 * 60 * 60));
+        
+        console.log('⏰ Часов с последнего вывода:', hoursSinceLastWithdrawal);
+        
+        if (hoursSinceLastWithdrawal < 24) {
+          const hoursLeft = 24 - hoursSinceLastWithdrawal;
+          return { 
+            eligible: false, 
+            reason: `Следующий вывод доступен через ${hoursLeft} ${hoursLeft === 1 ? 'час' : 'часов'}` 
+          };
+        }
+      }
+      
+      // Проверяем баланс
+      const { data: wallet, error: walletError } = await sb
+        .from('wallets')
+        .select('balance_cents')
+        .eq('user_id', userId)
+        .single();
+        
+      if (walletError || !wallet) {
+        return { eligible: false, reason: 'Ошибка проверки баланса' };
+      }
+      
+      if (wallet.balance_cents < 2900) {
+        return { eligible: false, reason: 'Минимальная сумма для вывода: $29' };
+      }
+      
+      console.log('✅ Все проверки пройдены');
+      return { eligible: true };
+      
+    } catch (error) {
+      console.error('❌ Ошибка проверки возможности вывода:', error);
+      return { eligible: false, reason: 'Ошибка проверки возможности вывода' };
+    }
+  };
+
+  // Функция загрузки истории выводов
+  LC.loadWithdrawalsList = async function() {
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) {
+        console.error('❌ Supabase not available');
+        return;
+      }
+      
+      // Получаем текущего пользователя
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+      
+      const tbody = document.getElementById('wd-table-body');
+      if (!tbody) return;
+      
+      // Загружаем заявки пользователя
+      const { data, error } = await sb
+        .from('withdrawals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (error) throw error;
+      
+      tbody.innerHTML = '';
+      
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Пока нет заявок</td></tr>';
+        return;
+      }
+      
+      // Рендерим таблицу
+      data.forEach(withdrawal => {
+        const tr = document.createElement('tr');
+        const amount = (withdrawal.amount_cents / 100).toFixed(2);
+        const date = new Date(withdrawal.created_at).toLocaleString();
+        const fee = withdrawal.fee_cents ? (withdrawal.fee_cents / 100).toFixed(2) : '0.00';
+        const total = ((withdrawal.amount_cents + (withdrawal.fee_cents || 0)) / 100).toFixed(2);
+        
+        // Статусы
+        let statusBadge = '';
+        switch (withdrawal.status) {
+          case 'paid':
+            statusBadge = '<span class="pill paid">Выплачено</span>';
+            break;
+          case 'rejected':
+            statusBadge = '<span class="pill rejected">Отклонено</span>';
+            break;
+          case 'cancelled':
+            statusBadge = '<span class="pill rejected">Отменено</span>';
+            break;
+          default:
+            statusBadge = '<span class="pill pending">Ожидание</span>';
+        }
+        
+        // Можно отменить только pending заявки в течение 5 часов
+        const canCancel = withdrawal.status === 'pending' && 
+          (Date.now() - new Date(withdrawal.created_at).getTime()) < 5 * 3600 * 1000;
+        
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td class="right">${total} $</td>
+          <td>${withdrawal.network || 'TRC20'}</td>
+          <td>${statusBadge}</td>
+          <td>${withdrawal.txid ? `<code title="${withdrawal.txid}">${withdrawal.txid.substring(0, 8)}...</code>` : '—'}</td>
+          <td>
+            ${canCancel ? 
+              `<button class="btn bad" data-cancel="${withdrawal.id}">Отменить</button>` : 
+              '<span class="small muted">—</span>'
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      // Добавляем обработчики для кнопок отмены
+      tbody.querySelectorAll('[data-cancel]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const withdrawalId = e.target.getAttribute('data-cancel');
+          await LC.cancelWithdrawal(withdrawalId);
+        });
+      });
+      
+    } catch (error) {
+      console.error('❌ Load withdrawals error:', error);
+      const tbody = document.getElementById('wd-table-body');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка загрузки</td></tr>';
+      }
+    }
+  };
+
+  // Функция отмены вывода
+  LC.cancelWithdrawal = async function(withdrawalId) {
+    if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
+      return;
+    }
+    
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) {
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_network_error') : '❌ Ошибка подключения к базе данных');
+        return;
+      }
+      
+      // Используем RPC функцию для отмены
+      const { data, error } = await sb.rpc('user_cancel_withdrawal', {
+        p_id: parseInt(withdrawalId)
+      });
+      
+      if (error) {
+        console.error('❌ Cancel withdrawal RPC error:', error);
+        throw new Error('Не удалось отменить заявку: ' + error.message);
+      }
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Ошибка отмены заявки');
+      }
+      
+      alert('✅ ' + (data.message || (window.LC_I18N ? window.LC_I18N.t('notification_success') + ' Заявка отменена' : 'Заявка отменена')));
+      
+      // Обновляем интерфейс
+      await LC.refreshBalance();
+      
+    } catch (error) {
+      console.error('❌ Cancel withdrawal error:', error);
+      alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Ошибка отмены заявки') + ': ' + error.message);
+    }
+  };
+
+  // Real-time подписка на выводы
+  LC.subscribeToWithdrawals = async function() {
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) return;
+      
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+      
+      console.log('🔔 Подписываемся на обновления выводов для пользователя:', user.id);
+      
+      const channel = sb.channel('withdrawals-' + user.id)
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'withdrawals',
+            filter: `user_id=eq.${user.id}`
+          }, 
+          (payload) => {
+            console.log('🔄 Получено обновление вывода:', payload);
+            LC.loadWithdrawalsList();
+            LC.refreshBalance();
+          }
+        )
+        .subscribe((status) => {
+          console.log('📡 Статус подписки на выводы:', status);
+        });
+      
+      return channel;
+    } catch (error) {
+      console.error('❌ Subscribe to withdrawals error:', error);
+    }
+  };
+
+  // Инициализация страницы вывода
+  LC.initWithdrawPage = async function() {
+    try {
+      const sb = window.sb || window.supabase;
+      if (!sb) {
+        console.error('❌ Supabase not available');
+        return;
+      }
+      
+      // Проверяем авторизацию
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        window.location.href = 'login_single.html';
+        return;
+      }
+      
+      console.log('🚀 Инициализация страницы вывода для пользователя:', user.id);
+      
+      // Обновляем баланс
+      await LC.refreshBalance();
+      
+      // Загружаем историю выводов
+      await LC.loadWithdrawalsList();
+      
+      // Инициализируем real-time подписку
+      await LC.subscribeToWithdrawals();
+      
+      console.log('✅ Страница вывода успешно инициализирована');
+      
+    } catch (error) {
+      console.error('❌ Withdraw page init error:', error);
+    }
+  };
+
+  // ===== СИСТЕМА ДЕПОЗИТОВ ================================================
+
+  // Инициализация страницы депозита
+  LC.initDepositPage = async function() {
+    try {
+      const user = await getUser(); 
+      if (!user) { 
+        location.href = '/login_single.html'; 
+        return; 
+      }
+      await LC.refreshBalance();
+      
+      const form = document.getElementById('depositForm');
+      if (form && !form.dataset.lcInit) {
+        form.dataset.lcInit = '1';
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const amount = parseFloat(document.getElementById('amount')?.value || '0');
+          const network = document.getElementById('network')?.value || 'TRC20';
+          await LC.createDeposit(Math.round(amount * 100), network, 'USDT');
+        });
+      }
+    } catch(e) { 
+      console.error('[LC] initDepositPage', e); 
+    }
+  };
+
+  // Создание депозита
+  LC.createDeposit = async function(amountCents, network='TRC20', currency='USDT') {
+    const user = await getUser(); 
+    if (!user) { 
+      alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт'); 
+      return; 
+    }
+    
+    const { data, error } = await sb.rpc('create_deposit', {
+      p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
+      p_network: String(network || 'TRC20'),
+      p_currency: String(currency || 'USDT')
+    });
+    
+    if (error) { 
+      console.error(error); 
+      alert(window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Ошибка создания депозита'); 
+      return; 
+    }
+    
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row?.ok) { 
+      alert(row?.message || (window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Депозит отклонен')); 
+      return; 
+    }
+    
+    alert(window.LC_I18N ? window.LC_I18N.t('notification_deposit_success') : '✅ Депозит создан');
+    return row;
+  };
+
+  // Создание депозита с прикреплением TXID
+  LC.createDepositWithTx = async function(amountCents, network = 'TRC20', currency = 'USDT', txid = '') {
+    try {
+      const user = await getUser();
+      if (!user) {
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
+        return null;
+      }
+
+      console.log('🔄 Создание депозита:', {
+        userId: user.id,
+        amountCents,
+        network,
+        currency,
+        txid
+      });
+
+      // Создаем депозит напрямую
+      const { data, error } = await sb
+        .from('deposits')
+        .insert({
+          user_id: user.id,
+          amount_cents: amountCents,
+          network: network,
+          currency: currency,
+          txid: txid || null,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Ошибка создания депозита:', error);
+        alert((window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Не удалось создать депозит') + ': ' + error.message);
+        return null;
+      }
+
+      console.log('✅ Депозит создан:', data);
+      return { ok: true, id: data.id, message: window.LC_I18N ? window.LC_I18N.t('notification_deposit_success') : '✅ Депозит создан' };
+        
+    } catch (error) {
+      console.error('❌ Ошибка создания депозита:', error);
+      alert((window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Ошибка при создании депозита') + ': ' + error.message);
+      return null;
+    }
+  };
+
+  // Прикрепление TXID к существующему депозиту
+  LC.attachTxToDeposit = async function(depositId, txid) {
+    try {
+      const user = await getUser();
+      if (!user) {
+        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
+        return null;
+      }
+
+      const { data, error } = await sb
+        .from('deposits')
+        .update({ 
+          txid: txid,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', depositId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Ошибка прикрепления TXID:', error);
+        alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Не удалось прикрепить TXID') + ': ' + error.message);
+        return null;
+      }
+
+      console.log('✅ TXID прикреплен:', data);
+      return data;
+        
+    } catch (error) {
+      console.error('❌ Ошибка прикрепления TXID:', error);
+      alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Ошибка при прикреплении TXID') + ': ' + error.message);
       return null;
     }
   };
