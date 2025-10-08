@@ -102,7 +102,6 @@
     gap: 8px;
   }
 
-  /* БАЛАНС */
   .balance-small {
     font-size: 20px;
     font-weight: 700;
@@ -277,7 +276,7 @@
     width: 100%;
   }
 
-  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ - УПРОЩЕННАЯ === */
+  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ === */
   .carousel-container {
     position: relative;
     width: 100%;
@@ -354,7 +353,6 @@
     font-weight: bold;
   }
 
-  /* ОБНОВЛЕННЫЕ ИКОНКИ */
   .level-top-icon {
     position: absolute;
     top: 50%;
@@ -368,7 +366,6 @@
     z-index: 2;
   }
 
-  /* ИНФОРМАЦИЯ ПЕРЕНЕСЕНА В ЛЕВЫЙ УГОЛ */
   .level-content {
     text-align: left;
     position: absolute;
@@ -448,7 +445,7 @@
     transform: scale(1.2);
   }
 
-  /* === КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР В ЖЕЛТОЙ ТЕМЕ === */
+  /* === КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР === */
   .video-player {
     background: linear-gradient(135deg, #1a1500 0%, #2a2200 100%);
     border-radius: 12px;
@@ -777,7 +774,7 @@
     border-radius: 2px;
   }
 
-  /* === МОДАЛЬНЫЕ ОКНА ДЛЯ ТАБЛИЦ === */
+  /* === МОДАЛЬНЫЕ ОКНА === */
   .modal-overlay {
     position: fixed;
     top: 0;
@@ -1030,7 +1027,7 @@
     z-index: 3;
   }
 
-  /* Дополнительные стили для статусов рефералов */
+  /* Дополнительные стили */
   .loading-indicator {
     text-align: center;
     padding: 10px;
@@ -1187,7 +1184,6 @@
     <div class="balance-small" data-balance>$0.00</div>
   </div>
   
-  <!-- Переключатель языка - ОБНОВЛЕННЫЙ согласно language-switcher.js -->
   <div class="language-switcher" id="languageSwitcher">
     <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
       <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1296,7 +1292,7 @@
 <!-- Основной контент -->
 <main class="main-content">
   <div class="container">
-    <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ С ОБНОВЛЕННЫМИ ИКОНКАМИ -->
+    <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ -->
     <div class="carousel-container">
       <div class="carousel-wrapper" id="carouselWrapper">
         <div class="level-card-carousel level-card" data-level="starter" data-index="0">
@@ -1373,7 +1369,7 @@
       </div>
     </div>
 
-    <!-- 2. КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР В ЖЕЛТОЙ ТЕМЕ -->
+    <!-- 2. КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР -->
     <div class="video-player">
       <div class="video-header">
         <div class="video-title" data-i18n="mining_processor">Mining Processor</div>
@@ -1513,7 +1509,7 @@ function showNotification(message) {
   }
 }
 
-// Карусель карточек уровней с улучшенным свайпом
+// Карусель карточек уровней
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
   const cards = document.querySelectorAll('.level-card-carousel');
@@ -1621,7 +1617,6 @@ function initModals() {
   const closeInfoModalBtn = document.getElementById('closeInfoModal');
   const closeReferralModalBtn = document.getElementById('closeReferralModal');
 
-  // Функции для показа/скрытия загрузки
   function showInfoModalLoading() {
     document.getElementById('infoModalLoading').style.display = 'block';
     document.getElementById('infoDonutChart').style.display = 'none';
@@ -1678,7 +1673,6 @@ function initModals() {
     infoModal.classList.add('active');
     
     try {
-      // Обновляем данные перед показом модального окна
       if (window.LC && typeof window.LC.refreshLevelInfo === 'function') {
         await window.LC.refreshLevelInfo();
       }
@@ -1694,7 +1688,6 @@ function initModals() {
     referralModal.classList.add('active');
     
     try {
-      // Обновляем данные перед показом модального окна
       if (window.LC && typeof window.LC.loadReferralEarnings === 'function') {
         await window.LC.loadReferralEarnings();
       }
@@ -1742,13 +1735,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // УДАЛЕНО: конфликтующий код переключателя языка
-  // Теперь переключатель управляется language-switcher.js
-  
   initCarousel();
   initModals();
   
-  // Инициализация дашборда
   if (window.LC && typeof window.LC.initDashboard === 'function') {
     setTimeout(() => {
       window.LC.initDashboard();
