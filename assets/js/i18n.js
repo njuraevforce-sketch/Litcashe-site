@@ -20,6 +20,15 @@ window.LC_I18N = (function(){
       "page_title_login": "Вход — Litcash",
       "page_title_register": "Регистрация — Litcash",
       
+      // Hero секция
+      "hero_badge": "USDT • TRC20 • 13%/5%/1%",
+      "hero_title": "Заряжайся и побеждай! LITCASH-заработок, которому доверяют!",
+      "hero_start": "Начать",
+      "hero_more": "Подробнее",
+      "hero_activeUsers": "Активные пользователи",
+      "hero_payouts": "Выплаты",
+      "hero_apr": "Потенциальный APR",      
+      
       // Новые переводы для дашборда
       "nav_platform": "Платформа",
       "nav_profile": "Профиль",
