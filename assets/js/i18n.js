@@ -99,6 +99,14 @@ window.LC_I18N = (function(){
       "referral_capital": "Капитал",
       "referral_level": "Уровень",
       "referral_date": "Дата",
+        
+
+  "language_switch_label": "Выбор языка",
+  "deposit_invalid_amount": "Введите корректную сумму в USDT",
+  "deposit_minimum_amount": "Минимальная сумма пополнения: $29",
+  "deposit_success_message": "✅ Заявка на пополнение создана! После подтверждения сети баланс пополнится автоматически.",
+  "deposit_error_message": "Ошибка при создании пополнения",
+
       
       // Ошибки и сообщения
       "error_loading_data": "Ошибка загрузки данных",
