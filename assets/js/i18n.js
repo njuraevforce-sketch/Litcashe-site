@@ -190,6 +190,21 @@ window.LC_I18N = (function(){
       "page_title_home": "Home — Litcash",
       "page_title_login": "Login — Litcash",
       "page_title_register": "Register — Litcash",
+
+      "hero_badge": "USDT • TRC20 • 13%/5%/1%",
+      "hero_title": "Charge up and win! LITCASH - earnings you can trust!",
+      "hero_start": "Get Started",
+      "hero_more": "Learn More",
+      "hero_activeUsers": "Active Users",
+      "hero_payouts": "Payouts",
+      "hero_apr": "Potential APR",
+      
+      "steps_activation": "Activation",
+      "steps_activationDesc": "Deposit from 29 USDT (TRC20) - account becomes active.",
+      "steps_views": "Views",
+      "steps_viewsDesc": "Watch short videos. Every 5 views give up to 5% to your balance.",
+      "steps_referrals": "Referrals",
+      "steps_referralsDesc": "Build a team of investors - you get 13% / 5% / 1%.",      
       
       "nav_platform": "Platform",
       "nav_profile": "Profile",
