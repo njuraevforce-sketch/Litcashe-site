@@ -393,7 +393,8 @@ window.LC_I18N = (function(){
   "loading": "Loading…",
   "dashboard": "Dashboard",
   "withdraw": "Withdraw",
-  "copyright": "© 2025 Litcash. All rights reserved.",   
+  "copyright": "© 2025 Litcash. All rights reserved.",
+      "language_switch_label": "Language selection",
      
       "error_loading_data": "Error loading data",
       "error_loading_referral_data": "Error loading referral data",
