@@ -1678,7 +1678,6 @@ function initModals() {
     infoModal.classList.add('active');
     
     try {
-      // Обновляем данные перед показом модального окна
       if (window.LC && typeof window.LC.refreshLevelInfo === 'function') {
         await window.LC.refreshLevelInfo();
       }
@@ -1694,7 +1693,6 @@ function initModals() {
     referralModal.classList.add('active');
     
     try {
-      // Обновляем данные перед показом модального окна
       if (window.LC && typeof window.LC.loadReferralEarnings === 'function') {
         await window.LC.loadReferralEarnings();
       }
