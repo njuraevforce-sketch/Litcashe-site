@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0a1a14">
+  <meta name="theme-color" content="#F5C518">
 
   <!-- iOS -->
   <link rel="apple-touch-icon" href="/icons/litcash-180.png">
@@ -14,42 +14,47 @@
 
   <!-- PWA init -->
   <script defer src="/app-install.js"></script>
-  
+  <script defer>
+  (function () {
+    if (!('serviceWorker' in navigator)) return;
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.getRegistration('/')
+        .then(function (reg) {
+          if (!reg) {
+            return navigator.serviceWorker.register('/sw.js', { scope: '/' });
+          }
+        })
+        .catch(console.error);
+    });
+  })();
+  </script>
+
   <title>FAQ — Litcash</title>
-  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%2310b981'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%230a1a14' font-family='Arial' font-weight='700'>LC</text></svg>">
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23F5C518'/><text x='50%25' y='56%25' font-size='28' text-anchor='middle' fill='%23ffffff' font-family='Arial' font-weight='700'>LC</text></svg>">
 
   <style>
   /* === ОСНОВНЫЕ СТИЛИ === */
   :root {
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #34d399;
+    --primary: #F5C518;
+    --primary-dark: #e0b415;
+    --primary-light: #f8d34a;
     --success: #22c55e;
     --warning: #f59e0b;
     --error: #ef4444;
-    --bg: #0a1a14;
-    --bg-gradient: linear-gradient(135deg, #0a1a14 0%, #0d2c1f 50%, #0a1a14 100%);
-    --bg-card: rgba(255, 255, 255, 0.08);
-    --text: #ffffff;
-    --text-secondary: #a7f3d0;
-    --border: rgba(16, 185, 129, 0.3);
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --radius: 12px;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #ffffff;
+    --bg-gradient: linear-gradient(135deg, #f0fff0 0%, #e0ffe0 100%);
+    --bg-card: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius: 16px;
   }
 
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html {
-    height: 100%;
-    overflow-x: hidden;
-    background: var(--bg);
   }
 
   body {
@@ -57,375 +62,93 @@
     background: var(--bg-gradient);
     color: var(--text);
     line-height: 1.4;
+    position: relative;
+    overflow-x: hidden;
     min-height: 100vh;
-    min-height: -webkit-fill-available;
     -webkit-text-size-adjust: 100%;
-    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-    width: 100%;
-    overflow-x: hidden;
-  }
-
-  /* Анимация крипторынка на фоне */
-  .crypto-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-    overflow: hidden;
-    background: var(--bg);
-  }
-
-  .crypto-logo {
-    position: absolute;
-    font-size: 18px;
-    font-weight: 800;
-    color: rgba(16, 185, 129, 0.9);
-    opacity: 0;
-    animation: float 20s linear infinite;
-    text-shadow: 0 0 25px rgba(16, 185, 129, 1);
-    z-index: 1;
-  }
-
-  .trading-bot {
-    position: absolute;
-    width: 35px;
-    height: 35px;
-    background: radial-gradient(circle, var(--primary) 0%, transparent 60%);
-    border-radius: 50%;
-    opacity: 0;
-    animation: trade 25s ease-in-out infinite;
-    filter: blur(1px);
-    box-shadow: 0 0 35px var(--primary);
-    opacity: 0.8;
-  }
-
-  .price-line {
-    position: absolute;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
-    opacity: 0;
-    animation: priceMove 15s linear infinite;
-    box-shadow: 0 0 25px var(--primary);
-    opacity: 0.6;
-  }
-
-  .exchange-logo {
-    position: absolute;
-    font-size: 13px;
-    font-weight: 700;
-    color: rgba(52, 211, 153, 0.9);
-    opacity: 0;
-    animation: exchangeFloat 30s linear infinite;
-    padding: 4px 8px;
-    background: rgba(16, 185, 129, 0.35);
-    border-radius: 4px;
-    border: 1px solid rgba(16, 185, 129, 0.5);
-  }
-
-  .crypto-chart {
-    position: absolute;
-    width: 100px;
-    height: 45px;
-    border: 2px solid rgba(16, 185, 129, 0.7);
-    opacity: 0;
-    animation: chartFloat 40s linear infinite;
-    background: rgba(16, 185, 129, 0.25);
-  }
-
-  .crypto-chart::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.2) 50%, transparent 100%);
-    clip-path: polygon(0% 100%, 10% 80%, 20% 60%, 30% 70%, 40% 40%, 50% 50%, 60% 30%, 70% 60%, 80% 20%, 90% 40%, 100% 10%, 100% 100%, 0% 100%);
-  }
-
-  @keyframes float {
-    0% {
-      transform: translateY(100vh) rotate(0deg) scale(0.5);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.9;
-    }
-    90% {
-      opacity: 0.9;
-    }
-    100% {
-      transform: translateY(-100px) rotate(360deg) scale(1);
-      opacity: 0;
-    }
-  }
-
-  @keyframes trade {
-    0%, 100% {
-      transform: translate(0, 0) scale(0.8);
-      opacity: 0;
-    }
-    20% {
-      transform: translate(200px, 150px) scale(1);
-      opacity: 0.8;
-    }
-    40% {
-      transform: translate(400px, 80px) scale(0.7);
-      opacity: 0.8;
-    }
-    60% {
-      transform: translate(600px, 200px) scale(0.9);
-      opacity: 0.8;
-    }
-    80% {
-      transform: translate(800px, 120px) scale(0.6);
-      opacity: 0.8;
-    }
-  }
-
-  @keyframes priceMove {
-    0% {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.6;
-    }
-    90% {
-      opacity: 0.6;
-    }
-    100% {
-      transform: translateX(100vw);
-      opacity: 0;
-    }
-  }
-
-  @keyframes exchangeFloat {
-    0% {
-      transform: translateX(100vw) translateY(0) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.8;
-    }
-    90% {
-      opacity: 0.8;
-    }
-    100% {
-      transform: translateX(-100px) translateY(80px) rotate(180deg);
-      opacity: 0;
-    }
-  }
-
-  @keyframes chartFloat {
-    0% {
-      transform: translateY(100vh) rotate(0deg);
-      opacity: 0;
-    }
-    10% {
-      opacity: 0.4;
-    }
-    90% {
-      opacity: 0.4;
-    }
-    100% {
-      transform: translateY(-100px) rotate(10deg);
-      opacity: 0;
-    }
-  }
-
-  .pulse-dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--primary-light);
-    border-radius: 50%;
-    animation: pulse 3s ease-in-out infinite;
-    box-shadow: 0 0 30px var(--primary);
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.4;
-    }
-    50% {
-      transform: scale(2.5);
-      opacity: 0.3;
-    }
+    max-width: 100%;
   }
 
   .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
     width: 100%;
+    margin: 0 auto;
+    padding: 10px 15px;
+    max-width: 100%;
   }
 
   /* Header */
-  .header {
-    background: rgba(10, 26, 20, 0.98);
-    backdrop-filter: blur(20px);
-    box-shadow: var(--shadow);
-    border-bottom: 1px solid var(--border);
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: var(--bg);
     position: sticky;
     top: 0;
-    z-index: 1000;
-    flex-shrink: 0;
-    padding-top: var(--safe-top);
-  }
-
-  .nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 50px;
-    gap: 10px;
-    padding: 0 10px;
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    flex-shrink: 0;
-    z-index: 1001;
+    z-index: 100;
+    box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border);
+    width: 100%;
   }
 
   .logo {
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    animation: logoGlow 3s ease-in-out infinite alternate;
-  }
-
-  @keyframes logoGlow {
-    0% {
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    }
-    100% {
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.6);
-    }
-  }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .nav-links a {
-    color: var(--text);
-    text-decoration: none;
-    font-weight: 500;
-    padding: 6px 0;
-    font-size: 12px;
-    position: relative;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-  }
-
-  .nav-links a:hover {
-    color: var(--primary-light);
-  }
-
-  .nav-links a.active {
     color: var(--primary);
-  }
-
-  .nav-links a.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--primary);
-    box-shadow: 0 0 8px var(--primary);
-  }
-
-  .nav-cta {
+    font-weight: bold;
+    font-size: 18px;
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-shrink: 0;
   }
 
-  /* Кнопки */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    height: 32px;
-    padding: 0 12px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--bg-card);
+  /* БАЛАНС */
+  .balance-small {
+    font-size: 20px;
+    font-weight: 700;
     color: var(--text);
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 11px;
-    backdrop-filter: blur(10px);
+    background: rgba(245, 197, 24, 0.1);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(245, 197, 24, 0.2);
+  }
+
+  /* Верхнее меню */
+  .top-menu {
+    display: flex;
+    justify-content: space-around;
+    background-color: var(--bg);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
     white-space: nowrap;
-    -webkit-tap-highlight-color: transparent;
+    width: 100%;
   }
 
-  .btn:hover {
-    border-color: var(--primary);
+  .menu-item {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    min-width: 60px;
+    padding: 0 5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .menu-item.active {
     color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
   }
 
-  .btn.primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-color: var(--primary);
-    color: white;
-  }
-
-  .btn.primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-    transform: translateY(-1px);
-    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+  .menu-item i {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 4px;
   }
 
   /* Основной контент */
-  .main {
-    padding: 15px 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 120px);
-    overflow-y: auto;
-    width: 100%;
-    position: relative;
-  }
-
   .main-content {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    padding-bottom: 70px;
     width: 100%;
   }
 
@@ -438,31 +161,9 @@
     padding: 15px;
     margin-bottom: 12px;
     transition: all 0.3s ease;
-    backdrop-filter: blur(15px);
     position: relative;
     overflow: hidden;
     width: 100%;
-  }
-
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
-    transition: left 0.5s ease;
-  }
-
-  .card:hover::before {
-    left: 100%;
-  }
-
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
-    border-color: rgba(16, 185, 129, 0.5);
   }
 
   .card h1, .card h2, .card h3 {
@@ -505,7 +206,58 @@
   }
 
   .card strong {
-    color: var(--primary-light);
+    color: var(--primary);
+  }
+
+  /* Иконки для заголовков */
+  .icon {
+    width: 18px;
+    height: 18px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    box-shadow: 0 0 8px var(--primary);
+  }
+
+  /* Нижний навбар */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--bg);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 5px;
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    width: 100%;
+  }
+
+  .nav-item {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-decoration: none;
+    flex: 1;
+    padding: 5px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-item.active {
+    color: var(--primary);
+  }
+
+  .nav-item i {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 4px;
   }
 
   /* Утилиты */
@@ -524,561 +276,193 @@
     text-align: center;
   }
 
-  /* Footer */
-  .footer {
-    background: rgba(10, 26, 20, 0.8);
-    border-top: 1px solid var(--border);
-    padding: 15px 0;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 10px;
-    font-weight: 500;
-    backdrop-filter: blur(20px);
-    flex-shrink: 0;
-    padding-bottom: calc(15px + var(--safe-bottom));
-  }
-
-  /* Иконки для заголовков */
-  .icon {
-    width: 18px;
-    height: 18px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 9px;
-    font-weight: bold;
-    box-shadow: 0 0 8px var(--primary);
-  }
-
-  /* Бургер меню для мобильных */
-  .burger {
-    display: none;
-    flex-direction: column;
-    gap: 3px;
-    cursor: pointer;
-    padding: 8px;
-    z-index: 1001;
-  }
-
-  .burger span {
-    width: 18px;
-    height: 2px;
-    background: var(--text);
-    transition: all 0.3s;
-    border-radius: 1px;
-  }
-
-  /* Мобильное меню */
-  .mobile-menu {
-    position: fixed;
-    top: 50px;
-    left: 0;
-    right: 0;
-    background: rgba(10, 26, 20, 0.98);
-    backdrop-filter: blur(30px);
-    border-bottom: 1px solid var(--border);
-    padding: 15px;
-    transform: translateY(-100%);
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 999;
-  }
-
-  .mobile-menu.active {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  .mobile-menu a {
-    display: block;
-    color: var(--text);
-    text-decoration: none;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-
-  .mobile-menu a:hover,
-  .mobile-menu a.active {
-    color: var(--primary);
-  }
-
-  .mobile-menu a:last-child {
-    border-bottom: none;
-  }
-
-  /* ===== МОБИЛЬНАЯ ОПТИМИЗАЦИЯ ===== */
-  @media (max-width: 768px) {
-    html, body {
-      background: var(--bg);
-      position: relative;
-      height: auto;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
+  /* Адаптивность */
+  @media (max-width: 360px) {
     .container {
-      padding: 0 10px;
-      max-width: 100%;
-      width: 100%;
-    }
-
-    .nav {
-      height: 50px;
-      padding: 0 8px;
-      gap: 8px;
-    }
-
-    .brand {
-      font-size: 15px;
-    }
-
-    .logo {
-      width: 26px;
-      height: 26px;
-      font-size: 11px;
-    }
-
-    .nav-cta {
-      gap: 6px;
-    }
-
-    .btn {
-      height: 32px;
-      padding: 0 10px;
-      font-size: 10px;
-    }
-
-    .main {
-      padding: 10px 0;
-      min-height: calc(100vh - 140px);
-      overflow-y: auto;
-    }
-
-    .card {
-      padding: 12px;
-      margin-bottom: 8px;
-    }
-
-    .card h1, .card h2, .card h3 {
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-
-    .card h2, .card h3 {
-      font-size: 13px;
-    }
-
-    .card p, .card ul, .card li {
-      font-size: 10px;
-    }
-
-    /* Скрываем обычное меню, показываем бургер */
-    .nav-links {
-      display: none !important;
-    }
-    
-    .burger {
-      display: flex;
-    }
-
-    /* УВЕЛИЧЕНА ВИДИМОСТЬ ФОНА НА МОБИЛЬНЫХ */
-    .crypto-logo {
-      font-size: 16px !important;
-      animation-duration: 18s !important;
-      color: rgba(16, 185, 129, 0.95) !important;
-      text-shadow: 0 0 30px rgba(16, 185, 129, 1) !important;
-    }
-
-    .trading-bot {
-      width: 30px !important;
-      height: 30px !important;
-      animation-duration: 22s !important;
-      box-shadow: 0 0 40px var(--primary) !important;
-      opacity: 0.9 !important;
-    }
-
-    .crypto-chart {
-      width: 90px !important;
-      height: 40px !important;
-      animation-duration: 35s !important;
-      border: 2px solid rgba(16, 185, 129, 0.8) !important;
-      background: rgba(16, 185, 129, 0.3) !important;
-    }
-
-    .price-line {
-      animation-duration: 16s !important;
-      height: 3px !important;
-      box-shadow: 0 0 30px var(--primary) !important;
-      opacity: 0.7 !important;
-    }
-
-    .exchange-logo {
-      animation-duration: 28s !important;
-      color: rgba(52, 211, 153, 0.95) !important;
-      background: rgba(16, 185, 129, 0.4) !important;
-      font-size: 12px !important;
-      padding: 3px 7px !important;
-    }
-
-    .pulse-dot {
-      width: 9px !important;
-      height: 9px !important;
-      box-shadow: 0 0 35px var(--primary) !important;
+      padding: 8px;
     }
   }
 
-  /* Для очень маленьких экранов */
-  @media (max-width: 480px) {
-    .container {
-      padding: 0 8px;
-    }
-
-    .nav {
-      padding: 0 5px;
-    }
-
-    .card h1, .card h2, .card h3 {
-      font-size: 13px;
-    }
-
-    .card {
-      padding: 10px;
-    }
-
-    .btn {
-      padding: 0 8px;
-      font-size: 9px;
-    }
+  /* Стили для разделителей */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    margin: 15px 0;
+    opacity: 0.5;
   }
 
-  /* Отключение анимаций для пользователей, которые предпочитают уменьшенное движение */
-  @media (prefers-reduced-motion: reduce) {
-    .crypto-logo,
-    .trading-bot,
-    .price-line,
-    .exchange-logo,
-    .crypto-chart,
-    .pulse-dot,
-    .logo,
-    .card::before {
-      animation: none !important;
-      transition: none !important;
-    }
+  /* Стили для выделенных секций */
+  .highlight-section {
+    background: rgba(245, 197, 24, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid rgba(245, 197, 24, 0.1);
   }
-  </style>
 
-  <!-- Language switcher styles -->
-  <style>
-  .lc-lang{position:relative;display:inline-flex;align-items:center}
-  .lc-lang__btn{height:28px;padding:4px 8px;border-radius:999px;border:1px solid var(--border)!important;background:var(--bg-card)!important;color:var(--text)!important;display:inline-flex;gap:4px;align-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:all 0.3s ease}
-  .lc-lang__btn:hover{border-color:var(--primary)!important;color:var(--primary)!important;box-shadow:0 2px 10px rgba(0,0,0,.3)}
-  .lc-lang__icon{width:12px;height:12px}
-  .lc-lang__label{font-size:9px;line-height:1}
+  /* Стили для эмодзи в заголовках */
+  .emoji-title {
+    font-size: 18px;
+    margin-right: 8px;
+  }
   </style>
 </head>
 
 <body>
-<!-- Анимированный фон с крипто-элементами -->
-<div class="crypto-background" id="cryptoBackground">
-  <!-- Элементы добавляются через JavaScript -->
-</div>
-
-<!-- Мобильное меню -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="index.html">Главная</a>
-  <a href="dashboard_single.html">Личный кабинет</a>
-  <a href="deposit_single.html">Пополнение</a>
-  <a href="withdraw_single.html">Вывод</a>
-  <a href="faq_single.html" class="active">FAQ</a>
-  <a href="settings_single.html">Настройки</a>
-</div>
-
-<header class="header">
-  <div class="container">
-    <nav class="nav">
-      <a class="brand" href="index.html">
-        <div class="logo">LC</div>
-        <span>Litcash</span>
-      </a>
-      
-      <div class="nav-links">
-        <a href="index.html">Главная</a>
-        <a href="dashboard_single.html">Личный кабинет</a>
-        <a href="deposit_single.html">Пополнение</a>
-        <a href="withdraw_single.html">Вывод</a>
-        <a href="faq_single.html" class="active">FAQ</a>
-        <a href="settings_single.html">Настройки</a>
-      </div>
-
-      <div class="nav-cta">
-        <div class="lc-lang">
-          <button class="lc-lang__btn">
-            <svg class="lc-lang__icon" viewBox="0 0 24 24">
-              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 0 1 0-16v16zm1-16a8 8 0 0 1 0 16V4zM4.7 7h14.6M4.7 17h14.6M12 2a15 15 0 0 0 0 20M12 2a15 15 0 0 1 0 20" fill="none" stroke="currentColor" stroke-width="1.2"></path>
-            </svg>
-            <span class="lc-lang__label">RU</span>
-          </button>
-        </div>
-        
-        <a class="btn" href="login_single.html">Вход</a>
-        <a class="btn primary" href="register_single.html">Регистрация</a>
-      </div>
-
-      <div class="burger" id="burgerBtn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </nav>
+<!-- Верхняя часть -->
+<header>
+  <div class="logo">
+    <span>Litcash</span>
+    <div class="balance-small">FAQ</div>
   </div>
 </header>
 
-<main class="main">
-  <div class="container main-content">
+<!-- Верхнее меню -->
+<nav class="top-menu">
+  <a href="dashboard_single.html" class="menu-item">
+    <i>🏠</i> <span>Dashboard</span>
+  </a>
+  <a href="deposit_single.html" class="menu-item">
+    <i>💰</i> <span>Deposit</span>
+  </a>
+  <a href="withdraw_single.html" class="menu-item">
+    <i>💸</i> <span>Withdraw</span>
+  </a>
+  <a href="faq_single.html" class="menu-item active">
+    <i>❓</i> <span>FAQ</span>
+  </a>
+</nav>
+
+<!-- Основной контент -->
+<main class="main-content">
+  <div class="container">
     <div class="card">
-      <h1><span class="icon">❓</span>FAQ — Litcash</h1>
+      <h1><span class="emoji-title">🚀</span> Earn with Litcash — Smart, Fast, and Profitable</h1>
       
-      <h2>1) Основы</h2>
-      <h3>Что такое Litcash?</h3>
-      <p>Litcash — платформа, где пользователи инвестируют в развитие компании, ежедневно смотрят 5 рекламных видео и получают вознаграждение на баланс в соответствии со своим уровнем и условиями программы.</p>
-      <h3>Как начать?</h3>
-      <p>Зарегистрируйтесь, активируйте уровень и выполните ежедневную активность (просмотр 5 роликов в сутки). Все статусы и начисления отображаются в личном кабинете.</p>
-      <h3>Из чего формируются выплаты?</h3>
-      <p>Вознаграждения зависят от объёма рекламных бюджетов и правил программы. Часть выручки распределяется между участниками согласно их уровню и активности.</p>
+      <p>Litcash isn't just a platform — it's an ecosystem of income powered by AI-driven mining. Forget complicated rigs: our system mines crypto for you, converts it instantly, and credits your balance in real time.</p>
       
-      <h2>2) Уровни и требования</h2>
-      <h3>Какие есть уровни и ставки?</h3>
+      <div class="divider"></div>
+      
+      <h2><span class="emoji-title">✨</span> 1) Start in Seconds</h2>
+      <p>Sign up, create your wallet, and get your unique referral code. That's it — your account is ready to earn.</p>
+      
+      <div class="highlight-section">
+        <p><strong>Quick Setup:</strong> No lengthy verification, no complex forms. Just register and start earning immediately.</p>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <h2><span class="emoji-title">⚙️💸</span> 2) AI Mining = Instant Rewards</h2>
+      <p>Our intelligent mining system works 24/7:</p>
       <ul>
-        <li><strong>Starter</strong> — 2,5% (активация $29).</li>
-        <li><strong>Advanced</strong> — 3% (вклад $300 и 5 рефералов).</li>
-        <li><strong>Pro Elite</strong> — 4% (вклад $1 000 и 10 рефералов).</li>
-        <li><strong>Titanium</strong> — 5% (вклад $3 000 и 30 рефералов).</li>
+        <li><strong>No hardware, no setup needed.</strong> We handle all the technical aspects.</li>
+        <li><strong>Coins are mined and auto-converted</strong> to your balance in real-time.</li>
+        <li><strong>Transparent stats</strong> and real-time growth tracking.</li>
       </ul>
-      <h3>Нужны ли рефералы для входа?</h3>
-      <p>Для Starter — нет. Для Advanced, Pro Elite и Titanium нужны вложения и команда указанного размера.</p>
-      <h3>Как повысить уровень?</h3>
-      <p>Пополните баланс до требуемой суммы и выполните условие по количеству рефералов. Статус обновится после проверки условий системой.</p>
       
-      <h2>3) Начисления и активность</h2>
-      <h3>Зачем смотреть 5 видео в день?</h3>
-      <p>Ежедневная активность — обязательное условие начислений. Это подтверждает вовлечённость и влияет на расчёт вознаграждений по вашему уровню.</p>
-      <h3>Что будет, если не выполнить дневную норму?</h3>
-      <p>Если 5 роликов не просмотрены, начисления за соответствующий период могут быть уменьшены или не начислены — смотрите точные правила в кабинете/оферте.</p>
-      <h3>Как часто происходят начисления?</h3>
-      <p>Периодичность и формула зависят от внутренних правил и могут корректироваться. Актуальная информация — в личном кабинете.</p>
+      <div class="highlight-section">
+        <p><strong>Smart Technology:</strong> Our AI optimizes mining operations for maximum efficiency and profitability.</p>
+      </div>
       
-      <h2>4) Реферальная программа (3 поколения)</h2>
-      <h3>Как работают реферальные уровни?</h3>
-      <p>Вы получаете процент от дохода ваших рефералов:</p>
+      <div class="divider"></div>
+      
+      <h2><span class="emoji-title">📈</span> 3) Level Up — Earn More</h2>
+      <p>Upgrade from Starter → Advanced → Pro Elite → Titanium. Higher levels unlock higher daily profits and exclusive bonuses.</p>
+      
       <ul>
-        <li>1-е поколение — <strong>13%</strong></li>
-        <li>2-е поколение — <strong>5%</strong></li>
-        <li>3-е поколение — <strong>1%</strong></li>
+        <li><strong>Starter:</strong> Perfect beginning with basic rewards</li>
+        <li><strong>Advanced:</strong> Increased earning potential</li>
+        <li><strong>Pro Elite:</strong> Premium benefits and higher percentages</li>
+        <li><strong>Titanium:</strong> Maximum rewards and exclusive features</li>
       </ul>
-      <h3>Пример расчёта</h3>
-      <p>Если реферал 1-го уровня получил $100 дохода по программе, вы получите $13. Для 2-го уровня — $5 с каждых $100 его дохода, для 3-го — $1.</p>
-      <h3>Можно ли зарабатывать без приглашений?</h3>
-      <p>Да, на уровне Starter возможно участвовать без команды. Более высокие уровни требуют и вклад, и рефералов.</p>
       
-      <h2>5) Пополнение и вывод</h2>
-      <h3>Какие способы ввода/вывода доступны?</h3>
-      <p>Доступные методы и комиссии отображаются в личном кабинете и могут зависеть от региона пользователя.</p>
-      <h3>Есть ли комиссии?</h3>
-      <p>Комиссии за пополнение/вывод и возможные лимиты по операциям указываются в интерфейсе до подтверждения транзакции.</p>
-      <h3>В какой валюте происходит учёт?</h3>
-      <p>Базовая валюта баланса — в долларах США (USD). При конвертации возможна разница из-за курсов и комиссий платёжных систем.</p>
+      <div class="divider"></div>
       
-      <h2>6) Безопасность и соответствие правилам</h2>
-      <h3>Какие меры против накрутки?</h3>
-      <p>Используются анти-фрод алгоритмы. Автоматические просмотры, боты, VPN-фермы и любая имитация активности запрещены и ведут к блокировке начислений или аккаунта.</p>
-      <h3>Нужна ли верификация (KYC)?</h3>
-      <p>В отдельных случаях может потребоваться подтверждение личности в рамках требований по AML/KYC и для безопасности выплат.</p>
-      <h3>Как защитить аккаунт?</h3>
-      <p>Включите двухфакторную аутентификацию, используйте уникальный пароль, не передавайте доступ третьим лицам.</p>
-      
-      <h2>7) Юридические и риск-дисклеймеры</h2>
-      <h3>Есть ли гарантии дохода?</h3>
-      <p>Нет. Доходность не гарантируется и зависит от выполнения условий программы, объёма рекламных бюджетов и рыночных факторов. Инвестиции связаны с риском потерь.</p>
-      <h3>Есть ли ограничения по странам и возрасту?</h3>
-      <p>Участие может быть ограничено законодательством вашей юрисдикции. Платформа предназначена для совершеннолетних пользователей.</p>
-      <h3>Налоги</h3>
-      <p>Участник самостоятельно исполняет требования местного законодательства, связанных с декларированием и уплатой налогов.</p>
-      
-      <h2>8) Поддержка и решения проблем</h2>
-      <h3>Не засчитался просмотр видео — что делать?</h3>
-      <p>Перезагрузите страницу/приложение и убедитесь, что ролик досмотрен до конца без перемотки, адблок отключён. Если проблема повторяется — обратитесь в поддержку.</p>
-      <h3>Начисления не пришли вовремя</h3>
-      <p>Проверьте, выполнены ли условия уровня и дневная активность. Посмотрите статус в кабинете. Если данных нет — напишите в поддержку с ID аккаунта и датой.</p>
-      <h3>Как связаться с поддержкой?</h3>
-      <p>Канал связи указан в личном кабинете (чат/почта/телеграм). При обращении указывайте ID, скриншоты и время проблемы — так мы быстрее поможем.</p>
-      
-      <h2>9) Краткая памятка</h2>
+      <h2><span class="emoji-title">🤝🌱</span> 4) Referral Power</h2>
+      <p>Invite friends and earn from their mining:</p>
       <ul>
-        <li>Выполняйте <strong>5 просмотров в день</strong> — это влияет на начисления.</li>
-        <li>Для высоких уровней нужны и вклад, и команда.</li>
-        <li>Реферальные выплаты: <strong>13% / 5% / 1%</strong> от дохода 1–3 поколений.</li>
-        <li>Доходность не гарантируется; читайте оферту и правила в кабинете.</li>
-        <li>Анти-фрод действует: накрутка запрещена и карается блокировкой.</li>
+        <li><strong>1st level — 13%</strong> of their earnings</li>
+        <li><strong>2nd level — 5%</strong> of their earnings</li>
+        <li><strong>3rd level — 1%</strong> of their earnings</li>
       </ul>
+      <p>The bigger your network, the bigger your passive income.</p>
+      
+      <div class="highlight-section">
+        <p><strong>Network Effect:</strong> Build your team and watch your earnings grow exponentially as your network expands.</p>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <h2><span class="emoji-title">🔁</span> 5) Flexible Finance</h2>
+      <p>Deposit, withdraw, reinvest — all transactions are tracked and transparent in your dashboard.</p>
+      
+      <ul>
+        <li><strong>Instant Deposits:</strong> Multiple payment methods available</li>
+        <li><strong>Quick Withdrawals:</strong> Get your earnings when you need them</li>
+        <li><strong>Reinvestment Options:</strong> Grow your capital faster</li>
+      </ul>
+      
+      <div class="divider"></div>
+      
+      <h2><span class="emoji-title">🛡️</span> 6) Secure & Reliable</h2>
+      <p>Every payout is logged, audited, and protected. No double-counting, no tricks — just clean, verified earnings.</p>
+      
+      <ul>
+        <li><strong>Advanced Security:</strong> Your funds and data are protected with enterprise-grade security</li>
+        <li><strong>Transparent Operations:</strong> All transactions are recorded on secure ledgers</li>
+        <li><strong>24/7 Monitoring:</strong> Our systems work around the clock to ensure reliability</li>
+      </ul>
+      
+      <div class="divider"></div>
+      
+      <h2><span class="emoji-title">🔥</span> Quick Start Plan</h2>
+      <ol>
+        <li><strong>Register & activate</strong> your profile in under 60 seconds</li>
+        <li><strong>Launch AI mining</strong> — watch coins flow to your balance immediately</li>
+        <li><strong>Invite 5 friends</strong> → unlock referral bonuses and level up faster</li>
+        <li><strong>Upgrade to VIP</strong> for maximum growth and premium features</li>
+        <li><strong>Withdraw or reinvest</strong> — your choice, complete financial control</li>
+      </ol>
+      
+      <div class="highlight-section">
+        <p><strong>Start Today:</strong> Join thousands of users already earning with Litcash's revolutionary AI mining platform.</p>
+      </div>
     </div>
   </div>
 </main>
 
-<footer class="footer">
-  <div class="container">
-    © 2025 Litcash. Все права защищены.
-  </div>
-</footer>
+<!-- Нижний навбар -->
+<nav class="bottom-nav">
+  <a href="dashboard_single.html" class="nav-item">
+    <i>🏠</i> <span>Dashboard</span>
+  </a>
+  <a href="deposit_single.html" class="nav-item">
+    <i>💰</i> <span>Deposit</span>
+  </a>
+  <a href="withdraw_single.html" class="nav-item">
+    <i>💸</i> <span>Withdraw</span>
+  </a>
+  <a href="faq_single.html" class="nav-item active">
+    <i>❓</i> <span>FAQ</span>
+  </a>
+</nav>
 
 <script>
-// Service Worker Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistration('/')
-      .then((reg) => {
-        if (!reg) {
-          return navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        }
-      })
-      .catch(console.error);
-  });
-}
-
-// Mobile Menu
-document.addEventListener('DOMContentLoaded', () => {
-  const burgerBtn = document.getElementById('burgerBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
+// Базовые функции для навигации
+document.addEventListener('DOMContentLoaded', function() {
+  // Добавляем активный класс к текущей странице
+  const currentPage = window.location.pathname.split('/').pop();
+  const navItems = document.querySelectorAll('.nav-item, .menu-item');
   
-  if (burgerBtn && mobileMenu) {
-    burgerBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      mobileMenu.classList.toggle('active');
-      burgerBtn.classList.toggle('active');
-    });
-    
-    const mobileLinks = mobileMenu.querySelectorAll('a');
-    mobileLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      });
-    });
-    
-    document.addEventListener('click', (e) => {
-      if (!mobileMenu.contains(e.target) && !burgerBtn.contains(e.target)) {
-        mobileMenu.classList.remove('active');
-        burgerBtn.classList.remove('active');
-      }
-    });
-  }
-});
-
-// Crypto Background Animation
-document.addEventListener('DOMContentLoaded', () => {
-  const cryptoBackground = document.getElementById('cryptoBackground');
-  if (!cryptoBackground) return;
-
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-  
-  const cryptoLogos = ['₿', 'Ξ', 'BNB', 'XRP', 'ADA', 'SOL', 'DOGE', 'DOT', 'LTC', 'MATIC', 'LINK', 'UNI'];
-  const exchangeLogos = ['BINANCE', 'COINBASE', 'KRAKEN', 'FTX', 'KUCOIN', 'HUOBI', 'OKX', 'BITFINEX'];
-  
-  const cryptoLogoCount = isMobile ? 8 : 12;
-  const exchangeLogoCount = isMobile ? 6 : 8;
-  const botCount = isMobile ? 4 : 6;
-  const lineCount = isMobile ? 6 : 8;
-  const chartCount = isMobile ? 3 : 4;
-  const dotCount = isMobile ? 8 : 10;
-  
-  // Create crypto logos
-  for (let i = 0; i < cryptoLogoCount; i++) {
-    const element = document.createElement('div');
-    element.className = 'crypto-logo';
-    element.textContent = cryptoLogos[i % cryptoLogos.length];
-    element.style.left = Math.random() * 90 + 5 + '%';
-    element.style.animationDelay = (i * (isMobile ? 1.2 : 1.5)) + 's';
-    element.style.fontSize = (Math.random() * 8 + 14) + 'px';
-    cryptoBackground.appendChild(element);
-  }
-  
-  // Create exchange logos
-  for (let i = 0; i < exchangeLogoCount; i++) {
-    const element = document.createElement('div');
-    element.className = 'exchange-logo';
-    element.textContent = exchangeLogos[i % exchangeLogos.length];
-    element.style.top = Math.random() * 80 + 10 + '%';
-    element.style.animationDelay = (i * (isMobile ? 2.5 : 3)) + 's';
-    cryptoBackground.appendChild(element);
-  }
-  
-  // Create trading bots
-  for (let i = 0; i < botCount; i++) {
-    const bot = document.createElement('div');
-    bot.className = 'trading-bot';
-    bot.style.left = Math.random() * 80 + 10 + '%';
-    bot.style.animationDelay = (i * (isMobile ? 3 : 3)) + 's';
-    cryptoBackground.appendChild(bot);
-  }
-  
-  // Create price lines
-  for (let i = 0; i < lineCount; i++) {
-    const line = document.createElement('div');
-    line.className = 'price-line';
-    line.style.top = Math.random() * 80 + 10 + '%';
-    line.style.width = (Math.random() * 200 + 100) + 'px';
-    line.style.animationDelay = (i * (isMobile ? 1 : 1.2)) + 's';
-    cryptoBackground.appendChild(line);
-  }
-
-  // Create crypto charts
-  for (let i = 0; i < chartCount; i++) {
-    const chart = document.createElement('div');
-    chart.className = 'crypto-chart';
-    chart.style.left = Math.random() * 80 + 10 + '%';
-    chart.style.animationDelay = (i * (isMobile ? 6 : 6)) + 's';
-    cryptoBackground.appendChild(chart);
-  }
-
-  // Create pulse dots
-  for (let i = 0; i < dotCount; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'pulse-dot';
-    dot.style.left = Math.random() * 95 + '%';
-    dot.style.top = Math.random() * 95 + '%';
-    dot.style.animationDelay = (i * 0.3) + 's';
-    cryptoBackground.appendChild(dot);
-  }
-});
-</script>
-
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script defer src="supabaseConfig.js"></script>
-<script defer src="assets/js/i18n.js"></script>
-<script defer src="app_supabase.js"></script>
-<script defer src="assets/js/lang-switcher.js"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', async function(){
-  try{
-    const sb = window._supabase;
-    if(!sb) return;
-    const cta = document.querySelector('.nav-cta');
-    const { data } = await sb.auth.getUser();
-    const isAuth = !!(data && data.user);
-    if(isAuth && cta){
-      cta.innerHTML = '<button id="nav-logout" class="btn" style="background:var(--error);border-color:var(--error)">Выйти</button>';
-      const btn = document.getElementById('nav-logout');
-      if(btn){ btn.addEventListener('click', function(e){ e.preventDefault(); if(window.logout){ logout(); } }); }
+  navItems.forEach(item => {
+    const href = item.getAttribute('href');
+    if (href === currentPage) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
     }
-  }catch(_){}
+  });
 });
 </script>
-
 </body>
 </html>
