@@ -102,6 +102,7 @@
     gap: 8px;
   }
 
+  /* БАЛАНС */
   .balance-small {
     font-size: 20px;
     font-weight: 700;
@@ -276,7 +277,64 @@
     width: 100%;
   }
 
-  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ === */
+  /* ИНДИКАТОР ТЕКУЩЕГО УРОВНЯ */
+  .current-level-banner {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 12px 15px;
+    border-radius: var(--radius);
+    margin-bottom: 15px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .current-level-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  }
+
+  .current-level-text {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .current-level-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .current-level-stats {
+    display: flex;
+    justify-content: space-around;
+    font-size: 12px;
+    opacity: 0.9;
+  }
+
+  .current-level-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  .stat-value {
+    font-weight: bold;
+  }
+
+  /* === КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ - УПРОЩЕННАЯ === */
   .carousel-container {
     position: relative;
     width: 100%;
@@ -304,6 +362,12 @@
     overflow: hidden;
     display: block !important;
     visibility: visible !important;
+    transition: all 0.3s ease;
+  }
+
+  .level-card-carousel.active {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(245, 197, 24, 0.3);
   }
 
   .level-bg {
@@ -353,6 +417,7 @@
     font-weight: bold;
   }
 
+  /* ОБНОВЛЕННЫЕ ИКОНКИ */
   .level-top-icon {
     position: absolute;
     top: 50%;
@@ -366,6 +431,7 @@
     z-index: 2;
   }
 
+  /* ИНФОРМАЦИЯ ПЕРЕНЕСЕНА В ЛЕВЫЙ УГОЛ */
   .level-content {
     text-align: left;
     position: absolute;
@@ -445,7 +511,7 @@
     transform: scale(1.2);
   }
 
-  /* === КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР === */
+  /* === КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР В ЖЕЛТОЙ ТЕМЕ === */
   .video-player {
     background: linear-gradient(135deg, #1a1500 0%, #2a2200 100%);
     border-radius: 12px;
@@ -774,7 +840,7 @@
     border-radius: 2px;
   }
 
-  /* === МОДАЛЬНЫЕ ОКНА === */
+  /* === МОДАЛЬНЫЕ ОКНА ДЛЯ ТАБЛИЦ === */
   .modal-overlay {
     position: fixed;
     top: 0;
@@ -1027,7 +1093,7 @@
     z-index: 3;
   }
 
-  /* Дополнительные стили */
+  /* Дополнительные стили для статусов рефералов */
   .loading-indicator {
     text-align: center;
     padding: 10px;
@@ -1158,19 +1224,6 @@
       </div>
     </div>
 
-    <table class="referral-table" id="referralTable" style="display: none;">
-      <thead>
-        <tr>
-          <th data-i18n="referral_generation">Уровень</th>
-          <th data-i18n="referral_email">Email</th>
-          <th data-i18n="referral_capital">Капитал</th>
-          <th data-i18n="referral_level">Уровень</th>
-          <th data-i18n="referral_date">Дата</th>
-        </tr>
-      </thead>
-      <tbody id="refTree"></tbody>
-    </table>
-
     <div class="error-message" id="referralModalError" data-i18n="error_loading_referral_data">
       Ошибка загрузки реферальных данных
     </div>
@@ -1184,6 +1237,7 @@
     <div class="balance-small" data-balance>$0.00</div>
   </div>
   
+  <!-- Переключатель языка - ОБНОВЛЕННЫЙ согласно language-switcher.js -->
   <div class="language-switcher" id="languageSwitcher">
     <button class="lang-btn" id="langBtn" aria-label="Выбор языка">
       <svg class="lang-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1292,7 +1346,27 @@
 <!-- Основной контент -->
 <main class="main-content">
   <div class="container">
-    <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ -->
+    <!-- БАННЕР ТЕКУЩЕГО УРОВНЯ -->
+    <div class="current-level-banner" id="currentLevelBanner">
+      <div class="current-level-text" data-i18n="current_level">Текущий уровень</div>
+      <div class="current-level-name" id="currentLevelName">Загрузка...</div>
+      <div class="current-level-stats">
+        <div class="current-level-stat">
+          <div class="stat-label" data-i18n="level_percentage">Процент</div>
+          <div class="stat-value" id="currentLevelPercent">0%</div>
+        </div>
+        <div class="current-level-stat">
+          <div class="stat-label" data-i18n="level_base">База</div>
+          <div class="stat-value" id="currentLevelBase">$0</div>
+        </div>
+        <div class="current-level-stat">
+          <div class="stat-label" data-i18n="views_left">Осталось просмотров</div>
+          <div class="stat-value" id="currentLevelViews">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. КАРУСЕЛЬ КАРТОЧЕК УРОВНЕЙ С ОБНОВЛЕННЫМИ ИКОНКАМИ -->
     <div class="carousel-container">
       <div class="carousel-wrapper" id="carouselWrapper">
         <div class="level-card-carousel level-card" data-level="starter" data-index="0">
@@ -1369,7 +1443,7 @@
       </div>
     </div>
 
-    <!-- 2. КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР -->
+    <!-- 2. КОМПАКТНЫЙ МАЙНИНГ-ПРОЦЕССОР В ЖЕЛТОЙ ТЕМЕ -->
     <div class="video-player">
       <div class="video-header">
         <div class="video-title" data-i18n="mining_processor">Mining Processor</div>
@@ -1509,7 +1583,7 @@ function showNotification(message) {
   }
 }
 
-// Карусель карточек уровней
+// Карусель карточек уровней с улучшенным свайпом
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
   const cards = document.querySelectorAll('.level-card-carousel');
@@ -1533,6 +1607,22 @@ function initCarousel() {
       dot.classList.toggle('active', index === currentIndex);
     });
   }
+
+  // Функция для установки активной карточки по уровню
+  window.setActiveCarouselCard = function(levelName) {
+    const levelMap = {
+      'Starter': 0,
+      'Advanced': 1,
+      'Pro Elite': 2,
+      'Titanium': 3
+    };
+    
+    const index = levelMap[levelName];
+    if (index !== undefined && index !== currentIndex) {
+      currentIndex = index;
+      updateCarousel();
+    }
+  };
 
   dots.forEach(dot => {
     dot.addEventListener('click', () => {
@@ -1617,6 +1707,7 @@ function initModals() {
   const closeInfoModalBtn = document.getElementById('closeInfoModal');
   const closeReferralModalBtn = document.getElementById('closeReferralModal');
 
+  // Функции для показа/скрытия загрузки
   function showInfoModalLoading() {
     document.getElementById('infoModalLoading').style.display = 'block';
     document.getElementById('infoDonutChart').style.display = 'none';
@@ -1646,7 +1737,6 @@ function initModals() {
     document.getElementById('referralDonutChart').style.display = 'none';
     document.getElementById('referralChartLegend').style.display = 'none';
     document.getElementById('referralStatsModal').style.display = 'none';
-    document.getElementById('referralTable').style.display = 'none';
     document.getElementById('referralModalError').style.display = 'none';
   }
 
@@ -1655,7 +1745,6 @@ function initModals() {
     document.getElementById('referralDonutChart').style.display = 'flex';
     document.getElementById('referralChartLegend').style.display = 'flex';
     document.getElementById('referralStatsModal').style.display = 'grid';
-    document.getElementById('referralTable').style.display = 'table';
     document.getElementById('referralModalError').style.display = 'none';
   }
 
@@ -1664,7 +1753,6 @@ function initModals() {
     document.getElementById('referralDonutChart').style.display = 'none';
     document.getElementById('referralChartLegend').style.display = 'none';
     document.getElementById('referralStatsModal').style.display = 'none';
-    document.getElementById('referralTable').style.display = 'none';
     document.getElementById('referralModalError').style.display = 'block';
   }
 
@@ -1673,6 +1761,7 @@ function initModals() {
     infoModal.classList.add('active');
     
     try {
+      // Обновляем данные перед показом модального окна
       if (window.LC && typeof window.LC.refreshLevelInfo === 'function') {
         await window.LC.refreshLevelInfo();
       }
@@ -1688,6 +1777,7 @@ function initModals() {
     referralModal.classList.add('active');
     
     try {
+      // Обновляем данные перед показом модального окна
       if (window.LC && typeof window.LC.loadReferralEarnings === 'function') {
         await window.LC.loadReferralEarnings();
       }
@@ -1738,6 +1828,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initCarousel();
   initModals();
   
+  // Инициализация дашборда
   if (window.LC && typeof window.LC.initDashboard === 'function') {
     setTimeout(() => {
       window.LC.initDashboard();
@@ -1757,6 +1848,32 @@ function updateVideoProgress(percent) {
     progressText.textContent = Math.round(percent) + '%';
   }
 }
+
+// Функция для обновления баннера текущего уровня
+window.updateCurrentLevelBanner = function(levelInfo) {
+  if (!levelInfo) return;
+  
+  const levelName = levelInfo.level_name || 'Starter';
+  const levelPercent = levelInfo.level_percent || levelInfo.rate_percent || '0';
+  const levelBase = levelInfo.base_amount_cents ? (levelInfo.base_amount_cents / 100).toFixed(2) : '0';
+  const viewsLeft = levelInfo.views_left_today || 0;
+  
+  // Обновляем баннер
+  const currentLevelName = document.getElementById('currentLevelName');
+  const currentLevelPercent = document.getElementById('currentLevelPercent');
+  const currentLevelBase = document.getElementById('currentLevelBase');
+  const currentLevelViews = document.getElementById('currentLevelViews');
+  
+  if (currentLevelName) currentLevelName.textContent = levelName;
+  if (currentLevelPercent) currentLevelPercent.textContent = levelPercent + '%';
+  if (currentLevelBase) currentLevelBase.textContent = '$' + levelBase;
+  if (currentLevelViews) currentLevelViews.textContent = viewsLeft;
+  
+  // Устанавливаем активную карточку в карусели
+  if (window.setActiveCarouselCard) {
+    window.setActiveCarouselCard(levelName);
+  }
+};
 </script>
 </body>
 </html>
