@@ -4,7 +4,32 @@
     return;
   }
   window.__LC_SINGLETON__ = 'app_supabase@2025-09-20';
-
+ 
+  // ===== ПОДКЛЮЧЕНИЕ ПЕРЕВОДОВ ===============================================
+  // Ждем загрузки переводов из внешних файлов
+  if (!window.LC_I18N) {
+    // Проверяем, есть ли уже загруженные переводы
+    if (window.i18n && window.i18n.t) {
+      window.LC_I18N = window.i18n;
+      console.log('✅ Переводы загружены из i18n.js');
+    } else {
+      // Заглушка на случай если переводы не загрузились
+      console.warn('⚠️ Переводы не найдены, используем заглушку');
+      window.LC_I18N = {
+        t: (key, params) => {
+          // Просто возвращаем ключ - система переводов сама подставит значения
+          if (params) {
+            let result = key;
+            Object.keys(params).forEach(k => {
+              result = result.replace(`{${k}}`, params[k]);
+            });
+            return result;
+          }
+          return key;
+        }
+      };
+    }
+  }
   // Конфиг + клиент
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
     console.error('[LC] Supabase config missing.');
