@@ -53,8 +53,8 @@ window.LC_I18N = (function(){
       "vip_cap_advanced": "до $1,000",
       "vip_cap_proelite": "до $3,000",
       "vip_cap_titanium": "$3,000+",
-      "vip_cap_diamond_elite": "$10,000+"
-      "vip_cap_quantum_titan": "$25,000+"
+
+  
       // Майнинг процессор
       "mining_processor": "Mining Processor",
       "mining_views_left": "Осталось:",
