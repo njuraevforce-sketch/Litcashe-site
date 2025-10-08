@@ -103,7 +103,7 @@
     }
   };
 
-  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - КАРТОЧКИ НЕ ИЗМЕНЯЮТСЯ
+  // ПОЛНОСТЬЮ ПЕРЕПИСАННАЯ ФУНКЦИЯ - УБРАНО ВСЯКОЕ ВМЕШАТЕЛЬСТВО В КАРТОЧКИ
   LC.refreshLevelInfo = async function() {
     try {
       const info = await LC.getLevelInfo(); 
@@ -131,17 +131,24 @@
       const badge = $('#perViewBadge'); 
       if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
 
+      // ОБНОВЛЯЕМ ТОЛЬКО ИНФОРМАЦИОННЫЕ ЭЛЕМЕНТЫ, НЕ КАРТОЧКИ
       const levelEl = $('[data-level]');
-      if (levelEl) levelEl.textContent = info.level_name || '—';
+      if (levelEl && !levelEl.closest('.level-card-carousel')) {
+        levelEl.textContent = info.level_name || '—';
+      }
       
       const rateEl = $('[data-rate]');
-      if (rateEl) rateEl.textContent = `${rate.toFixed(2)}%`;
+      if (rateEl && !rateEl.closest('.level-card-carousel')) {
+        rateEl.textContent = `${rate.toFixed(2)}%`;
+      }
       
       const capEl = $('[data-cap]');
-      if (capEl) capEl.textContent = `$${base.toFixed(2)}`;
+      if (capEl && !capEl.closest('.level-card-carousel')) {
+        capEl.textContent = `$${base.toFixed(2)}`;
+      }
       
       const refsEl = $('[data-refs]');
-      if (refsEl && info.total_referrals !== undefined) {
+      if (refsEl && info.total_referrals !== undefined && !refsEl.closest('.level-card-carousel')) {
         refsEl.textContent = info.total_referrals;
       }
 
@@ -156,41 +163,9 @@
         if (nextTargetEl) nextTargetEl.textContent = '—';
       }
 
-      // ===== ИСПРАВЛЕННОЕ ОБНОВЛЕНИЕ КАРТОЧЕК УРОВНЕЙ ========================
-      try {
-        const levelCards = document.querySelectorAll('.level-card-carousel');
-        console.log('Found level cards:', levelCards.length);
-        
-        if (levelCards.length) {
-          const currentLevelName = info.level_name?.toLowerCase().replace(' ', '');
-          
-          console.log('Current active level:', currentLevelName);
-          
-          levelCards.forEach(card => {
-            const cardLevel = card.getAttribute('data-level');
-            const statusElement = card.querySelector('.level-status');
-            
-            // ВАЖНО: КАРТОЧКИ НИКОГДА НЕ МЕНЯЮТ СВОЙ ВНЕШНИЙ ВИД ИЛИ ПОРЯДОК
-            // ТОЛЬКО обновляем текст статуса для активной карточки
-            
-            // Убираем активный класс у всех
-            card.classList.remove('active');
-            
-            // Добавляем активный класс только текущему уровню
-            if (cardLevel === currentLevelName) {
-              console.log('Setting active level:', cardLevel);
-              card.classList.add('active');
-              if (statusElement) {
-                statusElement.textContent = window.LC_I18N ? window.LC_I18N.t('status_active') : 'Активен';
-                // НЕ меняем display - оставляем как есть в HTML!
-              }
-            }
-            // НЕ делаем ничего с неактивными карточками - оставляем их как есть
-          });
-        }
-      } catch (error) {
-        console.error('Error updating level cards:', error);
-      }
+      // ВАЖНО: ПОЛНОСТЬЮ УБРАН КОД, КОТОРЫЙ МЕНЯЛ КАРТОЧКИ
+      // КАРТОЧКИ ОСТАЮТСЯ НЕТРОНУТЫМИ В ЛЮБОМ СЛУЧАЕ
+      console.log('🔄 Level info updated - CARDS LEFT UNTOUCHED');
 
     } catch(e) { 
       console.error('[LC] refreshLevelInfo', e); 
