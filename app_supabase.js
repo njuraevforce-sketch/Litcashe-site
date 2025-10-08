@@ -187,7 +187,7 @@
       return null;
     }
 
-    console.log('Calling credit_view with:', { videoId, watchedSeconds, userId: user.id });
+    console.log('Calling credit_view_v3 with:', { videoId, watchedSeconds, userId: user.id });
 
     try {
       // Сначала проверим текущий уровень и лимиты
@@ -199,7 +199,8 @@
         return null;
       }
 
-      const { data, error } = await sb.rpc('credit_view', {
+      // Используем credit_view_v3 вместо credit_view
+      const { data, error } = await sb.rpc('credit_view_v3', {
         p_video_id: String(videoId || 'video'),
         p_watched_seconds: Math.max(0, Math.floor(watchedSeconds || 0)),
       });
@@ -292,8 +293,8 @@
         return;
       }
 
-      // Применяем реферальный код
-      const { error } = await sb.rpc('apply_referral', { 
+      // Применяем реферальный код с помощью apply_referral_code
+      const { error } = await sb.rpc('apply_referral_code', { 
         p_ref_code: refParam 
       });
 
@@ -394,10 +395,10 @@
         console.warn('❌ get_all_referral_counts не сработал:', e1);
       }
 
-      // Способ 2: Если первый не сработал, пробуем get_referral_counts_active
+      // Способ 2: Если первый не сработал, пробуем get_my_ref_counts
       if (counts.gen1 === 0 && counts.gen2 === 0 && counts.gen3 === 0) {
         try {
-          const { data, error } = await sb.rpc('get_referral_counts_active');
+          const { data, error } = await sb.rpc('get_my_ref_counts');
           if (!error && data) {
             const row = Array.isArray(data) ? data[0] : data;
             counts = {
@@ -405,10 +406,10 @@
               gen2: Number(row.gen2 || row.lvl2 || 0),
               gen3: Number(row.gen3 || row.lvl3 || 0)
             };
-            console.log('✅ Количество рефералов из get_referral_counts_active:', counts);
+            console.log('✅ Количество рефералов из get_my_ref_counts:', counts);
           }
         } catch (e2) {
-          console.warn('❌ get_referral_counts_active не сработал:', e2);
+          console.warn('❌ get_my_ref_counts не сработал:', e2);
         }
       }
 
@@ -456,19 +457,14 @@
   // ИСПРАВЛЕННАЯ ФУНКЦИЯ - получаем рефералов по поколениям
   LC.getActiveReferrals = async function(level = 1) {
     try {
+      // Используем get_all_referrals_by_generation
       const { data, error } = await sb.rpc('get_all_referrals_by_generation', {
         p_level: level
       });
       
       if (error) {
-        console.warn('get_all_referrals_by_generation failed, trying alternative:', error);
-        // Fallback на альтернативную функцию
-        const { data: altData, error: altError } = await sb.rpc('get_referrals_by_generation', {
-          p_level: level
-        });
-        
-        if (altError) throw altError;
-        return Array.isArray(altData) ? altData : (altData ? [altData] : []);
+        console.warn('get_all_referrals_by_generation failed:', error);
+        return [];
       }
       
       return Array.isArray(data) ? data : (data ? [data] : []);
@@ -501,7 +497,6 @@
           const row = Array.isArray(summaryData) ? summaryData[0] : summaryData;
           
           if (row) {
-            // ИСПРАВЛЕНО: Используем правильные имена полей
             gen1Total = Math.round((row.lvl1_usdt || 0) * 100);
             gen2Total = Math.round((row.lvl2_usdt || 0) * 100);
             gen3Total = Math.round((row.lvl3_usdt || 0) * 100);
@@ -518,47 +513,7 @@
         console.warn('❌ my_ref_income_summary не сработал:', summaryErr);
       }
 
-      // Способ 2: Если первый способ не дал ВООБЩЕ данных, пробуем get_referral_earnings
-      if (!dataFound) {
-        try {
-          const { data: refData, error: refError } = await sb.rpc('get_referral_earnings');
-          
-          if (!refError && refData) {
-            console.log('📊 Данные из get_referral_earnings:', refData);
-            
-            const earnings = Array.isArray(refData) ? refData : (refData ? [refData] : []);
-            
-            earnings.forEach(earning => {
-              // ИСПРАВЛЕНО: Используем правильные имена полей
-              const generation = earning.generation;
-              const totalCents = earning.total_cents || 0;
-              
-              switch(generation) {
-                case 1:
-                  gen1Total = totalCents;
-                  break;
-                case 2:
-                  gen2Total = totalCents;
-                  break;
-                case 3:
-                  gen3Total = totalCents;
-                  break;
-              }
-            });
-            
-            dataFound = true;
-            console.log('✅ Данные из get_referral_earnings обработаны:', {
-              gen1: gen1Total/100,
-              gen2: gen2Total/100,
-              gen3: gen3Total/100
-            });
-          }
-        } catch (refErr) {
-          console.warn('❌ get_referral_earnings не сработал:', refErr);
-        }
-      }
-
-      // Способ 3: Если все еще нет данных, пробуем ref_income_totals
+      // Способ 2: Если первый способ не дал ВООБЩЕ данных, пробуем ref_income_totals
       if (!dataFound) {
         try {
           const { data: totalsData, error: totalsError } = await sb.rpc('ref_income_totals');
@@ -569,8 +524,7 @@
             const totalsArray = Array.isArray(totalsData) ? totalsData : (totalsData ? [totalsData] : []);
             
             totalsArray.forEach(item => {
-              // ИСПРАВЛЕНО: Правильная обработка данных
-              const level = item.lvl;
+              const level = item.level;
               const amountUsd = item.amount_usd || 0;
               
               switch(level) {
@@ -598,7 +552,7 @@
         }
       }
 
-      // Способ 4: Прямой запрос к таблице referral_rewards (если другие способы не сработали)
+      // Способ 3: Прямой запрос к таблице referral_rewards (если другие способы не сработали)
       if (!dataFound) {
         try {
           const { data: rewardsData, error: rewardsError } = await sb
@@ -998,7 +952,7 @@
         address
       });
 
-      // Используем RPC функцию
+      // Используем RPC функцию request_withdrawal
       const { data, error } = await sb.rpc('request_withdrawal', {
         p_amount_cents: parseInt(amountCents),
         p_network: String(method),
@@ -1008,71 +962,12 @@
 
       if (error) {
         console.error('❌ Withdrawal RPC error:', error);
-        
-        // Fallback: создаем заявку напрямую
-        console.log('🔄 Пробуем создать заявку напрямую...');
-        
-        const { data: wallet } = await sb
-          .from('wallets')
-          .select('balance_cents')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (!wallet || wallet.balance_cents < amountCents) {
-          alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Недостаточно средств на балансе');
-          return null;
-        }
-        
-        const { data: directData, error: directError } = await sb
-          .from('withdrawals')
-          .insert({
-            user_id: user.id,
-            amount_cents: amountCents,
-            network: method,
-            address: address,
-            currency: 'USDT',
-            status: 'pending',
-            fee_cents: 0,
-            created_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-          
-        if (directError) {
-          console.error('❌ Ошибка прямой вставки:', directError);
-          alert((window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : '❌ Не удалось создать заявку') + ': ' + directError.message);
-          return null;
-        }
-        
-        // Списываем средства
-        await sb
-          .from('wallets')
-          .update({ 
-            balance_cents: wallet.balance_cents - amountCents,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-        
-        console.log('✅ Заявка создана напрямую:', directData);
-        
-        return { 
-          ok: true, 
-          message: window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_success') : '✅ Заявка на вывод создана и отправлена на обработку администратору',
-          id: directData.id 
-        };
+        throw error;
       }
 
       console.log('✅ Ответ от RPC функции:', data);
       
-      // Обрабатываем ответ от RPC функции
-      const result = typeof data === 'object' ? data : JSON.parse(data);
-      
-      if (!result?.ok) {
-        alert('❌ ' + (result?.message || (window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : 'Заявка отклонена системой')));
-        return null;
-      }
-      
-      return result;
+      return data;
       
     } catch (error) {
       console.error('❌ Withdrawal request error:', error);
@@ -1087,83 +982,17 @@
       const sb = window.sb || window.supabase;
       if (!sb) return { eligible: false, reason: 'База данных недоступна' };
       
-      // Получаем профиль пользователя
-      const { data: profile, error: profileError } = await sb
-        .from('profiles')
-        .select('created_at')
-        .eq('user_id', userId)
-        .single();
+      // Используем RPC функцию check_withdrawal_eligibility
+      const { data, error } = await sb.rpc('check_withdrawal_eligibility', {
+        p_user_id: userId
+      });
       
-      if (profileError) {
-        console.error('❌ Ошибка профиля:', profileError);
-        return { eligible: false, reason: 'Ошибка получения данных профиля' };
+      if (error) {
+        console.error('❌ Ошибка проверки возможности вывода:', error);
+        return { eligible: false, reason: 'Ошибка проверки возможности вывода' };
       }
       
-      const registrationDate = new Date(profile.created_at);
-      const now = new Date();
-      const daysSinceRegistration = Math.floor((now - registrationDate) / (1000 * 60 * 60 * 24));
-      
-      console.log('📅 Дней с регистрации:', daysSinceRegistration);
-      
-      // Проверяем историю выводов
-      const { data: previousWithdrawals, error: withdrawalsError } = await sb
-        .from('withdrawals')
-        .select('id, created_at, status')
-        .eq('user_id', userId)
-        .in('status', ['paid', 'pending'])
-        .order('created_at', { ascending: false });
-      
-      if (withdrawalsError) {
-        console.error('❌ Ошибка проверки истории выводов:', withdrawalsError);
-        return { eligible: false, reason: 'Ошибка проверки истории выводов' };
-      }
-      
-      const hasPreviousWithdrawals = previousWithdrawals && previousWithdrawals.length > 0;
-      
-      // Первый вывод - минимум 5 дней после регистрации
-      if (!hasPreviousWithdrawals && daysSinceRegistration < 5) {
-        const daysLeft = 5 - daysSinceRegistration;
-        return { 
-          eligible: false, 
-          reason: `Первый вывод доступен через ${daysLeft} ${daysLeft === 1 ? 'день' : 'дня'} после регистрации` 
-        };
-      }
-      
-      // Проверяем последний вывод (не чаще 1 раза в 24 часа)
-      if (hasPreviousWithdrawals) {
-        const lastWithdrawal = previousWithdrawals[0];
-        const lastWithdrawalDate = new Date(lastWithdrawal.created_at);
-        const hoursSinceLastWithdrawal = Math.floor((now - lastWithdrawalDate) / (1000 * 60 * 60));
-        
-        console.log('⏰ Часов с последнего вывода:', hoursSinceLastWithdrawal);
-        
-        if (hoursSinceLastWithdrawal < 24) {
-          const hoursLeft = 24 - hoursSinceLastWithdrawal;
-          return { 
-            eligible: false, 
-            reason: `Следующий вывод доступен через ${hoursLeft} ${hoursLeft === 1 ? 'час' : 'часов'}` 
-          };
-        }
-      }
-      
-      // Проверяем баланс
-      const { data: wallet, error: walletError } = await sb
-        .from('wallets')
-        .select('balance_cents')
-        .eq('user_id', userId)
-        .single();
-        
-      if (walletError || !wallet) {
-        return { eligible: false, reason: 'Ошибка проверки баланса' };
-      }
-      
-      if (wallet.balance_cents < 2900) {
-        return { eligible: false, reason: 'Минимальная сумма для вывода: $29' };
-      }
-      
-      console.log('✅ Все проверки пройдены');
-      return { eligible: true };
-      
+      return data;
     } catch (error) {
       console.error('❌ Ошибка проверки возможности вывода:', error);
       return { eligible: false, reason: 'Ошибка проверки возможности вывода' };
@@ -1247,7 +1076,7 @@
         tbody.appendChild(tr);
       });
       
-      // Добавляем обработчики для кнопок отмены
+      // Добавляем обработчики для кнопок отмена
       tbody.querySelectorAll('[data-cancel]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const withdrawalId = e.target.getAttribute('data-cancel');
@@ -1277,7 +1106,7 @@
         return;
       }
       
-      // Используем RPC функцию для отмены
+      // Используем RPC функцию user_cancel_withdrawal
       const { data, error } = await sb.rpc('user_cancel_withdrawal', {
         p_id: parseInt(withdrawalId)
       });
@@ -1437,6 +1266,7 @@
       return; 
     }
     
+    // Используем существующую функцию create_deposit
     const { data, error } = await sb.rpc('create_deposit', {
       p_amount_cents: Math.max(0, Math.floor(amountCents || 0)),
       p_network: String(network || 'TRC20'),
