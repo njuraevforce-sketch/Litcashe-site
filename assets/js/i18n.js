@@ -28,6 +28,14 @@ window.LC_I18N = (function(){
       "hero_activeUsers": "Активные пользователи",
       "hero_payouts": "Выплаты",
       "hero_apr": "Потенциальный APR",      
+
+      // Шаги работы
+      "steps_activation": "Активация",
+      "steps_activationDesc": "Пополняешь от 29 USDT (TRC20) — аккаунт становится активным.",
+      "steps_views": "Просмотры",
+      "steps_viewsDesc": "Смотри короткие ролики. Каждые 5 просмотров дают до 5% к балансу.",
+      "steps_referrals": "Рефералы",
+      "steps_referralsDesc": "Создай команду инвесторов — ты получаешь 13% / 5% / 1%.",      
       
       // Новые переводы для дашборда
       "nav_platform": "Платформа",
