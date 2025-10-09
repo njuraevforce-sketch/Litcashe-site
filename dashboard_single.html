@@ -270,6 +270,38 @@
     margin-bottom: 4px;
   }
 
+  /* Стили для баннера */
+  .banner-container {
+    width: 50%; /* Половина ширины экрана */
+    height: 120px;
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto; /* Центрирование по горизонтали */
+    border-radius: 8px; /* Легкое скругление углов для красоты */
+  }
+
+  .banner-slider {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .banner-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    border-radius: 8px; /* Скругление для видео */
+  }
+
+  .banner-video.active {
+    opacity: 1;
+  }
+
   /* Основной контент */
   .main-content {
     flex: 1;
@@ -1024,6 +1056,11 @@
     .level-locked {
       font-size: 50px;
     }
+
+    .banner-container {
+      width: 90%; /* На мобильных увеличиваем ширину баннера */
+      height: 100px;
+    }
   }
 
   /* Уведомления */
@@ -1325,6 +1362,24 @@
   </a>
 </nav>
 
+<!-- Баннер с анимацией -->
+<div class="banner-container">
+  <div class="banner-slider">
+    <video class="banner-video active" autoplay muted loop playsinline>
+      <source src="/assets/banner1.mp4" type="video/mp4">
+    </video>
+    <video class="banner-video" autoplay muted loop playsinline>
+      <source src="/assets/banner2.mp4" type="video/mp4">
+    </video>
+    <video class="banner-video" autoplay muted loop playsinline>
+      <source src="/assets/banner3.mp4" type="video/mp4">
+    </video>
+    <video class="banner-video" autoplay muted loop playsinline>
+      <source src="/assets/banner4.mp4" type="video/mp4">
+    </video>
+  </div>
+</div>
+
 <!-- Основной контент -->
 <main class="main-content">
   <div class="container">
@@ -1583,6 +1638,26 @@ function showNotification(message) {
   }
 }
 
+// Функционал баннера
+function initBannerSlider() {
+  const banners = document.querySelectorAll('.banner-video');
+  let currentBanner = 0;
+  
+  function showNextBanner() {
+    // Скрываем текущий баннер
+    banners[currentBanner].classList.remove('active');
+    
+    // Переходим к следующему
+    currentBanner = (currentBanner + 1) % banners.length;
+    
+    // Показываем следующий баннер
+    banners[currentBanner].classList.add('active');
+  }
+  
+  // Запускаем автоматическую смену каждые 10 секунд
+  setInterval(showNextBanner, 10000);
+}
+
 // Карусель карточек уровней с улучшенным свайпом
 function initCarousel() {
   const carouselWrapper = document.getElementById('carouselWrapper');
@@ -1810,6 +1885,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
+  initBannerSlider();
   initCarousel();
   initModals();
   
