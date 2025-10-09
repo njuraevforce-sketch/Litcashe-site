@@ -46,11 +46,11 @@
     --bg-card: rgba(255, 255, 255, 0.92);
     --text: #1a237e;
     --text-secondary: #3949ab;
-    --border: rgba(0, 180, 255, 0.3);
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    --radius: 20px;
+    --border: rgba(0, 180, 255, 0.2);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    --radius: 16px;
     --glass: rgba(255, 255, 255, 0.15);
-    --glass-border: rgba(255, 255, 255, 0.25);
+    --glass-border: rgba(255, 255, 255, 0.2);
   }
 
   * {
@@ -73,7 +73,7 @@
     background: #000;
   }
 
-  /* Видео фон - ТОЛЬКО ВИДЕО */
+  /* Видео фон с легким оверлеем */
   .video-background {
     position: fixed;
     top: 0;
@@ -81,6 +81,16 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    z-index: -2;
+  }
+
+  .video-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(13, 71, 161, 0.3) 0%, rgba(21, 101, 192, 0.25) 100%);
     z-index: -1;
   }
 
@@ -257,7 +267,7 @@
     z-index: 1;
   }
 
-  /* Карточки */
+  /* Карточки - МИНИМАЛЬНЫЕ РАМКИ */
   .card {
     background: var(--bg-card);
     border-radius: var(--radius);
@@ -289,7 +299,7 @@
 
   .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
   }
 
   .card h2 {
@@ -446,7 +456,7 @@
     grid-template-columns: 1fr;
   }
 
-  /* Видео контейнер */
+  /* Видео контейнер - БЕЗ РАМКИ */
   .video-container {
     width: 100%;
     height: 220px;
@@ -454,7 +464,6 @@
     overflow: hidden;
     background: #000;
     margin-bottom: 20px;
-    border: 1px solid var(--border);
     box-shadow: var(--shadow);
   }
 
@@ -465,7 +474,7 @@
     object-fit: cover;
   }
 
-  /* Rotator */
+  /* Rotator - БЕЗ РАМКИ */
   .hero-rotator {
     display: flex;
     align-items: center;
@@ -647,11 +656,12 @@
 </head>
 
 <body>
-  <!-- Видео фон - ТОЛЬКО ВИДЕО -->
+  <!-- Видео фон с легким оверлеем -->
   <video class="video-background" autoplay muted loop playsinline>
     <source src="assets/animation1.mp4" type="video/mp4">
     <source src="assets/animation1.webm" type="video/webm">
   </video>
+  <div class="video-overlay"></div>
 
 <header>
   <div class="logo">
@@ -794,7 +804,7 @@
       </div>
     </section>
 
-    <!-- Video section -->
+    <!-- Video section - БЕЗ РАМКИ -->
     <section class="card">
       <h2><span data-i18n="video_preview">Превью</span></h2>
       <div class="video-container">
@@ -804,7 +814,7 @@
       </div>
     </section>
 
-    <!-- Rotator section -->
+    <!-- Rotator section - БЕЗ РАМКИ -->
     <section class="card hero-rotator">
       <img id="brandRotator" class="rotator-img" src="assets/rotator/lit-1.webp" alt="Lit Energy — бренд" loading="eager" decoding="async" data-i18n="alt_brand_rotator"/>
     </section>
