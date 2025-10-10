@@ -1,4 +1,14 @@
 (function () {
+  // Заглушка для LanguageSwitcher чтобы избежать ошибок
+  if (typeof window.LanguageSwitcher === 'undefined') {
+    window.LanguageSwitcher = {
+      t: function(key) {
+        // Просто возвращаем ключ как есть
+        return key;
+      }
+    };
+  }
+
   if (window.__LC_SINGLETON__) {
     try { console.warn('[LC] main app already initialized:', window.__LC_SINGLETON__); } catch(_){}
     return;
