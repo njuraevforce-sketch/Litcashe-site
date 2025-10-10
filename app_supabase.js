@@ -1,4 +1,4 @@
-;(function () {
+(function () {
   if (window.__LC_SINGLETON__) {
     try { console.warn('[LC] main app already initialized:', window.__LC_SINGLETON__); } catch(_){}
     return;
@@ -11,10 +11,10 @@
     // Проверяем, есть ли уже загруженные переводы
     if (window.i18n && window.i18n.t) {
       window.LC_I18N = window.i18n;
-      console.log('✅ Переводы загружены из i18n.js');
+      console.log('✅ Translations loaded from i18n.js');
     } else {
       // Заглушка на случай если переводы не загрузились
-      console.warn('⚠️ Переводы не найдены, используем заглушку');
+      console.warn('⚠️ Translations not found, using fallback');
       window.LC_I18N = {
         t: (key, params) => {
           // Просто возвращаем ключ - система переводов сама подставит значения
@@ -154,7 +154,7 @@
       set('[data-level-percent]', `${rate.toFixed(2)}%`);
 
       const badge = $('#perViewBadge'); 
-      if (badge) badge.textContent = `+${perView.toFixed(2)} USDT за просмотр`;
+      if (badge) badge.textContent = `+${perView.toFixed(2)} USDT per view`;
 
       // Обновляем информационные элементы
       const levelEl = $('[data-level]');
@@ -221,12 +221,12 @@
           const statusEl = activeCard.querySelector('.level-status');
           if (statusEl) {
             statusEl.style.display = 'block';
-            console.log(`✅ Активный уровень установлен: ${currentLevelName}`);
+            console.log(`✅ Active level set: ${currentLevelName}`);
           }
         }
       }
     } catch (error) {
-      console.error('Ошибка при обновлении активной карточки:', error);
+      console.error('Error updating active card:', error);
     }
   };
 
@@ -234,14 +234,14 @@
   LC.creditView = async function(videoId, watchedSeconds) {
     const user = await getUser(); 
     if (!user) { 
-      alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт'); 
+      alert('❌ Please login to your account'); 
       return null; 
     }
 
     // Проверяем активность пользователя
     const isActive = await LC.isActiveUser();
     if (!isActive) {
-      alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
+      alert('❌ To earn from views, you need to deposit at least $29');
       return null;
     }
 
@@ -253,7 +253,7 @@
       console.log('Current level info before credit:', levelInfo);
       
       if (levelInfo && levelInfo.views_left_today <= 0) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : '❌ Лимит просмотров исчерпан');
+        alert('❌ Daily view limit reached');
         return null;
       }
 
@@ -264,7 +264,7 @@
       
       if (error) { 
         console.error('Credit view error:', error); 
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_award_error') : '❌ Ошибка начисления'); 
+        alert('❌ Award error'); 
         return null; 
       }
       
@@ -272,7 +272,7 @@
       
       const row = Array.isArray(data) ? data[0] : data;
       if (!row?.ok) { 
-        alert(row?.message || (window.LC_I18N ? window.LC_I18N.t('notification_award_error') : '❌ Начисление отклонено')); 
+        alert(row?.message || '❌ Award rejected'); 
         return null; 
       }
       
@@ -291,13 +291,13 @@
       // Показываем уведомление о начислении
       if (row.reward_cents) {
         const reward = (row.reward_cents / 100).toFixed(2);
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_award_success', { amount: reward }) : `✅ Начислено $${reward} за просмотр!`);
+        alert(`✅ $${reward} credited for viewing!`);
       }
       
       return row;
     } catch (error) {
       console.error('Exception in creditView:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_award_error') : '❌ Ошибка при начислении') + ': ' + error.message);
+      alert('❌ Error during crediting: ' + error.message);
       return null;
     }
   };
@@ -414,13 +414,13 @@
         btn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText(input.value);
-            btn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_copied') : '✅ Скопировано!';
-            setTimeout(() => btn.textContent = '📋 Копировать', 2000);
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => btn.textContent = '📋 Copy', 2000);
           } catch (err) {
             input.select();
             document.execCommand('copy');
-            btn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_copied') : '✅ Скопировано!';
-            setTimeout(() => btn.textContent = '📋 Копировать', 2000);
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => btn.textContent = '📋 Copy', 2000);
           }
         });
       }
@@ -446,10 +446,10 @@
             gen2: Number(row.gen2 || row.lvl2 || 0),
             gen3: Number(row.gen3 || row.lvl3 || 0)
           };
-          console.log('✅ Количество рефералов из get_all_referral_counts:', counts);
+          console.log('✅ Referral counts from get_all_referral_counts:', counts);
         }
       } catch (e1) {
-        console.warn('❌ get_all_referral_counts не сработал:', e1);
+        console.warn('❌ get_all_referral_counts failed:', e1);
       }
 
       // Способ 2: Если первый не сработал, пробуем get_referral_counts_active
@@ -463,10 +463,10 @@
               gen2: Number(row.gen2 || row.lvl2 || 0),
               gen3: Number(row.gen3 || row.lvl3 || 0)
             };
-            console.log('✅ Количество рефералов из get_referral_counts_active:', counts);
+            console.log('✅ Referral counts from get_referral_counts_active:', counts);
           }
         } catch (e2) {
-          console.warn('❌ get_referral_counts_active не сработал:', e2);
+          console.warn('❌ get_referral_counts_active failed:', e2);
         }
       }
 
@@ -498,15 +498,15 @@
           if (!error2) counts.gen2 = refs2?.length || 0;
           if (!error3) counts.gen3 = refs3?.length || 0;
 
-          console.log('✅ Количество рефералов из прямого запроса:', counts);
+          console.log('✅ Referral counts from direct query:', counts);
         } catch (e3) {
-          console.warn('❌ Прямой запрос к referrals не сработал:', e3);
+          console.warn('❌ Direct referrals query failed:', e3);
         }
       }
 
       return counts;
     } catch (e) {
-      console.warn('[LC] getActiveReferralCounts ошибка:', e);
+      console.warn('[LC] getActiveReferralCounts error:', e);
       return { gen1: 0, gen2: 0, gen3: 0 };
     }
   };
@@ -542,7 +542,7 @@
       const user = await getUser(); 
       if (!user) return;
 
-      console.log('🔄 Загрузка реферальных доходов для пользователя:', user.id);
+      console.log('🔄 Loading referral earnings for user:', user.id);
 
       let gen1Total = 0;
       let gen2Total = 0;
@@ -554,7 +554,7 @@
         const { data: refData, error: refError } = await sb.rpc('get_referral_earnings');
         
         if (!refError && refData) {
-          console.log('📊 Данные из get_referral_earnings:', refData);
+          console.log('📊 Data from get_referral_earnings:', refData);
           
           const earnings = Array.isArray(refData) ? refData : (refData ? [refData] : []);
           
@@ -576,14 +576,14 @@
           });
           
           dataFound = true;
-          console.log('✅ Данные из get_referral_earnings обработаны:', {
+          console.log('✅ Data from get_referral_earnings processed:', {
             gen1: gen1Total/100,
             gen2: gen2Total/100,
             gen3: gen3Total/100
           });
         }
       } catch (refErr) {
-        console.warn('❌ get_referral_earnings не сработал:', refErr);
+        console.warn('❌ get_referral_earnings failed:', refErr);
       }
 
       // Способ 2: Если первый способ не дал ВООБЩЕ данных, пробуем transactions
@@ -597,7 +597,7 @@
             .eq('status', 'completed');
 
           if (!transError && transactions) {
-            console.log('📊 Данные из transactions:', transactions);
+            console.log('📊 Data from transactions:', transactions);
             
             transactions.forEach(trans => {
               const generation = trans.metadata?.generation || 1;
@@ -617,14 +617,14 @@
             });
             
             dataFound = true;
-            console.log('✅ Данные из transactions обработаны:', {
+            console.log('✅ Data from transactions processed:', {
               gen1: gen1Total/100,
               gen2: gen2Total/100,
               gen3: gen3Total/100
             });
           }
         } catch (transErr) {
-          console.warn('❌ Запрос к transactions не сработал:', transErr);
+          console.warn('❌ Transactions query failed:', transErr);
         }
       }
 
@@ -634,7 +634,7 @@
           const { data: totalsData, error: totalsError } = await sb.rpc('ref_income_totals');
           
           if (!totalsError && totalsData) {
-            console.log('📊 Данные из ref_income_totals:', totalsData);
+            console.log('📊 Data from ref_income_totals:', totalsData);
             
             const totalsArray = Array.isArray(totalsData) ? totalsData : (totalsData ? [totalsData] : []);
             
@@ -656,14 +656,14 @@
             });
             
             dataFound = true;
-            console.log('✅ Данные из ref_income_totals обработаны:', {
+            console.log('✅ Data from ref_income_totals processed:', {
               gen1: gen1Total/100,
               gen2: gen2Total/100,
               gen3: gen3Total/100
             });
           }
         } catch (totalsErr) {
-          console.warn('❌ ref_income_totals не сработал:', totalsErr);
+          console.warn('❌ ref_income_totals failed:', totalsErr);
         }
       }
 
@@ -687,7 +687,7 @@
       set('#gen3CellModal', fmtMoney(gen3Total/100));
       set('#refTotalCellModal', fmtMoney(total));
 
-      console.log('🎯 Итоговые реферальные доходы:', { 
+      console.log('🎯 Final referral earnings:', { 
         gen1: fmtMoney(gen1Total/100), 
         gen2: fmtMoney(gen2Total/100), 
         gen3: fmtMoney(gen3Total/100), 
@@ -698,7 +698,7 @@
       this.updateReferralCharts(gen1Total, gen2Total, gen3Total);
 
     } catch(e) { 
-      console.error('❌ [LC] loadReferralEarnings ошибка:', e); 
+      console.error('❌ [LC] loadReferralEarnings error:', e); 
     }
   };
 
@@ -719,7 +719,7 @@
 
       this.updateChartAppearance(gen1Percent, gen2Percent, gen3Percent);
     } catch (error) {
-      console.error('Ошибка обновления диаграмм:', error);
+      console.error('Chart update error:', error);
     }
   };
 
@@ -786,11 +786,11 @@
               });
             }
           } catch (levelErr) {
-            console.warn(`Не удалось получить рефералов ${level} поколения:`, levelErr);
+            console.warn(`Failed to get referrals ${level} generation:`, levelErr);
           }
         }
       } catch (method1Err) {
-        console.warn('Первый способ получения рефералов не сработал:', method1Err);
+        console.warn('First method of getting referrals failed:', method1Err);
       }
 
       // Способ 2: Прямой запрос к referrals
@@ -817,7 +817,7 @@
             }));
           }
         } catch (method2Err) {
-          console.warn('Второй способ получения рефералов не сработал:', method2Err);
+          console.warn('Second method of getting referrals failed:', method2Err);
         }
       }
 
@@ -825,7 +825,7 @@
       tbody.innerHTML = '';
       
       if (allRefs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">Нет активных рефералов</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:10px 0;">No active referrals</td></tr>`;
       } else {
         allRefs.slice(0, 20).forEach(r => {
           const tr = document.createElement('tr');
@@ -838,9 +838,9 @@
         });
       }
 
-      console.log('✅ Таблица рефералов обновлена, записей:', allRefs.length);
+      console.log('✅ Referrals table updated, records:', allRefs.length);
     } catch (error) {
-      console.error('❌ Ошибка загрузки таблицы рефералов:', error);
+      console.error('❌ Error loading referrals table:', error);
     }
   };
 
@@ -866,13 +866,13 @@
       set('#gen2CountModal', counts.gen2);
       set('#gen3CountModal', counts.gen3);
 
-      console.log('📊 Количество рефералов обновлено:', counts);
+      console.log('📊 Referral counts updated:', counts);
 
       // Загружаем детальную информацию о рефералах для таблицы
       await this.loadReferralDetailsTable();
 
     } catch(e) { 
-      console.error('[LC] refreshDashboardCards ошибка:', e); 
+      console.error('[LC] refreshDashboardCards error:', e); 
     }
   };
 
@@ -904,7 +904,7 @@
       video.currentTime = 0; video.pause();
       setBar(0); 
       startBtn.disabled = false; 
-      startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('dashboard_earn_by_view') : '🎬 Заработать за просмотр';
+      startBtn.textContent = '🎬 Earn by viewing';
       checkVideoAvailability();
     };
 
@@ -917,25 +917,25 @@
         console.log('Video availability check:', { isActive, viewsLeft, levelInfo });
         
         if (!isActive) {
-          ui(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : 'Пополните баланс от $29 для заработка');
+          ui('Deposit at least $29 to earn');
           startBtn.disabled = true;
-          startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_failed') + ' Неактивный аккаунт' : '❌ Неактивный аккаунт';
+          startBtn.textContent = '❌ Inactive account';
           if (overlay) {
             overlay.style.display = 'flex';
-            overlay.textContent = window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : 'Для заработка пополните баланс от $29';
+            overlay.textContent = 'Deposit at least $29 to earn';
           }
         } else if (viewsLeft <= 0) {
-          ui(window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : 'Лимит просмотров исчерпан');
+          ui('Daily view limit reached');
           startBtn.disabled = true;
-          startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : '⏳ Лимит исчерпан';
+          startBtn.textContent = '⏳ Limit reached';
           if (overlay) {
             overlay.style.display = 'flex';
-            overlay.textContent = window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : 'Лимит просмотров исчерпан';
+            overlay.textContent = 'Daily view limit reached';
           }
         } else {
-          ui(window.LC_I18N ? window.LC_I18N.t('progress_views_left', { count: viewsLeft }) : `Нажмите «Заработать за просмотр» (осталось: ${viewsLeft})`);
+          ui(`Click "Earn by viewing" (left: ${viewsLeft})`);
           startBtn.disabled = false;
-          startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('dashboard_earn_by_view') : '🎬 Заработать за просмотр';
+          startBtn.textContent = '🎬 Earn by viewing';
           if (overlay) overlay.style.display = 'none';
         }
       } catch (error) {
@@ -960,7 +960,7 @@
       
       if (t >= dur - 0.5) {
         video.pause();
-        ui(window.LC_I18N ? window.LC_I18N.t('notification_success') + ' Начисление завершено' : 'Начисление завершено');
+        ui('Success! Crediting completed');
         setTimeout(reset, 1500);
       }
     });
@@ -968,7 +968,7 @@
     video.addEventListener('ended', ()=> {
       if (!allowed) return;
       video.pause();
-      ui(window.LC_I18N ? window.LC_I18N.t('notification_success') + ' Начисление завершено' : 'Начисление завершено');
+      ui('Success! Crediting completed');
       setTimeout(reset, 1500);
     });
 
@@ -983,12 +983,12 @@
       console.log('Start button clicked:', { isActive, viewsLeft });
       
       if (!isActive) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Для заработка на просмотрах необходимо пополнить баланс минимум на $29');
+        alert('❌ To earn from views, you need to deposit at least $29');
         return;
       }
       
       if (viewsLeft <= 0) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_view_limit_reached') : '❌ Лимит просмотров на сегодня исчерпан');
+        alert('❌ Daily view limit reached');
         return;
       }
       
@@ -998,14 +998,14 @@
       
       try {
         await video.play();
-        ui(window.LC_I18N ? window.LC_I18N.t('notification_processing') + ' Смотрите видео до конца' : 'Смотрите видео до конца'); 
+        ui('Watch video till the end'); 
         setBar(0);
         startBtn.disabled = true; 
-        startBtn.textContent = window.LC_I18N ? window.LC_I18N.t('notification_processing') : '⏳ Ожидание...';
+        startBtn.textContent = '⏳ Processing...';
         if (overlay) overlay.style.display = 'none';
       } catch (err) {
         console.warn('Autoplay failed:', err);
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_autoplay_blocked') : '❌ Автовоспроизведение заблокировано');
+        alert('❌ Autoplay blocked');
         reset();
       }
     });
@@ -1022,18 +1022,18 @@
     try {
       const sb = window.sb || window.supabase;
       if (!sb) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_network_error') : '❌ Ошибка подключения к базе данных');
+        alert('❌ Database connection error');
         return null;
       }
       
       // Получаем текущего пользователя
       const { data: { user }, error: userError } = await sb.auth.getUser();
       if (userError || !user) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
+        alert('❌ Please login to your account');
         return null;
       }
       
-      console.log('🔄 Запрос вывода:', {
+      console.log('🔄 Withdrawal request:', {
         userId: user.id,
         amountCents,
         method,
@@ -1052,7 +1052,7 @@
         console.error('❌ Withdrawal RPC error:', error);
         
         // Fallback: создаем заявку напрямую
-        console.log('🔄 Пробуем создать заявку напрямую...');
+        console.log('🔄 Trying to create application directly...');
         
         const { data: wallet } = await sb
           .from('wallets')
@@ -1061,7 +1061,7 @@
           .single();
           
         if (!wallet || wallet.balance_cents < amountCents) {
-          alert(window.LC_I18N ? window.LC_I18N.t('notification_insufficient_balance') : '❌ Недостаточно средств на балансе');
+          alert('❌ Insufficient balance');
           return null;
         }
         
@@ -1081,8 +1081,8 @@
           .single();
           
         if (directError) {
-          console.error('❌ Ошибка прямой вставки:', directError);
-          alert((window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : '❌ Не удалось создать заявку') + ': ' + directError.message);
+          console.error('❌ Direct insert error:', directError);
+          alert('❌ Failed to create application: ' + directError.message);
           return null;
         }
         
@@ -1095,22 +1095,22 @@
           })
           .eq('user_id', user.id);
         
-        console.log('✅ Заявка создана напрямую:', directData);
+        console.log('✅ Application created directly:', directData);
         
         return { 
           ok: true, 
-          message: window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_success') : '✅ Заявка на вывод создана и отправлена на обработку администратору',
+          message: '✅ Withdrawal application created and sent for processing',
           id: directData.id 
         };
       }
 
-      console.log('✅ Ответ от RPC функции:', data);
+      console.log('✅ Response from RPC function:', data);
       
       // Обрабатываем ответ от RPC функции
       const result = typeof data === 'object' ? data : JSON.parse(data);
       
       if (!result?.ok) {
-        alert('❌ ' + (result?.message || (window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : 'Заявка отклонена системой')));
+        alert('❌ ' + (result?.message || 'Application rejected by system'));
         return null;
       }
       
@@ -1118,7 +1118,7 @@
       
     } catch (error) {
       console.error('❌ Withdrawal request error:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_withdrawal_error') : '❌ Ошибка при создании заявки') + ': ' + error.message);
+      alert('❌ Error creating application: ' + error.message);
       return null;
     }
   };
@@ -1127,7 +1127,7 @@
   LC.checkWithdrawalEligibility = async function(userId) {
     try {
       const sb = window.sb || window.supabase;
-      if (!sb) return { eligible: false, reason: 'База данных недоступна' };
+      if (!sb) return { eligible: false, reason: 'Database unavailable' };
       
       // Получаем профиль пользователя
       const { data: profile, error: profileError } = await sb
@@ -1137,15 +1137,15 @@
         .single();
       
       if (profileError) {
-        console.error('❌ Ошибка профиля:', profileError);
-        return { eligible: false, reason: 'Ошибка получения данных профиля' };
+        console.error('❌ Profile error:', profileError);
+        return { eligible: false, reason: 'Error getting profile data' };
       }
       
       const registrationDate = new Date(profile.created_at);
       const now = new Date();
       const daysSinceRegistration = Math.floor((now - registrationDate) / (1000 * 60 * 60 * 24));
       
-      console.log('📅 Дней с регистрации:', daysSinceRegistration);
+      console.log('📅 Days since registration:', daysSinceRegistration);
       
       // Проверяем историю выводов
       const { data: previousWithdrawals, error: withdrawalsError } = await sb
@@ -1156,8 +1156,8 @@
         .order('created_at', { ascending: false });
       
       if (withdrawalsError) {
-        console.error('❌ Ошибка проверки истории выводов:', withdrawalsError);
-        return { eligible: false, reason: 'Ошибка проверки истории выводов' };
+        console.error('❌ Withdrawal history check error:', withdrawalsError);
+        return { eligible: false, reason: 'Error checking withdrawal history' };
       }
       
       const hasPreviousWithdrawals = previousWithdrawals && previousWithdrawals.length > 0;
@@ -1167,7 +1167,7 @@
         const daysLeft = 5 - daysSinceRegistration;
         return { 
           eligible: false, 
-          reason: `Первый вывод доступен через ${daysLeft} ${daysLeft === 1 ? 'день' : 'дня'} после регистрации` 
+          reason: `First withdrawal available in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} after registration` 
         };
       }
       
@@ -1177,13 +1177,13 @@
         const lastWithdrawalDate = new Date(lastWithdrawal.created_at);
         const hoursSinceLastWithdrawal = Math.floor((now - lastWithdrawalDate) / (1000 * 60 * 60));
         
-        console.log('⏰ Часов с последнего вывода:', hoursSinceLastWithdrawal);
+        console.log('⏰ Hours since last withdrawal:', hoursSinceLastWithdrawal);
         
         if (hoursSinceLastWithdrawal < 24) {
           const hoursLeft = 24 - hoursSinceLastWithdrawal;
           return { 
             eligible: false, 
-            reason: `Следующий вывод доступен через ${hoursLeft} ${hoursLeft === 1 ? 'час' : 'часов'}` 
+            reason: `Next withdrawal available in ${hoursLeft} ${hoursLeft === 1 ? 'hour' : 'hours'}` 
           };
         }
       }
@@ -1196,19 +1196,19 @@
         .single();
         
       if (walletError || !wallet) {
-        return { eligible: false, reason: 'Ошибка проверки баланса' };
+        return { eligible: false, reason: 'Balance check error' };
       }
       
       if (wallet.balance_cents < 2900) {
-        return { eligible: false, reason: 'Минимальная сумма для вывода: $29' };
+        return { eligible: false, reason: 'Minimum withdrawal amount: $29' };
       }
       
-      console.log('✅ Все проверки пройдены');
+      console.log('✅ All checks passed');
       return { eligible: true };
       
     } catch (error) {
-      console.error('❌ Ошибка проверки возможности вывода:', error);
-      return { eligible: false, reason: 'Ошибка проверки возможности вывода' };
+      console.error('❌ Withdrawal eligibility check error:', error);
+      return { eligible: false, reason: 'Withdrawal eligibility check error' };
     }
   };
 
@@ -1241,7 +1241,7 @@
       tbody.innerHTML = '';
       
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Пока нет заявок</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No applications yet</td></tr>';
         return;
       }
       
@@ -1257,16 +1257,16 @@
         let statusBadge = '';
         switch (withdrawal.status) {
           case 'paid':
-            statusBadge = '<span class="pill paid">Выплачено</span>';
+            statusBadge = '<span class="pill paid">Paid</span>';
             break;
           case 'rejected':
-            statusBadge = '<span class="pill rejected">Отклонено</span>';
+            statusBadge = '<span class="pill rejected">Rejected</span>';
             break;
           case 'cancelled':
-            statusBadge = '<span class="pill rejected">Отменено</span>';
+            statusBadge = '<span class="pill rejected">Cancelled</span>';
             break;
           default:
-            statusBadge = '<span class="pill pending">Ожидание</span>';
+            statusBadge = '<span class="pill pending">Pending</span>';
         }
         
         // Можно отменить только pending заявки в течение 5 часов
@@ -1281,7 +1281,7 @@
           <td>${withdrawal.txid ? `<code title="${withdrawal.txid}">${withdrawal.txid.substring(0, 8)}...</code>` : '—'}</td>
           <td>
             ${canCancel ? 
-              `<button class="btn bad" data-cancel="${withdrawal.id}">Отменить</button>` : 
+              `<button class="btn bad" data-cancel="${withdrawal.id}">Cancel</button>` : 
               '<span class="small muted">—</span>'
             }
           </td>
@@ -1301,21 +1301,21 @@
       console.error('❌ Load withdrawals error:', error);
       const tbody = document.getElementById('wd-table-body');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Ошибка загрузки</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading error</td></tr>';
       }
     }
   };
 
   // ИСПРАВЛЕННАЯ Функция отмены вывода
   LC.cancelWithdrawal = async function(withdrawalId) {
-    if (!confirm('Отменить заявку на вывод? Средства вернутся на баланс.')) {
+    if (!confirm('Cancel withdrawal application? Funds will return to balance.')) {
       return;
     }
     
     try {
       const sb = window.sb || window.supabase;
       if (!sb) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_network_error') : '❌ Ошибка подключения к базе данных');
+        alert('❌ Database connection error');
         return;
       }
       
@@ -1326,21 +1326,21 @@
       
       if (error) {
         console.error('❌ Cancel withdrawal RPC error:', error);
-        throw new Error('Не удалось отменить заявку: ' + error.message);
+        throw new Error('Failed to cancel application: ' + error.message);
       }
       
       if (!data.success) {
-        throw new Error(data.error || 'Ошибка отмены заявки');
+        throw new Error(data.error || 'Application cancellation error');
       }
       
-      alert('✅ ' + (data.message || (window.LC_I18N ? window.LC_I18N.t('notification_success') + ' Заявка отменена' : 'Заявка отменена')));
+      alert('✅ ' + (data.message || 'Application cancelled'));
       
       // Обновляем интерфейс
       await LC.refreshBalance();
       
     } catch (error) {
       console.error('❌ Cancel withdrawal error:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Ошибка отмены заявки') + ': ' + error.message);
+      alert('❌ Application cancellation error: ' + error.message);
     }
   };
 
@@ -1353,7 +1353,7 @@
       const { data: { user } } = await sb.auth.getUser();
       if (!user) return;
       
-      console.log('🔔 Подписываемся на обновления выводов для пользователя:', user.id);
+      console.log('🔔 Subscribing to withdrawal updates for user:', user.id);
       
       const channel = sb.channel('withdrawals-' + user.id)
         .on('postgres_changes', 
@@ -1364,13 +1364,13 @@
             filter: `user_id=eq.${user.id}`
           }, 
           (payload) => {
-            console.log('🔄 Получено обновление вывода:', payload);
+            console.log('🔄 Received withdrawal update:', payload);
             LC.loadWithdrawalsList();
             LC.refreshBalance();
           }
         )
         .subscribe((status) => {
-          console.log('📡 Статус подписки на выводы:', status);
+          console.log('📡 Withdrawal subscription status:', status);
         });
       
       return channel;
@@ -1395,7 +1395,7 @@
         return;
       }
       
-      console.log('🚀 Инициализация страницы вывода для пользователя:', user.id);
+      console.log('🚀 Withdraw page initialization for user:', user.id);
       
       // Обновляем баланс
       await LC.refreshBalance();
@@ -1406,7 +1406,7 @@
       // Инициализируем real-time подписку
       await LC.subscribeToWithdrawals();
       
-      console.log('✅ Страница вывода успешно инициализирована');
+      console.log('✅ Withdraw page successfully initialized');
       
     } catch (error) {
       console.error('❌ Withdraw page init error:', error);
@@ -1422,7 +1422,7 @@
         return; 
       }
       
-      console.log('🔄 Инициализация дашборда для пользователя:', user.id);
+      console.log('🔄 Dashboard initialization for user:', user.id);
       
       await LC.ensureProfile();
       await LC.applyReferral();
@@ -1433,7 +1433,7 @@
       await LC.loadReferralEarnings();
       LC.initVideoWatch();
       
-      console.log('✅ Дашборд успешно инициализирован');
+      console.log('✅ Dashboard successfully initialized');
       
     } catch(e) { 
       console.error('[LC] initDashboard', e); 
@@ -1468,7 +1468,7 @@
   LC.createDeposit = async function(amountCents, network='TRC20', currency='USDT') {
     const user = await getUser(); 
     if (!user) { 
-      alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт'); 
+      alert('❌ Please login to your account'); 
       return; 
     }
     
@@ -1480,32 +1480,32 @@
     
     if (error) { 
       console.error(error); 
-      alert(window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Ошибка создания депозита'); 
+      alert('❌ Deposit error'); 
       return; 
     }
     
     const row = Array.isArray(data) ? data[0] : data;
     if (!row?.ok) { 
-      alert(row?.message || (window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Депозит отклонен')); 
+      alert(row?.message || '❌ Deposit rejected'); 
       return; 
     }
     
-    alert(window.LC_I18N ? window.LC_I18N.t('notification_deposit_success') : '✅ Депозит создан');
+    alert('✅ Deposit created');
     return row;
   };
 
   // ===== ФУНКЦИИ ДЕПОЗИТОВ =================================================
 
-  // Создание депозита с прикреплением TXID
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ: Создание депозита с защитой от дублирования TXID
   LC.createDepositWithTx = async function(amountCents, network = 'TRC20', currency = 'USDT', txid = '') {
     try {
       const user = await getUser();
       if (!user) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
+        alert('❌ Please login to your account');
         return null;
       }
 
-      console.log('🔄 Создание депозита:', {
+      console.log('🔄 Creating deposit:', {
         userId: user.id,
         amountCents,
         network,
@@ -1513,7 +1513,29 @@
         txid
       });
 
-      // Создаем депозит напрямую
+      // 🔒 ПРОВЕРКА: Если указан TXID, проверяем его уникальность
+      if (txid && txid.trim() !== '') {
+        const { data: existingDeposit, error: checkError } = await sb
+          .from('deposits')
+          .select('id, user_id, status, amount_cents')
+          .eq('txid', txid.trim())
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('❌ TXID check error:', checkError);
+        }
+
+        if (existingDeposit) {
+          if (existingDeposit.user_id === user.id) {
+            alert('❌ This TXID is already used in your another deposit');
+          } else {
+            alert('❌ This TXID is already used by another user');
+          }
+          return null;
+        }
+      }
+
+      // Создаем депозит
       const { data, error } = await sb
         .from('deposits')
         .insert({
@@ -1521,7 +1543,7 @@
           amount_cents: amountCents,
           network: network,
           currency: currency,
-          txid: txid || null,
+          txid: txid && txid.trim() !== '' ? txid.trim() : null,
           status: 'pending',
           created_at: new Date().toISOString()
         })
@@ -1529,53 +1551,126 @@
         .single();
 
       if (error) {
-        console.error('❌ Ошибка создания депозита:', error);
-        alert((window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Не удалось создать депозит') + ': ' + error.message);
+        console.error('❌ Deposit creation error:', error);
+        
+        // 🔒 Обработка ошибки уникальности TXID
+        if (error.code === '23505' && error.message.includes('txid')) {
+          alert('❌ This TXID is already used in the system');
+          return null;
+        }
+        
+        alert('❌ Failed to create deposit: ' + error.message);
         return null;
       }
 
-      console.log('✅ Депозит создан:', data);
-      return { ok: true, id: data.id, message: window.LC_I18N ? window.LC_I18N.t('notification_deposit_success') : '✅ Депозит создан' };
+      console.log('✅ Deposit created:', data);
+      return { 
+        ok: true, 
+        id: data.id, 
+        message: '✅ Deposit created successfully' 
+      };
         
     } catch (error) {
-      console.error('❌ Ошибка создания депозита:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_deposit_error') : '❌ Ошибка при создании депозита') + ': ' + error.message);
+      console.error('❌ Deposit creation error:', error);
+      alert('❌ Error creating deposit: ' + error.message);
       return null;
     }
   };
 
-  // Прикрепление TXID к существующему депозиту
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ: Прикрепление TXID с защитой от дублирования
   LC.attachTxToDeposit = async function(depositId, txid) {
     try {
       const user = await getUser();
       if (!user) {
-        alert(window.LC_I18N ? window.LC_I18N.t('notification_login_required') : '❌ Войдите в аккаунт');
+        alert('❌ Please login to your account');
         return null;
       }
 
+      // 🔒 ПРОВЕРКА: Проверяем уникальность TXID
+      if (txid && txid.trim() !== '') {
+        const { data: existingDeposit, error: checkError } = await sb
+          .from('deposits')
+          .select('id, user_id, status')
+          .eq('txid', txid.trim())
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('❌ TXID check error:', checkError);
+        }
+
+        if (existingDeposit) {
+          if (existingDeposit.user_id === user.id) {
+            alert('❌ This TXID is already used in your another deposit');
+          } else {
+            alert('❌ This TXID is already used by another user');
+          }
+          return null;
+        }
+      }
+
+      // 🔒 ПРОВЕРКА: Получаем текущий депозит
+      const { data: currentDeposit, error: getError } = await sb
+        .from('deposits')
+        .select('id, status, txid, user_id')
+        .eq('id', depositId)
+        .single();
+
+      if (getError || !currentDeposit) {
+        alert('❌ Deposit not found');
+        return null;
+      }
+
+      // 🔒 ПРОВЕРКА: Проверяем владельца депозита
+      if (currentDeposit.user_id !== user.id) {
+        alert('❌ Access denied');
+        return null;
+      }
+
+      // 🔒 ПРОВЕРКА: Нельзя изменить подтвержденный депозит
+      if (currentDeposit.status !== 'pending') {
+        alert('❌ Cannot modify confirmed deposit');
+        return null;
+      }
+
+      // 🔒 ПРОВЕРКА: Нельзя изменить если уже есть TXID
+      if (currentDeposit.txid) {
+        alert('❌ TXID already attached to this deposit');
+        return null;
+      }
+
+      // Обновляем депозит с защитой от race condition
       const { data, error } = await sb
         .from('deposits')
         .update({ 
-          txid: txid,
+          txid: txid && txid.trim() !== '' ? txid.trim() : null,
           updated_at: new Date().toISOString()
         })
         .eq('id', depositId)
         .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .is('txid', null)
         .select()
         .single();
 
       if (error) {
-        console.error('❌ Ошибка прикрепления TXID:', error);
-        alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Не удалось прикрепить TXID') + ': ' + error.message);
+        console.error('❌ TXID attachment error:', error);
+        
+        // 🔒 Обработка ошибки уникальности
+        if (error.code === '23505' && error.message.includes('txid')) {
+          alert('❌ This TXID is already used in the system');
+          return null;
+        }
+        
+        alert('❌ Failed to attach TXID: ' + error.message);
         return null;
       }
 
-      console.log('✅ TXID прикреплен:', data);
+      console.log('✅ TXID attached:', data);
       return data;
-        
+      
     } catch (error) {
-      console.error('❌ Ошибка прикрепления TXID:', error);
-      alert((window.LC_I18N ? window.LC_I18N.t('notification_failed') : '❌ Ошибка при прикреплении TXID') + ': ' + error.message);
+      console.error('❌ TXID attachment error:', error);
+      alert('❌ Error attaching TXID: ' + error.message);
       return null;
     }
   };
